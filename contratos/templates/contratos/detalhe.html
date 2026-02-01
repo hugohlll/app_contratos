@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Contrato {{ contrato.numero }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between mb-3">
+        <a href="{% url 'pesquisa' %}" class="btn btn-outline-secondary">&larr; Voltar para Busca</a>
+        <a href="{% url 'transparencia' %}" class="btn btn-outline-primary">Ver Lista Completa</a>
+    </div>
+    
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="m-0">Contrato {{ contrato.numero }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h5 class="text-primary">{{ contrato.empresa.razao_social }}</h5>
+                    <p class="text-muted mb-1">CNPJ: {{ contrato.empresa.cnpj }}</p>
+                    <p class="mb-0"><strong>Objeto:</strong> {{ contrato.objeto }}</p>
+                </div>
+                <div class="col-md-4 text-md-end border-start">
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Vigência Contratual</small>
+                        <strong>{{ contrato.vigencia_inicio|date:"d/m/Y" }} a {{ contrato.vigencia_fim|date:"d/m/Y" }}</strong>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Valor Total</small>
+                        <strong class="text-success fs-5">R$ {{ contrato.valor_total }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mb-3">Equipe de Fiscalização (Comissão Atual)</h4>
+    
+    {% if comissoes %}
+        {% for comissao in comissoes %}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-white">
+                <strong>{{ comissao.get_tipo_display }}</strong>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead class="table-light">
+                        <tr class="align-middle text-center">
+                            <th rowspan="2">Função</th>
+                            <th rowspan="2">Militar</th>
+                            <th colspan="2">Vigência da Designação</th>
+                            <th colspan="2">Portaria</th>
+                            <th colspan="2">Boletim</th>
+                        </tr>
+                        <tr class="small text-muted text-center">
+                            <th>Início</th>
+                            <th>Término Previsto</th>
+                            <th>Número</th>
+                            <th>Data</th>
+                            <th>Número</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for integrante in comissao.integrantes.all %}
+                        <tr class="align-middle">
+                            <td class="fw-bold">{{ integrante.funcao.titulo }}</td>
+                            <td>
+                                {{ integrante.agente.nome_de_guerra }}
+                                <br><small class="text-muted">SARAM: {{ integrante.agente.saram }}</small>
+                            </td>
+                            <td class="text-center">{{ integrante.data_inicio|date:"d/m/Y" }}</td>
+                            <td class="text-center fw-bold text-primary">
+                                {{ integrante.data_fim|date:"d/m/Y"|default:"-" }}
+                            </td>
+                            <td class="text-center">{{ integrante.portaria_numero }}</td>
+                            <td class="text-center small">{{ integrante.portaria_data|date:"d/m/Y" }}</td>
+                            <td class="text-center">{{ integrante.boletim_numero|default:"-" }}</td>
+                            <td class="text-center small">{{ integrante.boletim_data|date:"d/m/Y"|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-warning">
+            ⚠️ Nenhuma comissão ativa cadastrada para este contrato no momento.
+        </div>
+    {% endif %}
+
+</div>
+</body>
+</html>

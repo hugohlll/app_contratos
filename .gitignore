@@ -1,0 +1,39 @@
+--- Python ---
+
+pycache/
+*.py[cod]
+*$py.class
+
+--- Django ---
+
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+--- Variáveis de Ambiente (Segurança) ---
+
+.env
+
+--- Ambientes Virtuais (Virtualenvs) ---
+
+O PyCharm cria o .venv, mas ele é local da sua máquina
+
+.venv/
+venv/
+env/
+ENV/
+
+--- IDEs (Configurações do Editor) ---
+
+.idea/
+.vscode/
+*.swp
+*.swo
+
+--- Sistema Operacional ---
+
+.DS_Store
+Thumbs.db

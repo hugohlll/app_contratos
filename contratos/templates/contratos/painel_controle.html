@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel de Auditoria - SISCONT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .legenda-vencimento {
+            font-size: 0.85rem;
+            padding: 10px 15px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+        .dot-status {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <span class="navbar-brand mb-0 h1">🛡️ Auditoria & Controle Interno</span>
+        <div>
+            <a href="{% url 'pesquisa' %}" class="btn btn-outline-light btn-sm me-2">
+                🔍 Busca Pública
+            </a>
+            <a href="{% url 'consulta_militar' %}" class="btn btn-outline-light btn-sm me-2">
+                👤 Minhas Comissões
+            </a>
+            <a href="{% url 'sair_do_sistema' %}" class="btn btn-danger btn-sm fw-bold">
+                🚪 Sair
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <h2 class="mb-4 text-center">Dashboard de Riscos e Conformidade</h2>
+
+    <!-- Bloco de Qualificação -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+                    <span>🎓 Status da Qualificação dos Agentes (Efetivo Ativo)</span>
+                    <a href="{% url 'exportar_qualificacao_csv' %}" class="btn btn-sm btn-outline-dark">
+                        ⬇️ Baixar Relatório Detalhado (.csv)
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4 text-center">
+                            <div style="height: 250px; width: 100%; display: flex; justify-content: center;">
+                                <canvas id="chartQualificacao"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="col-md-8">
+                            <h4 class="mb-3">Visão Geral</h4>
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between align-items-center list-group-item-success">
+                                    <div>
+                                        <strong>Qualificação em Dia</strong>
+                                        <small class="d-block text-muted">Curso válido (menos de 1 ano).</small>
+                                    </div>
+                                    <span class="badge bg-success rounded-pill fs-6">{{ dados_qualificacao.em_dia }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center list-group-item-danger">
+                                    <div>
+                                        <strong>Qualificação Vencida</strong>
+                                        <small class="d-block text-muted">Curso realizado há mais de 1 ano.</small>
+                                    </div>
+                                    <span class="badge bg-danger rounded-pill fs-6">{{ dados_qualificacao.vencidos }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center list-group-item-secondary">
+                                    <div>
+                                        <strong>Sem Registro de Curso</strong>
+                                        <small class="d-block text-muted">Nenhuma data de curso cadastrada.</small>
+                                    </div>
+                                    <span class="badge bg-dark rounded-pill fs-6">{{ dados_qualificacao.sem_curso }}</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 text-end text-muted small">
+                                Total de Agentes Designados: <strong>{{ dados_qualificacao.total }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card text-center text-bg-primary shadow-sm h-100 border-0">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h1 class="display-4 fw-bold">{{ total_contratos_ativos }}</h1>
+                    <p class="mb-0 fs-5 text-uppercase">Contratos Vigentes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card text-center text-bg-success shadow-sm h-100 border-0">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h1 class="display-4 fw-bold">{{ total_agentes_atuando }}</h1>
+                    <p class="mb-0 fs-5 text-uppercase">Militares Designados (Ativos)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Monitoramento de Vencimentos -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-secondary text-white fw-bold d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <span class="me-2">📅 Monitoramento de Vencimentos (Top 5 Urgentes)</span>
+                <span class="badge bg-light text-dark rounded-pill">{{ total_vencimentos_count }} designações totais</span>
+            </div>
+            <a href="{% url 'exportar_vencimentos_csv' %}" class="btn btn-light btn-sm text-secondary fw-bold">
+                ⬇️ Baixar Lista Completa (.csv)
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 text-center align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Status</th>
+                            <th>Dias Restantes</th>
+                            <th>Militar</th>
+                            <th>Função</th>
+                            <th>Contrato</th>
+                            <th>Término Previsto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in lista_vencimentos %}
+                        <tr class="{{ item.classe_cor }}">
+                            <td class="fw-bold">{{ item.status_texto }}</td>
+                            <td class="fw-bold fs-5">{{ item.dias_restantes }}</td>
+                            <td class="text-start">{{ item.agente.nome_de_guerra }}</td>
+                            <td>{{ item.funcao.sigla|default:item.funcao.titulo }}</td>
+                            <td>{{ item.comissao.contrato.numero }}</td>
+                            <td>{{ item.data_fim|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center py-4 text-muted">Nenhum vencimento próximo detectado.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- LEGENDA ATUALIZADA COM OS NOVOS CRITÉRIOS -->
+        <div class="legenda-vencimento d-flex justify-content-center align-items-center gap-4 border-top">
+            <span class="text-muted fw-bold small">CRITÉRIOS DE RISCO:</span>
+            <div class="d-flex align-items-center">
+                <span class="dot-status bg-danger"></span>
+                <span class="small"><strong>CRÍTICO:</strong> 7 dias ou menos</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="dot-status bg-warning"></span>
+                <span class="small"><strong>ALERTA:</strong> Entre 8 e 15 dias</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="dot-status bg-success"></span>
+                <span class="small"><strong>NORMAL:</strong> Mais de 15 dias</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seções inferiores mantidas conforme estrutura -->
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card shadow-sm mb-4 border-0 h-100">
+                <div class="card-header bg-info text-white fw-bold d-flex justify-content-between align-items-center">
+                    <span>⏱️ Radar de Permanência (Rodízio)</span>
+                    <span class="badge bg-light text-dark">Top 10 Mais Antigos</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Militar</th>
+                                    <th>Função</th>
+                                    <th>Contrato</th>
+                                    <th>Início Real</th>
+                                    <th class="text-end">Tempo Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in top_permanencia %}
+                                <tr>
+                                    <td class="fw-bold text-dark">{{ item.agente.nome_de_guerra }}</td>
+                                    <td>{{ item.funcao.sigla|default:item.funcao.titulo }}</td>
+                                    <td>{{ item.contrato.numero }}</td>
+                                    <td>
+                                        {{ item.inicio_real|date:"d/m/Y" }}
+                                        {% if item.inicio_real != item.inicio_original %}
+                                            <span class="text-info fw-bold" title="Data calculada somando designações anteriores sequenciais">*</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="badge {{ item.classe_tempo }} rounded-pill">{{ item.tempo_formatado }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center text-muted py-3">Dados insuficientes.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow-sm border-warning mb-4">
+                <div class="card-header bg-warning text-dark fw-bold">⚠️ Radar de Sobrecarga (Top 10)</div>
+                <ul class="list-group list-group-flush">
+                    {% for agente in agentes_sobrecarregados %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ agente.nome_de_guerra }}</strong>
+                            <div class="small text-muted">{{ agente.posto.sigla }} - SARAM: {{ agente.saram }}</div>
+                        </div>
+                        <span class="badge bg-danger rounded-pill fs-6">{{ agente.total_atuacoes }} funções</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted text-center py-3">Nenhuma sobrecarga detectada.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card shadow-sm border-danger mb-4">
+                <div class="card-header bg-danger text-white fw-bold">🚨 Contratos sem Equipe Ativa</div>
+                <div class="list-group list-group-flush">
+                    {% for contrato in contratos_risco %}
+                    <a href="{% url 'detalhe_contrato' contrato.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1 text-danger fw-bold">Contrato {{ contrato.numero }}</h6>
+                            <span class="badge bg-danger">URGENTE</span>
+                        </div>
+                        <p class="mb-1 small">{{ contrato.empresa.razao_social }}</p>
+                        <small class="text-muted">Vence em: {{ contrato.vigencia_fim|date:"d/m/Y" }}</small>
+                    </a>
+                    {% empty %}
+                    <div class="p-3 text-success text-center">✅ Todos os contratos possuem equipe.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">📋 Relatório Geral de Contratos Vigentes</h5>
+            <div>
+                <a href="{% url 'relatorio_periodo' %}" class="btn btn-info btn-sm me-2 text-white fw-bold">🔍 Histórico</a>
+                <a href="{% url 'exportar_csv' %}" class="btn btn-success btn-sm">⬇️ Baixar Planilha Geral</a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Contrato</th>
+                            <th>Empresa</th>
+                            <th>Vigência</th>
+                            <th style="width: 40%;">Equipe de Fiscalização (Ativa)</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contrato in tabela_contratos %}
+                        <tr>
+                            <td class="fw-bold text-primary">{{ contrato.numero }}</td>
+                            <td>{{ contrato.empresa.razao_social }}</td>
+                            <td>{{ contrato.vigencia_fim|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if contrato.comissoes_ativas %}
+                                    {% for comissao in contrato.comissoes_ativas %}
+                                        <div class="mb-2 border-bottom pb-1">
+                                            <small class="text-uppercase fw-bold text-muted">{{ comissao.get_tipo_display }}</small>
+                                            <ul class="list-unstyled mb-0 small mt-1">
+                                                {% for integrante in comissao.equipe_vigente %}
+                                                    <li>
+                                                        👥 <strong>{{ integrante.funcao.sigla }}:</strong> {{ integrante.agente.nome_de_guerra }}
+                                                        <span class="text-muted fst-italic ms-1">(Até: {{ integrante.data_fim|date:"d/m/Y"|default:"Indef." }})</span>
+                                                    </li>
+                                                {% empty %}
+                                                    <li class="text-danger">⚠️ Comissão sem membros!</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="badge bg-danger">SEM COMISSÃO</span>
+                                {% endif %}
+                            </td>
+                            <td><a href="{% url 'detalhe_contrato' contrato.id %}" class="btn btn-outline-secondary btn-sm">Detalhes</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center py-3">Nenhum contrato vigente.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('chartQualificacao').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Em Dia', 'Vencido', 'Sem Curso'],
+                datasets: [{
+                    data: [
+                        {{ dados_qualificacao.em_dia }},
+                        {{ dados_qualificacao.vencidos }},
+                        {{ dados_qualificacao.sem_curso }}
+                    ],
+                    backgroundColor: ['#198754', '#dc3545', '#6c757d'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
