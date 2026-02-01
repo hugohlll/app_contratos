@@ -1,10 +1,12 @@
 import csv
+import json
 from datetime import date, timedelta
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.db.models import Count, Q, Prefetch
 from django.contrib.auth.decorators import login_required
 from django.utils.dateparse import parse_date
+from django.utils.safestring import mark_safe
 from contratos.models import Contrato, Agente, Comissao, Integrante
 from contratos.utils import get_filtro_ativos
 
@@ -49,6 +51,11 @@ def painel_controle(request):
     lista_completa.sort(key=lambda x: x.dias_restantes)
     top_5_vencimentos = lista_completa[:5]
     total_vencimentos_count = len(lista_completa)
+    
+    # Dados agregados para gráfico de vencimentos
+    vencimentos_critico = sum(1 for i in lista_completa if i.dias_restantes <= 7)
+    vencimentos_alerta = sum(1 for i in lista_completa if 8 <= i.dias_restantes <= 15)
+    vencimentos_normal = sum(1 for i in lista_completa if i.dias_restantes > 15)
 
     # 2. RADAR DE PERMANÊNCIA (Cálculo de tempo de designação contínua)
     integrantes_ativos = Integrante.objects.filter(filtro_ativos).select_related(
@@ -95,6 +102,13 @@ def painel_controle(request):
 
     radar_permanencia.sort(key=lambda x: x['dias_totais'], reverse=True)
     top_10_permanencia = radar_permanencia[:10]
+    
+    # Dados para gráfico de permanência (top 10) - serializado como JSON
+    permanencia_labels = [f"{item['agente'].nome_de_guerra[:20]}" for item in top_10_permanencia]
+    permanencia_dias = [item['dias_totais'] for item in top_10_permanencia]
+    permanencia_labels_json = mark_safe(json.dumps(permanencia_labels, ensure_ascii=False))
+    permanencia_dias_json = mark_safe(json.dumps(permanencia_dias))
+    tem_permanencia = len(top_10_permanencia) > 0
 
     # 3. ESTATÍSTICAS DE QUALIFICAÇÃO
     equipe_ativa_qs = Integrante.objects.filter(filtro_ativos).select_related('agente')
@@ -114,6 +128,13 @@ def painel_controle(request):
     agentes_sobrecarregados = Agente.objects.annotate(
         total_atuacoes=Count('integrante', filter=Q(integrante__in=Integrante.objects.filter(filtro_ativos)))
     ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes')[:10]
+    
+    # Dados para gráfico de sobrecarga - serializado como JSON
+    sobrecarga_labels = [f"{ag.nome_de_guerra[:20]}" for ag in agentes_sobrecarregados]
+    sobrecarga_valores = [ag.total_atuacoes for ag in agentes_sobrecarregados]
+    sobrecarga_labels_json = mark_safe(json.dumps(sobrecarga_labels, ensure_ascii=False))
+    sobrecarga_valores_json = mark_safe(json.dumps(sobrecarga_valores))
+    tem_sobrecarga = len(sobrecarga_labels) > 0
 
     contratos_risco = Contrato.objects.filter(vigencia_fim__gte=hoje).annotate(
         fiscais_ativos=Count('comissoes__integrantes', filter=Q(comissoes__tipo='FISCALIZACAO') & Q(
@@ -135,8 +156,17 @@ def painel_controle(request):
     return render(request, 'contratos/painel_controle.html', {
         'lista_vencimentos': top_5_vencimentos,
         'total_vencimentos_count': total_vencimentos_count,
+        'vencimentos_critico': vencimentos_critico,
+        'vencimentos_alerta': vencimentos_alerta,
+        'vencimentos_normal': vencimentos_normal,
         'top_permanencia': top_10_permanencia,
+        'permanencia_labels': permanencia_labels_json,
+        'permanencia_dias': permanencia_dias_json,
+        'tem_permanencia': tem_permanencia,
         'agentes_sobrecarregados': agentes_sobrecarregados,
+        'sobrecarga_labels': sobrecarga_labels_json,
+        'sobrecarga_valores': sobrecarga_valores_json,
+        'tem_sobrecarga': tem_sobrecarga,
         'contratos_risco': contratos_risco,
         'total_contratos_ativos': total_contratos_ativos,
         'total_agentes_atuando': total_agentes_atuando,
