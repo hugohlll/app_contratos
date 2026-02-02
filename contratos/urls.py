@@ -1,5 +1,5 @@
 from django.urls import path
-from contratos.views import public, militar, auditoria, auth
+from contratos.views import public, militar, auditoria, auth, portal, users
 
 urlpatterns = [
     # --- ÁREA PÚBLICA (Módulo public.py) ---
@@ -26,4 +26,38 @@ urlpatterns = [
 
     # --- AUTENTICAÇÃO (Módulo auth.py) ---
     path('sair/', auth.sair, name='sair_do_sistema'),
+    
+    # --- PORTAL DO LANÇADOR (SIMPLIFICADO) ---
+    path('portal/', portal.portal_home, name='portal_home'),
+    
+    # Empresas
+    path('portal/empresas/', portal.listar_empresas, name='listar_empresas'),
+    path('portal/empresas/nova/', portal.nova_empresa, name='nova_empresa'),
+    path('portal/empresas/editar/<int:pk>/', portal.editar_empresa, name='editar_empresa'),
+    
+    # Contratos
+    path('portal/contratos/', portal.listar_contratos, name='listar_contratos'),
+    path('portal/contratos/novo/', portal.novo_contrato, name='novo_contrato'),
+    path('portal/contratos/editar/<int:pk>/', portal.editar_contrato, name='editar_contrato'),
+    
+    # Agentes
+    path('portal/agentes/', portal.listar_agentes, name='listar_agentes'),
+    path('portal/agentes/novo/', portal.novo_agente, name='novo_agente'),
+    path('portal/agentes/editar/<int:pk>/', portal.editar_agente, name='editar_agente'),
+    
+    # Comissões
+    path('portal/comissoes/', portal.listar_comissoes, name='listar_comissoes'),
+    path('portal/comissoes/nova/', portal.nova_comissao, name='nova_comissao'),
+    path('portal/comissoes/editar/<int:pk>/', portal.editar_comissao, name='editar_comissao'),
+    
+    # Designações (Vinculadas a Comissão)
+    path('portal/comissoes/<int:comissao_id>/designacao/nova/', portal.nova_designacao_comissao, name='nova_designacao_comissao'),
+    path('portal/designacoes/editar/<int:pk>/', portal.editar_designacao_comissao, name='editar_designacao_comissao'),
+
+    # --- GERENCIAMENTO DE USUÁRIOS (Módulo users.py) ---
+    path('portal/usuarios/', users.listar_usuarios, name='listar_usuarios'),
+    path('portal/usuarios/novo/', users.novo_usuario, name='novo_usuario'),
+    path('portal/usuarios/editar/<int:pk>/', users.editar_usuario, name='editar_usuario'),
+    path('portal/usuarios/excluir/<int:pk>/', users.excluir_usuario, name='excluir_usuario'),
+    path('portal/alterar-senha/', users.alterar_senha, name='alterar_senha'),
 ]

@@ -1,0 +1,176 @@
+{% extends 'contratos/portal/base_portal.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="fw-bold">
+                {% if object %}Editar Comissão{% else %}Nova Comissão{% endif %}
+            </h2>
+            <a href="{% url 'listar_comissoes' %}" class="btn btn-outline-secondary">
+                ← Voltar para Lista
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-5">
+        <div class="card card-custom">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Dados da Comissão</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="{{ form.contrato.id_for_label }}" class="form-label fw-bold">
+                                {{ form.contrato.label }}
+                            </label>
+                            {{ form.contrato }}
+                            {% if form.contrato.errors %}
+                            <div class="text-danger small">{{ form.contrato.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.tipo.id_for_label }}" class="form-label fw-bold">
+                                {{ form.tipo.label }}
+                            </label>
+                            {{ form.tipo }}
+                            {% if form.tipo.errors %}
+                            <div class="text-danger small">{{ form.tipo.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.portaria_numero.id_for_label }}" class="form-label fw-bold">
+                                {{ form.portaria_numero.label }}
+                            </label>
+                            {{ form.portaria_numero }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.portaria_data.id_for_label }}" class="form-label fw-bold">
+                                {{ form.portaria_data.label }}
+                            </label>
+                            {{ form.portaria_data }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.boletim_numero.id_for_label }}" class="form-label fw-bold">
+                                {{ form.boletim_numero.label }}
+                            </label>
+                            {{ form.boletim_numero }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.boletim_data.id_for_label }}" class="form-label fw-bold">
+                                {{ form.boletim_data.label }}
+                            </label>
+                            {{ form.boletim_data }}
+                        </div>
+                    </div>
+
+                    <div class="row align-items-end">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.data_inicio.id_for_label }}" class="form-label fw-bold">
+                                {{ form.data_inicio.label }}
+                            </label>
+                            {{ form.data_inicio }}
+                            {% if form.data_inicio.errors %}
+                            <div class="text-danger small">{{ form.data_inicio.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.data_fim.id_for_label }}" class="form-label fw-bold">
+                                {{ form.data_fim.label }}
+                            </label>
+                            {{ form.data_fim }}
+                            {% if form.data_fim.errors %}
+                            <div class="text-danger small">{{ form.data_fim.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch ps-5 pt-4">
+                                {{ form.ativa }}
+                                <label class="form-check-label fw-bold ms-2" for="{{ form.ativa.id_for_label }}">
+                                    {{ form.ativa.label }}
+                                </label>
+                            </div>
+                            {% if form.ativa.errors %}
+                            <div class="text-danger small">{{ form.ativa.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            💾 Salvar Comissão
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if object %}
+    <div class="col-12">
+        <div class="card card-custom border-2 border-primary">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">📋 Integrantes Designados</h5>
+                <a href="{% url 'nova_designacao_comissao' comissao_id=object.id %}"
+                    class="btn btn-light text-primary fw-bold">
+                    + Adicionar Integrante
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Militar</th>
+                                <th>Função</th>
+                                <th>Início</th>
+                                <th>Fim</th>
+                                <th>Boletim</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for integrante in designacoes %}
+                            <tr>
+                                <td>{{ integrante.agente }}</td>
+                                <td>{{ integrante.funcao }}</td>
+                                <td>{{ integrante.data_inicio|date:"d/m/Y" }}</td>
+                                <td>{{ integrante.data_fim|date:"d/m/Y"|default:"-" }}</td>
+                                <td>
+                                    {% if integrante.boletim_numero %}
+                                    {{ integrante.boletim_numero }} ({{ integrante.boletim_data|date:"d/m/Y" }})
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'editar_designacao_comissao' pk=integrante.pk %}"
+                                        class="btn btn-sm btn-outline-secondary" title="Editar">
+                                        ✏️
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    Nenhum integrante designado para esta comissão.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

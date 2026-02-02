@@ -1,0 +1,63 @@
+{% extends 'contratos/portal/base_portal.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="fw-bold">Bem-vindo, Lançador!</h2>
+        <p class="text-muted">Selecione uma categoria abaixo para visualizar, adicionar ou editar registros.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card card-custom h-100">
+            <div class="card-body text-center p-4">
+                <div class="display-4 mb-3">📜</div>
+                <h5 class="card-title">Contratos</h5>
+                <p class="card-text text-muted">{{ total_contratos }} registrados</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'listar_contratos' %}" class="btn btn-outline-primary">Listar</a>
+                    <a href="{% url 'novo_contrato' %}" class="btn btn-primary">Adicionar Novo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card card-custom h-100">
+            <div class="card-body text-center p-4">
+                <div class="display-4 mb-3">👤</div>
+                <h5 class="card-title">Agentes</h5>
+                <p class="card-text text-muted">{{ total_agentes }} registrados</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'listar_agentes' %}" class="btn btn-outline-primary">Listar</a>
+                    <a href="{% url 'novo_agente' %}" class="btn btn-primary">Adicionar Novo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card card-custom h-100">
+            <div class="card-body text-center p-4">
+                <div class="display-4 mb-3">💰</div>
+                <h5 class="card-title">Comissões</h5>
+                <p class="card-text text-muted">{{ total_comissoes }} registradas</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'listar_comissoes' %}" class="btn btn-outline-primary">Listar</a>
+                    <a href="{% url 'nova_comissao' %}" class="btn btn-primary">Nova Comissão</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info border-0 shadow-sm">
+            <h5 class="alert-heading">💡 Dica Rápida</h5>
+            <p class="mb-0">Para inserir uma nova designação (integrante), certifique-se primeiro de que o
+                <strong>Contrato</strong> e o <strong>Agente</strong> já estejam cadastrados no sistema.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

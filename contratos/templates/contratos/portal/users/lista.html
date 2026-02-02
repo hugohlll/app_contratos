@@ -1,0 +1,60 @@
+{% extends 'contratos/portal/base_portal.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Gerenciar Usuários</h2>
+    <a href="{% url 'novo_usuario' %}" class="btn btn-success">
+        <i class="bi bi-person-plus-fill me-2"></i>Novo Usuário
+    </a>
+</div>
+
+<div class="card card-custom">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="px-4 py-3">Usuário</th>
+                        <th class="px-4 py-3">Email</th>
+                        <th class="px-4 py-3">Perfil</th>
+                        <th class="text-end px-4 py-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                    <tr>
+                        <td class="px-4 fw-medium">{{ u.username }}</td>
+                        <td class="px-4 text-muted">{{ u.email|default:"-" }}</td>
+                        <td class="px-4">
+                            {% if u.perfil_display == 'Administrador' or u.perfil_display == 'Superusuário' %}
+                            <span class="badge bg-primary">{{ u.perfil_display }}</span>
+                            {% elif u.perfil_display == 'Auditor' %}
+                            <span class="badge bg-secondary">{{ u.perfil_display }}</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark border">{{ u.perfil_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end px-4">
+                            <a href="{% url 'editar_usuario' u.pk %}" class="btn btn-sm btn-outline-secondary me-1"
+                                title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if not u.is_superuser %}
+                            <a href="{% url 'excluir_usuario' u.pk %}" class="btn btn-sm btn-outline-danger"
+                                title="Excluir">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">Nenhum usuário encontrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

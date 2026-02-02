@@ -1,0 +1,42 @@
+{% extends 'contratos/portal/base_portal.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="d-flex align-items-center mb-4">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary me-3">← Voltar</a>
+            <h2 class="fw-bold mb-0">{{ titulo }}</h2>
+        </div>
+
+        <div class="card card-custom">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% if field.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in field.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="javascript:history.back()" class="btn btn-light me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-5">💾 Salvar Registro</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,305 @@
+{% extends 'contratos/portal/base_portal.html' %}
+{% load portal_tags %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">{{ titulo }}</h2>
+    {% if url_novo and request.user|is_admin %}
+    <a href="{% url url_novo %}" class="btn btn-success">
+        <i class="bi bi-plus-lg"></i> Novo Registro
+    </a>
+    {% endif %}
+</div>
+
+<div class="card card-custom">
+    <div class="card-body">
+        <!-- Toolbar: Search & View Size -->
+        <div class="d-flex flex-wrap gap-3 mb-3 justify-content-between align-items-center">
+            <div class="flex-grow-1" style="max-width: 400px;">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Buscar..."
+                        autocomplete="off">
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <label for="viewSizeSelect" class="text-muted small fw-bold mb-0">Exibir:</label>
+                <select id="viewSizeSelect" class="form-select form-select-sm no-sort" style="width: auto;">
+                    <option value="5" selected>5 itens</option>
+                    <option value="10">10 itens</option>
+                    <option value="20">20 itens</option>
+                    <option value="50">50 itens</option>
+                    <option value="all">Todos</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Scrollable Container -->
+        <div id="tableContainer" class="table-responsive border rounded" style="max-height: 500px; overflow-y: auto;">
+            <table class="table table-hover align-middle mb-0" id="dataTable">
+                <thead class="custom-table-header position-sticky top-0 start-0 z-1">
+                    <tr>
+                        {% if is_designacao %}
+                        {% for col in custom_cols %}
+                        <th class="py-3 px-3 cursor-pointer sortable border-0 text-white" data-sort="text">
+                            <div class="d-flex justify-content-between align-items-center">
+                                {{ col }}
+                                <i class="bi bi-arrow-down-up text-white-50 small ms-2"></i>
+                            </div>
+                        </th>
+                        {% endfor %}
+                        {% else %}
+                        {% for field, label in fields %}
+                        <th class="py-3 px-3 cursor-pointer sortable border-0 text-white" data-sort="text">
+                            <div class="d-flex justify-content-between align-items-center">
+                                {{ label }}
+                                <i class="bi bi-arrow-down-up text-white-50 small ms-2"></i>
+                            </div>
+                        </th>
+                        {% endfor %}
+                        {% endif %}
+                        {% if request.user|is_admin %}
+                        <th class="text-end py-3 px-3 border-0 text-white" style="width: 100px;">Ações</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        {% if titulo == 'Designações' or is_designacao %}
+                        <td class="px-3">{{ item.comissao.contrato.numero }}</td>
+                        <td class="px-3">{{ item.agente }}</td>
+                        <td class="px-3">{{ item.funcao }}</td>
+                        <td class="px-3">{{ item.data_inicio|date:"d/m/Y" }}</td>
+                        <td class="px-3">{{ item.data_fim|date:"d/m/Y"|default:"-" }}</td>
+
+                        {% elif titulo == 'Empresas' %}
+                        <td class="px-3">{{ item.razao_social }}</td>
+                        <td class="px-3">{{ item.cnpj }}</td>
+                        <td class="px-3">{{ item.contato|default:"-" }}</td>
+
+                        {% elif titulo == 'Contratos' %}
+                        <td class="px-3">{{ item.numero }}</td>
+                        <td class="px-3">{{ item.empresa }}</td>
+                        <td class="px-3">{{ item.vigencia_fim|date:"d/m/Y" }}</td>
+
+                        {% elif titulo == 'Agentes' %}
+                        <td class="px-3">{{ item.posto.sigla }}</td>
+                        <td class="px-3">{{ item.nome_de_guerra }}</td>
+                        <td class="px-3">{{ item.saram }}</td>
+
+                        {% elif titulo == 'Comissões' %}
+                        <td class="px-3">{{ item.contrato.numero }}</td>
+                        <td class="px-3">{{ item.get_tipo_display }}</td>
+                        <td class="px-3">
+                            {% if item.ativa %}
+                            <span class="badge bg-success">Sim</span>
+                            {% else %}
+                            <span class="badge bg-danger">Não</span>
+                            {% endif %}
+                        </td>
+
+                        {% endif %}
+
+                        {% endif %}
+
+                        {% if request.user|is_admin %}
+                        <td class="text-end px-3">
+                            <a href="{% url url_editar pk=item.pk %}" class="btn btn-sm btn-outline-secondary"
+                                title="Editar">
+                                ✏️
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr id="noResultsRow">
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <div class="fs-1 opacity-25 mb-2">📂</div>
+                            <div>Nenhum registro encontrado.</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <!-- Visible only when search yields no results locally -->
+                    <tr id="noSearchMatchRow" class="d-none">
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <div class="fs-1 opacity-25 mb-2">🔍</div>
+                            <div>Nenhum resultado para a busca.</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <style>
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        /* Custom Header based on sidebar color */
+        .custom-table-header th {
+            background-color: #2c3e50 !important;
+            color: white !important;
+        }
+
+        /* Subtle Zebra Striping */
+        #dataTable tbody tr:nth-of-type(odd)>* {
+            background-color: rgba(0, 0, 0, 0.03) !important;
+            /* Lighter, more transparent gray */
+            box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.03);
+            /* Matching subtle shadow */
+        }
+
+        #dataTable tbody tr {
+            transition: all 0.2s ease-in-out;
+        }
+
+        #dataTable tbody tr:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            /* Stronger drop shadow */
+            transform: translateY(-2px);
+            /* Physical lift effect */
+            position: relative;
+            z-index: 10;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            /* Smooth snap */
+        }
+
+        /* Ensure cells preserve their color on hover (override Bootstrap accent) */
+        #dataTable tbody tr:nth-of-type(odd):hover>* {
+            background-color: rgba(0, 0, 0, 0.03) !important;
+            box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.03);
+        }
+
+        #dataTable tbody tr:nth-of-type(even):hover>* {
+            background-color: white !important;
+            box-shadow: none;
+        }
+
+        .sortable:hover {
+            background-color: #34495e !important;
+            /* Lighter version of header on hover */
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById('searchInput');
+            const viewSizeSelect = document.getElementById('viewSizeSelect');
+            const tableContainer = document.getElementById('tableContainer');
+            const table = document.getElementById('dataTable');
+            const tableBody = table.querySelector('tbody');
+            let tableRows = Array.from(document.querySelectorAll('#dataTable tbody tr:not(#noResultsRow):not(#noSearchMatchRow)'));
+            const noResultsRow = document.getElementById('noResultsRow'); // Server-side empty state
+            const noSearchMatchRow = document.getElementById('noSearchMatchRow'); // Client-side search empty state
+
+            // --- 1. View Size Logic ---
+            function updateContainerHeight() {
+                const size = viewSizeSelect.value;
+                if (size === 'all') {
+                    tableContainer.style.maxHeight = '75vh';
+                } else {
+                    const rowHeight = 55;
+                    const newHeight = (parseInt(size) * rowHeight) + 60;
+                    tableContainer.style.maxHeight = newHeight + 'px';
+                }
+            }
+
+            viewSizeSelect.addEventListener('change', updateContainerHeight);
+            updateContainerHeight();
+
+            // --- 2. Search Logic ---
+            function performSearch() {
+                const query = searchInput.value.toLowerCase();
+                let visibleCount = 0;
+
+                const currentRows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow):not(#noSearchMatchRow)'));
+
+                currentRows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    if (text.includes(query)) {
+                        row.classList.remove('d-none');
+                        visibleCount++;
+                    } else {
+                        row.classList.add('d-none');
+                    }
+                });
+
+                if (visibleCount === 0 && currentRows.length > 0) {
+                    noSearchMatchRow.classList.remove('d-none');
+                } else {
+                    noSearchMatchRow.classList.add('d-none');
+                }
+
+                if (noResultsRow) {
+                    if (query.length > 0) noResultsRow.classList.add('d-none');
+                    else if (currentRows.length === 0) noResultsRow.classList.remove('d-none');
+                }
+            }
+
+            searchInput.addEventListener('input', performSearch);
+
+            // --- 3. Sort Logic ---
+            document.querySelectorAll('.sortable').forEach((header, index) => {
+                header.addEventListener('click', () => {
+                    const isAsc = header.classList.contains('asc');
+                    const direction = isAsc ? -1 : 1;
+
+                    // Reset other headers
+                    document.querySelectorAll('.sortable').forEach(h => {
+                        h.classList.remove('asc', 'desc');
+                        const icon = h.querySelector('i');
+                        if (icon) {
+                            icon.className = 'bi bi-arrow-down-up text-white-50 small ms-2';
+                        }
+                    });
+
+                    // Update current header class
+                    if (isAsc) {
+                        header.classList.remove('asc');
+                        header.classList.add('desc');
+                        header.querySelector('i').className = 'bi bi-sort-down text-white small ms-2';
+                    } else {
+                        header.classList.add('asc');
+                        header.classList.remove('desc');
+                        header.querySelector('i').className = 'bi bi-sort-up text-white small ms-2';
+                    }
+
+                    // Sort Rows
+                    const rowsToSort = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow):not(#noSearchMatchRow)'));
+
+                    rowsToSort.sort((a, b) => {
+                        const aCol = a.children[index].innerText.trim();
+                        const bCol = b.children[index].innerText.trim();
+
+                        // Check if date (dd/mm/yyyy)
+                        const datePattern = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+                        if (datePattern.test(aCol) && datePattern.test(bCol)) {
+                            const aDate = aCol.split('/').reverse().join('');
+                            const bDate = bCol.split('/').reverse().join('');
+                            return direction * aDate.localeCompare(bDate);
+                        }
+
+                        // Check if numeric
+                        if (!isNaN(parseFloat(aCol)) && isFinite(aCol) && !isNaN(parseFloat(bCol)) && isFinite(bCol)) {
+                            return direction * (parseFloat(aCol) - parseFloat(bCol));
+                        }
+
+                        // Default string sort
+                        return direction * aCol.localeCompare(bCol, 'pt-br', { sensitivity: 'base' });
+                    });
+
+                    // Re-append rows
+                    rowsToSort.forEach(row => tableBody.appendChild(row));
+
+                    // Maintenance of empty rows at bottom
+                    if (noResultsRow) tableBody.appendChild(noResultsRow);
+                    if (noSearchMatchRow) tableBody.appendChild(noSearchMatchRow);
+                });
+            });
+        });
+    </script>
+</div>
+{% endblock %}
