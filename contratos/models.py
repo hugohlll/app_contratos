@@ -86,6 +86,13 @@ class Contrato(models.Model):
         verbose_name = "Contrato"
         verbose_name_plural = "Contratos"
 
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            # Cria automaticamente uma comissão de fiscalização padrão
+            Comissao.objects.create(contrato=self, tipo='FISCALIZACAO', ativa=True)
+
 
 class Comissao(models.Model):
     TIPO_CHOICES = [
@@ -96,6 +103,18 @@ class Comissao(models.Model):
     contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='comissoes')
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='FISCALIZACAO')
     ativa = models.BooleanField(default=True)
+
+    # --- CAMPOS DA PORTARIA DA COMISSÃO ---
+    portaria_numero = models.CharField("Nº Portaria da Comissão", max_length=50, blank=True, null=True)
+    portaria_data = models.DateField("Data da Portaria", blank=True, null=True)
+    
+    # --- CAMPOSTO DO BOLETIM DA COMISSÃO ---
+    boletim_numero = models.CharField("Nº Boletim", max_length=50, blank=True, null=True)
+    boletim_data = models.DateField("Data do Boletim", blank=True, null=True)
+    
+    # VIGÊNCIA DA COMISSÃO (Global)
+    data_inicio = models.DateField("Início da Comissão", blank=True, null=True)
+    data_fim = models.DateField("Fim da Comissão", blank=True, null=True)
 
     def __str__(self):
         return f"Comissão de {self.get_tipo_display()} - {self.contrato}"

@@ -1,0 +1,67 @@
+{% extends 'contratos/portal/base_portal.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">{{ titulo }}</h2>
+    <a href="{% url 'listar_usuarios' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="card card-custom" style="max-width: 600px;">
+    <div class="card-body p-4">
+        <form method="POST">
+            {% csrf_token %}
+
+            {% if is_new %}
+            <div class="mb-3">
+                <label class="form-label fw-bold">Nome de Usuário (Login)</label>
+                <input type="text" name="username" class="form-control" required>
+            </div>
+            {% else %}
+            <div class="mb-3">
+                <label class="form-label fw-bold">Nome de Usuário</label>
+                <input type="text" class="form-control" value="{{ usuario.username }}" disabled>
+                <div class="form-text">O nome de usuário não pode ser alterado.</div>
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Email</label>
+                <input type="email" name="email" class="form-control" value="{{ usuario.email|default:'' }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Perfil de Acesso</label>
+                <select name="perfil" class="form-select">
+                    <option value="none">Sem Perfil</option>
+                    <option value="auditor" {% if current_perfil == "auditor" %}selected{% endif %}>
+                        Módulo Auditoria (Apenas Leitura)
+                    </option>
+                    <option value="admin" {% if current_perfil == "admin" %}selected{% endif %}>
+                        Módulo Administrador (Acesso Total)
+                    </option>
+                </select>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">
+                    {% if is_new %}Senha Inicial{% else %}Nova Senha (Opcional){% endif %}
+                </label>
+                <input type="password" name="password" class="form-control" {% if is_new %}required{% endif %}>
+                {% if not is_new %}
+                <div class="form-text">Deixe em branco para manter a senha atual.</div>
+                {% endif %}
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-2"></i>Salvar Usuário
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
