@@ -1,480 +1,272 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Auditoria - SISCONT</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .dashboard-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 2rem;
-            margin: 2rem 0;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        .metric-card {
-            background: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            border-left: 5px solid;
-        }
-        .metric-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        .metric-card.primary { border-left-color: #0d6efd; }
-        .metric-card.success { border-left-color: #198754; }
-        .metric-card.danger { border-left-color: #dc3545; }
-        .metric-card.warning { border-left-color: #ffc107; }
-        .metric-card.info { border-left-color: #0dcaf0; }
-        
-        .metric-value {
-            font-size: 3rem;
-            font-weight: bold;
-            margin: 0.5rem 0;
-        }
-        .metric-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .chart-container {
-            background: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .chart-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: #2c3e50;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .navbar-custom {
-            background: rgba(0, 0, 0, 0.8) !important;
-            backdrop-filter: blur(10px);
-        }
-        .alert-badge {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #dc3545;
-            color: white;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        .chart-wrapper {
-            position: relative;
-            height: 300px;
-            margin-top: 1rem;
-        }
-        .chart-wrapper-large {
-            height: 400px;
-        }
-        .btn-download {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 0.5rem 1.5rem;
-            border-radius: 25px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        .btn-download:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-        .info-box {
-            background: #f8f9fa;
-            border-left: 4px solid #0dcaf0;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-top: 1rem;
-        }
-        .risk-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        .risk-critical { background-color: #dc3545; }
-        .risk-alert { background-color: #ffc107; }
-        .risk-normal { background-color: #198754; }
-        .info-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background-color: #6c757d;
-            color: white;
-            cursor: help;
-            margin-left: 8px;
-            vertical-align: middle;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            text-decoration: none;
-            padding: 0;
-            border: none;
-        }
-        .info-icon svg {
-            width: 12px;
-            height: 12px;
-            fill: white;
-        }
-        .info-icon:hover {
-            background-color: #0dcaf0;
-            transform: scale(1.15);
-            box-shadow: 0 2px 8px rgba(13, 202, 240, 0.4);
-        }
-        .info-icon:hover svg {
-            fill: white;
-        }
-        .info-icon:focus {
-            outline: 2px solid #0dcaf0;
-            outline-offset: 2px;
-        }
-        .metric-label {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .metric-label span:first-child {
-            flex: 1;
-        }
-        /* Tooltip customizado com fonte menor */
-        .tooltip {
-            font-size: 0.85rem !important;
-        }
-        .tooltip-inner {
-            max-width: 300px;
-            text-align: left;
-            font-size: 0.85rem;
-            line-height: 1.4;
-            padding: 0.5rem 0.75rem;
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-dark navbar-custom mb-4">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">🛡️ Painel de Auditoria & Controle</span>
-            <div>
-                <a href="{% url 'pesquisa' %}" class="btn btn-outline-light btn-sm me-2">🔍 Busca</a>
-                <a href="{% url 'consulta_militar' %}" class="btn btn-outline-light btn-sm me-2">👤 Militar</a>
-                <a href="{% url 'sair_do_sistema' %}" class="btn btn-danger btn-sm">🚪 Sair</a>
+{% extends 'contratos/portal/base_portal.html' %}
+{% load static %}
+
+{% block title %}Painel de Auditoria{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+    /* Dashboard specific styles */
+    .dashboard-container {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .metric-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        border-left: 5px solid;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .metric-card.primary {
+        border-left-color: #0d6efd;
+    }
+
+    .metric-card.success {
+        border-left-color: #198754;
+    }
+
+    .metric-card.danger {
+        border-left-color: #dc3545;
+    }
+
+    .metric-card.warning {
+        border-left-color: #ffc107;
+    }
+
+    .metric-card.info {
+        border-left-color: #0dcaf0;
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+
+    .metric-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .chart-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: #2c3e50;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .alert-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        height: 300px;
+        margin-top: 1rem;
+    }
+
+    .chart-wrapper-large {
+        height: 400px;
+    }
+
+    .info-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #6c757d;
+        color: white;
+        cursor: help;
+        margin-left: 8px;
+        transition: all 0.2s;
+    }
+
+    .info-icon:hover {
+        background-color: #0dcaf0;
+    }
+
+    .info-icon svg {
+        width: 12px;
+        height: 12px;
+        fill: white;
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="fw-bold" style="color: #2c3e50;">
+            📊 Dashboard de Auditoria
+        </h2>
+        <div>
+            <span class="badge bg-secondary">Módulo Auditor</span>
+        </div>
+    </div>
+
+    <!-- Cards de Métricas Principais -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="metric-card primary">
+                <div class="metric-label">
+                    <span>Contratos Vigentes</span>
+                    <span class="info-icon" data-bs-toggle="tooltip" title="Contratos com vigência ativa.">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" /><text x="12"
+                                y="16">i</text>
+                        </svg>
+                    </span>
+                </div>
+                <div class="metric-value text-primary">{{ total_contratos_ativos }}</div>
             </div>
         </div>
-    </nav>
+        <div class="col-md-3 mb-3">
+            <div class="metric-card success">
+                <div class="metric-label">
+                    <span>Militares Designados</span>
+                    <span class="info-icon" data-bs-toggle="tooltip" title="Militares únicos com designação ativa.">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" /><text x="12"
+                                y="16">i</text>
+                        </svg>
+                    </span>
+                </div>
+                <div class="metric-value text-success">{{ total_agentes_atuando }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="metric-card warning position-relative">
+                <div class="metric-label">
+                    <span>Designações com Prazo</span>
+                    <span class="info-icon" data-bs-toggle="tooltip"
+                        title="Designações ativas com data de término definida.">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" /><text x="12"
+                                y="16">i</text>
+                        </svg>
+                    </span>
+                </div>
+                <div class="metric-value text-warning">{{ total_vencimentos_count }}</div>
+                {% if vencimentos_critico > 0 %}
+                <span class="alert-badge" title="Críticas (≤7 dias)">{{ vencimentos_critico }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="metric-card danger position-relative">
+                <div class="metric-label">
+                    <span>Contratos em Risco</span>
+                    <span class="info-icon" data-bs-toggle="tooltip" title="Contratos sem equipe de fiscalização.">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" /><text x="12"
+                                y="16">i</text>
+                        </svg>
+                    </span>
+                </div>
+                <div class="metric-value text-danger">{{ contratos_risco|length }}</div>
+            </div>
+        </div>
+    </div>
 
-    <div class="container-fluid">
-        <div class="dashboard-container">
-            <h1 class="text-center mb-5" style="color: #2c3e50;">
-                📊 Dashboard de Riscos e Conformidade
-            </h1>
-
-            <!-- Cards de Métricas Principais -->
-            <div class="row mb-4">
-                <div class="col-md-3 mb-3">
-                    <div class="metric-card primary">
-                        <div class="metric-label">
-                            <span>Contratos Vigentes</span>
-                            <span class="info-icon" 
-                                  data-bs-toggle="tooltip" 
-                                  data-bs-placement="top"
-                                  title="Contratos com vigência ativa (data de término ≥ hoje). Representa todos os contratos que necessitam fiscalização e gestão no momento.">
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-                                    <text x="12" y="16" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="currentColor">i</text>
-                                </svg>
-                            </span>
-                        </div>
-                        <div class="metric-value text-primary">{{ total_contratos_ativos }}</div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="metric-card success">
-                        <div class="metric-label">
-                            <span>Militares Designados</span>
-                            <span class="info-icon" 
-                                  data-bs-toggle="tooltip" 
-                                  data-bs-placement="top"
-                                  title="Militares únicos com pelo menos uma designação ativa. Designação ativa: sem desligamento ou desligamento futuro, e sem término previsto ou término ainda não atingido.">
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-                                    <text x="12" y="16" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="currentColor">i</text>
-                                </svg>
-                            </span>
-                        </div>
-                        <div class="metric-value text-success">{{ total_agentes_atuando }}</div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="metric-card warning position-relative">
-                        <div class="metric-label">
-                            <span>Designações com Prazo</span>
-                            <span class="info-icon" 
-                                  data-bs-toggle="tooltip" 
-                                  data-bs-placement="top"
-                                  title="Designações ativas com data de término definida. Requerem monitoramento para renovação ou substituição. Badge vermelho: designações críticas (≤7 dias para vencer).">
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-                                    <text x="12" y="16" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="currentColor">i</text>
-                                </svg>
-                            </span>
-                        </div>
-                        <div class="metric-value text-warning">{{ total_vencimentos_count }}</div>
-                        {% if vencimentos_critico > 0 %}
-                        <span class="alert-badge" 
-                              data-bs-toggle="tooltip" 
-                              data-bs-placement="left"
-                              title="Designações CRÍTICAS (≤7 dias). Requerem ação imediata para renovação ou substituição.">
-                            {{ vencimentos_critico }}
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="metric-card danger position-relative">
-                        <div class="metric-label">
-                            <span>Contratos em Risco</span>
-                            <span class="info-icon" 
-                                  data-bs-toggle="tooltip" 
-                                  data-bs-placement="top"
-                                  title="Contratos vigentes sem equipe de fiscalização ativa. Requerem ação imediata para designar militares na comissão de fiscalização.">
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-                                    <text x="12" y="16" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="currentColor">i</text>
-                                </svg>
-                            </span>
-                        </div>
-                        <div class="metric-value text-danger">{{ contratos_risco|length }}</div>
-                    </div>
+    <!-- Gráfico de Vencimentos -->
+    <div class="chart-container">
+        <div class="chart-title">
+            <span>📅 Distribuição de Vencimentos</span>
+            <a href="{% url 'exportar_vencimentos_csv' %}" class="btn btn-primary btn-sm rounded-pill">
+                <i class="bi bi-download me-2"></i> CSV Completo
+            </a>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="chart-wrapper">
+                    <canvas id="chartVencimentos"></canvas>
                 </div>
             </div>
-
-            <!-- Gráfico de Qualificação -->
-            <div class="chart-container">
-                <div class="chart-title">
-                    <span>🎓 Status da Qualificação dos Agentes</span>
-                    <a href="{% url 'exportar_qualificacao_csv' %}" class="btn btn-download btn-sm">
-                        ⬇️ CSV Detalhado
-                    </a>
-                </div>
-                <div class="row">
-                    <div class="col-md-5">
-                        <div class="chart-wrapper">
-                            <canvas id="chartQualificacao"></canvas>
-                        </div>
-                    </div>
-                    <div class="col-md-7">
-                        <div class="d-flex flex-column justify-content-center h-100">
-                            <div class="mb-3 p-3 rounded" style="background: #d1e7dd;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong class="text-success">✅ Em Dia</strong>
-                                        <p class="mb-0 small text-muted">Curso válido (menos de 1 ano)</p>
-                                    </div>
-                                    <span class="badge bg-success fs-5 px-3 py-2">{{ dados_qualificacao.em_dia }}</span>
-                                </div>
-                            </div>
-                            <div class="mb-3 p-3 rounded" style="background: #f8d7da;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong class="text-danger">⚠️ Vencido</strong>
-                                        <p class="mb-0 small text-muted">Curso realizado há mais de 1 ano</p>
-                                    </div>
-                                    <span class="badge bg-danger fs-5 px-3 py-2">{{ dados_qualificacao.vencidos }}</span>
-                                </div>
-                            </div>
-                            <div class="mb-3 p-3 rounded" style="background: #e2e3e5;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong class="text-dark">❌ Sem Curso</strong>
-                                        <p class="mb-0 small text-muted">Nenhuma data cadastrada</p>
-                                    </div>
-                                    <span class="badge bg-dark fs-5 px-3 py-2">{{ dados_qualificacao.sem_curso }}</span>
-                                </div>
-                            </div>
-                            <div class="info-box mt-3">
-                                <small><strong>Total:</strong> {{ dados_qualificacao.total }} agentes designados</small>
-                            </div>
-                        </div>
-                    </div>
+            <div class="col-md-4">
+                <div class="d-flex flex-column justify-content-center h-100 ps-4">
+                    <div class="mb-3"><span class="badge bg-danger">Crítico (≤7 dias)</span> <span
+                            class="float-end fw-bold">{{ vencimentos_critico }}</span></div>
+                    <div class="mb-3"><span class="badge bg-warning text-dark">Alerta (8-15 dias)</span> <span
+                            class="float-end fw-bold">{{ vencimentos_alerta }}</span></div>
+                    <div class="mb-3"><span class="badge bg-success">Normal (>15 dias)</span> <span
+                            class="float-end fw-bold">{{ vencimentos_normal }}</span></div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Gráfico de Vencimentos -->
-            <div class="chart-container">
-                <div class="chart-title">
-                    <span>📅 Distribuição de Vencimentos de Designações</span>
-                    <a href="{% url 'exportar_vencimentos_csv' %}" class="btn btn-download btn-sm">
-                        ⬇️ CSV Completo
-                    </a>
+    <!-- Gráfico de Qualificação -->
+    <div class="chart-container">
+        <div class="chart-title">
+            <span>🎓 Qualificação dos Agentes</span>
+            <a href="{% url 'exportar_qualificacao_csv' %}" class="btn btn-outline-secondary btn-sm rounded-pill">
+                <i class="bi bi-download me-2"></i> CSV Detalhado
+            </a>
+        </div>
+        <div class="row">
+            <div class="col-md-5">
+                <div class="chart-wrapper">
+                    <canvas id="chartQualificacao"></canvas>
                 </div>
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="chart-wrapper">
-                            <canvas id="chartVencimentos"></canvas>
+            </div>
+            <div class="col-md-7">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 rounded text-center" style="background: #d1e7dd;">
+                            <div class="fs-4 fw-bold text-success">{{ dados_qualificacao.em_dia }}</div>
+                            <small class="text-muted">Em Dia</small>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="d-flex flex-column justify-content-center h-100">
-                            <div class="mb-3">
-                                <span class="risk-indicator risk-critical"></span>
-                                <strong>Crítico:</strong> ≤ 7 dias
-                                <span class="badge bg-danger float-end">{{ vencimentos_critico }}</span>
-                            </div>
-                            <div class="mb-3">
-                                <span class="risk-indicator risk-alert"></span>
-                                <strong>Alerta:</strong> 8-15 dias
-                                <span class="badge bg-warning text-dark float-end">{{ vencimentos_alerta }}</span>
-                            </div>
-                            <div class="mb-3">
-                                <span class="risk-indicator risk-normal"></span>
-                                <strong>Normal:</strong> > 15 dias
-                                <span class="badge bg-success float-end">{{ vencimentos_normal }}</span>
-                            </div>
-                            {% if lista_vencimentos %}
-                            <div class="mt-3 p-2 rounded" style="background: #fff3cd;">
-                                <small><strong>⚠️ Top 5 Urgentes:</strong></small>
-                                <ul class="small mb-0 mt-2">
-                                    {% for item in lista_vencimentos|slice:":5" %}
-                                    <li>{{ item.agente.nome_de_guerra }} - {{ item.dias_restantes }} dias</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% endif %}
+                        <div class="p-3 rounded text-center" style="background: #f8d7da;">
+                            <div class="fs-4 fw-bold text-danger">{{ dados_qualificacao.vencidos }}</div>
+                            <small class="text-muted">Vencidos</small>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Gráfico de Permanência -->
-            <div class="chart-container">
-                <div class="chart-title">
-                    <span>⏱️ Radar de Permanência (Top 10 - Necessidade de Rodízio)</span>
-                </div>
-                {% if top_permanencia %}
-                <div class="chart-wrapper chart-wrapper-large">
-                    <canvas id="chartPermanencia"></canvas>
-                </div>
-                {% else %}
-                <div class="text-center py-5 text-muted">
-                    <p class="fs-4">📊 Dados insuficientes</p>
-                </div>
-                {% endif %}
-                <div class="info-box mt-3">
-                    <small><strong>💡 Informação:</strong> Tempo total de designação contínua (incluindo renovações sequenciais). 
-                    Designações acima de 1 ano devem ser avaliadas para rodízio.</small>
-                </div>
-            </div>
-
-            <!-- Gráfico de Sobrecarga -->
-            <div class="chart-container">
-                <div class="chart-title">
-                    <span>⚖️ Sobrecarga de Agentes (Múltiplas Designações Simultâneas)</span>
-                </div>
-                {% if sobrecarga_labels %}
-                <div class="chart-wrapper">
-                    <canvas id="chartSobrecarga"></canvas>
-                </div>
-                {% else %}
-                <div class="text-center py-5 text-muted">
-                    <p class="fs-4">✅ Nenhuma sobrecarga detectada</p>
-                    <small>Todos os agentes possuem carga de trabalho adequada</small>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Contratos em Risco -->
-            {% if contratos_risco %}
-            <div class="chart-container">
-                <div class="chart-title">
-                    <span>🚨 Contratos sem Equipe de Fiscalização Ativa</span>
-                </div>
-                <div class="row">
-                    {% for contrato in contratos_risco %}
-                    <div class="col-md-6 mb-3">
-                        <div class="card border-danger">
-                            <div class="card-body">
-                                <h5 class="card-title text-danger">
-                                    <span class="badge bg-danger me-2">URGENTE</span>
-                                    Contrato {{ contrato.numero }}
-                                </h5>
-                                <p class="card-text mb-2"><strong>Empresa:</strong> {{ contrato.empresa.razao_social }}</p>
-                                <p class="card-text mb-2"><small class="text-muted">Vence em: {{ contrato.vigencia_fim|date:"d/m/Y" }}</small></p>
-                                <a href="{% url 'detalhe_contrato' contrato.id %}" class="btn btn-outline-danger btn-sm">Ver Detalhes</a>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% else %}
-            <div class="chart-container text-center py-4">
-                <h5 class="text-success">✅ Todos os contratos possuem equipe de fiscalização ativa</h5>
-            </div>
-            {% endif %}
-
-            <!-- Área de Downloads -->
-            <div class="chart-container">
-                <div class="chart-title">
-                    <span>📥 Relatórios e Exportações</span>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <h5 class="card-title">📋 Auditoria Completa</h5>
-                                <p class="card-text small text-muted">Todos os contratos vigentes com equipes ativas</p>
-                                <a href="{% url 'exportar_csv' %}" class="btn btn-primary">⬇️ Baixar CSV</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <h5 class="card-title">📅 Relatório por Período</h5>
-                                <p class="card-text small text-muted">Designações em um intervalo específico</p>
-                                <a href="{% url 'relatorio_periodo' %}" class="btn btn-info text-white">🔍 Consultar</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <h5 class="card-title">📊 Todos os Relatórios</h5>
-                                <p class="card-text small text-muted">Acesse todas as exportações disponíveis</p>
-                                <div class="d-grid gap-2">
-                                    <a href="{% url 'exportar_vencimentos_csv' %}" class="btn btn-sm btn-outline-warning">Vencimentos</a>
-                                    <a href="{% url 'exportar_qualificacao_csv' %}" class="btn btn-sm btn-outline-success">Qualificação</a>
-                                </div>
-                            </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded text-center" style="background: #e2e3e5;">
+                            <div class="fs-4 fw-bold text-dark">{{ dados_qualificacao.sem_curso }}</div>
+                            <small class="text-muted">Sem Curso</small>
                         </div>
                     </div>
                 </div>
@@ -482,213 +274,179 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Inicializa todos os tooltips do Bootstrap
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl, {
-                    html: true,
-                    delay: { show: 200, hide: 100 }
-                });
-            });
-            // Gráfico de Qualificação (Doughnut)
-            const ctxQual = document.getElementById('chartQualificacao');
-            if (ctxQual) {
-                new Chart(ctxQual, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Em Dia', 'Vencido', 'Sem Curso'],
-                        datasets: [{
-                            data: [
-                                {{ dados_qualificacao.em_dia }},
-                                {{ dados_qualificacao.vencidos }},
-                                {{ dados_qualificacao.sem_curso }}
-                            ],
-                            backgroundColor: ['#198754', '#dc3545', '#6c757d'],
-                            borderWidth: 3,
-                            borderColor: '#ffffff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 15,
-                                    font: { size: 12 }
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        label += context.parsed + ' agentes';
-                                        return label;
-                                    }
-                                }
-                            }
-                        },
-                        cutout: '70%'
-                    }
-                });
-            }
+    <!-- Gráficos Secundários -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart-container h-100">
+                <div class="chart-title">
+                    <span>⏱️ Radar de Permanência (Top 10)</span>
+                </div>
+                {% if top_permanencia %}
+                <div class="chart-wrapper">
+                    <canvas id="chartPermanencia"></canvas>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">Dados insuficientes</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-container h-100">
+                <div class="chart-title">
+                    <span>⚖️ Sobrecarga de Agentes</span>
+                </div>
+                {% if sobrecarga_labels %}
+                <div class="chart-wrapper">
+                    <canvas id="chartSobrecarga"></canvas>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">Nenhuma sobrecarga detectada</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
-            // Gráfico de Vencimentos (Bar)
-            const ctxVenc = document.getElementById('chartVencimentos');
-            if (ctxVenc) {
-                new Chart(ctxVenc, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Crítico (≤7 dias)', 'Alerta (8-15 dias)', 'Normal (>15 dias)'],
-                        datasets: [{
-                            label: 'Designações',
-                            data: [
-                                {{ vencimentos_critico }},
-                                {{ vencimentos_alerta }},
-                                {{ vencimentos_normal }}
-                            ],
-                            backgroundColor: ['#dc3545', '#ffc107', '#198754'],
-                            borderColor: ['#bb2d3b', '#ffcd39', '#157347'],
-                            borderWidth: 2,
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return context.parsed.y + ' designações';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    stepSize: 1
-                                }
-                            }
-                        }
-                    }
-                });
-            }
+    <!-- Contratos em Risco -->
+    {% if contratos_risco %}
+    <div class="chart-container border-danger">
+        <div class="chart-title text-danger">
+            <span>🚨 Contratos sem Equipe de Fiscalização</span>
+        </div>
+        <div class="row">
+            {% for contrato in contratos_risco %}
+            <div class="col-md-6 mb-3">
+                <div class="card bg-light border-danger h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-danger">Contrato {{ contrato.numero }}</h5>
+                        <p class="mb-1">{{ contrato.empresa.razao_social }}</p>
+                        <small class="text-muted">Vence em: {{ contrato.vigencia_fim|date:"d/m/Y" }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
-            // Gráfico de Permanência (Horizontal Bar)
-            const ctxPerm = document.getElementById('chartPermanencia');
-            {% if tem_permanencia %}
-            if (ctxPerm) {
-                new Chart(ctxPerm, {
-                    type: 'bar',
-                    data: {
-                        labels: {{ permanencia_labels }},
-                        datasets: [{
-                            label: 'Dias de Permanência',
-                            data: {{ permanencia_dias }},
-                            backgroundColor: function(context) {
-                                const value = context.parsed.x;
-                                if (value > 730) return '#dc3545'; // > 2 anos - vermelho
-                                if (value > 365) return '#ffc107'; // > 1 ano - amarelo
-                                return '#198754'; // < 1 ano - verde
-                            },
-                            borderColor: function(context) {
-                                const value = context.parsed.x;
-                                if (value > 730) return '#bb2d3b';
-                                if (value > 365) return '#ffcd39';
-                                return '#157347';
-                            },
-                            borderWidth: 2,
-                            borderRadius: 5
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const dias = context.parsed.x;
-                                        const anos = Math.floor(dias / 365);
-                                        const meses = Math.floor((dias % 365) / 30);
-                                        return dias + ' dias (' + anos + 'a ' + meses + 'm)';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Dias de Permanência'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-            {% endif %}
+    <!-- Exportações -->
+    <div class="chart-container">
+        <div class="chart-title"><span>📥 Relatórios</span></div>
+        <div class="d-flex gap-3">
+            <a href="{% url 'exportar_csv' %}" class="btn btn-outline-primary"><i
+                    class="bi bi-file-earmark-spreadsheet me-2"></i>Auditoria Completa</a>
+            <a href="{% url 'relatorio_periodo' %}" class="btn btn-outline-info"><i
+                    class="bi bi-calendar-range me-2"></i>Por Período</a>
+        </div>
+    </div>
 
-            // Gráfico de Sobrecarga (Bar)
-            const ctxSob = document.getElementById('chartSobrecarga');
-            {% if tem_sobrecarga %}
-            if (ctxSob) {
-                new Chart(ctxSob, {
-                    type: 'bar',
-                    data: {
-                        labels: {{ sobrecarga_labels }},
-                        datasets: [{
-                            label: 'Número de Designações',
-                            data: {{ sobrecarga_valores }},
-                            backgroundColor: '#667eea',
-                            borderColor: '#5568d3',
-                            borderWidth: 2,
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return context.parsed.y + ' designação(ões) simultânea(s)';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    stepSize: 1
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Número de Designações'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-            {% endif %}
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Inicializa Tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
-    </script>
-</body>
-</html>
+
+        // Configuração Comum
+        Chart.defaults.font.family = "'Segoe UI', 'Helvetica', 'Arial', sans-serif";
+        Chart.defaults.color = '#6c757d';
+
+        // 1. Gráfico de Vencimentos
+        const ctxVenc = document.getElementById('chartVencimentos');
+        if (ctxVenc) {
+            new Chart(ctxVenc, {
+                type: 'bar',
+                data: {
+                    labels: ['Crítico (≤7 dias)', 'Alerta (8-15 dias)', 'Normal (>15 dias)'],
+                    datasets: [{
+                        label: 'Designações',
+                        data: [{{ vencimentos_critico }}, {{ vencimentos_alerta }}, {{ vencimentos_normal }}],
+        backgroundColor: ['#dc3545', '#ffc107', '#198754'],
+            borderRadius: 5
+    }]
+                },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+            });
+        }
+
+    // 2. Gráfico de Qualificação
+    const ctxQual = document.getElementById('chartQualificacao');
+    if (ctxQual) {
+        new Chart(ctxQual, {
+            type: 'doughnut',
+            data: {
+                labels: ['Em Dia', 'Vencido', 'Sem Curso'],
+                datasets: [{
+                    data: [{{ dados_qualificacao.em_dia }}, {{ dados_qualificacao.vencidos }}, {{ dados_qualificacao.sem_curso }}],
+    backgroundColor: ['#198754', '#dc3545', '#6c757d'],
+        borderWidth: 0
+                    }]
+                },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+                cutout: '75%',
+                    plugins: { legend: { position: 'right' } }
+    }
+            });
+        }
+
+    // 3. Radar de Permanência
+    const ctxPerm = document.getElementById('chartPermanencia');
+    {% if tem_permanencia %}
+    if (ctxPerm) {
+        new Chart(ctxPerm, {
+            type: 'bar',
+            data: {
+                labels: {{ permanencia_labels }},
+    datasets: [{
+        label: 'Dias',
+        data: {{ permanencia_dias }},
+        backgroundColor: '#0dcaf0',
+        borderRadius: 4
+                    }]
+                },
+    options: {
+        indexAxis: 'y',
+            responsive: true,
+                maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+    }
+            });
+        }
+    {% endif %}
+
+    // 4. Sobrecarga
+    const ctxSob = document.getElementById('chartSobrecarga');
+    {% if tem_sobrecarga %}
+    if (ctxSob) {
+        new Chart(ctxSob, {
+            type: 'bar',
+            data: {
+                labels: {{ sobrecarga_labels }},
+    datasets: [{
+        label: 'Designações',
+        data: {{ sobrecarga_valores }},
+        backgroundColor: '#667eea',
+        borderRadius: 4
+                    }]
+                },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+            });
+        }
+    {% endif %}
+    });
+</script>
+{% endblock %}
