@@ -160,8 +160,30 @@ def listar_agentes(request):
     return generico_listar(
         request, Agente, 'contratos/portal/lista_generica.html', 'Agentes', 
         'novo_agente', 'editar_agente',
-        [('posto', 'Posto'), ('nome_de_guerra', 'Nome de Guerra'), ('saram', 'SARAM')]
+        [('posto', 'Posto'), ('nome_de_guerra', 'Nome de Guerra'), ('saram', 'SARAM')],
+        url_exportar='exportar_agentes_csv',
+        arquivo_exportacao='agentes.csv'
     )
+
+@auditor_required
+def exportar_agentes_csv(request):
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="agentes.csv"'
+    
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Posto', 'Nome de Guerra', 'Nome Completo', 'SARAM', 'CPF', 'Data Último Curso'])
+    
+    for agente in Agente.objects.select_related('posto').all():
+        writer.writerow([
+            agente.posto.sigla, 
+            agente.nome_de_guerra, 
+            agente.nome_completo, 
+            agente.saram,
+            agente.cpf if agente.cpf else '',
+            agente.data_ultimo_curso.strftime('%d/%m/%Y') if agente.data_ultimo_curso else ''
+        ])
+    
+    return response
 
 @admin_required
 def novo_agente(request):
@@ -178,8 +200,34 @@ def listar_comissoes(request):
     return generico_listar(
         request, Comissao, 'contratos/portal/lista_generica.html', 'Comissões', 
         'nova_comissao', 'editar_comissao',
-        [('contrato', 'Contrato'), ('tipo', 'Tipo'), ('ativa', 'Ativa?')]
+        [('contrato', 'Contrato'), ('tipo', 'Tipo'), ('ativa', 'Ativa?')],
+        url_exportar='exportar_comissoes_csv',
+        arquivo_exportacao='comissoes.csv'
     )
+
+@auditor_required
+def exportar_comissoes_csv(request):
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="comissoes.csv"'
+    
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Contrato', 'Empresa', 'Tipo', 'Ativa', 'Portaria Nº', 'Portaria Data', 'Boletim Nº', 'Boletim Data', 'Início', 'Fim'])
+    
+    for comissao in Comissao.objects.select_related('contrato__empresa').all():
+        writer.writerow([
+            comissao.contrato.numero,
+            comissao.contrato.empresa.razao_social,
+            comissao.get_tipo_display(),
+            'Sim' if comissao.ativa else 'Não',
+            comissao.portaria_numero or '',
+            comissao.portaria_data.strftime('%d/%m/%Y') if comissao.portaria_data else '',
+            comissao.boletim_numero or '',
+            comissao.boletim_data.strftime('%d/%m/%Y') if comissao.boletim_data else '',
+            comissao.data_inicio.strftime('%d/%m/%Y') if comissao.data_inicio else '',
+            comissao.data_fim.strftime('%d/%m/%Y') if comissao.data_fim else ''
+        ])
+    
+    return response
 
 @admin_required
 def nova_comissao(request):

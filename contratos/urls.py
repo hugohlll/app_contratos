@@ -48,11 +48,13 @@ urlpatterns = [
     
     # Agentes
     path('portal/agentes/', portal.listar_agentes, name='listar_agentes'),
+    path('portal/agentes/exportar.csv', portal.exportar_agentes_csv, name='exportar_agentes_csv'),
     path('portal/agentes/novo/', portal.novo_agente, name='novo_agente'),
     path('portal/agentes/editar/<int:pk>/', portal.editar_agente, name='editar_agente'),
     
     # Comissões
     path('portal/comissoes/', portal.listar_comissoes, name='listar_comissoes'),
+    path('portal/comissoes/exportar.csv', portal.exportar_comissoes_csv, name='exportar_comissoes_csv'),
     path('portal/comissoes/nova/', portal.nova_comissao, name='nova_comissao'),
     path('portal/comissoes/editar/<int:pk>/', portal.editar_comissao, name='editar_comissao'),
     
