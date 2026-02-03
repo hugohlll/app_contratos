@@ -20,13 +20,15 @@ def portal_home(request):
 
 # --- GENERIC CRUD HELPERS ---
 
-def generico_listar(request, model, template_name, titulo, url_novo, url_editar, fields_display):
+def generico_listar(request, model, template_name, titulo, url_novo, url_editar, fields_display, url_exportar=None, arquivo_exportacao=None):
     items = model.objects.all()
     context = {
         'items': items,
         'titulo': titulo,
         'url_novo': url_novo,
         'url_editar': url_editar,
+        'url_exportar': url_exportar,
+        'arquivo_exportacao': arquivo_exportacao,
         'fields': fields_display # Lista de tuplas (atributo, label)
     }
     return render(request, template_name, context)
@@ -46,14 +48,34 @@ def generico_form(request, form_class, template_name, titulo, url_sucesso, insta
         'titulo': titulo
     })
 
+import csv
+import io
+from django.http import HttpResponse
+
 # --- EMPRESAS ---
 @auditor_required
 def listar_empresas(request):
     return generico_listar(
         request, Empresa, 'contratos/portal/lista_generica.html', 'Empresas', 
         'nova_empresa', 'editar_empresa', 
-        [('razao_social', 'Razão Social'), ('cnpj', 'CNPJ'), ('contato', 'Contato')]
+        [('razao_social', 'Razão Social'), ('cnpj', 'CNPJ')],
+        url_exportar='exportar_empresas_csv',
+        arquivo_exportacao='empresas.csv'
     )
+
+@auditor_required
+def exportar_empresas_csv(request):
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="empresas.csv"'
+    response.write('\ufeff')  # BOM
+    
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Razão Social', 'CNPJ'])
+    
+    for empresa in Empresa.objects.all():
+        writer.writerow([empresa.razao_social, empresa.cnpj])
+        
+    return response
 
 @admin_required
 def nova_empresa(request):
@@ -67,11 +89,61 @@ def editar_empresa(request, pk):
 # --- CONTRATOS ---
 @auditor_required
 def listar_contratos(request):
+    # Added 'objeto' and split company/cnpj for the generic list template to handle
     return generico_listar(
         request, Contrato, 'contratos/portal/lista_generica.html', 'Contratos', 
         'novo_contrato', 'editar_contrato',
-        [('numero', 'Número'), ('empresa', 'Empresa'), ('vigencia_fim', 'Vigência')]
+        [('numero', 'Número'), ('empresa', 'Empresa'), ('cnpj', 'CNPJ'), ('objeto', 'Objeto'), ('vigencia_fim', 'Vigência')],
+        url_exportar='exportar_contratos_csv',
+        arquivo_exportacao='contratos.csv'
     )
+
+@auditor_required
+def exportar_contratos_csv(request):
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="contratos.csv"'
+    response.write('\ufeff')  # BOM
+    
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Número', 'Objeto', 'Empresa', 'CNPJ', 'Início Vigência', 'Fim Vigência', 'Valor Total'])
+    
+    for contrato in Contrato.objects.select_related('empresa').all():
+        writer.writerow([
+            contrato.numero, 
+            contrato.objeto, 
+            contrato.empresa.razao_social, 
+            contrato.empresa.cnpj, 
+            contrato.vigencia_inicio.strftime('%d/%m/%Y'), 
+            contrato.vigencia_fim.strftime('%d/%m/%Y'),
+            str(contrato.valor_total).replace('.', ',')
+        ])
+    
+    return response
+
+@auditor_required
+def detalhe_contrato(request, pk):
+    from django.db.models import Prefetch
+    from contratos.utils import get_filtro_ativos
+    
+    contrato = get_object_or_404(Contrato, pk=pk)
+    filtro_integrante_ativo = get_filtro_ativos()
+
+    comissoes_ativas = contrato.comissoes.filter(ativa=True).prefetch_related(
+        Prefetch(
+            'integrantes',
+            queryset=Integrante.objects.filter(filtro_integrante_ativo).select_related('agente', 'funcao').order_by('funcao__titulo'),
+            to_attr='integrantes_ativos_lista'
+        )
+    )
+
+    comissoes_fiscalizacao = [c for c in comissoes_ativas if c.tipo == 'FISCALIZACAO']
+    comissoes_recebimento = [c for c in comissoes_ativas if c.tipo == 'RECEBIMENTO']
+
+    return render(request, 'contratos/portal/detalhe_contrato.html', {
+        'contrato': contrato,
+        'comissoes_fiscalizacao': comissoes_fiscalizacao,
+        'comissoes_recebimento': comissoes_recebimento
+    })
 
 @admin_required
 def novo_contrato(request):

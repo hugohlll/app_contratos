@@ -1,156 +1,136 @@
-from django.db import models
-from django.core.exceptions import ValidationError
-from datetime import date, timedelta
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Consulta Militar - SISCONT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #198754 0%, #157347 100%);
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body class="bg-light">
 
-class PostoGraduacao(models.Model):
-    sigla = models.CharField("Sigla", max_length=10, unique=True)
-    descricao = models.CharField("Descrição Completa", max_length=100)
-    senioridade = models.IntegerField("Ordem de Antiguidade", default=0)
-
-    def __str__(self):
-        return self.sigla
-
-    class Meta:
-        verbose_name = "Posto/Graduação"
-        verbose_name_plural = "Postos e Graduações"
-        ordering = ['senioridade']
-
-class Agente(models.Model):
-    nome_completo = models.CharField("Nome Completo", max_length=150)
-    nome_de_guerra = models.CharField("Nome de Guerra", max_length=50)
-    posto = models.ForeignKey(PostoGraduacao, on_delete=models.PROTECT, verbose_name="Posto Atual")
-    saram = models.CharField("SARAM/Matrícula", max_length=20, unique=True)
-    cpf = models.CharField("CPF", max_length=14, blank=True, null=True)
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'pesquisa' %}">🏛️ SISCONT</a>
+            
+            <div class="ms-auto d-flex align-items-center">
+                 <a href="{% url 'pesquisa' %}" class="btn btn-outline-light btn-sm me-2">
+                    🔍 Volta para Pesquisa de Contratos
+                </a>
+            </div>
+        </div>
+    </nav>
     
-    data_ultimo_curso = models.DateField(null=True, blank=True, verbose_name="Data do Último Curso de Gestão")
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold mb-3">Minhas Comissões</h1>
+            <p class="lead mb-4">Consulte seu histórico de designações e portarias.</p>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <form action="" method="get" class="d-flex shadow-sm">
+                        <input name="q" class="form-control form-control-lg border-0 rounded-start" type="search" placeholder="Digite seu SARAM ou Nome de Guerra..." value="{{ query|default:'' }}" aria-label="Search" required> 
+                        <button class="btn btn-light text-success fw-bold border-0 rounded-end px-4" type="submit">
+                            Consultar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    def __str__(self):
-        return f"{self.posto.sigla} {self.nome_de_guerra}"
+    <div class="container mb-5">
+        {% if integrantes %}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4>Resultados para "<span class="text-success">{{ query }}</span>"</h4>
+            
+            <a href="{% url 'exportar_historico_militar_csv' %}?q={{ query }}" class="btn btn-outline-success">
+                <i class="bi bi-file-earmark-excel me-2"></i>Baixar Histórico Completo
+            </a>
+        </div>
 
-    @property
-    def qualificacao_vencida(self):
-        if not self.data_ultimo_curso: return True 
-        return date.today() > (self.data_ultimo_curso + timedelta(days=365))
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-success">
+                            <tr>
+                                <th>Militar</th>
+                                <th>Função</th>
+                                <th>Contrato</th>
+                                <th>Período Designação</th>
+                                <th>Portaria</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in integrantes %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">
+                                    {% if item.posto_graduacao %}
+                                        {{ item.posto_graduacao.sigla }} {{ item.agente.nome_de_guerra }}
+                                    {% else %}
+                                        {{ item.agente.posto.sigla }} {{ item.agente.nome_de_guerra }}
+                                    {% endif %}
+                                    </div>
+                                    <small class="text-muted">SARAM: {{ item.agente.saram }}</small>
+                                </td>
+                                <td>{{ item.funcao.titulo }}</td>
+                                <td>
+                                    <a href="{% url 'detalhe_contrato' item.comissao.contrato.id %}" class="text-decoration-none fw-bold">
+                                        {{ item.comissao.contrato.numero }}
+                                    </a>
+                                    <div class="small text-muted text-truncate" style="max-width: 250px;">
+                                        {{ item.comissao.contrato.empresa.razao_social }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span><strong>Início:</strong> {{ item.data_inicio|date:"d/m/Y" }}</span>
+                                        {% if item.data_desligamento %}
+                                        <span class="text-danger small">Saiu em: {{ item.data_desligamento|date:"d/m/Y" }}</span>
+                                        {% elif item.data_fim %}
+                                        <span class="text-muted small">Previsto até: {{ item.data_fim|date:"d/m/Y" }}</span>
+                                        {% else %}
+                                        <span class="text-success small">Ativa</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>Nº {{ item.portaria_numero }}</div>
+                                    <small class="text-muted">de {{ item.portaria_data|date:"d/m/Y" }}</small>
+                                </td>
+                                <td>
+                                    {% if item.is_ativo %}
+                                    <span class="badge bg-success">ATIVO</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">ENCERRADO</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        {% elif query %}
+        <div class="text-center py-5">
+            <div class="display-1 text-muted opacity-25 mb-3">🤷‍♂️</div>
+            <h3 class="text-muted">Nenhum registro encontrado.</h3>
+            <p class="text-muted">Verifique se digitou corretamente o SARAM ou Nome de Guerra.</p>
+        </div>
+        {% endif %}
+    </div>
 
-    @property
-    def data_validade_curso(self):
-        if self.data_ultimo_curso: return self.data_ultimo_curso + timedelta(days=365)
-        return None
-
-    class Meta:
-        verbose_name = "Agente"
-        verbose_name_plural = "Agentes"
-
-class Empresa(models.Model):
-    razao_social = models.CharField("Razão Social", max_length=200)
-    cnpj = models.CharField("CNPJ", max_length=18, unique=True)
-    contato = models.CharField("Contato/Email", max_length=100, blank=True, null=True)
-    
-    def __str__(self):
-        return f"{self.razao_social} ({self.cnpj})"
-
-    class Meta:
-        verbose_name = "Empresa"
-        verbose_name_plural = "Empresas"
-
-class Funcao(models.Model):
-    titulo = models.CharField("Título da Função", max_length=100, unique=True)
-    sigla = models.CharField("Sigla", max_length=20, blank=True, null=True)
-    ativa = models.BooleanField("Ativa?", default=True)
-
-    def __str__(self):
-        return self.titulo
-
-    class Meta:
-        verbose_name = "Tipo de Função"
-        verbose_name_plural = "Tipos de Função"
-        ordering = ['titulo']
-
-class Contrato(models.Model):
-    numero = models.CharField("Número do Contrato", max_length=20, unique=True)
-    objeto = models.TextField("Objeto do Contrato")
-    empresa = models.ForeignKey(Empresa, on_delete=models.PROTECT, verbose_name="Empresa Contratada")
-    vigencia_inicio = models.DateField("Início da Vigência")
-    vigencia_fim = models.DateField("Fim da Vigência")
-    valor_total = models.DecimalField("Valor Total", max_digits=12, decimal_places=2)
-
-    def __str__(self):
-        return f"CT {self.numero} - {self.empresa.razao_social}"
-
-    class Meta:
-        verbose_name = "Contrato"
-        verbose_name_plural = "Contratos"
-
-class Comissao(models.Model):
-    TIPO_CHOICES = [
-        ('FISCALIZACAO', 'Fiscalização (Gestor/Fiscal)'),
-        ('RECEBIMENTO', 'Recebimento (Pres/Membros)'),
-    ]
-    
-    contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='comissoes')
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='FISCALIZACAO')
-    ativa = models.BooleanField(default=True)
-
-    def __str__(self):
-        return f"Comissão de {self.get_tipo_display()} - {self.contrato}"
-
-    class Meta:
-        verbose_name = "Comissão"
-        verbose_name_plural = "Comissões"
-
-class Integrante(models.Model):
-    comissao = models.ForeignKey(Comissao, on_delete=models.CASCADE, related_name='integrantes')
-    agente = models.ForeignKey(Agente, on_delete=models.PROTECT, verbose_name="Militar")
-    funcao = models.ForeignKey(Funcao, on_delete=models.PROTECT, verbose_name="Função")
-    
-    # --- NOVO CAMPO: FOTO DO POSTO NA ÉPOCA ---
-    posto_graduacao = models.ForeignKey(PostoGraduacao, on_delete=models.PROTECT, verbose_name="Posto na Época", null=True, blank=True)
-
-    # DATAS DA DESIGNAÇÃO
-    data_inicio = models.DateField("Início (Designação)")
-    data_fim = models.DateField("Término Previsto", null=True, blank=True)
-    
-    # ENCERRAMENTO / DISPENSA
-    data_desligamento = models.DateField("Data Efetiva de Saída", null=True, blank=True)
-    motivo_desligamento = models.CharField("Motivo da Saída", max_length=100, blank=True, null=True)
-    doc_desligamento = models.CharField("Doc. de Desligamento", max_length=50, blank=True, null=True)
-
-    # DOCUMENTOS
-    portaria_numero = models.CharField("Nº Portaria", max_length=50)
-    portaria_data = models.DateField("Data da Portaria")
-    
-    boletim_numero = models.CharField("Nº Boletim", max_length=50, blank=True, null=True)
-    boletim_data = models.DateField("Data do Boletim", blank=True, null=True)
-    
-    observacao = models.CharField("Obs", max_length=100, blank=True, null=True)
-
-    # --- AUTOMATIZAÇÃO: SALVAR O POSTO ATUAL NO HISTÓRICO ---
-    def save(self, *args, **kwargs):
-        # Se for um novo registro ou se o posto estiver vazio, copia do Agente
-        if not self.posto_graduacao and self.agente:
-            self.posto_graduacao = self.agente.posto
-        super().save(*args, **kwargs)
-
-    def clean(self):
-        if self.data_fim and self.data_inicio > self.data_fim:
-            raise ValidationError("A data de término previsto não pode ser anterior ao início.")
-        if self.data_desligamento and self.data_inicio > self.data_desligamento:
-            raise ValidationError("A data efetiva de saída não pode ser anterior ao início da designação.")
-
-    @property
-    def is_ativo(self):
-        hoje = date.today()
-        if self.data_desligamento and self.data_desligamento <= hoje: return False
-        if self.data_fim and self.data_fim < hoje: return False
-        return True
-
-    def __str__(self):
-        # Agora usamos o posto histórico na representação
-        posto_str = self.posto_graduacao.sigla if self.posto_graduacao else self.agente.posto.sigla
-        status = "(ENCERRADO)" if not self.is_ativo else "(ATIVO)"
-        return f"{posto_str} {self.agente.nome_de_guerra} - {self.funcao} {status}"
-
-    class Meta:
-        verbose_name = "Integrante"
-        verbose_name_plural = "Histórico de Integrantes"
-        ordering = ['-data_inicio']
+</body>
+</html>

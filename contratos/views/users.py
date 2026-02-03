@@ -25,6 +25,9 @@ def listar_usuarios(request):
         'titulo': 'Gerenciar Usuários'
     })
 
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+
 @admin_required
 def novo_usuario(request):
     if request.method == 'POST':
@@ -37,13 +40,30 @@ def novo_usuario(request):
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Usuário já existe.')
             return redirect('novo_usuario')
+            
+        # Validação de Email
+        if email:
+            try:
+                validate_email(email)
+            except ValidationError:
+                messages.error(request, 'Digite um endereço de email válido.')
+                return render(request, 'contratos/portal/users/form.html', {
+                    'titulo': 'Novo Usuário',
+                    'is_new': True,
+                })
 
         if password != confirm_password:
             messages.error(request, 'As senhas não conferem.')
             return render(request, 'contratos/portal/users/form.html', {
                 'titulo': 'Novo Usuário',
                 'is_new': True,
-                # Preserve form data could be nice but keeping it simple for now as per previous pattern
+            })
+
+        if perfil not in ['admin', 'auditor']:
+            messages.error(request, 'É obrigatório selecionar um perfil de acesso (Administrador ou Auditor).')
+            return render(request, 'contratos/portal/users/form.html', {
+                'titulo': 'Novo Usuário',
+                'is_new': True,
             })
 
         user = User.objects.create_user(username=username, email=email, password=password)
@@ -66,6 +86,14 @@ def editar_usuario(request, pk):
     if request.method == 'POST':
         user.email = request.POST.get('email')
         perfil = request.POST.get('perfil')
+
+        # Validação de Email
+        if user.email:
+            try:
+                validate_email(user.email)
+            except ValidationError:
+                messages.error(request, 'Digite um endereço de email válido.')
+                return redirect('editar_usuario', pk=pk)
         
         # Password update only if provided
         new_password = request.POST.get('password')
@@ -77,6 +105,10 @@ def editar_usuario(request, pk):
                 return redirect('editar_usuario', pk=pk)
                 
             user.set_password(new_password)
+        
+        if perfil not in ['admin', 'auditor']:
+            messages.error(request, 'É obrigatório selecionar um perfil de acesso (Administrador ou Auditor).')
+            return redirect('editar_usuario', pk=pk)
             
         user.save()
         update_user_group(user, perfil)

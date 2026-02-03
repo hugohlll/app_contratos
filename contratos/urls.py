@@ -17,13 +17,13 @@ urlpatterns = [
     path('auditoria/', auditoria.painel_controle, name='painel_controle'),
 
     # Exportações do Painel
-    path('auditoria/exportar/', auditoria.exportar_csv, name='exportar_csv'),
-    path('auditoria/vencimentos/csv/', auditoria.exportar_vencimentos_csv, name='exportar_vencimentos_csv'),
-    path('auditoria/qualificacao/csv/', auditoria.exportar_qualificacao_csv, name='exportar_qualificacao_csv'),
+    path('auditoria/exportar.csv', auditoria.exportar_csv, name='exportar_csv'),
+    path('auditoria/vencimentos.csv', auditoria.exportar_vencimentos_csv, name='exportar_vencimentos_csv'),
+    path('auditoria/qualificacao.csv', auditoria.exportar_qualificacao_csv, name='exportar_qualificacao_csv'),
 
     # Relatório por Período
     path('auditoria/relatorio/periodo/', auditoria.relatorio_por_periodo, name='relatorio_periodo'),
-    path('auditoria/relatorio/periodo/csv/', auditoria.exportar_relatorio_periodo_csv, name='exportar_periodo_csv'),
+    path('auditoria/relatorio/periodo.csv', auditoria.exportar_relatorio_periodo_csv, name='exportar_periodo_csv'),
 
     # --- AUTENTICAÇÃO (Módulo auth.py + LoginView) ---
     path('login/', auth_views.LoginView.as_view(template_name='contratos/login.html'), name='login'),
@@ -33,12 +33,16 @@ urlpatterns = [
     path('portal/', portal.portal_home, name='portal_home'),
     
     # Empresas
+    # Empresas
     path('portal/empresas/', portal.listar_empresas, name='listar_empresas'),
+    path('portal/empresas/exportar.csv', portal.exportar_empresas_csv, name='exportar_empresas_csv'),
     path('portal/empresas/nova/', portal.nova_empresa, name='nova_empresa'),
     path('portal/empresas/editar/<int:pk>/', portal.editar_empresa, name='editar_empresa'),
     
     # Contratos
     path('portal/contratos/', portal.listar_contratos, name='listar_contratos'),
+    path('portal/contratos/<int:pk>/', portal.detalhe_contrato, name='detalhe_contrato_portal'),
+    path('portal/contratos/exportar.csv', portal.exportar_contratos_csv, name='exportar_contratos_csv'),
     path('portal/contratos/novo/', portal.novo_contrato, name='novo_contrato'),
     path('portal/contratos/editar/<int:pk>/', portal.editar_contrato, name='editar_contrato'),
     

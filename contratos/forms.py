@@ -1,8 +1,11 @@
 from datetime import date
 from django import forms
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
 from django.utils.safestring import mark_safe
 from .models import Empresa, Contrato, Agente, Integrante, Comissao
+from .utils import clean_digits, format_cpf, format_cnpj
 
 class EstiloFormMixin:
     """Mixin para aplicar estilos Bootstrap aos campos"""
@@ -16,11 +19,24 @@ class EstiloFormMixin:
 class EmpresaForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = Empresa
-        fields = ['razao_social', 'cnpj', 'contato']
+        fields = ['razao_social', 'cnpj']
         help_texts = {
             'cnpj': 'Apenas números ou formato padrão xx.xxx.xxx/0001-xx',
-            'contato': 'Nome do representante, telefone ou e-mail principal'
         }
+
+    def clean_cnpj(self):
+        cnpj = self.cleaned_data.get('cnpj')
+        digits = clean_digits(cnpj)
+        
+        # Se o usuário tentar apagar no update, o model dirá que é required (unique=True geralmente implica required no form a menos que blank=True)
+        # O model diz: unique=True, mas não blank=True. Então é obrigatório.
+        
+        if len(digits) != 14:
+            raise forms.ValidationError("O CNPJ deve conter exatamente 14 números.")
+            
+        return format_cnpj(digits)
+
+
 
 class ContratoForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
@@ -39,6 +55,17 @@ class AgenteForm(EstiloFormMixin, forms.ModelForm):
         widgets = {
             'data_ultimo_curso': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def clean_cpf(self):
+        cpf = self.cleaned_data.get('cpf')
+        if not cpf:
+            return cpf
+            
+        digits = clean_digits(cpf)
+        if len(digits) != 11:
+            raise forms.ValidationError("O CPF deve conter exatamente 11 números.")
+            
+        return format_cpf(digits)
 
 class ComissaoForm(EstiloFormMixin, forms.ModelForm):
     class Meta:

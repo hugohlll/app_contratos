@@ -1,0 +1,279 @@
+{% extends 'contratos/portal/base_portal.html' %}
+{% load portal_tags %}
+
+{% block title %}Contrato {{ contrato.numero }}{% endblock %}
+
+{% block content %}
+<style>
+    .role-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+
+    .role-gestor {
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+        color: white;
+    }
+
+    .role-fiscal {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
+    }
+
+    .role-presidente {
+        background: linear-gradient(135deg, #28a745, #218838);
+        color: white;
+    }
+
+    .role-membro {
+        background: linear-gradient(135deg, #20c997, #1aa179);
+        color: white;
+    }
+
+    .military-card {
+        background: #fff;
+        padding: 12px;
+        border-radius: 8px;
+        border-left: 3px solid #6c757d;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .commission-docs {
+        background: #eef2f7;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .commission-docs-recebimento {
+        border-left-color: #198754;
+        background: #e8f5e9;
+    }
+
+    .exception-badge {
+        background: linear-gradient(135deg, #ffc107, #e0a800);
+        color: #212529;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .exception-card {
+        background: #fff8e1;
+        border: 2px dashed #ffc107;
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-top: 8px;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'listar_contratos' %}" class="btn btn-outline-secondary btn-sm mb-2">
+            <i class="bi bi-arrow-left me-1"></i> Voltar
+        </a>
+        <h2 class="fw-bold m-0">Contrato {{ contrato.numero }}</h2>
+    </div>
+    {% if request.user|is_admin %}
+    <a href="{% url 'editar_contrato' pk=contrato.pk %}" class="btn btn-primary">
+        <i class="bi bi-pencil me-2"></i>Editar Contrato
+    </a>
+    {% endif %}
+</div>
+
+<div class="card card-custom mb-4 border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h5 class="m-0 text-primary fw-bold"><i class="bi bi-info-circle me-2"></i>Dados Gerais</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <h5 class="fw-bold mb-1">{{ contrato.empresa.razao_social }}</h5>
+                <p class="text-muted mb-3"><i class="bi bi-building me-1"></i>CNPJ: {{ contrato.empresa.cnpj }}</p>
+                <div class="p-3 bg-light rounded">
+                    <strong>Objeto:</strong><br>
+                    {{ contrato.objeto }}
+                </div>
+            </div>
+            <div class="col-md-4 border-start">
+                <div class="mb-3">
+                    <small class="text-muted d-block text-uppercase fw-bold"
+                        style="font-size: 0.75rem;">Vigência</small>
+                    <div class="fs-5">{{ contrato.vigencia_inicio|date:"d/m/Y" }} a {{ contrato.vigencia_fim|date:"d/m/Y" }}</div>
+                </div>
+                <div>
+                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Valor
+                        Total</small>
+                    <div class="fs-5 text-success">R$ {{ contrato.valor_total|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-3 mt-4"><i class="bi bi-people-fill me-2"></i>Equipe de Fiscalização</h4>
+
+{% if comissoes_fiscalizacao %}
+<h5 class="mb-3 text-primary border-bottom pb-2">Fiscalização (Gestor e Fiscais)</h5>
+{% for comissao in comissoes_fiscalizacao %}
+<div class="card card-custom mb-4 border-primary border-top-0 border-end-0 border-bottom-0 border-start-0 border-start-4 shadow-sm"
+    style="border-left: 4px solid #0d6efd !important;">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <strong><i class="bi bi-shield-check me-2"></i>{{ comissao.get_tipo_display }}</strong>
+        {% if request.user|is_admin %}
+        <a href="{% url 'editar_comissao' comissao.pk %}" class="btn btn-sm btn-light text-primary py-0">Gerenciar</a>
+        {% endif %}
+    </div>
+    <div class="card-body p-4">
+        <div class="commission-docs">
+            <div class="row">
+                <div class="col-md-4">
+                    <i class="bi bi-calendar-range me-1 text-primary"></i>
+                    <strong>Vigência:</strong> {{ comissao.data_inicio|date:"d/m/Y"|default:"-" }} a {{ comissao.data_fim|date:"d/m/Y"|default:"Indeterminado" }}
+                </div>
+                <div class="col-md-4">
+                    <i class="bi bi-file-earmark-text me-1 text-primary"></i>
+                    <strong>Portaria:</strong> {% if comissao.portaria_numero %}nº {{ comissao.portaria_numero }} ({{ comissao.portaria_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <i class="bi bi-journal-text me-1 text-primary"></i>
+                    <strong>Boletim:</strong> {% if comissao.boletim_numero %}nº {{ comissao.boletim_numero }} ({{ comissao.boletim_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% for integrante in comissao.integrantes_ativos_lista %}
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    {% if 'Gestor' in integrante.funcao.titulo %}
+                    <span class="role-icon role-gestor"><i class="bi bi-star-fill"></i></span>
+                    {% elif 'Fiscal' in integrante.funcao.titulo %}
+                    <span class="role-icon role-fiscal"><i class="bi bi-clipboard-check-fill"></i></span>
+                    {% else %}
+                    <span class="role-icon role-fiscal"><i class="bi bi-person-fill"></i></span>
+                    {% endif %}
+                    <div class="fw-bold">{{ integrante.funcao.titulo }}</div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="military-card">
+                    <div class="fw-bold text-dark">
+                        {% if integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla }}{% else %}{{ integrante.agente.posto.sigla }}{% endif %}
+                        {{ integrante.agente.nome_de_guerra }}
+                    </div>
+                    <small class="text-muted"><i class="bi bi-hash me-1"></i>SARAM: {{ integrante.agente.saram}}</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                {% if integrante.data_inicio != comissao.data_inicio or integrante.data_fim != comissao.data_fim %}
+                <div class="exception-card">
+                    <span class="exception-badge"><i class="bi bi-exclamation-triangle me-1"></i>Designação
+                        Específica</span>
+                    <div class="mt-2 small">
+                        <div><i class="bi bi-calendar-event me-1"></i>{{ integrante.data_inicio|date:"d/m/Y" }}{% if integrante.data_fim %} - {{ integrante.data_fim|date:"d/m/Y" }}{% endif %}</div>
+                        <div>Port. {{ integrante.portaria_numero }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% if not forloop.last %}
+        <hr class="my-2 text-muted opacity-25">{% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if comissoes_recebimento %}
+<h5 class="mb-3 text-success border-bottom pb-2 mt-5">Recebimento (Presidente e Membros)</h5>
+{% for comissao in comissoes_recebimento %}
+<div class="card card-custom mb-4 border-success border-top-0 border-end-0 border-bottom-0 border-start-0 border-start-4 shadow-sm"
+    style="border-left: 4px solid #198754 !important;">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <strong><i class="bi bi-check-circle me-2"></i>{{ comissao.get_tipo_display }}</strong>
+        {% if request.user|is_admin %}
+        <a href="{% url 'editar_comissao' comissao.pk %}" class="btn btn-sm btn-light text-success py-0">Gerenciar</a>
+        {% endif %}
+    </div>
+    <div class="card-body p-4">
+        <div class="commission-docs commission-docs-recebimento">
+            <div class="row">
+                <div class="col-md-4">
+                    <i class="bi bi-calendar-range me-1 text-success"></i>
+                    <strong>Vigência:</strong> {{ comissao.data_inicio|date:"d/m/Y"|default:"-" }} a {{ comissao.data_fim|date:"d/m/Y"|default:"Indeterminado" }}
+                </div>
+                <div class="col-md-4">
+                    <i class="bi bi-file-earmark-text me-1 text-success"></i>
+                    <strong>Portaria:</strong> {% if comissao.portaria_numero %}nº {{ comissao.portaria_numero }} ({{ comissao.portaria_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <i class="bi bi-journal-text me-1 text-success"></i>
+                    <strong>Boletim:</strong> {% if comissao.boletim_numero %}nº {{ comissao.boletim_numero }} ({{ comissao.boletim_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% for integrante in comissao.integrantes_ativos_lista %}
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    {% if 'Presidente' in integrante.funcao.titulo %}
+                    <span class="role-icon role-presidente"><i class="bi bi-award-fill"></i></span>
+                    {% else %}
+                    <span class="role-icon role-membro"><i class="bi bi-person-check-fill"></i></span>
+                    {% endif %}
+                    <div class="fw-bold">{{ integrante.funcao.titulo }}</div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="military-card">
+                    <div class="fw-bold text-dark">
+                        {% if integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla }}{% else %}{{ integrante.agente.posto.sigla }}{% endif %}
+                        {{ integrante.agente.nome_de_guerra }}
+                    </div>
+                    <small class="text-muted"><i class="bi bi-hash me-1"></i>SARAM: {{ integrante.agente.saram}}</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                {% if integrante.data_inicio != comissao.data_inicio or integrante.data_fim != comissao.data_fim %}
+                <div class="exception-card">
+                    <span class="exception-badge"><i class="bi bi-exclamation-triangle me-1"></i>Designação
+                        Específica</span>
+                    <div class="mt-2 small">
+                        <div><i class="bi bi-calendar-event me-1"></i>{{ integrante.data_inicio|date:"d/m/Y" }}{% if integrante.data_fim %} - {{ integrante.data_fim|date:"d/m/Y" }}{% endif %}</div>
+                        <div>Port. {{ integrante.portaria_numero }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% if not forloop.last %}
+        <hr class="my-2 text-muted opacity-25">{% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if not comissoes_fiscalizacao and not comissoes_recebimento %}
+<div class="alert alert-warning text-center p-5">
+    <div class="fs-1 mb-2">⚠️</div>
+    <h4>Nenhuma comissão ativa</h4>
+    <p class="text-muted">Não há membros designados para este contrato atualmente.</p>
+    {% if request.user|is_admin %}
+    <a href="{% url 'nova_comissao' %}?contrato={{ contrato.pk }}" class="btn btn-warning mt-2">Criar Comissão</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

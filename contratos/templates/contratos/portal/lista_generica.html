@@ -4,11 +4,19 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold">{{ titulo }}</h2>
-    {% if url_novo and request.user|is_admin %}
-    <a href="{% url url_novo %}" class="btn btn-success">
-        <i class="bi bi-plus-lg"></i> Novo Registro
-    </a>
-    {% endif %}
+    <div class="d-flex gap-2">
+        {% if url_exportar %}
+        <a href="{% url url_exportar %}" {% if arquivo_exportacao %}download="{{ arquivo_exportacao }}" {% endif %}
+            class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar CSV
+        </a>
+        {% endif %}
+        {% if url_novo and request.user|is_admin %}
+        <a href="{% url url_novo %}" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> Novo Registro
+        </a>
+        {% endif %}
+    </div>
 </div>
 
 <div class="card card-custom">
@@ -77,11 +85,23 @@
                         {% elif titulo == 'Empresas' %}
                         <td class="px-3">{{ item.razao_social }}</td>
                         <td class="px-3">{{ item.cnpj }}</td>
-                        <td class="px-3">{{ item.contato|default:"-" }}</td>
 
                         {% elif titulo == 'Contratos' %}
-                        <td class="px-3">{{ item.numero }}</td>
-                        <td class="px-3">{{ item.empresa }}</td>
+                        <td class="px-3 fw-bold">
+                            <a href="{% url 'detalhe_contrato_portal' pk=item.pk %}"
+                                class="text-decoration-none fw-bold" title="Ver Detalhes do Contrato">
+                                {{ item.numero }} <i class="bi bi-box-arrow-up-right small ms-1"
+                                    style="font-size: 0.8rem;"></i>
+                            </a>
+                        </td>
+                        <td class="px-3">{{ item.empresa.razao_social }}</td>
+                        <td class="px-3"><span class="badge bg-light text-dark border">{{ item.empresa.cnpj }}</span>
+                        </td>
+                        <td class="px-3 text-muted small"
+                            style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                            title="{{ item.objeto }}">
+                            {{ item.objeto }}
+                        </td>
                         <td class="px-3">{{ item.vigencia_fim|date:"d/m/Y" }}</td>
 
                         {% elif titulo == 'Agentes' %}

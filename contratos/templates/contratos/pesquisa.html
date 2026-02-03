@@ -70,7 +70,6 @@
 
     <div class="container mb-5">
 
-        {% if not query %}
         <div class="row justify-content-center mb-5">
             <div class="col-md-8">
                 <div class="card border-0 shadow-sm">
@@ -98,7 +97,6 @@
                 </div>
             </div>
         </div>
-        {% endif %}
 
         {% if query %}
         <h4 class="mb-4 text-secondary">Resultados para "<span class="text-dark">{{ query }}</span>"</h4>
@@ -119,7 +117,8 @@
                         </p>
                         <hr class="my-3 opacity-25">
                         <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted"><strong>Vence em:</strong> {{ contrato.vigencia_fim|date:"d/m/Y"
+                            <small class="text-muted"><strong>Vigência:</strong> {{
+                                contrato.vigencia_inicio|date:"d/m/Y" }} a {{ contrato.vigencia_fim|date:"d/m/Y"
                                 }}</small>
                             <a href="{% url 'detalhe_contrato' contrato.id %}"
                                 class="btn btn-sm btn-outline-primary">Ver Detalhes</a>

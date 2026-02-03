@@ -66,7 +66,9 @@
             <i class="bi bi-diagram-3-fill fs-3 me-3"></i>
             <div class="d-flex flex-column">
                 <span class="fw-bold fs-5">SISCONT</span>
-                <span class="small text-white-50" style="font-size: 0.8rem;">Administrador</span>
+                <span class="small text-white-50" style="font-size: 0.8rem;">
+                    {% if request.user|is_admin %}Administrador{% elif request.user.groups.all.0.name == "Auditores" %}Auditor{% else %}Usuário{% endif %}
+                </span>
             </div>
         </a>
         <hr>

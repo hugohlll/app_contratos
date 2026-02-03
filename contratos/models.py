@@ -47,7 +47,6 @@ class Agente(models.Model):
 class Empresa(models.Model):
     razao_social = models.CharField("Razão Social", max_length=200)
     cnpj = models.CharField("CNPJ", max_length=18, unique=True)
-    contato = models.CharField("Contato/Email", max_length=100, blank=True, null=True)
 
     def __str__(self):
         return f"{self.razao_social} ({self.cnpj})"

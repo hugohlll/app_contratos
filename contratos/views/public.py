@@ -31,9 +31,13 @@ def detalhe_contrato(request, contrato_id):
         )
     )
 
+    comissoes_fiscalizacao = [c for c in comissoes_ativas if c.tipo == 'FISCALIZACAO']
+    comissoes_recebimento = [c for c in comissoes_ativas if c.tipo == 'RECEBIMENTO']
+
     return render(request, 'contratos/detalhe.html', {
         'contrato': contrato,
-        'comissoes': comissoes_ativas
+        'comissoes_fiscalizacao': comissoes_fiscalizacao,
+        'comissoes_recebimento': comissoes_recebimento
     })
 
 
@@ -62,7 +66,7 @@ def exportar_transparencia_csv(request):
     writer = csv.writer(response, delimiter=';')
     writer.writerow([
         'Contrato', 'Empresa', 'Vigência Contrato',
-        'Comissão', 'Função', 'Militar',
+        'Comissão', 'Função', 'Posto/Grad', 'Nome',
         'Início Designação', 'Término Previsto',
         'Nº Portaria', 'Data Portaria',
         'Nº Boletim', 'Data Boletim'
@@ -81,6 +85,7 @@ def exportar_transparencia_csv(request):
                     fim = integrante.data_fim.strftime('%d/%m/%Y') if integrante.data_fim else "Indeterminado"
                     data_port = integrante.portaria_data.strftime('%d/%m/%Y') if integrante.portaria_data else "-"
                     data_bol = integrante.boletim_data.strftime('%d/%m/%Y') if integrante.boletim_data else "-"
+                    posto = integrante.posto_graduacao.sigla if integrante.posto_graduacao else integrante.agente.posto.sigla
 
                     writer.writerow([
                         contrato.numero,
@@ -88,16 +93,17 @@ def exportar_transparencia_csv(request):
                         contrato.vigencia_fim.strftime('%d/%m/%Y'),
                         com.get_tipo_display(),
                         integrante.funcao.titulo,
+                        posto,
                         integrante.agente.nome_de_guerra,
                         inicio,
                         fim,
                         integrante.portaria_numero,
                         data_port,
-                        integrante.boletim_numero,
+                        integrante.boletim_numero if integrante.boletim_numero else "-",
                         data_bol
                     ])
         else:
             writer.writerow([contrato.numero, contrato.empresa.razao_social, contrato.vigencia_fim.strftime('%d/%m/%Y'),
-                             "SEM COMISSÃO"] + ["-"] * 8)
+                             "SEM COMISSÃO"] + ["-"] * 9)
 
     return response

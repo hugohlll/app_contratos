@@ -1,5 +1,6 @@
 import csv
 import json
+import io
 from datetime import date, timedelta
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -177,8 +178,10 @@ def painel_controle(request):
 
 @login_required
 def exportar_vencimentos_csv(request):
-    response = HttpResponse(content_type='text/csv')
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
     response['Content-Disposition'] = 'attachment; filename="monitoramento_vencimentos.csv"'
+    response.write('\ufeff')  # BOM
+    
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Status', 'Dias Restantes', 'Militar', 'Função', 'Contrato', 'Término Previsto'])
 
@@ -190,7 +193,7 @@ def exportar_vencimentos_csv(request):
     lista_export = []
     for integrante in integrantes:
         dias = (integrante.data_fim - hoje).days
-        _, status = get_classificacao_vencimento(dias)  # Usa a mesma função auxiliar
+        _, status = get_classificacao_vencimento(dias)
         lista_export.append((dias, status, integrante))
 
     lista_export.sort(key=lambda x: x[0])
@@ -203,15 +206,16 @@ def exportar_vencimentos_csv(request):
             integrante.comissao.contrato.numero,
             integrante.data_fim.strftime('%d/%m/%Y')
         ])
+    
     return response
 
 
 @login_required
 def exportar_csv(request):
     """Exportação geral da auditoria"""
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="auditoria_completa.csv"'
-    writer = csv.writer(response, delimiter=';')
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, delimiter=';')
+    
     writer.writerow([
         'Contrato', 'Empresa', 'Vigência Contrato', 'Comissão', 'Função',
         'Militar', 'SARAM', 'Início Designação', 'Término Previsto',
@@ -243,6 +247,9 @@ def exportar_csv(request):
                                 contrato.vigencia_fim.strftime('%d/%m/%Y'),
                                 "SEM COMISSÃO"
                             ] + ["-"] * 9)
+    
+    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="auditoria_completa.csv"'
     return response
 
 
@@ -269,9 +276,8 @@ def relatorio_por_periodo(request):
 
 @login_required
 def exportar_qualificacao_csv(request):
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="relatorio_qualificacao_agentes.csv"'
-    writer = csv.writer(response, delimiter=';')
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, delimiter=';')
     writer.writerow(['Militar', 'SARAM', 'Função', 'Contrato', 'Data Último Curso', 'Validade', 'Situação'])
 
     hoje = date.today()
@@ -297,6 +303,9 @@ def exportar_qualificacao_csv(request):
             item.agente.nome_de_guerra, item.agente.saram, item.funcao.titulo,
             item.comissao.contrato.numero, dt_fmt, validade_fmt, situacao
         ])
+        
+    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="relatorio_qualificacao_agentes.csv"'
     return response
 
 
@@ -304,14 +313,14 @@ def exportar_qualificacao_csv(request):
 def exportar_relatorio_periodo_csv(request):
     data_inicial = request.GET.get('data_inicial')
     data_final = request.GET.get('data_final')
-    response = HttpResponse(content_type='text/csv')
-    nome_arquivo = f"relatorio_agentes_{data_inicial}_a_{data_final}.csv"
-    response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
-    writer = csv.writer(response, delimiter=';')
+    
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, delimiter=';')
     writer.writerow([
         'Contrato', 'Empresa', 'Militar', 'SARAM', 'Função',
         'Início Designação', 'Fim Designação', 'Nº Portaria', 'Data Portaria', 'Nº Boletim', 'Data Boletim'
     ])
+    
     if data_inicial and data_final:
         dt_ini = parse_date(data_inicial)
         dt_fim = parse_date(data_final)
@@ -335,4 +344,8 @@ def exportar_relatorio_periodo_csv(request):
                 r.data_inicio.strftime('%d/%m/%Y'), fim_fmt, 
                 r.portaria_numero, data_port, bol_num, bol_data
             ])
+            
+    nome_arquivo = f"relatorio_agentes_{data_inicial}_a_{data_final}.csv"
+    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
     return response

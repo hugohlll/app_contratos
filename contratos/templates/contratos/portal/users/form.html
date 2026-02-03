@@ -34,7 +34,7 @@
             <div class="mb-4">
                 <label class="form-label fw-bold">Perfil de Acesso</label>
                 <select name="perfil" class="form-select">
-                    <option value="none">Sem Perfil</option>
+                    <!-- Opção removida: Sem Perfil -->
                     <option value="auditor" {% if current_perfil == "auditor" %}selected{% endif %}>
                         Módulo Auditoria (Apenas Leitura)
                     </option>
@@ -56,6 +56,14 @@
                         onclick="togglePassword('id_password', this)">
                         <i class="bi bi-eye"></i>
                     </button>
+                </div>
+                <div class="form-text mt-2 small text-muted">
+                    <ul class="mb-0 ps-3">
+                        <li>Sua senha não pode ser muito parecida com suas outras informações pessoais.</li>
+                        <li>Sua senha deve conter pelo menos 8 caracteres.</li>
+                        <li>Sua senha não pode ser uma senha comumente usada.</li>
+                        <li>Sua senha não pode ser inteiramente numérica.</li>
+                    </ul>
                 </div>
                 {% if not is_new %}
                 <div class="form-text">Deixe em branco para manter a senha atual.</div>

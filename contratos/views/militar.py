@@ -25,7 +25,8 @@ def consulta_militar(request):
             'comissao__contrato__empresa',
             'funcao',
             'agente',
-            'posto'
+            'posto_graduacao',
+            'agente__posto'
         ).order_by('comissao__contrato__vigencia_fim')
 
     return render(request, 'contratos/militar.html', {
