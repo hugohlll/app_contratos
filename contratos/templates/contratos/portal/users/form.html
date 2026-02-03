@@ -50,11 +50,93 @@
                 <label class="form-label fw-bold">
                     {% if is_new %}Senha Inicial{% else %}Nova Senha (Opcional){% endif %}
                 </label>
-                <input type="password" name="password" class="form-control" {% if is_new %}required{% endif %}>
+                <div class="input-group">
+                    <input type="password" name="password" id="id_password" class="form-control" {% if is_new %}required{% endif %}>
+                    <button class="btn btn-outline-secondary" type="button"
+                        onclick="togglePassword('id_password', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
                 {% if not is_new %}
                 <div class="form-text">Deixe em branco para manter a senha atual.</div>
                 {% endif %}
             </div>
+
+            <div class="mb-3" id="confirm_password_container" {% if not is_new %}style="display:none;" {% endif %}>
+                <label class="form-label fw-bold">Confirmar Senha</label>
+                <div class="input-group">
+                    <input type="password" name="confirm_password" id="id_confirm_password" class="form-control" {% if is_new %}required{% endif %}>
+                    <button class="btn btn-outline-secondary" type="button"
+                        onclick="togglePassword('id_confirm_password', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div id="password_match_feedback" class="form-text text-danger d-none">
+                    <i class="bi bi-x-circle me-1"></i>As senhas não conferem.
+                </div>
+            </div>
+
+            <script>
+                function togglePassword(inputId, btn) {
+                    const input = document.getElementById(inputId);
+                    const icon = btn.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    }
+                }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    const password = document.getElementById('id_password');
+                    const confirmPassword = document.getElementById('id_confirm_password');
+                    const feedback = document.getElementById('password_match_feedback');
+                    const submitBtn = document.querySelector('button[type="submit"]');
+                    const confirmContainer = document.getElementById('confirm_password_container');
+                    const isNewUser = {{ is_new|yesno:"true,false" }};
+
+                function validatePasswords() {
+                    // Se for edição e a senha estiver vazia, não valida
+                    if (!password.value && confirmContainer.style.display === 'none') {
+                        feedback.classList.add('d-none');
+                        submitBtn.disabled = false;
+                        return;
+                    }
+
+                    // Show confirm field if password has value in edit mode
+                    if (password.value && confirmContainer.style.display === 'none') {
+                        confirmContainer.style.display = 'block';
+                        confirmPassword.required = true;
+                    } else if (!password.value && !isNewUser) {
+                        confirmContainer.style.display = 'none';
+                        confirmPassword.required = false;
+                        confirmPassword.value = '';
+                    }
+
+                    if (password.value !== confirmPassword.value) {
+                        feedback.classList.remove('d-none');
+                        confirmPassword.classList.add('is-invalid');
+                        submitBtn.disabled = true;
+                    } else {
+                        feedback.classList.add('d-none');
+                        confirmPassword.classList.remove('is-invalid');
+                        submitBtn.disabled = false;
+                    }
+                }
+
+                password.addEventListener('input', validatePasswords);
+                confirmPassword.addEventListener('input', validatePasswords);
+
+                // Initial check for edit mode logic
+                if (!isNewUser && !password.value) {
+                    confirmContainer.style.display = 'none';
+                }
+                });
+            </script>
 
             <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-primary btn-lg">

@@ -1,4 +1,5 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from contratos.views import public, militar, auditoria, auth, portal, users
 
 urlpatterns = [
@@ -24,7 +25,8 @@ urlpatterns = [
     path('auditoria/relatorio/periodo/', auditoria.relatorio_por_periodo, name='relatorio_periodo'),
     path('auditoria/relatorio/periodo/csv/', auditoria.exportar_relatorio_periodo_csv, name='exportar_periodo_csv'),
 
-    # --- AUTENTICAÇÃO (Módulo auth.py) ---
+    # --- AUTENTICAÇÃO (Módulo auth.py + LoginView) ---
+    path('login/', auth_views.LoginView.as_view(template_name='contratos/login.html'), name='login'),
     path('sair/', auth.sair, name='sair_do_sistema'),
     
     # --- PORTAL DO LANÇADOR (SIMPLIFICADO) ---

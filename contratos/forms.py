@@ -1,5 +1,7 @@
 from datetime import date
 from django import forms
+from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
+from django.utils.safestring import mark_safe
 from .models import Empresa, Contrato, Agente, Integrante, Comissao
 
 class EstiloFormMixin:
@@ -96,3 +98,28 @@ class IntegranteForm(EstiloFormMixin, forms.ModelForm):
         
         return cleaned_data
 
+
+class AlterarSenhaForm(EstiloFormMixin, DjangoPasswordChangeForm):
+    """Formulário de alteração de senha em português"""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Traduz labels para português
+        self.fields['old_password'].label = 'Senha atual'
+        self.fields['new_password1'].label = 'Nova senha'
+        self.fields['new_password2'].label = 'Confirmação da nova senha'
+        
+        # Traduz help texts para português
+        self.fields['new_password1'].help_text = mark_safe('''
+            <ul class="mb-0">
+                <li>Sua senha não pode ser muito parecida com suas outras informações pessoais.</li>
+                <li>Sua senha deve conter pelo menos 8 caracteres.</li>
+                <li>Sua senha não pode ser uma senha comumente usada.</li>
+                <li>Sua senha não pode ser inteiramente numérica.</li>
+            </ul>
+        ''')
+        self.fields['new_password2'].help_text = 'Digite a mesma senha novamente, para verificação.'
+        
+        # Remove help text da senha antiga
+        self.fields['old_password'].help_text = None

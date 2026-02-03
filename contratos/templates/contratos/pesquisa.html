@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Busca de Contratos - SISCONT</title>
@@ -13,121 +14,130 @@
         }
     </style>
 </head>
+
 <body class="bg-light">
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="{% url 'pesquisa' %}">🏛️ SISCONT</a>
-        
-        <div class="ms-auto d-flex align-items-center">
-            {% if user.is_authenticated %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'pesquisa' %}">🏛️ SISCONT</a>
+
+            <div class="ms-auto d-flex align-items-center">
+                {% if user.is_authenticated %}
                 <span class="text-white me-3 small d-none d-md-block">Olá, {{ user.username }}</span>
-                
+
                 <a href="{% url 'painel_controle' %}" class="btn btn-outline-light btn-sm me-2">
                     📊 Painel Auditoria
                 </a>
-                
+
                 <a href="{% url 'sair_do_sistema' %}" class="btn btn-danger btn-sm">
                     🚪 Sair
                 </a>
-            {% else %}
-                <a href="/admin/login/" class="btn btn-light btn-sm text-primary fw-bold">
-                    🔒 Área Restrita
+                {% else %}
+                <a href="{% url 'login' %}?next={% url 'painel_controle' %}"
+                    class="btn btn-light btn-sm text-primary fw-bold">
+                    🔒 Login
                 </a>
-            {% endif %}
-        </div>
-    </div>
-</nav>
-
-<div class="hero-section text-center">
-    <div class="container">
-        <h1 class="display-4 fw-bold mb-3">Contratos GAP-BR</h1>
-        <p class="lead mb-4">Sistema de Gestão e Fiscalização de Contratos Administrativos.</p>
-        
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                <form action="" method="get" class="d-flex shadow-sm">
-                    <input name="q" class="form-control form-control-lg border-0 rounded-start" type="search" 
-                           placeholder="Digite nº contrato, empresa ou objeto..." 
-                           value="{{ query|default:'' }}" aria-label="Search">
-                    <button class="btn btn-light text-primary fw-bold border-0 rounded-end px-4" type="submit">
-                        Pesquisar
-                    </button>
-                </form>
+                {% endif %}
             </div>
         </div>
-        
-        <div class="mt-4">
-            <a href="{% url 'transparencia' %}" class="text-white text-decoration-underline small">
-                Ver lista completa de contratos vigentes
-            </a>
+    </nav>
+
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Contratos GAP-BR</h1>
+            <p class="lead mb-4">Sistema de Gestão e Fiscalização de Contratos Administrativos.</p>
+
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <form action="" method="get" class="d-flex shadow-sm">
+                        <input name="q" class="form-control form-control-lg border-0 rounded-start" type="search"
+                            placeholder="Digite nº contrato, empresa ou objeto..." value="{{ query|default:'' }}"
+                            aria-label="Search">
+                        <button class="btn btn-light text-primary fw-bold border-0 rounded-end px-4" type="submit">
+                            Pesquisar
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'transparencia' %}" class="text-white text-decoration-underline small">
+                    Ver lista completa de contratos vigentes
+                </a>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="container mb-5">
-    
-    {% if not query %}
-    <div class="row justify-content-center mb-5">
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4 d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-warning rounded-circle p-3 me-3 text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-badge" viewBox="0 0 16 16">
-                              <path d="M6.5 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                              <path d="M4.5 0A2.5 2.5 0 0 0 2 2.5V14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2.5A2.5 2.5 0 0 0 11.5 0h-7zM3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v10.795a4.2 4.2 0 0 0-.776-.492C11.392 12.387 10.063 12 8 12s-3.392.387-4.224.803a4.2 4.2 0 0 0-.776.492V2.5z"/>
-                            </svg>
+    <div class="container mb-5">
+
+        {% if not query %}
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning rounded-circle p-3 me-3 text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                    class="bi bi-person-badge" viewBox="0 0 16 16">
+                                    <path
+                                        d="M6.5 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                                    <path
+                                        d="M4.5 0A2.5 2.5 0 0 0 2 2.5V14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2.5A2.5 2.5 0 0 0 11.5 0h-7zM3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v10.795a4.2 4.2 0 0 0-.776-.492C11.392 12.387 10.063 12 8 12s-3.392.387-4.224.803a4.2 4.2 0 0 0-.776.492V2.5z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 fw-bold">É militar do efetivo?</h5>
+                                <p class="mb-0 text-muted small">Consulte suas escalas em comissões de fiscalização e
+                                    verifique portarias.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h5 class="mb-1 fw-bold">É militar do efetivo?</h5>
-                            <p class="mb-0 text-muted small">Consulte suas escalas em comissões de fiscalização e verifique portarias.</p>
-                        </div>
+                        <a href="{% url 'consulta_militar' %}" class="btn btn-primary fw-bold">
+                            Consultar Minhas Comissões →
+                        </a>
                     </div>
-                    <a href="{% url 'consulta_militar' %}" class="btn btn-primary fw-bold">
-                        Consultar Minhas Comissões →
-                    </a>
                 </div>
             </div>
         </div>
-    </div>
-    {% endif %}
+        {% endif %}
 
-    {% if query %}
+        {% if query %}
         <h4 class="mb-4 text-secondary">Resultados para "<span class="text-dark">{{ query }}</span>"</h4>
-    {% endif %}
+        {% endif %}
 
-    <div class="row">
-        {% for contrato in resultados %}
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0 hover-effect">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="card-title text-primary fw-bold">Contrato {{ contrato.numero }}</h5>
-                        <span class="badge bg-light text-dark border">Vigente</span>
-                    </div>
-                    <h6 class="card-subtitle mb-3 text-muted">{{ contrato.empresa.razao_social }}</h6>
-                    <p class="card-text text-secondary small">
-                        {{ contrato.objeto|truncatechars:120 }}
-                    </p>
-                    <hr class="my-3 opacity-25">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted"><strong>Vence em:</strong> {{ contrato.vigencia_fim|date:"d/m/Y" }}</small>
-                        <a href="{% url 'detalhe_contrato' contrato.id %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
+        <div class="row">
+            {% for contrato in resultados %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0 hover-effect">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title text-primary fw-bold">Contrato {{ contrato.numero }}</h5>
+                            <span class="badge bg-light text-dark border">Vigente</span>
+                        </div>
+                        <h6 class="card-subtitle mb-3 text-muted">{{ contrato.empresa.razao_social }}</h6>
+                        <p class="card-text text-secondary small">
+                            {{ contrato.objeto|truncatechars:120 }}
+                        </p>
+                        <hr class="my-3 opacity-25">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted"><strong>Vence em:</strong> {{ contrato.vigencia_fim|date:"d/m/Y"
+                                }}</small>
+                            <a href="{% url 'detalhe_contrato' contrato.id %}"
+                                class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        {% empty %}
+            {% empty %}
             {% if query %}
             <div class="col-12 text-center py-5">
                 <h3 class="text-muted">😕 Nenhum contrato encontrado.</h3>
                 <p>Tente buscar pelo número, nome da empresa ou palavra-chave do objeto.</p>
             </div>
             {% endif %}
-        {% endfor %}
+            {% endfor %}
+        </div>
     </div>
-</div>
 
 </body>
+
 </html>

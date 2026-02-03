@@ -310,7 +310,7 @@ def exportar_relatorio_periodo_csv(request):
     writer = csv.writer(response, delimiter=';')
     writer.writerow([
         'Contrato', 'Empresa', 'Militar', 'SARAM', 'Função',
-        'Início Designação', 'Fim Designação', 'Portaria', 'Boletim'
+        'Início Designação', 'Fim Designação', 'Nº Portaria', 'Data Portaria', 'Nº Boletim', 'Data Boletim'
     ])
     if data_inicial and data_final:
         dt_ini = parse_date(data_inicial)
@@ -322,10 +322,17 @@ def exportar_relatorio_periodo_csv(request):
         )
         for r in resultados:
             fim_fmt = r.data_fim.strftime('%d/%m/%Y') if r.data_fim else "Ativa (Indefinido)"
-            bol_fmt = f"{r.boletim_numero} ({r.boletim_data.strftime('%d/%m/%Y')})" if r.boletim_numero else "-"
+            data_port = r.portaria_data.strftime('%d/%m/%Y') if r.portaria_data else "-"
+            bol_num = r.boletim_numero if r.boletim_numero else "-"
+            bol_data = r.boletim_data.strftime('%d/%m/%Y') if r.boletim_data else "-"
+            
+            posto = r.posto_graduacao.sigla if r.posto_graduacao else r.agente.posto.sigla
+            nome_completo = f"{posto} {r.agente.nome_de_guerra}"
+            
             writer.writerow([
                 r.comissao.contrato.numero, r.comissao.contrato.empresa.razao_social,
-                r.agente.nome_de_guerra, r.agente.saram, r.funcao.titulo,
-                r.data_inicio.strftime('%d/%m/%Y'), fim_fmt, r.portaria_numero, bol_fmt
+                nome_completo, r.agente.saram, r.funcao.titulo,
+                r.data_inicio.strftime('%d/%m/%Y'), fim_fmt, 
+                r.portaria_numero, data_port, bol_num, bol_data
             ])
     return response

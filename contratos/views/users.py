@@ -31,11 +31,20 @@ def novo_usuario(request):
         username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
         perfil = request.POST.get('perfil') # 'admin' or 'auditor'
 
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Usuário já existe.')
             return redirect('novo_usuario')
+
+        if password != confirm_password:
+            messages.error(request, 'As senhas não conferem.')
+            return render(request, 'contratos/portal/users/form.html', {
+                'titulo': 'Novo Usuário',
+                'is_new': True,
+                # Preserve form data could be nice but keeping it simple for now as per previous pattern
+            })
 
         user = User.objects.create_user(username=username, email=email, password=password)
         
@@ -60,7 +69,13 @@ def editar_usuario(request, pk):
         
         # Password update only if provided
         new_password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        
         if new_password:
+            if new_password != confirm_password:
+                messages.error(request, 'As senhas não conferem.')
+                return redirect('editar_usuario', pk=pk)
+                
             user.set_password(new_password)
             
         user.save()
@@ -98,17 +113,19 @@ def excluir_usuario(request, pk):
 
 @login_required
 def alterar_senha(request):
+    from contratos.forms import AlterarSenhaForm
+    
     if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
+        form = AlterarSenhaForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)  # Important!
             messages.success(request, 'Sua senha foi alterada com sucesso!')
             return redirect('portal_home')
         else:
-            messages.error(request, 'Por favor, corrija o erro abaixo.')
+            messages.error(request, 'Por favor, corrija os erros abaixo.')
     else:
-        form = PasswordChangeForm(request.user)
+        form = AlterarSenhaForm(request.user)
     return render(request, 'contratos/portal/users/senha.html', {
         'form': form
     })
