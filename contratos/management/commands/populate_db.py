@@ -121,13 +121,19 @@ class Command(BaseCommand):
             obj = random.choice(objetos)
             val = random.uniform(10000.0, 5000000.0)
             
+            days_duration = random.randint(90, 720) # 3 months to 2 years
+            days_offset_end = random.randint(-100, 400) # Ends between 100 days ago and 400 days in future
+            
+            dt_fim = date.today() + timedelta(days=days_offset_end)
+            dt_inicio = dt_fim - timedelta(days=days_duration)
+
             if not Contrato.objects.filter(numero=num).exists():
                 Contrato.objects.create(
                     numero=num,
                     empresa=emp,
                     objeto=obj,
-                    vigencia_inicio=date.today() - timedelta(days=random.randint(0, 180)),
-                    vigencia_fim=date.today() + timedelta(days=random.randint(180, 720)),
+                    vigencia_inicio=dt_inicio,
+                    vigencia_fim=dt_fim,
                     valor_total=val
                 )
         self.stdout.write('Contratos gerados.')
