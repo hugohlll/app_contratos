@@ -5,6 +5,7 @@ from contratos.views import public, militar, auditoria, auth, portal, users
 urlpatterns = [
     # --- ÁREA PÚBLICA (Módulo public.py) ---
     path('', public.pesquisa_publica, name='pesquisa'),
+    path('contratos/busca/', public.buscar_contratos, name='buscar_contratos'),
     path('contrato/<int:contrato_id>/', public.detalhe_contrato, name='detalhe_contrato'),
     path('transparencia/', public.relatorio_transparencia, name='transparencia'),
     path('transparencia/exportar/', public.exportar_transparencia_csv, name='exportar_transparencia_csv'),

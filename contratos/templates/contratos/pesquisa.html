@@ -38,7 +38,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <span class="navbar-brand fw-bold">SISCONT - Consultas</span>
+            <span class="navbar-brand">:: SISCONT ::</span>
 
             <div class="ms-auto d-flex align-items-center">
                 {% if user.is_authenticated %}
@@ -80,7 +80,7 @@
                         <div class="card-body">
                             <h4 class="fw-bold mb-4 text-center">Comissões de contratos</h4>
 
-                            <form action="" method="get" class="d-flex shadow-sm mb-4">
+                            <form action="{% url 'buscar_contratos' %}" method="get" class="d-flex shadow-sm mb-4">
                                 <input name="q"
                                     class="form-control form-control-lg border-0 rounded-start border-primary"
                                     type="search" placeholder="Digite nº contrato, empresa ou objeto..."
@@ -133,43 +133,7 @@
             </div>
         </div>
 
-        {% if query %}
-        <h4 class="mb-4 text-secondary">Resultados para "<span class="text-dark">{{ query }}</span>"</h4>
-        {% endif %}
 
-        <div class="row">
-            {% for contrato in resultados %}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100 shadow-sm border-0 hover-effect">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title text-primary fw-bold">Contrato {{ contrato.numero }}</h5>
-                            <span class="badge bg-light text-dark border">Vigente</span>
-                        </div>
-                        <h6 class="card-subtitle mb-3 text-muted">{{ contrato.empresa.razao_social }}</h6>
-                        <p class="card-text text-secondary small">
-                            {{ contrato.objeto|truncatechars:120 }}
-                        </p>
-                        <hr class="my-3 opacity-25">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted"><strong>Vigência:</strong> {{
-                                contrato.vigencia_inicio|date:"d/m/Y" }} a {{ contrato.vigencia_fim|date:"d/m/Y"
-                                }}</small>
-                            <a href="{% url 'detalhe_contrato' contrato.id %}"
-                                class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            {% if query %}
-            <div class="col-12 text-center py-5">
-                <h3 class="text-muted">😕 Nenhum contrato encontrado.</h3>
-                <p>Tente buscar pelo número, nome da empresa ou palavra-chave do objeto.</p>
-            </div>
-            {% endif %}
-            {% endfor %}
-        </div>
     </div>
 
     <footer class="bg-primary text-white text-center py-4 mt-auto">

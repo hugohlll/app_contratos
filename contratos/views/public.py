@@ -8,15 +8,41 @@ from contratos.utils import get_filtro_ativos
 
 
 def pesquisa_publica(request):
+    return render(request, 'contratos/pesquisa.html')
+
+
+def buscar_contratos(request):
     query = request.GET.get('q')
-    resultados = []
+    contratos = []
+    
     if query:
-        resultados = Contrato.objects.filter(
+        filtro_integrante_ativo = get_filtro_ativos()
+        
+        contratos = Contrato.objects.filter(
             Q(numero__icontains=query) |
             Q(objeto__icontains=query) |
             Q(empresa__razao_social__icontains=query)
-        ).distinct()
-    return render(request, 'contratos/pesquisa.html', {'resultados': resultados, 'query': query})
+        ).prefetch_related(
+            Prefetch(
+                'comissoes',
+                queryset=Comissao.objects.filter(ativa=True).prefetch_related(
+                    Prefetch('integrantes',
+                             queryset=Integrante.objects.filter(filtro_integrante_ativo).select_related('agente', 'funcao').annotate(
+                                 prioridade=Case(
+                                     When(funcao__titulo__icontains='Gestor', then=Value(1)),
+                                     When(funcao__titulo__icontains='Presidente', then=Value(1)),
+                                     When(funcao__titulo__icontains='Fiscal', then=Value(2)),
+                                     When(funcao__titulo__icontains='Membro', then=Value(2)),
+                                     default=Value(3),
+                                     output_field=IntegerField(),
+                                 )
+                             ).order_by('prioridade', 'funcao__titulo'))
+                ),
+                to_attr='comissoes_vigentes'
+            )
+        ).distinct().order_by('vigencia_fim')
+
+    return render(request, 'contratos/resultado_busca.html', {'contratos': contratos, 'query': query})
 
 
 def detalhe_contrato(request, contrato_id):
