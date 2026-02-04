@@ -21,3 +21,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('contratos.urls')), # <--- Adicione esta linha
 ]
+
+from django.conf import settings
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
+if settings.DEBUG:
+    urlpatterns += staticfiles_urlpatterns()

@@ -1,6 +1,13 @@
+{% load static %}
 {% extends 'contratos/portal/base_portal.html' %}
 
 {% block content %}
+<div class="row mb-5">
+    <div class="col-12 text-center">
+        <img src="{% static 'contratos/img/gap_logo.png' %}" alt="Brasão do GAP-BR" style="height: 120px; width: auto;">
+    </div>
+</div>
+
 <div class="row mb-4">
     <div class="col">
         <h2 class="fw-bold">Bem-vindo, {{ request.user.first_name|default:request.user.username }}!</h2>
@@ -60,4 +67,11 @@
         </div>
     </div>
 </div>
+
+<footer class="bg-primary text-white text-center py-4 mt-5 rounded-top">
+    <div class="container">
+        <p class="mb-0 fw-bold">Desenvolvido por SO SEL Hugo</p>
+        <p class="mb-0 small opacity-75">&copy; {% now "Y" %} SISCONT - GAP-BR</p>
+    </div>
+</footer>
 {% endblock %}
