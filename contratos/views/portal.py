@@ -93,7 +93,7 @@ def listar_contratos(request):
     return generico_listar(
         request, Contrato, 'contratos/portal/lista_generica.html', 'Contratos', 
         'novo_contrato', 'editar_contrato',
-        [('numero', 'Número'), ('empresa', 'Empresa'), ('cnpj', 'CNPJ'), ('objeto', 'Objeto'), ('vigencia_fim', 'Vigência')],
+        [('numero', 'Número'), ('tipo', 'Tipo'), ('empresa', 'Empresa'), ('cnpj', 'CNPJ'), ('objeto', 'Objeto'), ('vigencia_fim', 'Vigência')],
         url_exportar='exportar_contratos_csv',
         arquivo_exportacao='contratos.csv'
     )

@@ -94,9 +94,9 @@
                                     style="font-size: 0.8rem;"></i>
                             </a>
                         </td>
+                        <td class="px-3">{{ item.get_tipo_display }}</td>
                         <td class="px-3">{{ item.empresa.razao_social }}</td>
-                        <td class="px-3"><span class="badge bg-light text-dark border">{{ item.empresa.cnpj }}</span>
-                        </td>
+                        <td class="px-3">{{ item.empresa.cnpj }}</td>
                         <td class="px-3 text-muted small"
                             style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
                             title="{{ item.objeto }}">

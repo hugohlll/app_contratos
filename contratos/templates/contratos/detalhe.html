@@ -1,28 +1,88 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Contrato {{ contrato.numero }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        .role-icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; margin-right: 8px; }
-        .role-gestor { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; }
-        .role-fiscal { background: linear-gradient(135deg, #17a2b8, #138496); color: white; }
-        .role-presidente { background: linear-gradient(135deg, #28a745, #218838); color: white; }
-        .role-membro { background: linear-gradient(135deg, #20c997, #1aa179); color: white; }
-        .military-card { background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 3px solid #6c757d; }
-        .commission-docs { background: #f0f4f8; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid #0d6efd; }
-        .commission-docs-recebimento { border-left-color: #198754; }
-        .exception-badge { background: linear-gradient(135deg, #ffc107, #e0a800); color: #212529; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 8px; }
-        .exception-card { background: #fff8e1; border: 2px dashed #ffc107; padding: 8px 12px; border-radius: 6px; margin-top: 8px; }
+        .role-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .role-gestor {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            color: white;
+        }
+
+        .role-fiscal {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+        }
+
+        .role-presidente {
+            background: linear-gradient(135deg, #28a745, #218838);
+            color: white;
+        }
+
+        .role-membro {
+            background: linear-gradient(135deg, #20c997, #1aa179);
+            color: white;
+        }
+
+        .military-card {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #6c757d;
+        }
+
+        .commission-docs {
+            background: #f0f4f8;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            border-left: 4px solid #0d6efd;
+        }
+
+        .commission-docs-recebimento {
+            border-left-color: #198754;
+        }
+
+        .exception-badge {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #212529;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .exception-card {
+            background: #fff8e1;
+            border: 2px dashed #ffc107;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
     </style>
 </head>
+
 <body class="bg-light">
     <div class="container mt-5 mb-5">
         <div class="d-flex justify-content-between mb-3">
-            <a href="{% url 'pesquisa' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>Voltar para Busca</a>
-            <a href="{% url 'transparencia' %}" class="btn btn-outline-primary"><i class="bi bi-list-ul me-2"></i>Ver Lista Completa</a>
+            <a href="{% url 'pesquisa' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>Voltar
+                para Busca</a>
+            <a href="{% url 'transparencia' %}" class="btn btn-outline-primary"><i class="bi bi-list-ul me-2"></i>Ver
+                Lista Completa</a>
         </div>
 
         <div class="card shadow-sm border-0 mb-4">
@@ -32,13 +92,17 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-8">
-                        <h5 class="text-primary"><i class="bi bi-building me-2"></i>{{ contrato.empresa.razao_social }}</h5>
-                        <p class="text-muted mb-1"><i class="bi bi-card-text me-2"></i>CNPJ: {{ contrato.empresa.cnpj }}</p>
+                        <h5 class="text-primary"><i class="bi bi-building me-2"></i>{{ contrato.empresa.razao_social }}
+                        </h5>
+                        <p class="text-muted mb-1"><i class="bi bi-card-text me-2"></i>CNPJ: {{ contrato.empresa.cnpj }}
+                            | <i class="bi bi-tag ms-2 me-1"></i>Tipo: <strong>{{ contrato.get_tipo_display }}</strong>
+                        </p>
                         <p class="mb-0"><strong>Objeto:</strong> {{ contrato.objeto }}</p>
                     </div>
                     <div class="col-md-4 text-md-end border-start">
                         <div class="mb-2">
-                            <small class="text-muted d-block"><i class="bi bi-calendar-range me-1"></i>Vigência Contratual</small>
+                            <small class="text-muted d-block"><i class="bi bi-calendar-range me-1"></i>Vigência
+                                Contratual</small>
                             <strong>{{ contrato.vigencia_inicio|date:"d/m/Y" }} a {{ contrato.vigencia_fim|date:"d/m/Y" }}</strong>
                         </div>
                     </div>
@@ -49,7 +113,8 @@
         <h4 class="mb-3"><i class="bi bi-people-fill me-2"></i>Equipe de Fiscalização (Comissão Atual)</h4>
 
         {% if comissoes_fiscalizacao %}
-        <h4 class="mb-3 text-primary border-bottom pb-2"><i class="bi bi-clipboard-check me-2"></i>Fiscalização (Gestor e Fiscais)</h4>
+        <h4 class="mb-3 text-primary border-bottom pb-2"><i class="bi bi-clipboard-check me-2"></i>Fiscalização (Gestor
+            e Fiscais)</h4>
         {% for comissao in comissoes_fiscalizacao %}
         <div class="card mb-4 shadow-sm border-primary">
             <div class="card-header bg-primary text-white">
@@ -68,7 +133,8 @@
                         </div>
                         <div class="col-md-4">
                             <i class="bi bi-journal-text me-1 text-primary"></i>
-                            <strong>Boletim:</strong> {% if comissao.boletim_numero %}nº {{ comissao.boletim_numero }}, de {{ comissao.boletim_data|date:"d/m/Y" }}{% else %}Não cadastrado{% endif %}
+                            <strong>Boletim:</strong> {% if comissao.boletim_numero %}nº {{ comissao.boletim_numero }},
+                            de {{ comissao.boletim_data|date:"d/m/Y" }}{% else %}Não cadastrado{% endif %}
                         </div>
                     </div>
                 </div>
@@ -83,7 +149,9 @@
                             {% else %}
                             <span class="role-icon role-fiscal"><i class="bi bi-person-fill"></i></span>
                             {% endif %}
-                            <div><div class="fw-bold">{{ integrante.funcao.titulo }}</div></div>
+                            <div>
+                                <div class="fw-bold">{{ integrante.funcao.titulo }}</div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -95,9 +163,12 @@
                     <div class="col-md-4">
                         {% if integrante.data_inicio != comissao.data_inicio or integrante.data_fim != comissao.data_fim %}
                         <div class="exception-card">
-                            <span class="exception-badge"><i class="bi bi-exclamation-triangle me-1"></i>Designação Específica</span>
+                            <span class="exception-badge"><i class="bi bi-exclamation-triangle me-1"></i>Designação
+                                Específica</span>
                             <div class="mt-2">
-                                <div><i class="bi bi-calendar-event me-1"></i><strong>Início:</strong> {{ integrante.data_inicio|date:"d/m/Y" }}{% if integrante.data_fim %} | <strong>Término:</strong> {{ integrante.data_fim|date:"d/m/Y" }}{% endif %}</div>
+                                <div><i class="bi bi-calendar-event me-1"></i><strong>Início:</strong> {{ integrante.data_inicio|date:"d/m/Y" }}{% if integrante.data_fim %} |
+                                    <strong>Término:</strong> {{ integrante.data_fim|date:"d/m/Y" }}{% endif %}
+                                </div>
                                 <div class="mt-1"><i class="bi bi-file-earmark-text me-1"></i>Port. {{ integrante.portaria_numero }}, de {{ integrante.portaria_data|date:"d/m/Y" }}</div>
                                 {% if integrante.boletim_numero %}<div><i class="bi bi-journal-text me-1"></i>Bol. {{ integrante.boletim_numero }}, de {{ integrante.boletim_data|date:"d/m/Y" }}</div>{% endif %}
                             </div>
@@ -105,7 +176,8 @@
                         {% endif %}
                     </div>
                 </div>
-                {% if not forloop.last %}<hr class="my-3">{% endif %}
+                {% if not forloop.last %}
+                <hr class="my-3">{% endif %}
                 {% endfor %}
             </div>
         </div>
@@ -113,7 +185,8 @@
         {% endif %}
 
         {% if comissoes_recebimento %}
-        <h4 class="mb-3 text-success border-bottom pb-2 mt-5"><i class="bi bi-box-seam me-2"></i>Recebimento (Presidente e Membros)</h4>
+        <h4 class="mb-3 text-success border-bottom pb-2 mt-5"><i class="bi bi-box-seam me-2"></i>Recebimento (Presidente
+            e Membros)</h4>
         {% for comissao in comissoes_recebimento %}
         <div class="card mb-4 shadow-sm border-success">
             <div class="card-header bg-success text-white">
@@ -132,7 +205,8 @@
                         </div>
                         <div class="col-md-4">
                             <i class="bi bi-journal-text me-1 text-success"></i>
-                            <strong>Boletim:</strong> {% if comissao.boletim_numero %}nº {{ comissao.boletim_numero }}, de {{ comissao.boletim_data|date:"d/m/Y" }}{% else %}Não cadastrado{% endif %}
+                            <strong>Boletim:</strong> {% if comissao.boletim_numero %}nº {{ comissao.boletim_numero }},
+                            de {{ comissao.boletim_data|date:"d/m/Y" }}{% else %}Não cadastrado{% endif %}
                         </div>
                     </div>
                 </div>
@@ -145,7 +219,9 @@
                             {% else %}
                             <span class="role-icon role-membro"><i class="bi bi-person-check-fill"></i></span>
                             {% endif %}
-                            <div><div class="fw-bold">{{ integrante.funcao.titulo }}</div></div>
+                            <div>
+                                <div class="fw-bold">{{ integrante.funcao.titulo }}</div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -157,9 +233,12 @@
                     <div class="col-md-4">
                         {% if integrante.data_inicio != comissao.data_inicio or integrante.data_fim != comissao.data_fim %}
                         <div class="exception-card">
-                            <span class="exception-badge"><i class="bi bi-exclamation-triangle me-1"></i>Designação Específica</span>
+                            <span class="exception-badge"><i class="bi bi-exclamation-triangle me-1"></i>Designação
+                                Específica</span>
                             <div class="mt-2">
-                                <div><i class="bi bi-calendar-event me-1"></i><strong>Início:</strong> {{ integrante.data_inicio|date:"d/m/Y" }}{% if integrante.data_fim %} | <strong>Término:</strong> {{ integrante.data_fim|date:"d/m/Y" }}{% endif %}</div>
+                                <div><i class="bi bi-calendar-event me-1"></i><strong>Início:</strong> {{ integrante.data_inicio|date:"d/m/Y" }}{% if integrante.data_fim %} |
+                                    <strong>Término:</strong> {{ integrante.data_fim|date:"d/m/Y" }}{% endif %}
+                                </div>
                                 <div class="mt-1"><i class="bi bi-file-earmark-text me-1"></i>Port. {{ integrante.portaria_numero }}, de {{ integrante.portaria_data|date:"d/m/Y" }}</div>
                                 {% if integrante.boletim_numero %}<div><i class="bi bi-journal-text me-1"></i>Bol. {{ integrante.boletim_numero }}, de {{ integrante.boletim_data|date:"d/m/Y" }}</div>{% endif %}
                             </div>
@@ -167,7 +246,8 @@
                         {% endif %}
                     </div>
                 </div>
-                {% if not forloop.last %}<hr class="my-3">{% endif %}
+                {% if not forloop.last %}
+                <hr class="my-3">{% endif %}
                 {% endfor %}
             </div>
         </div>
@@ -175,8 +255,10 @@
         {% endif %}
 
         {% if not comissoes_fiscalizacao and not comissoes_recebimento %}
-        <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Nenhuma comissão ativa cadastrada para este contrato no momento.</div>
+        <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Nenhuma comissão ativa
+            cadastrada para este contrato no momento.</div>
         {% endif %}
     </div>
 </body>
+
 </html>
