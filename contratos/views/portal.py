@@ -160,7 +160,7 @@ def listar_agentes(request):
     return generico_listar(
         request, Agente, 'contratos/portal/lista_generica.html', 'Agentes', 
         'novo_agente', 'editar_agente',
-        [('posto', 'Posto'), ('nome_de_guerra', 'Nome de Guerra'), ('saram', 'SARAM')],
+        [('posto', 'Posto'), ('nome_de_guerra', 'Nome de Guerra'), ('saram', 'SARAM'), ('cpf', 'CPF')],
         url_exportar='exportar_agentes_csv',
         arquivo_exportacao='agentes.csv'
     )

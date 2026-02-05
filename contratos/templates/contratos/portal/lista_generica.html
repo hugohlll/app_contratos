@@ -108,6 +108,7 @@
                         <td class="px-3">{{ item.posto.sigla }}</td>
                         <td class="px-3">{{ item.nome_de_guerra }}</td>
                         <td class="px-3">{{ item.saram }}</td>
+                        <td class="px-3">{{ item.cpf|default:"-" }}</td>
 
                         {% elif titulo == 'Comissões' %}
                         <td class="px-3">{{ item.contrato.numero }}</td>

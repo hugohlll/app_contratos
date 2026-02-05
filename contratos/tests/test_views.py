@@ -132,3 +132,11 @@ class AuditoriaViewsTest(TestCase):
         content = response.content.decode('utf-8-sig')
         self.assertIn("Maj Grafico", content)
 
+    def test_agent_list_contains_cpf(self):
+        """Teste se a lista de agentes mostra a coluna CPF"""
+        url = reverse('listar_agentes')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "CPF") # Header
+        self.assertContains(response, "111.111.111-11") # Data from setUp
+
