@@ -73,3 +73,52 @@ class PortalViewsTest(TestCase):
          self.assertContains(response, "Objeto Portal")
          self.assertContains(response, "Tipo:") 
          self.assertContains(response, "Despesa")
+
+class AuditoriaViewsTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='auditor_user', password='password')
+        # Add to Auditores group just in case (though view uses @login_required)
+        group, _ = Group.objects.get_or_create(name='Auditores')
+        self.user.groups.add(group)
+        self.user.save()
+        self.client.login(username='auditor_user', password='password')
+        
+        # Setup data for charts
+        self.posto = PostoGraduacao.objects.create(sigla="Maj", descricao="Major", senioridade=2)
+        self.agente = Agente.objects.create(
+            nome_completo="Agente Grafico", 
+            nome_de_guerra="Grafico", 
+            posto=self.posto, 
+            saram="99999",
+            cpf="111.111.111-11"
+        ) 
+        # Wait, Agente doesn't have CNPJ. checking models... Agente has cpf.
+        # Fixed in replacement content below.
+        
+        self.empresa = Empresa.objects.create(razao_social="Empresa G", cnpj="77.777.777/0001-77")
+        self.contrato = Contrato.objects.create(
+            numero="999/2026", tipo="DESPESA", empresa=self.empresa, objeto="Obj",
+            vigencia_inicio=date.today(), vigencia_fim=date.today()+timedelta(days=365),
+            valor_total=1000
+        )
+        # Create Integrante to appear in charts
+        self.funcao = Funcao.objects.create(titulo="Gestor", sigla="GES")
+        self.comissao = Comissao.objects.create(contrato=self.contrato, tipo="FISCALIZACAO", ativa=True)
+        self.integrante = Integrante.objects.create(
+            comissao=self.comissao, agente=self.agente, funcao=self.funcao, 
+            data_inicio=date.today() - timedelta(days=100),
+            portaria_numero="111", portaria_data=date.today()
+        )
+
+    def test_chart_labels_contain_rank(self):
+        url = reverse('painel_controle')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        
+        # Check context for chart labels
+        # p_labels should be in context 'permanencia_labels' (JSON string)
+        # We expect "Maj Grafico"
+        expected_label = "Maj Grafico"
+        self.assertContains(response, expected_label)
+

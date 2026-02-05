@@ -105,7 +105,7 @@ def painel_controle(request):
     top_10_permanencia = radar_permanencia[:10]
     
     # Dados para gráfico de permanência (top 10) - serializado como JSON
-    permanencia_labels = [f"{item['agente'].nome_de_guerra[:20]}" for item in top_10_permanencia]
+    permanencia_labels = [f"{item['agente'].posto.sigla} {item['agente'].nome_de_guerra}" for item in top_10_permanencia]
     permanencia_dias = [item['dias_totais'] for item in top_10_permanencia]
     permanencia_labels_json = mark_safe(json.dumps(permanencia_labels, ensure_ascii=False))
     permanencia_dias_json = mark_safe(json.dumps(permanencia_dias))
@@ -131,7 +131,7 @@ def painel_controle(request):
     ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes')[:10]
     
     # Dados para gráfico de sobrecarga - serializado como JSON
-    sobrecarga_labels = [f"{ag.nome_de_guerra[:20]}" for ag in agentes_sobrecarregados]
+    sobrecarga_labels = [f"{ag.posto.sigla} {ag.nome_de_guerra}" for ag in agentes_sobrecarregados]
     sobrecarga_valores = [ag.total_atuacoes for ag in agentes_sobrecarregados]
     sobrecarga_labels_json = mark_safe(json.dumps(sobrecarga_labels, ensure_ascii=False))
     sobrecarga_valores_json = mark_safe(json.dumps(sobrecarga_valores))
