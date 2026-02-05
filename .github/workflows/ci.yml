@@ -1,0 +1,38 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - master
+      - 'feature/**'
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Run Tests & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and Start Containers
+        run: |
+          docker compose up -d --build
+          echo "Waiting for DB to be ready..."
+          sleep 10  # Simple wait, in production use wait-for-it or healthcheck
+
+      - name: Run Migrations (Prepare DB)
+        run: docker compose exec -T web python manage.py migrate
+
+      - name: Run Tests
+        run: docker compose exec -T web python manage.py test contratos
+
+      - name: Stop Containers
+        if: always()
+        run: docker compose down
