@@ -379,7 +379,7 @@
     const ctxQual = document.getElementById('chartQualificacao');
     if (ctxQual) {
         new Chart(ctxQual, {
-            type: 'doughnut',
+            type: 'pie',
             data: {
                 labels: ['Em Dia', 'Vencido', 'Sem Curso'],
                 datasets: [{
@@ -391,8 +391,7 @@
     options: {
         responsive: true,
             maintainAspectRatio: false,
-                cutout: '75%',
-                    plugins: { legend: { position: 'right' } }
+                plugins: { legend: { position: 'right' } }
     }
             });
         }
