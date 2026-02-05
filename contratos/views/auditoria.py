@@ -201,7 +201,7 @@ def exportar_vencimentos_csv(request):
         writer.writerow([
             status,
             dias,
-            integrante.agente.nome_de_guerra,
+            f"{integrante.agente.posto.sigla} {integrante.agente.nome_de_guerra}",
             integrante.funcao.titulo,
             integrante.comissao.contrato.numero,
             integrante.data_fim.strftime('%d/%m/%Y')
@@ -400,7 +400,7 @@ def exportar_radar_permanencia_csv(request):
     
     for item in radar_permanencia:
         writer.writerow([
-            item['agente'].nome_de_guerra,
+            f"{item['agente'].posto.sigla} {item['agente'].nome_de_guerra}",
             item['funcao'].titulo,
             item['contrato'].numero,
             item['dias_totais'],
@@ -427,7 +427,7 @@ def exportar_sobrecarga_agentes_csv(request):
     
     for agente in agentes_sobrecarregados:
         writer.writerow([
-            agente.nome_de_guerra,
+            f"{agente.posto.sigla} {agente.nome_de_guerra}",
             agente.saram,
             agente.total_atuacoes
         ])

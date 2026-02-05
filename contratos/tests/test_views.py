@@ -122,3 +122,13 @@ class AuditoriaViewsTest(TestCase):
         expected_label = "Maj Grafico"
         self.assertContains(response, expected_label)
 
+    def test_csv_export_contains_rank(self):
+        """Testa se a exportação CSV contém o posto/graduação"""
+        url = reverse('exportar_radar_permanencia_csv')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        
+        # O conteúdo do CSV vem em bytes, decodificamos para verificar texto
+        content = response.content.decode('utf-8-sig')
+        self.assertIn("Maj Grafico", content)
+
