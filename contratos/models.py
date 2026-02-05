@@ -71,7 +71,12 @@ class Funcao(models.Model):
 
 
 class Contrato(models.Model):
+    TIPO_CHOICES = [
+        ('RECEITA', 'Receita'),
+        ('DESPESA', 'Despesa'),
+    ]
     numero = models.CharField("Número do Contrato", max_length=20, unique=True)
+    tipo = models.CharField("Tipo", max_length=10, choices=TIPO_CHOICES, default='DESPESA')
     objeto = models.TextField("Objeto do Contrato")
     empresa = models.ForeignKey(Empresa, on_delete=models.PROTECT, verbose_name="Empresa Contratada")
     vigencia_inicio = models.DateField("Início da Vigência")

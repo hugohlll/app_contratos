@@ -41,7 +41,7 @@ class EmpresaForm(EstiloFormMixin, forms.ModelForm):
 class ContratoForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = Contrato
-        fields = ['numero', 'empresa', 'objeto', 'vigencia_inicio', 'vigencia_fim', 'valor_total']
+        fields = ['tipo', 'numero', 'empresa', 'objeto', 'vigencia_inicio', 'vigencia_fim', 'valor_total']
         widgets = {
             'vigencia_inicio': forms.DateInput(attrs={'type': 'date'}),
             'vigencia_fim': forms.DateInput(attrs={'type': 'date'}),
@@ -81,6 +81,19 @@ class ComissaoForm(EstiloFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['contrato'].label_from_instance = lambda obj: f"{obj.numero} - {obj.empresa.razao_social}"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        contrato = cleaned_data.get('contrato')
+        tipo_comissao = cleaned_data.get('tipo')
+
+        if contrato and tipo_comissao:
+            # Regra: Contratos de RECEITA não podem ter comissão de RECEBIMENTO
+            if contrato.tipo == 'RECEITA' and tipo_comissao == 'RECEBIMENTO':
+                # Adiciona erro ao campo 'tipo' e também erro geral se desejar
+                self.add_error('tipo', "Contratos de RECEITA não possuem comissão de Recebimento, apenas de Fiscalização.")
+        
+        return cleaned_data
 
 class IntegranteForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
