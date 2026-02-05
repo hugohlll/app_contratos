@@ -1,13 +1,15 @@
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group
 from contratos.models import PostoGraduacao, Agente, Empresa, Contrato, Comissao, Integrante, Funcao
 from datetime import date, timedelta
+import random
 
 class Command(BaseCommand):
-    help = 'Popula o banco de dados com dados de teste'
+    help = 'Popula o banco de dados com dados de teste MASSIVOS'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write(self.style.WARNING('Iniciando carga de dados...'))
+        self.stdout.write(self.style.WARNING('Iniciando carga de dados MASSIVA...'))
 
         # 1. CRIAR GRUPOS
         group_admin, _ = Group.objects.get_or_create(name='Administradores')
@@ -15,75 +17,63 @@ class Command(BaseCommand):
         self.stdout.write('Grupos criados.')
 
         # 2. CRIAR USUÁRIOS
-        # Superuser
         if not User.objects.filter(username='admin').exists():
             User.objects.create_superuser('admin', 'admin@example.com', 'admin')
             self.stdout.write('Superuser admin/admin criado.')
 
-        # Gestor (Admin)
         user_gestor, created = User.objects.get_or_create(username='gestor')
         if created:
             user_gestor.set_password('senha123')
             user_gestor.save()
             user_gestor.groups.add(group_admin)
-            self.stdout.write('Usuário gestor/senha123 criado (Grupo Administradores).')
+            self.stdout.write('Usuário gestor/senha123 criado.')
 
-        # Auditor
         user_auditor, created = User.objects.get_or_create(username='auditor')
         if created:
             user_auditor.set_password('senha123')
             user_auditor.save()
             user_auditor.groups.add(group_auditor)
-            self.stdout.write('Usuário auditor/senha123 criado (Grupo Auditores).')
+            self.stdout.write('Usuário auditor/senha123 criado.')
 
-        # 3. CRIAR POSTOS/GRADUAÇÕES
+        # 3. CRIAR POSTOS
         postos = [
-            ('Cel', 'Coronel', 1),
-            ('Ten Cel', 'Tenente-Coronel', 2),
-            ('Maj', 'Major', 3),
-            ('Cap', 'Capitão', 4),
-            ('1º Ten', 'Primeiro Tenente', 5),
-            ('2º Ten', 'Segundo Tenente', 6),
-            ('Asp', 'Aspirante', 7),
-            ('SO', 'Suboficial', 8),
-            ('1S', 'Primeiro Sargento', 9),
-            ('2S', 'Segundo Sargento', 10),
-            ('3S', 'Terceiro Sargento', 11),
-            ('Cb', 'Cabo', 12),
-            ('S1', 'Soldado de Primeira Classe', 13),
-            ('S2', 'Soldado de Segunda Classe', 14),
+            ('Cel', 'Coronel', 1), ('Ten Cel', 'Tenente-Coronel', 2), ('Maj', 'Major', 3),
+            ('Cap', 'Capitão', 4), ('1º Ten', 'Primeiro Tenente', 5), ('2º Ten', 'Segundo Tenente', 6),
+            ('Asp', 'Aspirante', 7), ('SO', 'Suboficial', 8), ('1S', 'Primeiro Sargento', 9),
+            ('2S', 'Segundo Sargento', 10), ('3S', 'Terceiro Sargento', 11), ('Cb', 'Cabo', 12),
+            ('S1', 'Soldado de 1ª Classe', 13), ('S2', 'Soldado de 2ª Classe', 14),
         ]
-        
         for sigla, desc, ordem in postos:
             PostoGraduacao.objects.get_or_create(sigla=sigla, defaults={'descricao': desc, 'senioridade': ordem})
-        self.stdout.write('Postos e Graduações criados.')
+        self.stdout.write('Postos criados.')
 
-        # 4. CRIAR AGENTES (MILITARES)
-        import random
-        
-        nomes = ['Silva', 'Santos', 'Oliveira', 'Souza', 'Lima', 'Pereira', 'Ferreira', 'Costa', 'Almeida', 'Nascimento', 'Alves', 'Carvalho', 'Rodrigues', 'Ribeiro']
-        nomes_meio = ['Carlos', 'Marcos', 'Ricardo', 'Ana', 'Pedro', 'João', 'Lucas', 'Mariana', 'Fernanda', 'Gabriel', 'Larissa', 'Rafael', 'Amanda', 'Patricia']
+        # 4. CRIAR AGENTES (200 agentes)
+        nomes = ['Silva', 'Santos', 'Oliveira', 'Souza', 'Lima', 'Pereira', 'Ferreira', 'Costa', 'Almeida', 'Nascimento', 'Alves', 'Carvalho', 'Rodrigues', 'Ribeiro', 'Mendes', 'Barbosa']
+        nomes_meio = ['Carlos', 'Marcos', 'Ricardo', 'Ana', 'Pedro', 'João', 'Lucas', 'Mariana', 'Fernanda', 'Gabriel', 'Larissa', 'Rafael', 'Amanda', 'Patricia', 'Bruno', 'Juliana']
         
         postos_objs = list(PostoGraduacao.objects.all())
         
-        # Gerar 50 agentes
-        for i in range(50):
-            posto = random.choice(postos_objs)
-            sobrenome = random.choice(nomes)
-            nome_guerra = sobrenome
-            nome_completo = f"{random.choice(nomes_meio)} {sobrenome}"
+        count_agentes = 0
+        for i in range(200):
             saram = f"{random.randint(1000000, 9999999)}"
-            
             if not Agente.objects.filter(saram=saram).exists():
+                posto = random.choice(postos_objs)
+                sobrenome = random.choice(nomes)
+                nome_completo = f"{random.choice(nomes_meio)} {sobrenome}"
+                
+                # Variar data do curso para ter alguns vencidos
+                dias_curso = random.randint(10, 800) # Se > 365, está vencido
+                
                 Agente.objects.create(
                     nome_completo=nome_completo,
-                    nome_de_guerra=nome_guerra,
+                    nome_de_guerra=sobrenome,
                     posto=posto,
                     cpf=f"{random.randint(100,999)}.{random.randint(100,999)}.{random.randint(100,999)}-{random.randint(10,99)}",
-                    data_ultimo_curso=date.today() - timedelta(days=random.randint(10, 500)),
+                    data_ultimo_curso=date.today() - timedelta(days=dias_curso),
                     saram=saram
                 )
-        self.stdout.write('Agentes gerados.')
+                count_agentes += 1
+        self.stdout.write(f'{count_agentes} Agentes gerados.')
 
         # 5. CRIAR FUNÇÕES
         funcoes = ['Presidente', 'Membro', 'Secretário', 'Gestor', 'Fiscal Administrativo', 'Fiscal Técnico', 'Fiscal Setorial']
@@ -91,138 +81,124 @@ class Command(BaseCommand):
             Funcao.objects.get_or_create(titulo=func, defaults={'sigla': func[:3].upper()})
         self.stdout.write('Funções criadas.')
 
-        # 6. CRIAR EMPRESAS
-        tipos_empresa = ['Tech', 'Soluções', 'Construtora', 'Serviços', 'Comércio', 'Indústria', 'Logística', 'Consultoria']
+        # 6. CRIAR EMPRESAS (50 empresas)
+        tipos_empresa = ['Tech', 'Soluções', 'Construtora', 'Serviços', 'Comércio', 'Indústria', 'Logística', 'Consultoria', 'Engenharia', 'Alimentos']
         sufixos = ['Ltda', 'SA', 'Eireli', 'ME', 'EPP']
         
-        # Gerar 20 empresas
-        for i in range(20):
-            razao = f"{random.choice(tipos_empresa)} {random.choice(nomes)} {random.choice(sufixos)}"
+        count_emp = 0
+        for i in range(50):
             cnpj = f"{random.randint(10,99)}.{random.randint(100,999)}.{random.randint(100,999)}/0001-{random.randint(10,99)}"
-            
             if not Empresa.objects.filter(cnpj=cnpj).exists():
+                razao = f"{random.choice(tipos_empresa)} {random.choice(nomes)} {random.choice(sufixos)}"
                 Empresa.objects.create(razao_social=razao, cnpj=cnpj)
-        
-        self.stdout.write('Empresas geradas.')
+                count_emp += 1
+        self.stdout.write(f'{count_emp} Empresas geradas.')
 
-        # 7. CRIAR CONTRATOS
+        # 7. CRIAR CONTRATOS (200 contratos)
         empresas = list(Empresa.objects.all())
         objetos = [
             'Serviços de Tecnologia da Informação', 'Aquisição de Material de Escritório', 
-            'Reforma do Pavilhão A', 'Manutenção de Viaturas', 'Fornecimento de Alimentação', 
-            'Serviços de Limpeza', 'Segurança Patrimonial', 'Locação de Equipamentos', 
-            'Consultoria em Engenharia', 'Aquisição de Licenças de Software'
+            'Reforma de Instalações Prediais', 'Manutenção de Viaturas', 'Fornecimento de Alimentação', 
+            'Serviços de Limpeza e Conservação', 'Segurança Patrimonial Armada', 'Locação de Equipamentos', 
+            'Consultoria Especializada em Engenharia', 'Aquisição de Licenças de Software',
+            'Serviços de Jardinagem', 'Manutenção de Ar Condicionado', 'Fornecimento de Combustível'
         ]
         
-        # Gerar 50 contratos
-        for i in range(1, 51):
+        count_contr = 0
+        for i in range(1, 201):
             num = f"{str(i).zfill(3)}/{date.today().year}"
-            emp = random.choice(empresas)
-            obj = random.choice(objetos)
-            val = random.uniform(10000.0, 5000000.0)
             
-            days_duration = random.randint(90, 720) # 3 months to 2 years
-            days_offset_end = random.randint(-100, 400) # Ends between 100 days ago and 400 days in future
-            
-            dt_fim = date.today() + timedelta(days=days_offset_end)
-            dt_inicio = dt_fim - timedelta(days=days_duration)
+            # 80% Despesa, 20% Receita
+            tipo_contrato = 'DESPESA' if random.random() < 0.8 else 'RECEITA'
 
             if not Contrato.objects.filter(numero=num).exists():
+                emp = random.choice(empresas)
+                val = random.uniform(5000.0, 10000000.0)
+                
+                # Alguns contratos já encerrados, outros vigentes, outros futuros
+                cenario = random.choice(['passado', 'vigente', 'vigente', 'vigente', 'futuro'])
+                
+                duracao = random.randint(180, 1460) # 6 meses a 4 anos
+                
+                if cenario == 'passado':
+                    inicio = date.today() - timedelta(days=duracao + random.randint(50, 300))
+                elif cenario == 'futuro':
+                    inicio = date.today() + timedelta(days=random.randint(10, 60))
+                else: # vigente
+                    inicio = date.today() - timedelta(days=random.randint(10, duracao-10))
+                
+                fim = inicio + timedelta(days=duracao)
+
                 Contrato.objects.create(
                     numero=num,
+                    tipo=tipo_contrato,
                     empresa=emp,
-                    objeto=obj,
-                    vigencia_inicio=dt_inicio,
-                    vigencia_fim=dt_fim,
+                    objeto=random.choice(objetos),
+                    vigencia_inicio=inicio,
+                    vigencia_fim=fim,
                     valor_total=val
                 )
-        self.stdout.write('Contratos gerados.')
+                count_contr += 1
+        self.stdout.write(f'{count_contr} Contratos gerados.')
 
-        # 8. CRIAR COMISSÕES E DESIGNAÇÕES
+        # 8. CRIAR COMISSÕES
         agentes = list(Agente.objects.all())
         funcao_gestor = Funcao.objects.get(titulo='Gestor')
         funcao_fiscal = Funcao.objects.get(titulo='Fiscal Técnico')
         funcao_presidente = Funcao.objects.get(titulo='Presidente')
         funcao_membro = Funcao.objects.get(titulo='Membro')
         
+        count_comiss = 0
         for contrato in Contrato.objects.all():
-            # Fiscalização
+            # Fiscalização (Padrão para todos)
             comissao_fisc = contrato.comissoes.filter(tipo='FISCALIZACAO').first()
             if comissao_fisc:
                 portaria = f"{random.randint(100, 999)}/GC"
-                dt_port = contrato.vigencia_inicio + timedelta(days=5) # Portaria 5 days after contract start
-                
-                # Boletim info
+                dt_port = contrato.vigencia_inicio
                 boletim = f"{random.randint(1, 52)}/{dt_port.year}"
-                dt_bol = dt_port + timedelta(days=random.randint(1, 5)) # Published 1-5 days after portaria
-
+                
                 comissao_fisc.portaria_numero = portaria
                 comissao_fisc.portaria_data = dt_port
                 comissao_fisc.boletim_numero = boletim
-                comissao_fisc.boletim_data = dt_bol
+                comissao_fisc.boletim_data = dt_port + timedelta(days=2)
                 comissao_fisc.data_inicio = dt_port
                 comissao_fisc.data_fim = contrato.vigencia_fim
                 comissao_fisc.ativa = True
                 comissao_fisc.save()
 
-                # Gestor e Fiscal
-                for func in [funcao_gestor, funcao_fiscal]:
-                    if not comissao_fisc.integrantes.filter(funcao=func).exists():
-                        Integrante.objects.create(
-                            comissao=comissao_fisc,
-                            agente=random.choice(agentes),
-                            funcao=func,
-                            data_inicio=dt_port,
-                            data_fim=contrato.vigencia_fim, # Set member end date too
-                            portaria_numero=portaria,
-                            portaria_data=dt_port,
-                            boletim_numero=boletim,
-                            boletim_data=dt_bol
-                        )
+                # Adicionar membros aleatórios
+                # Tentar não repetir o mesmo agente na comissão
+                possiveis = random.sample(agentes, k=2)
+                
+                if not comissao_fisc.integrantes.exists():
+                    Integrante.objects.create(comissao=comissao_fisc, agente=possiveis[0], funcao=funcao_gestor, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+                    Integrante.objects.create(comissao=comissao_fisc, agente=possiveis[1], funcao=funcao_fiscal, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+                    count_comiss += 1
 
-            # Recebimento (Criar aleatoriamente para 50% dos contratos)
-            if random.random() > 0.5:
-                dt_port_rec = contrato.vigencia_inicio + timedelta(days=10)
-                portaria_rec = f"{random.randint(100, 999)}/GC"
-                boletim_rec = f"{random.randint(1, 52)}/{dt_port_rec.year}"
-                dt_bol_rec = dt_port_rec + timedelta(days=random.randint(1, 5))
-
-                # Check if model allows multiple or how it works. Assuming we can create one.
+            # Recebimento (Apenas se TIPO != RECEITA) e com 60% de chance
+            if contrato.tipo != 'RECEITA' and random.random() > 0.4:
                 comissao_rec, created = Comissao.objects.get_or_create(
-                    contrato=contrato, 
-                    tipo='RECEBIMENTO',
+                    contrato=contrato, tipo='RECEBIMENTO',
                     defaults={
-                        'data_inicio': dt_port_rec,
-                        'data_fim': contrato.vigencia_fim,
                         'ativa': True,
-                        'portaria_numero': portaria_rec,
-                        'portaria_data': dt_port_rec,
-                        'boletim_numero': boletim_rec,
-                        'boletim_data': dt_bol_rec
+                        'data_inicio': contrato.vigencia_inicio,
+                        'data_fim': contrato.vigencia_fim
                     }
                 )
-                
-                if not created:
-                   comissao_rec.portaria_numero = portaria_rec
-                   comissao_rec.portaria_data = dt_port_rec
-                   comissao_rec.boletim_numero = boletim_rec
-                   comissao_rec.boletim_data = dt_bol_rec
-                   comissao_rec.data_inicio = dt_port_rec
-                   comissao_rec.data_fim = contrato.vigencia_fim
-                   comissao_rec.save()
+                if created:
+                    portaria = f"{random.randint(100, 999)}/GC"
+                    dt_port = contrato.vigencia_inicio
+                    
+                    comissao_rec.portaria_numero = portaria
+                    comissao_rec.portaria_data = dt_port
+                    comissao_rec.boletim_numero = f"{random.randint(1,52)}/{dt_port.year}"
+                    comissao_rec.boletim_data = dt_port + timedelta(days=2)
+                    comissao_rec.save()
 
-                # Presidente e 2 Membros
-                for func in [funcao_presidente, funcao_membro, funcao_membro]:
-                     Integrante.objects.create(
-                        comissao=comissao_rec, 
-                        agente=random.choice(agentes), 
-                        funcao=func, 
-                        data_inicio=dt_port_rec, 
-                        data_fim=contrato.vigencia_fim,
-                        portaria_numero=portaria_rec, 
-                        portaria_data=dt_port_rec,
-                        boletim_numero=boletim_rec,
-                        boletim_data=dt_bol_rec
-                    )
-
-        self.stdout.write(self.style.SUCCESS('Carga de dados MASSIVA concluída com sucesso!'))
+                    possiveis = random.sample(agentes, k=3)
+                    Integrante.objects.create(comissao=comissao_rec, agente=possiveis[0], funcao=funcao_presidente, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+                    Integrante.objects.create(comissao=comissao_rec, agente=possiveis[1], funcao=funcao_membro, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+                    Integrante.objects.create(comissao=comissao_rec, agente=possiveis[2], funcao=funcao_membro, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+                    count_comiss += 1
+        
+        self.stdout.write(self.style.SUCCESS('Base de testes MASSIVA criada com sucesso!'))
