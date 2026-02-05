@@ -21,6 +21,8 @@ urlpatterns = [
     path('auditoria/exportar.csv', auditoria.exportar_csv, name='exportar_csv'),
     path('auditoria/vencimentos.csv', auditoria.exportar_vencimentos_csv, name='exportar_vencimentos_csv'),
     path('auditoria/qualificacao.csv', auditoria.exportar_qualificacao_csv, name='exportar_qualificacao_csv'),
+    path('auditoria/radar_permanencia.csv', auditoria.exportar_radar_permanencia_csv, name='exportar_radar_permanencia_csv'),
+    path('auditoria/sobrecarga_agentes.csv', auditoria.exportar_sobrecarga_agentes_csv, name='exportar_sobrecarga_agentes_csv'),
 
     # Relatório por Período
     path('auditoria/relatorio/periodo/', auditoria.relatorio_por_periodo, name='relatorio_periodo'),

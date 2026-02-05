@@ -349,3 +349,87 @@ def exportar_relatorio_periodo_csv(request):
     response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
     return response
+    
+    
+@login_required
+def exportar_radar_permanencia_csv(request):
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="radar_permanencia.csv"'
+    response.write('\ufeff')
+    
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Militar', 'Função', 'Contrato', 'Dias Totais', 'Tempo Formatado', 'Início Real'])
+    
+    hoje = date.today()
+    filtro_ativos = get_filtro_ativos()
+    
+    integrantes_ativos = Integrante.objects.filter(filtro_ativos).select_related(
+        'agente', 'funcao', 'comissao__contrato'
+    )
+    
+    radar_permanencia = []
+    
+    for atual in integrantes_ativos:
+        data_inicio_real = atual.data_inicio
+        while True:
+            dia_anterior = data_inicio_real - timedelta(days=1)
+            designacao_anterior = Integrante.objects.filter(
+                comissao=atual.comissao,
+                agente=atual.agente,
+                funcao=atual.funcao
+            ).filter(Q(data_fim=dia_anterior) | Q(data_desligamento=dia_anterior)).first()
+
+            if designacao_anterior:
+                data_inicio_real = designacao_anterior.data_inicio
+            else:
+                break
+
+        dias_totais = (hoje - data_inicio_real).days
+        anos, meses = dias_totais // 365, (dias_totais % 365) // 30
+        
+        radar_permanencia.append({
+            'agente': atual.agente,
+            'funcao': atual.funcao,
+            'contrato': atual.comissao.contrato,
+            'dias_totais': dias_totais,
+            'tempo_formatado': f"{anos}a {meses}m ({dias_totais} dias)",
+            'inicio_real': data_inicio_real,
+        })
+        
+    radar_permanencia.sort(key=lambda x: x['dias_totais'], reverse=True)
+    
+    for item in radar_permanencia:
+        writer.writerow([
+            item['agente'].nome_de_guerra,
+            item['funcao'].titulo,
+            item['contrato'].numero,
+            item['dias_totais'],
+            item['tempo_formatado'],
+            item['inicio_real'].strftime('%d/%m/%Y')
+        ])
+        
+    return response
+
+
+@login_required
+def exportar_sobrecarga_agentes_csv(request):
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="sobrecarga_agentes.csv"'
+    response.write('\ufeff')
+    
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Militar', 'SARAM', 'Quantidade de Contratos'])
+    
+    filtro_ativos = get_filtro_ativos()
+    agentes_sobrecarregados = Agente.objects.annotate(
+        total_atuacoes=Count('integrante', filter=Q(integrante__in=Integrante.objects.filter(filtro_ativos)))
+    ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes')
+    
+    for agente in agentes_sobrecarregados:
+        writer.writerow([
+            agente.nome_de_guerra,
+            agente.saram,
+            agente.total_atuacoes
+        ])
+        
+    return response
