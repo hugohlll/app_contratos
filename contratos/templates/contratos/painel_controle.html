@@ -206,72 +206,49 @@
         </div>
     </div>
 
-    <!-- Gráfico de Vencimentos -->
-    <div class="chart-container">
-        <div class="chart-title">
-            <span>📅 Distribuição de Vencimentos</span>
-            <a href="{% url 'exportar_vencimentos_csv' %}" class="btn btn-primary btn-sm rounded-pill">
-                <i class="bi bi-download me-2"></i> CSV Completo
-            </a>
-        </div>
-        <div class="row">
-            <div class="col-md-8">
-                <div class="chart-wrapper">
-                    <canvas id="chartVencimentos"></canvas>
+    <!-- Gráficos de Pizza: Qualificação e Vencimentos -->
+    <div class="row">
+        <!-- Gráfico de Qualificação -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container h-100">
+                <div class="chart-title">
+                    <span>🎓 Qualificação dos Agentes</span>
+                    <a href="{% url 'exportar_qualificacao_csv' %}" download
+                        class="btn btn-outline-secondary btn-sm rounded-pill">
+                        <i class="bi bi-download me-2"></i> CSV Detalhado
+                    </a>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="chart-wrapper">
+                            <canvas id="chartQualificacao"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="d-flex flex-column justify-content-center h-100 ps-4">
-                    <div class="mb-3"><span class="badge bg-danger">Crítico (≤7 dias)</span> <span
-                            class="float-end fw-bold">{{ vencimentos_critico }}</span></div>
-                    <div class="mb-3"><span class="badge bg-warning text-dark">Alerta (8-15 dias)</span> <span
-                            class="float-end fw-bold">{{ vencimentos_alerta }}</span></div>
-                    <div class="mb-3"><span class="badge bg-success">Normal (>15 dias)</span> <span
-                            class="float-end fw-bold">{{ vencimentos_normal }}</span></div>
+        </div>
+
+        <!-- Gráfico de Vencimentos -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container h-100">
+                <div class="chart-title">
+                    <span>📅 Distribuição de Vencimentos</span>
+                    <a href="{% url 'exportar_vencimentos_csv' %}" class="btn btn-primary btn-sm rounded-pill">
+                        <i class="bi bi-download me-2"></i> CSV Completo
+                    </a>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="chart-wrapper">
+                            <canvas id="chartVencimentos"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Gráfico de Qualificação -->
-    <div class="chart-container">
-        <div class="chart-title">
-            <span>🎓 Qualificação dos Agentes</span>
-            <a href="{% url 'exportar_qualificacao_csv' %}" download
-                class="btn btn-outline-secondary btn-sm rounded-pill">
-                <i class="bi bi-download me-2"></i> CSV Detalhado
-            </a>
-        </div>
-        <div class="row">
-            <div class="col-md-5">
-                <div class="chart-wrapper">
-                    <canvas id="chartQualificacao"></canvas>
-                </div>
-            </div>
-            <div class="col-md-7">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="p-3 rounded text-center" style="background: #d1e7dd;">
-                            <div class="fs-4 fw-bold text-success">{{ dados_qualificacao.em_dia }}</div>
-                            <small class="text-muted">Em Dia</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="p-3 rounded text-center" style="background: #f8d7da;">
-                            <div class="fs-4 fw-bold text-danger">{{ dados_qualificacao.vencidos }}</div>
-                            <small class="text-muted">Vencidos</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="p-3 rounded text-center" style="background: #e2e3e5;">
-                            <div class="fs-4 fw-bold text-dark">{{ dados_qualificacao.sem_curso }}</div>
-                            <small class="text-muted">Sem Curso</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Gráficos Secundários -->
     <div class="row">
@@ -356,21 +333,19 @@
         const ctxVenc = document.getElementById('chartVencimentos');
         if (ctxVenc) {
             new Chart(ctxVenc, {
-                type: 'bar',
+                type: 'pie',
                 data: {
                     labels: ['Crítico (≤7 dias)', 'Alerta (8-15 dias)', 'Normal (>15 dias)'],
                     datasets: [{
-                        label: 'Designações',
                         data: [{{ vencimentos_critico }}, {{ vencimentos_alerta }}, {{ vencimentos_normal }}],
         backgroundColor: ['#dc3545', '#ffc107', '#198754'],
-            borderRadius: 5
+            borderWidth: 0
     }]
                 },
         options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
+        plugins: { legend: { position: 'right' } }
     }
             });
         }
