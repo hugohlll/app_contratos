@@ -401,24 +401,114 @@
     const ctxPerm = document.getElementById('chartPermanencia');
     {% if tem_permanencia %}
     if (ctxPerm) {
-        new Chart(ctxPerm, {
-            type: 'bar',
-            data: {
-                labels: {{ permanencia_labels }},
-    datasets: [{
-        label: 'Dias',
-        data: {{ permanencia_dias }},
-        backgroundColor: '#0dcaf0',
-        borderRadius: 4
-                    }]
+        // Dados originais
+        const usuarios = {{ permanencia_labels }};
+    const diasTotais = {{ permanencia_dias }};
+
+    // Separar em Base (<365) e Excesso (>365)
+    const baseData = diasTotais.map(d => Math.min(d, 365));
+    const excessData = diasTotais.map(d => Math.max(0, d - 365));
+
+    // Plugin customizado para linha vertical
+    const limitLinePlugin = {
+        id: 'limitLine',
+        afterDraw: (chart) => {
+            const ctx = chart.ctx;
+            const xAxis = chart.scales.x;
+            const yAxis = chart.scales.y;
+            const xValue = 365;
+
+            // Se 365 estiver fora do range visível, não desenha
+            if (xValue < xAxis.min || xValue > xAxis.max) return;
+
+            const xPixel = xAxis.getPixelForValue(xValue);
+            const topPixel = yAxis.top;
+            const bottomPixel = yAxis.bottom;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.strokeStyle = '#000000'; // Preto
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 5]); // Tracejado
+            ctx.moveTo(xPixel, topPixel);
+            ctx.lineTo(xPixel, bottomPixel);
+            ctx.stroke();
+
+            // Texto "limite ideal"
+            ctx.fillStyle = '#000000'; // Preto
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('limite ideal', xPixel, topPixel - 8);
+
+            ctx.restore();
+        }
+    };
+
+    new Chart(ctxPerm, {
+        type: 'bar',
+        data: {
+            labels: usuarios,
+            datasets: [
+                {
+                    label: 'Regular',
+                    data: baseData,
+                    backgroundColor: '#0dcaf0', // Cyan
+                    borderRadius: 4,
+                    barPercentage: 0.6
                 },
-    options: {
-        indexAxis: 'y',
+                {
+                    label: 'Excedente',
+                    data: excessData,
+                    borderRadius: 4,
+                    barPercentage: 0.6,
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)' // Vermelho fixo para simplificar
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
             responsive: true,
-                maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-    }
-            });
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 30 // Espaço para não cortar o texto "limite ideal"
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            // Mostrar o total real no tooltip
+                            const idx = context.dataIndex;
+                            const original = diasTotais[idx];
+                            return `Total: ${original} dias`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    grid: { color: '#f0f0f0' },
+                    suggestedMax: 400,
+                    title: {
+                        display: true,
+                        text: 'Dias de Permanência'
+                    }
+                },
+                y: {
+                    stacked: true,
+                    grid: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Militares'
+                    }
+                }
+            }
+        },
+        plugins: [limitLinePlugin]
+    });
         }
     {% endif %}
 
