@@ -516,25 +516,103 @@
     const ctxSob = document.getElementById('chartSobrecarga');
     {% if tem_sobrecarga %}
     if (ctxSob) {
-        new Chart(ctxSob, {
-            type: 'bar',
-            data: {
-                labels: {{ sobrecarga_labels }},
-    datasets: [{
-        label: 'Designações',
-        data: {{ sobrecarga_valores }},
-        backgroundColor: '#667eea',
-        borderRadius: 4
-                    }]
-                },
-    options: {
-        responsive: true,
-            maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-    }
-            });
+        const labels = {{ sobrecarga_labels }};
+    const values = {{ sobrecarga_valores }};
+
+    // Calcular média arredondada para cima
+    const sum = values.reduce((a, b) => a + b, 0);
+    const avg = values.length > 0 ? Math.ceil(sum / values.length) : 0;
+
+    // Separar em Base e Excesso
+    const baseDataSob = values.map(v => Math.min(v, avg));
+    const excessDataSob = values.map(v => Math.max(0, v - avg));
+
+    const averageLinePlugin = {
+        id: 'averageLine',
+        afterDraw: (chart) => {
+            const ctx = chart.ctx;
+            const xAxis = chart.scales.x;
+            const yAxis = chart.scales.y;
+            const yValue = avg;
+
+            if (yValue < yAxis.min || yValue > yAxis.max) return;
+
+            const yPixel = yAxis.getPixelForValue(yValue);
+            const leftPixel = xAxis.left;
+            const rightPixel = xAxis.right;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.strokeStyle = '#000000'; // Preto
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 5]); // Tracejado
+            ctx.moveTo(leftPixel, yPixel);
+            ctx.lineTo(rightPixel, yPixel);
+            ctx.stroke();
+
+            ctx.fillStyle = '#000000'; // Preto
+            ctx.textAlign = 'right';
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('valor médio: ' + avg, rightPixel, yPixel - 5);
+            ctx.restore();
         }
+    };
+
+    new Chart(ctxSob, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Regular',
+                    data: baseDataSob,
+                    backgroundColor: '#0dcaf0', // Cyan
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                },
+                {
+                    label: 'Excedente',
+                    data: excessDataSob,
+                    borderRadius: 4,
+                    barPercentage: 0.6,
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)' // Vermelho transparente
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: { top: 20 }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const idx = context.dataIndex;
+                            return `Total: ${values[idx]}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    grid: { display: false }, // Vertical grid lines usually off for clarity
+                    title: { display: true, text: 'Agentes' }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 },
+                    title: { display: true, text: 'Quantidade de Contratos' }
+                }
+            }
+        },
+        plugins: [averageLinePlugin]
+    });
+    }
     {% endif %}
     });
 </script>
