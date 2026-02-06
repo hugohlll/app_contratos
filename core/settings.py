@@ -129,4 +129,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication Redirects
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/auditoria/'
+LOGIN_REDIRECT_URL = '/portal/'

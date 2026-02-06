@@ -105,7 +105,7 @@
 
             <form method="post" action="{% url 'login' %}">
                 {% csrf_token %}
-                <input type="hidden" name="next" value="{{ next|default:'/auditoria/' }}">
+                <input type="hidden" name="next" value="{{ next|default:'/portal/' }}">
 
                 {% if form.errors %}
                 <div class="alert alert-danger py-2 px-3 mb-4 d-flex align-items-center" role="alert"
