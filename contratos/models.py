@@ -100,8 +100,8 @@ class Contrato(models.Model):
 
 class Comissao(models.Model):
     TIPO_CHOICES = [
-        ('FISCALIZACAO', 'Fiscalização (Gestor/Fiscal)'),
-        ('RECEBIMENTO', 'Recebimento (Pres/Membros)'),
+        ('FISCALIZACAO', 'Fiscalização'),
+        ('RECEBIMENTO', 'Recebimento'),
     ]
 
     contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='comissoes')
