@@ -131,7 +131,7 @@ def detalhe_contrato(request, pk):
     comissoes_ativas = contrato.comissoes.filter(ativa=True).prefetch_related(
         Prefetch(
             'integrantes',
-            queryset=Integrante.objects.select_related('agente', 'funcao').order_by('funcao__titulo'),
+            queryset=Integrante.objects.select_related('agente', 'funcao').order_by('funcao__ordem', 'funcao__titulo'),
             to_attr='integrantes_lista'
         )
     )

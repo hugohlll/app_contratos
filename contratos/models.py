@@ -59,6 +59,7 @@ class Empresa(models.Model):
 class Funcao(models.Model):
     titulo = models.CharField("Título da Função", max_length=100, unique=True)
     sigla = models.CharField("Sigla", max_length=20, blank=True, null=True)
+    ordem = models.IntegerField("Ordem de Hierarquia", default=0)
     ativa = models.BooleanField("Ativa?", default=True)
 
     def __str__(self):
@@ -67,7 +68,7 @@ class Funcao(models.Model):
     class Meta:
         verbose_name = "Tipo de Função"
         verbose_name_plural = "Tipos de Função"
-        ordering = ['titulo']
+        ordering = ['ordem', 'titulo']
 
 
 class Contrato(models.Model):
