@@ -1,5 +1,6 @@
 {% extends 'contratos/portal/base_portal.html' %}
 {% load static %}
+{% load portal_tags %}
 
 {% block content %}
 
@@ -7,7 +8,11 @@
 <div class="row mb-4">
     <div class="col">
         <h2 class="fw-bold">Bem-vindo, {{ request.user.first_name|default:request.user.username }}!</h2>
+        {% if request.user|is_admin %}
         <p class="text-muted">Selecione uma categoria abaixo para visualizar, adicionar ou editar registros.</p>
+        {% else %}
+        <p class="text-muted">Selecione uma categoria abaixo para visualizar os registros.</p>
+        {% endif %}
     </div>
 </div>
 
@@ -20,7 +25,9 @@
                 <p class="card-text text-muted">{{ total_contratos }} registrados</p>
                 <div class="d-grid gap-2">
                     <a href="{% url 'listar_contratos' %}" class="btn btn-outline-primary">Listar</a>
+                    {% if request.user|is_admin %}
                     <a href="{% url 'novo_contrato' %}" class="btn btn-primary">Adicionar Novo</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -33,7 +40,9 @@
                 <p class="card-text text-muted">{{ total_agentes }} registrados</p>
                 <div class="d-grid gap-2">
                     <a href="{% url 'listar_agentes' %}" class="btn btn-outline-primary">Listar</a>
+                    {% if request.user|is_admin %}
                     <a href="{% url 'novo_agente' %}" class="btn btn-primary">Adicionar Novo</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -46,7 +55,9 @@
                 <p class="card-text text-muted">{{ total_comissoes }} registradas</p>
                 <div class="d-grid gap-2">
                     <a href="{% url 'listar_comissoes' %}" class="btn btn-outline-primary">Listar</a>
+                    {% if request.user|is_admin %}
                     <a href="{% url 'nova_comissao' %}" class="btn btn-primary">Nova Comissão</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -57,9 +68,16 @@
     <div class="col-12">
         <div class="alert alert-info border-0 shadow-sm">
             <h5 class="alert-heading">💡 Dica Rápida</h5>
+            {% if request.user|is_admin %}
             <p class="mb-0">Para inserir uma nova designação (integrante), certifique-se primeiro de que o
                 <strong>Contrato</strong> e o <strong>Agente</strong> já estejam cadastrados no sistema.
             </p>
+            {% else %}
+            <p class="mb-0">Acesse o <a href="{% url 'painel_controle' %}" class="fw-bold text-decoration-none">Painel
+                    de
+                    Auditoria</a> para visualizar dashboards de conformidade, relatórios de vencimentos e análise de
+                sobrecarga de fiscais.</p>
+            {% endif %}
         </div>
     </div>
 </div>
