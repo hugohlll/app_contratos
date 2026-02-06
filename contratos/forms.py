@@ -93,6 +93,14 @@ class ComissaoForm(EstiloFormMixin, forms.ModelForm):
                 # Adiciona erro ao campo 'tipo' e também erro geral se desejar
                 self.add_error('tipo', "Contratos de RECEITA não possuem comissão de Recebimento, apenas de Fiscalização.")
         
+        # Validação de Data Fim para Comissões Ativas
+        data_fim = cleaned_data.get('data_fim')
+        ativa = cleaned_data.get('ativa')
+        
+        if ativa and data_fim:
+            if data_fim < date.today():
+                self.add_error('data_fim', "Uma comissão ativa não pode ter data de término anterior à data atual.")
+        
         return cleaned_data
 
 class IntegranteForm(EstiloFormMixin, forms.ModelForm):

@@ -173,4 +173,155 @@
     </div>
     {% endif %}
 </div>
+
+<style>
+    /* Estilo para erro de validação estrito */
+    .field-error-shadow {
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+        border-color: #dc3545 !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .field-side-warning {
+        position: absolute;
+        top: 0;
+        right: -10px;
+        transform: translateX(100%);
+        background-color: #ffdce0;
+        color: #b02a37;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        white-space: nowrap;
+        z-index: 10;
+        display: none;
+        border: 1px solid #f5c2c7;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .field-side-warning::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -6px;
+        transform: translateY(-50%);
+        border-width: 6px 6px 6px 0;
+        border-style: solid;
+        border-color: transparent #f5c2c7 transparent transparent;
+    }
+
+    /* Container relativo para posicionamento */
+    .input-wrapper-relative {
+        position: relative;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dataFimInput = document.getElementById('{{ form.data_fim.id_for_label }}');
+        const ativaInput = document.getElementById('{{ form.ativa.id_for_label }}');
+
+        if (!dataFimInput || !ativaInput) return;
+
+        // Cria o elemento de aviso
+        const warningSpan = document.createElement('div');
+        warningSpan.className = 'field-side-warning';
+        warningSpan.innerText = 'Data inválida para comissão ativa';
+
+        // Envolve o input em um wrapper relativo se ainda não estiver
+        const parent = dataFimInput.parentNode;
+        parent.classList.add('input-wrapper-relative');
+        parent.appendChild(warningSpan);
+        parent.style.position = 'relative'; // Garante reset do contexto de empilhamento
+
+        function validateStrict() {
+            // Se NÃO estiver ativa, limpa erro
+            if (!ativaInput.checked) {
+                clearValidation();
+                return;
+            }
+
+            // Se estiver ativa
+            const dateValue = dataFimInput.value;
+            // Verifica se há mensagem de erro do servidor para este campoe esconde
+            const serverError = dataFimInput.parentNode.querySelector('.text-danger');
+            if (serverError) {
+                serverError.style.display = 'none';
+                // Se veio com erro do servidor, forçamos o estado inválido visual
+                // Mesmo que o value possa estar vazio ou não parseável
+                if (!dateValue) {
+                    // Se está vazio mas tem erro de servidor, assume que tentou salvar errado
+                    // Mas precisamos saber se é validação de data futura
+                }
+            }
+
+            if (dateValue) {
+                // Parse manual para evitar problemas de timezone (yyyy-mm-dd)
+                const parts = dateValue.split('-');
+                let selectedDate = null;
+                if (parts.length === 3) {
+                    // new Date(y, m, d) cria data local meia-noite
+                    selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                }
+
+                if (selectedDate) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    if (selectedDate < today) {
+                        // REGRAS ESTRITAS: Data passada
+                        // 1. Limpar campo (mantendo consistência com interação)
+                        dataFimInput.value = '';
+                        // 2. Sombreado vermelho
+                        dataFimInput.classList.add('field-error-shadow');
+                        // 3. Aviso ao lado
+                        if (warningSpan) {
+                            warningSpan.style.display = 'block';
+                            warningSpan.style.top = (dataFimInput.offsetTop + 5) + 'px';
+                        }
+                    } else {
+                        // Se tiver erro de servidor mas a data agora parece válida (usuário corrigiu? não, isso é apenas leitura)
+                        // Limpa erro
+                        clearValidation();
+                    }
+                }
+            } else {
+                // Se campo vazio
+                clearValidation();
+
+                // Exceção: Se tiver erro de servidor e estiver vazio (provável submit sem data ou data inválida limpa pelo browser)
+                // Mas a regra estrita só aplica se "ativa" e data < hoje.
+                // Se data for vazia, permitimos (deixamos o usuário preencher).
+            }
+
+            // Se tiver erro de servidor E a validação estrita detectou erro (entrou no if), o texto sumiu e o balão apareceu.
+            // Se tiver erro de servidor MAS o valor não disparou strict (ex: data futura mas outro erro?), mantemos escondido se for especificamente erro de campo.
+            // Para garantir que o estilo visual se mantenha apenas sobre a regra de data passada:
+
+            // Mas espere! Se o server devolve o form com erro, ele devolve o valor POSTado.
+            // Se usuário mandou 2000-01-01, o value é 2000-01-01.
+            // O código acima vai detectar < today e vai LIMPAR e mostrar erro. Perfeito.
+        }
+
+        function clearValidation() {
+            dataFimInput.classList.remove('field-error-shadow');
+            warningSpan.style.display = 'none';
+        }
+
+        // Eventos
+        ativaInput.addEventListener('change', validateStrict);
+        // Validar data apenas no BLUR
+        dataFimInput.addEventListener('blur', validateStrict);
+
+        // Remove erro ao digitar
+        dataFimInput.addEventListener('input', function () {
+            clearValidation();
+        });
+
+        // Executa validação ao carregar a página (para tratar retorno do servidor com erro)
+        // Pequeno delay para garantir renderização
+        setTimeout(validateStrict, 50);
+    });
+</script>
 {% endblock %}
