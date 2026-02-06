@@ -88,17 +88,16 @@
                                 <span class="badge bg-warning text-dark">Recebimento</span>
                                 {% endif %}
                             </td>
-                            <td>{{ item.posto_graduacao.sigla|default:item.agente.posto.sigla }} {{ item.agente.nome_de_guerra }}</td>
+                            <td>
+                                {{ item.posto_graduacao.sigla|default:item.agente.posto.sigla }}
+                                {{ item.agente.nome_de_guerra }}
+                            </td>
                             <td>{{ item.agente.saram }}</td>
                             <td>{{ item.agente.cpf|default:"-" }}</td>
                             <td>{{ item.funcao.titulo }}</td>
                             <td>{{ item.data_inicio|date:"d/m/Y" }}</td>
                             <td>
-                                {% if item.data_fim %}
-                                {{ item.data_fim|date:"d/m/Y" }}
-                                {% else %}
-                                <span class="badge bg-success">Ativa</span>
-                                {% endif %}
+                                {{ item.data_fim|date:"d/m/Y"|default:"-" }}
                             </td>
                             <td>{{ item.portaria_numero }}</td>
                             <td>{{ item.portaria_data|date:"d/m/Y"|default:"-" }}</td>

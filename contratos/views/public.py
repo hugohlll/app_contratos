@@ -49,11 +49,13 @@ def detalhe_contrato(request, contrato_id):
     contrato = Contrato.objects.get(id=contrato_id)
     filtro_integrante_ativo = get_filtro_ativos()
 
-    comissoes_ativas = contrato.comissoes.filter(ativa=True).prefetch_related(
+    # Busca todas as comissões (inclusive inativas) e todos os integrantes (inclusive desligados)
+    comissoes_ativas = contrato.comissoes.all().prefetch_related(
         Prefetch(
             'integrantes',
-            queryset=Integrante.objects.filter(filtro_integrante_ativo).select_related('agente', 'funcao'),
-            to_attr='integrantes_ativos_lista'
+            # Ordenação por função para agrupar (Gestor, Fiscal..), ou poderia ser por data_inicio
+            queryset=Integrante.objects.all().select_related('agente', 'funcao').order_by('funcao__titulo'),
+            to_attr='integrantes_lista'  # Nome esperado pelo template detalhe.html
         )
     )
 

@@ -160,6 +160,13 @@ class Integrante(models.Model):
         # Se for um novo registro ou se o posto estiver vazio, copia do Agente
         if not self.posto_graduacao and self.agente:
             self.posto_graduacao = self.agente.posto
+            
+        # Regra de Negócio: Auto-preenchimento de datas
+        if not self.data_inicio and self.comissao.data_inicio:
+            self.data_inicio = self.comissao.data_inicio
+        if not self.data_fim and self.comissao.data_fim:
+            self.data_fim = self.comissao.data_fim
+            
         super().save(*args, **kwargs)
 
     def clean(self):

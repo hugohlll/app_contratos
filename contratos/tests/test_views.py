@@ -74,6 +74,37 @@ class PortalViewsTest(TestCase):
          self.assertContains(response, "Tipo:") 
          self.assertContains(response, "Despesa")
 
+    def test_contrato_detail_shows_expired_members(self):
+        """Teste se membros com designação encerrada aparecem na tela de detalhes (sem filtro de ativo)"""
+        # Criar comissão e integrante expirado
+        comissao = Comissao.objects.create(
+            contrato=self.contrato,
+            tipo='FISCALIZACAO',
+            ativa=True,
+            data_inicio=date.today() - timedelta(days=200),
+            data_fim=date.today() - timedelta(days=100) # Expirada
+        )
+        posto = PostoGraduacao.objects.create(sigla="Sgt", descricao="Sargento", senioridade=5)
+        agente = Agente.objects.create(nome_completo="Sargento Antigo", nome_de_guerra="Antigo", saram="12345", posto=posto)
+        funcao = Funcao.objects.create(titulo="Membro")
+        
+        # Integrante expirado
+        Integrante.objects.create(
+            comissao=comissao,
+            agente=agente,
+            funcao=funcao,
+            data_inicio=date.today() - timedelta(days=200),
+            data_fim=date.today() - timedelta(days=100),
+            portaria_numero="100", portaria_data=date.today()
+        )
+        
+        url = reverse('detalhe_contrato_portal', kwargs={'pk': self.contrato.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        # Deve mostrar o nome do integrante mesmo expirado
+        self.assertContains(response, "Sgt")
+        self.assertContains(response, "Antigo")
+
 class AuditoriaViewsTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -170,7 +201,10 @@ class AuditoriaViewsTest(TestCase):
         
         # Ensure no broken template tags are visible
         self.assertNotContains(response, "{{")
+        self.assertNotContains(response, "{{")
         self.assertNotContains(response, "}}")
+        # should not contain Ativa badge or text
+        self.assertNotContains(response, "Ativa")
 
     def test_report_period_csv_export(self):
         """Teste se a exportação CSV do relatório por período funciona e contém as colunas novas"""
@@ -186,6 +220,12 @@ class AuditoriaViewsTest(TestCase):
         self.assertIn("CPF", content)
         self.assertIn("Tipo Comissão", content)
         self.assertIn("Fiscalização", content)
+        self.assertIn("Tipo Comissão", content)
+        self.assertIn("Fiscalização", content)
         self.assertIn("Término (Previsão)", content)
+        # Check for presence of at least one date or "Previsto" depending on test data
+        # self.assertIn("(Previsto)", content) 
+
+        self.assertNotIn("Ativa", content)
         self.assertIn("111.111.111-11", content)
 

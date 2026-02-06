@@ -104,6 +104,7 @@
                             <small class="text-muted d-block"><i class="bi bi-calendar-range me-1"></i>Vigência
                                 Contratual</small>
                             <strong>{{ contrato.vigencia_inicio|date:"d/m/Y" }} a {{ contrato.vigencia_fim|date:"d/m/Y" }}</strong>
+
                         </div>
                     </div>
                 </div>
@@ -130,6 +131,7 @@
                         <div class="col-md-4">
                             <i class="bi bi-file-earmark-text me-1 text-primary"></i>
                             <strong>Portaria:</strong> {% if comissao.portaria_numero %}nº {{ comissao.portaria_numero }}, de {{ comissao.portaria_data|date:"d/m/Y" }}{% else %}Não cadastrada{% endif %}
+
                         </div>
                         <div class="col-md-4">
                             <i class="bi bi-journal-text me-1 text-primary"></i>
@@ -138,7 +140,7 @@
                         </div>
                     </div>
                 </div>
-                {% for integrante in comissao.integrantes_ativos_lista %}
+                {% for integrante in comissao.integrantes_lista %}
                 <div class="row mb-3 align-items-start">
                     <div class="col-md-4">
                         <div class="d-flex align-items-center">
@@ -156,12 +158,13 @@
                     </div>
                     <div class="col-md-4">
                         <div class="military-card">
-                            <div class="fw-bold"><i class="bi bi-shield-fill-check me-1 text-primary"></i>{% if integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla }}{% else %}{{ integrante.agente.posto.sigla }}{% endif %} {{ integrante.agente.nome_de_guerra }}</div>
+                            <div class="fw-bold"><i class="bi bi-shield-fill-check me-1 text-primary"></i>{% if                 integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla }}{% else %}{{ integrante.agente.posto.sigla }}{% endif %} {{ integrante.agente.nome_de_guerra }}</div>
                             <small class="text-muted"><i class="bi bi-hash me-1"></i>SARAM: {{ integrante.agente.saram }}</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         {% if integrante.data_inicio != comissao.data_inicio or integrante.data_fim != comissao.data_fim %}
+
                         <div class="exception-card">
                             <span class="exception-badge"><i class="bi bi-exclamation-triangle me-1"></i>Designação
                                 Específica</span>
@@ -202,6 +205,7 @@
                         <div class="col-md-4">
                             <i class="bi bi-file-earmark-text me-1 text-success"></i>
                             <strong>Portaria:</strong> {% if comissao.portaria_numero %}nº {{ comissao.portaria_numero }}, de {{ comissao.portaria_data|date:"d/m/Y" }}{% else %}Não cadastrada{% endif %}
+
                         </div>
                         <div class="col-md-4">
                             <i class="bi bi-journal-text me-1 text-success"></i>
@@ -210,7 +214,7 @@
                         </div>
                     </div>
                 </div>
-                {% for integrante in comissao.integrantes_ativos_lista %}
+                {% for integrante in comissao.integrantes_lista %}
                 <div class="row mb-3 align-items-start">
                     <div class="col-md-4">
                         <div class="d-flex align-items-center">
@@ -226,12 +230,13 @@
                     </div>
                     <div class="col-md-4">
                         <div class="military-card">
-                            <div class="fw-bold"><i class="bi bi-shield-fill-check me-1 text-success"></i>{% if integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla }}{% else %}{{ integrante.agente.posto.sigla }}{% endif %} {{ integrante.agente.nome_de_guerra }}</div>
+                            <div class="fw-bold"><i class="bi bi-shield-fill-check me-1 text-success"></i>{% if                 integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla }}{% else %}{{ integrante.agente.posto.sigla }}{% endif %} {{ integrante.agente.nome_de_guerra }}</div>
                             <small class="text-muted"><i class="bi bi-hash me-1"></i>SARAM: {{ integrante.agente.saram }}</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         {% if integrante.data_inicio != comissao.data_inicio or integrante.data_fim != comissao.data_fim %}
+
                         <div class="exception-card">
                             <span class="exception-badge"><i class="bi bi-exclamation-triangle me-1"></i>Designação
                                 Específica</span>

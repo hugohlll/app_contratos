@@ -330,7 +330,7 @@ def exportar_relatorio_periodo_csv(request):
             'agente', 'funcao', 'comissao__contrato'
         )
         for r in resultados:
-            fim_fmt = r.data_fim.strftime('%d/%m/%Y') if r.data_fim else "Ativa (Indefinido)"
+            fim_fmt = r.data_fim.strftime('%d/%m/%Y') if r.data_fim else "-"
             data_port = r.portaria_data.strftime('%d/%m/%Y') if r.portaria_data else "-"
             bol_num = r.boletim_numero if r.boletim_numero else "-"
             bol_data = r.boletim_data.strftime('%d/%m/%Y') if r.boletim_data else "-"
