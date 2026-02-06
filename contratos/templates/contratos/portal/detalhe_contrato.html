@@ -3,6 +3,7 @@
 
 {% block title %}Contrato {{ contrato.numero }}{% endblock %}
 
+{% load humanize %}
 {% block content %}
 <style>
     .role-icon {
@@ -115,7 +116,7 @@
                 <div>
                     <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Valor
                         Total</small>
-                    <div class="fs-5 text-success">R$ {{ contrato.valor_total|floatformat:2 }}</div>
+                    <div class="fs-5 text-success">R$ {{ contrato.valor_total|intcomma }}</div>
                 </div>
             </div>
         </div>
