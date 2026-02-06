@@ -673,4 +673,4 @@ Contribuições são bem-vindas! Para contribuir:
 
 ---
 
-**Desenvolvido com ❤️ para organizações militares**
+**Desenvolvido por Hugo Lima com ❤️ para organizações militares**
