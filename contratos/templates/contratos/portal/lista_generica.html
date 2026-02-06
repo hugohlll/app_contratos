@@ -166,7 +166,7 @@
         }
 
         /* Subtle Zebra Striping */
-        #dataTable tbody tr:nth-of-type(odd)>* {
+        #dataTable tbody tr.visible-odd>* {
             background-color: rgba(0, 0, 0, 0.03) !important;
             /* Lighter, more transparent gray */
             box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.03);
@@ -189,12 +189,12 @@
         }
 
         /* Ensure cells preserve their color on hover (override Bootstrap accent) */
-        #dataTable tbody tr:nth-of-type(odd):hover>* {
+        #dataTable tbody tr.visible-odd:hover>* {
             background-color: rgba(0, 0, 0, 0.03) !important;
             box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.03);
         }
 
-        #dataTable tbody tr:nth-of-type(even):hover>* {
+        #dataTable tbody tr:not(.visible-odd):hover>* {
             background-color: white !important;
             box-shadow: none;
         }
@@ -216,6 +216,18 @@
             const noResultsRow = document.getElementById('noResultsRow'); // Server-side empty state
             const noSearchMatchRow = document.getElementById('noSearchMatchRow'); // Client-side search empty state
 
+            // --- 0. Striping Logic ---
+            function updateStriping() {
+                const visibleRows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow):not(#noSearchMatchRow):not(.d-none)'));
+                visibleRows.forEach((row, index) => {
+                    if (index % 2 === 0) {
+                        row.classList.add('visible-odd');
+                    } else {
+                        row.classList.remove('visible-odd');
+                    }
+                });
+            }
+
             // --- 1. View Size Logic ---
             function updateContainerHeight() {
                 const size = viewSizeSelect.value;
@@ -230,6 +242,7 @@
 
             viewSizeSelect.addEventListener('change', updateContainerHeight);
             updateContainerHeight();
+            updateStriping(); // Initial striping
 
             // --- 2. Search Logic ---
             function performSearch() {
@@ -258,6 +271,8 @@
                     if (query.length > 0) noResultsRow.classList.add('d-none');
                     else if (currentRows.length === 0) noResultsRow.classList.remove('d-none');
                 }
+
+                updateStriping();
             }
 
             searchInput.addEventListener('input', performSearch);
@@ -318,6 +333,8 @@
                     // Maintenance of empty rows at bottom
                     if (noResultsRow) tableBody.appendChild(noResultsRow);
                     if (noSearchMatchRow) tableBody.appendChild(noSearchMatchRow);
+
+                    updateStriping();
                 });
             });
         });
