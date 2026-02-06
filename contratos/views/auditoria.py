@@ -317,8 +317,8 @@ def exportar_relatorio_periodo_csv(request):
     buffer = io.StringIO()
     writer = csv.writer(buffer, delimiter=';')
     writer.writerow([
-        'Contrato', 'Empresa', 'Militar', 'SARAM', 'Função',
-        'Início Designação', 'Fim Designação', 'Nº Portaria', 'Data Portaria', 'Nº Boletim', 'Data Boletim'
+        'Contrato', 'Empresa', 'Militar', 'SARAM', 'CPF', 'Função',
+        'Início', 'Término (Previsão)', 'Nº Portaria', 'Data Portaria', 'Nº Boletim', 'Data Boletim'
     ])
     
     if data_inicial and data_final:
@@ -340,7 +340,7 @@ def exportar_relatorio_periodo_csv(request):
             
             writer.writerow([
                 r.comissao.contrato.numero, r.comissao.contrato.empresa.razao_social,
-                nome_completo, r.agente.saram, r.funcao.titulo,
+                nome_completo, r.agente.saram, r.agente.cpf or '-', r.funcao.titulo,
                 r.data_inicio.strftime('%d/%m/%Y'), fim_fmt, 
                 r.portaria_numero, data_port, bol_num, bol_data
             ])

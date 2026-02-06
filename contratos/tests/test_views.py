@@ -140,3 +140,48 @@ class AuditoriaViewsTest(TestCase):
         self.assertContains(response, "CPF") # Header
         self.assertContains(response, "111.111.111-11") # Data from setUp
 
+    def test_agent_csv_export_contains_cpf(self):
+        """Teste se o CSV de agentes contém o CPF"""
+        url = reverse('exportar_agentes_csv')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8-sig')
+        self.assertIn("CPF", content)
+        self.assertIn("111.111.111-11", content)
+
+    def test_report_period_contains_cpf(self):
+        """Teste se o relatório por período mostra coluna CPF"""
+        from datetime import date
+        url = reverse('relatorio_periodo')
+        data_inicio = date.today().strftime('%Y-%m-%d')
+        data_fim = date.today().strftime('%Y-%m-%d')
+        
+        url_query = f"{url}?data_inicial={data_inicio}&data_final={data_fim}"
+        response = self.client.get(url_query)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, ">CPF<")        
+        self.assertContains(response, "111.111.111-11")
+        self.assertContains(response, "Início")
+        self.assertContains(response, "Término (Previsão)")
+        self.assertContains(response, "Nº Portaria")
+        self.assertContains(response, "Nº Boletim")
+        
+        # Ensure no broken template tags are visible
+        self.assertNotContains(response, "{{")
+        self.assertNotContains(response, "}}")
+
+    def test_report_period_csv_export(self):
+        """Teste se a exportação CSV do relatório por período funciona e contém as colunas novas"""
+        from datetime import date
+        url = reverse('exportar_periodo_csv')
+        data_inicio = date.today().strftime('%Y-%m-%d')
+        data_fim = date.today().strftime('%Y-%m-%d')
+        
+        url_query = f"{url}?data_inicial={data_inicio}&data_final={data_fim}"
+        response = self.client.get(url_query)
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8-sig')
+        self.assertIn("CPF", content)
+        self.assertIn("Término (Previsão)", content)
+        self.assertIn("111.111.111-11", content)
+
