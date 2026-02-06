@@ -659,6 +659,18 @@ Contribuições são bem-vindas! Para contribuir:
 - ✅ Exportações em CSV
 - ✅ Sistema completo de gestão de contratos
 
+### **Versão 1.1.0 (Beta)**
+- ✨ **UX/UI Aprimorado**:
+    - Ordenação hierárquica de membros (Gestor > Fiscal, Presidente > Membro)
+    - Simplificação visual de tipos de comissão
+    - Formatação de valores monetários (R$) e datas (pt-br)
+- 🛡️ **Validação Robusta**:
+    - Sincronização visual de erros cliente/servidor
+    - Validação estrita de datas de comissão (impedir datas passadas para ativos)
+- 🔧 **Correções e Estabilidade**:
+    - Varredura e correção de erros de renderização (tags quebradas)
+    - Testes automatizados padronizados (20/20 passing)
+
 ---
 
 **Desenvolvido com ❤️ para organizações militares**
