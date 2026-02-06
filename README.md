@@ -463,8 +463,7 @@ app_contratos/
 ├── docker-compose.yml     # Configuração Docker Compose
 ├── Dockerfile            # Imagem Docker
 ├── manage.py             # Script de gerenciamento Django
-├── README.md             # Este arquivo
-└── GIT_WORKFLOW.md       # Guia de workflow Git
+└── README.md             # Este arquivo
 ```
 
 ---
