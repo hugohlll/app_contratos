@@ -165,6 +165,8 @@ class AuditoriaViewsTest(TestCase):
         self.assertContains(response, "Término (Previsão)")
         self.assertContains(response, "Nº Portaria")
         self.assertContains(response, "Nº Boletim")
+        self.assertContains(response, "Tipo Comissão")
+        self.assertContains(response, "Fiscalização")
         
         # Ensure no broken template tags are visible
         self.assertNotContains(response, "{{")
@@ -182,6 +184,8 @@ class AuditoriaViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode('utf-8-sig')
         self.assertIn("CPF", content)
+        self.assertIn("Tipo Comissão", content)
+        self.assertIn("Fiscalização", content)
         self.assertIn("Término (Previsão)", content)
         self.assertIn("111.111.111-11", content)
 

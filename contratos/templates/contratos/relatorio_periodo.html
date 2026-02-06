@@ -64,6 +64,7 @@
                     <thead class="table-primary">
                         <tr>
                             <th>Contrato</th>
+                            <th>Tipo Comissão</th>
                             <th>Militar</th>
                             <th>SARAM</th>
                             <th>CPF</th>
@@ -80,6 +81,13 @@
                         {% for item in resultados %}
                         <tr>
                             <td class="fw-bold px-3">{{ item.comissao.contrato.numero }}</td>
+                            <td>
+                                {% if item.comissao.tipo == 'FISCALIZACAO' %}
+                                <span class="badge bg-info text-dark">Fiscalização</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Recebimento</span>
+                                {% endif %}
+                            </td>
                             <td>{{ item.posto_graduacao.sigla|default:item.agente.posto.sigla }} {{ item.agente.nome_de_guerra }}</td>
                             <td>{{ item.agente.saram }}</td>
                             <td>{{ item.agente.cpf|default:"-" }}</td>
