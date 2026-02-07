@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /app
+
+# Instalação de dependências do sistema para PostgreSQL
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev gcc \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Instalação de dependências Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install gunicorn
+
+# Cópia do código fonte
+COPY . .
+
+# Execução do Collectstatic (Agrupar ficheiros CSS/JS)
+RUN python manage.py collectstatic --noinput
+
+# Inicialização com Gunicorn (Apontando para core.wsgi)
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "core.wsgi:application"]

@@ -16,6 +16,7 @@ staticfiles/
 --- Variáveis de Ambiente (Segurança) ---
 
 .env
+.env.prod
 
 --- Ambientes Virtuais (Virtualenvs) ---
 
