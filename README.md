@@ -155,7 +155,7 @@ Dashboard interativo com gráficos e indicadores:
 
 ## 🛠️ Instalação
 
-### **Método 1: Docker (Mais Simples)**
+### **Método 1: Docker (Ambiente de Desenvolvimento)**
 
 1. **Clone o repositório:**
 ```bash
@@ -181,6 +181,15 @@ docker-compose exec web python manage.py createsuperuser
 5. **Acesse a aplicação:**
    - Aplicação: http://localhost:8000
    - Admin Django: http://localhost:8000/admin
+
+---
+
+### **🚀 Instalação em Produção**
+
+Para implantar o sistema em um servidor real (Linux/Docker/Nginx), consulte os manuais dedicados:
+
+- **[Manual de Instalação (TI)](MANUAL_INSTALACAO_TI.md)**: Guia completo para instalação no servidor da OM.
+- **[Manual de Teste Local](MANUAL_TESTE_LOCAL.md)**: Guia para simular o ambiente de produção na sua máquina.
 
 ---
 

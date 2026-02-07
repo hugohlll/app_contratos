@@ -13,11 +13,16 @@ app_contratos/
 │
 ├── core/                  # ⚙️ Configurações Globais do Projeto
 ├── contratos/             # 📦 Aplicação Principal (Lógica de Negócio)
-├── docker-compose.yml     # Orquestração de containers (App + DB)
-├── Dockerfile             # Definição da imagem Docker da aplicação
-├── manage.py              # Utilitário de linha de comando do Django
-├── requirements.txt       # Lista de dependências Python
-└── README.md              # Documentação geral do projeto
+├── docker-compose.yml     # Orquestração (Desenvolvimento)
+├── docker-compose.prod.yml # 🚀 Orquestração (Produção)
+├── Dockerfile             # Imagem Docker (Desenvolvimento)
+├── Dockerfile.prod        # 🚀 Imagem Docker (Produção via Gunicorn)
+├── nginx/                 # 🌐 Configuração do Proxy Reverso
+├── manage.py              # Utilitário de linha de comando
+├── requirements.txt       # Dependências Python
+├── README.md              # Documentação geral
+├── MANUAL_INSTALACAO_TI.md # 📘 Guia de instalação em servidor
+└── MANUAL_TESTE_LOCAL.md   # 📘 Guia de teste local (simulação)
 ```
 
 ---
