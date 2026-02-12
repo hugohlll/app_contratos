@@ -25,7 +25,23 @@ jobs:
         run: |
           docker compose up -d --build
           echo "Waiting for DB to be ready..."
-          sleep 10  # Simple wait, in production use wait-for-it or healthcheck
+          docker compose exec -T web python -c "
+          import time
+          from django.db import connections
+          from django.db.utils import OperationalError
+          
+          for i in range(30):
+              try:
+                  connections['default'].cursor()
+                  print('Database is ready!')
+                  break
+              except OperationalError:
+                  print(f'Waiting for database... {i+1}/30')
+                  time.sleep(1)
+          else:
+              print('Database connection failed after 30 seconds.')
+              exit(1)
+          "
 
       - name: Run Migrations (Prepare DB)
         run: docker compose exec -T web python manage.py migrate
