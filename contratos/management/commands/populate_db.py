@@ -118,34 +118,34 @@ class Command(BaseCommand):
         
         count_contr = 0
         for i in range(1, 201):
-            num = f"{str(i).zfill(3)}/{date.today().year}"
+            # LÓGICA DE VENCIMENTO (Movida para antes da verificação de existência para definir o ano)
+            rand_scenario = random.random()
+            if rand_scenario < 0.05: # Crítico
+                inicio = date.today() - timedelta(days=360)
+                fim = date.today() + timedelta(days=random.randint(1, 7))
+            elif rand_scenario < 0.10: # Alerta
+                inicio = date.today() - timedelta(days=360)
+                fim = date.today() + timedelta(days=random.randint(8, 15))
+            else: # Normal
+                cenario = random.choice(['passado', 'vigente', 'vigente', 'vigente', 'futuro'])
+                duracao = random.randint(180, 1460)
+                if cenario == 'passado':
+                    inicio = date.today() - timedelta(days=duracao + random.randint(50, 300))
+                    fim = inicio + timedelta(days=duracao)
+                elif cenario == 'futuro':
+                    inicio = date.today() + timedelta(days=random.randint(10, 60))
+                    fim = inicio + timedelta(days=duracao)
+                else:
+                    inicio = date.today() - timedelta(days=random.randint(10, duracao-10))
+                    fim = inicio + timedelta(days=duracao)
+
+            num = f"{str(i).zfill(3)}/{inicio.year}"
             tipo_contrato = 'DESPESA' if random.random() < 0.8 else 'RECEITA'
 
             if not Contrato.objects.filter(numero=num).exists():
                 emp = random.choice(empresas)
                 val = random.uniform(5000.0, 10000000.0)
                 
-                # LÓGICA DE VENCIMENTO
-                rand_scenario = random.random()
-                if rand_scenario < 0.05: # Crítico
-                    inicio = date.today() - timedelta(days=360)
-                    fim = date.today() + timedelta(days=random.randint(1, 7))
-                elif rand_scenario < 0.10: # Alerta
-                    inicio = date.today() - timedelta(days=360)
-                    fim = date.today() + timedelta(days=random.randint(8, 15))
-                else: # Normal
-                    cenario = random.choice(['passado', 'vigente', 'vigente', 'vigente', 'futuro'])
-                    duracao = random.randint(180, 1460)
-                    if cenario == 'passado':
-                        inicio = date.today() - timedelta(days=duracao + random.randint(50, 300))
-                        fim = inicio + timedelta(days=duracao)
-                    elif cenario == 'futuro':
-                        inicio = date.today() + timedelta(days=random.randint(10, 60))
-                        fim = inicio + timedelta(days=duracao)
-                    else:
-                        inicio = date.today() - timedelta(days=random.randint(10, duracao-10))
-                        fim = inicio + timedelta(days=duracao)
-
                 Contrato.objects.create(
                     numero=num,
                     tipo=tipo_contrato,
@@ -183,7 +183,7 @@ class Command(BaseCommand):
                 comissao_fisc.boletim_data = dt_port + timedelta(days=2)
                 comissao_fisc.data_inicio = dt_port
                 comissao_fisc.data_fim = contrato.vigencia_fim
-                comissao_fisc.ativa = True
+                comissao_fisc.ativa = (comissao_fisc.data_inicio <= date.today() <= comissao_fisc.data_fim)
                 comissao_fisc.save()
 
                 # RISCO: 10% de chance de NÃO ter fiscais (apenas se vigente)
@@ -214,7 +214,7 @@ class Command(BaseCommand):
                 comissao_rec, created = Comissao.objects.get_or_create(
                     contrato=contrato, tipo='RECEBIMENTO',
                     defaults={
-                        'ativa': True,
+                        'ativa': (contrato.vigencia_inicio <= date.today() <= contrato.vigencia_fim),
                         'data_inicio': contrato.vigencia_inicio,
                         'data_fim': contrato.vigencia_fim
                     }
@@ -269,4 +269,20 @@ class Command(BaseCommand):
         
         self.stdout.write(f'Contratos Críticos (<=7 dias): {criticos}')
         self.stdout.write(f'Contratos em Alerta (8-15 dias): {alertas}')
+        
+        # Verificação de Variedade e Consistência (Novo)
+        years = sorted(list(set(c.numero.split('/')[1] for c in Contrato.objects.all())))
+        self.stdout.write(f'Anos dos Contratos: {years}')
+        
+        active_count = Comissao.objects.filter(ativa=True).count()
+        inactive_count = Comissao.objects.filter(ativa=False).count()
+        self.stdout.write(f'Comissões Ativas: {active_count}')
+        self.stdout.write(f'Comissões Inativas: {inactive_count}')
+        
+        invalid_active = Comissao.objects.filter(ativa=True).exclude(data_inicio__lte=date.today(), data_fim__gte=date.today()).count()
+        if invalid_active > 0:
+             self.stdout.write(self.style.ERROR(f'ERRO: {invalid_active} comissões ativas mas fora da vigência!'))
+        else:
+             self.stdout.write(self.style.SUCCESS('Consistência de comissões ativas OK.'))
+
         self.stdout.write('--------------------------------')
