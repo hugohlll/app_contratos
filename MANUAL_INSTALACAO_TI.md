@@ -45,6 +45,30 @@ Este documento descreve os procedimentos para instalar, configurar e atualizar a
 
 ---
 
+## 2. Modos de Operação
+
+### A. Produção com Dados de Teste (Homologação/Treinamento)
+Para ambientes onde se deseja testar o sistema com uma grande massa de dados (fictícios, mas realistas):
+
+```bash
+docker-compose -f docker-compose.prod.yml exec web python manage.py populate_db
+```
+> **Nota:** Este comando cria usuários (admin/admin, gestor/senha123, auditor/senha123), contratos, agentes e comissões para simular o uso real.
+
+### B. Produção Estrita (Uso Real)
+Para o ambiente final de produção:
+1.  **NÃO EXECUTE** o `populate_db`.
+2.  Crie apenas o superusuário (Passo 1.5).
+3.  Cadastre os usuários e dados reais manualmente via sistema.
+
+### Persistência dos Dados
+Os dados do banco de dados são salvos no volume Docker `postgres_data`.
+*   **Segurança:** Se você parar (`docker-compose stop`) ou reiniciar a máquina, os dados **PERMANECEM SALVOS**.
+*   **Perigo:** Os dados só serão apagados se você rodar `docker-compose down -v` (com a flag `-v` de volumes). **Evite usar essa flag em produção.**
+
+
+---
+
 ## 2. Procedimento de Atualização
 
 Sempre que houver uma nova versão do sistema (commit no Git), siga estes passos:

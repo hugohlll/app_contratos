@@ -45,6 +45,13 @@ Este guia descreve como rodar o ambiente de produção (Docker + Nginx + Gunicor
    docker-compose -f docker-compose.prod.yml exec web python manage.py createsuperuser
    ```
 
+5. **Gerar Dados de Teste (Opcional)**
+   Para popular o banco com dados realistas (contratos, comissões, agentes):
+
+   ```bash
+   docker-compose -f docker-compose.prod.yml exec web python manage.py populate_db
+   ```
+
 5. **Acessar a Aplicação**
    Abra o navegador em: [http://localhost](http://localhost)
 

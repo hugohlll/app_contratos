@@ -9,7 +9,7 @@ class Command(BaseCommand):
     help = 'Popula o banco de dados com dados de teste MASSIVOS'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write(self.style.WARNING('Iniciando carga de dados MASSIVA...'))
+        self.stdout.write(self.style.WARNING('Iniciando carga de dados MASSIVA (Modo Realista v2)...'))
 
         # 1. CRIAR GRUPOS
         group_admin, _ = Group.objects.get_or_create(name='Administradores')
@@ -61,24 +61,36 @@ class Command(BaseCommand):
                 sobrenome = random.choice(nomes)
                 nome_completo = f"{random.choice(nomes_meio)} {sobrenome}"
                 
-                # Variar data do curso para ter alguns vencidos
-                dias_curso = random.randint(10, 800) # Se > 365, está vencido
+                # 15% de chance de NÃO ter curso (Sem Curso)
+                if random.random() < 0.15:
+                    dt_curso = None
+                else:
+                    # Variar data do curso para ter alguns vencidos
+                    dias_curso = random.randint(10, 800) 
+                    dt_curso = date.today() - timedelta(days=dias_curso)
                 
                 Agente.objects.create(
                     nome_completo=nome_completo,
                     nome_de_guerra=sobrenome,
                     posto=posto,
                     cpf=f"{random.randint(100,999)}.{random.randint(100,999)}.{random.randint(100,999)}-{random.randint(10,99)}",
-                    data_ultimo_curso=date.today() - timedelta(days=dias_curso),
+                    data_ultimo_curso=dt_curso,
                     saram=saram
                 )
                 count_agentes += 1
         self.stdout.write(f'{count_agentes} Agentes gerados.')
 
         # 5. CRIAR FUNÇÕES
-        funcoes = ['Presidente', 'Membro', 'Secretário', 'Gestor', 'Fiscal Administrativo', 'Fiscal Técnico', 'Fiscal Setorial']
-        for func in funcoes:
-            Funcao.objects.get_or_create(titulo=func, defaults={'sigla': func[:3].upper()})
+        # Ajuste conforme solicitação: Gestor vira Fiscal. Fiscal Substituto. Fiscal Técnico condicional.
+        funcoes = [
+            'Presidente', 'Membro', 'Fiscal', 
+            'Fiscal Substituto', 'Fiscal Técnico', 
+            'Fiscal Administrativo', 'Fiscal Setorial', 
+            'Presidente Substituto'
+        ]
+        for i, func in enumerate(funcoes):
+            # Usando 'ordem' para hierarquia simples baseada na lista
+            Funcao.objects.get_or_create(titulo=func, defaults={'sigla': func[:3].upper(), 'ordem': i})
         self.stdout.write('Funções criadas.')
 
         # 6. CRIAR EMPRESAS (50 empresas)
@@ -107,27 +119,32 @@ class Command(BaseCommand):
         count_contr = 0
         for i in range(1, 201):
             num = f"{str(i).zfill(3)}/{date.today().year}"
-            
-            # 80% Despesa, 20% Receita
             tipo_contrato = 'DESPESA' if random.random() < 0.8 else 'RECEITA'
 
             if not Contrato.objects.filter(numero=num).exists():
                 emp = random.choice(empresas)
                 val = random.uniform(5000.0, 10000000.0)
                 
-                # Alguns contratos já encerrados, outros vigentes, outros futuros
-                cenario = random.choice(['passado', 'vigente', 'vigente', 'vigente', 'futuro'])
-                
-                duracao = random.randint(180, 1460) # 6 meses a 4 anos
-                
-                if cenario == 'passado':
-                    inicio = date.today() - timedelta(days=duracao + random.randint(50, 300))
-                elif cenario == 'futuro':
-                    inicio = date.today() + timedelta(days=random.randint(10, 60))
-                else: # vigente
-                    inicio = date.today() - timedelta(days=random.randint(10, duracao-10))
-                
-                fim = inicio + timedelta(days=duracao)
+                # LÓGICA DE VENCIMENTO
+                rand_scenario = random.random()
+                if rand_scenario < 0.05: # Crítico
+                    inicio = date.today() - timedelta(days=360)
+                    fim = date.today() + timedelta(days=random.randint(1, 7))
+                elif rand_scenario < 0.10: # Alerta
+                    inicio = date.today() - timedelta(days=360)
+                    fim = date.today() + timedelta(days=random.randint(8, 15))
+                else: # Normal
+                    cenario = random.choice(['passado', 'vigente', 'vigente', 'vigente', 'futuro'])
+                    duracao = random.randint(180, 1460)
+                    if cenario == 'passado':
+                        inicio = date.today() - timedelta(days=duracao + random.randint(50, 300))
+                        fim = inicio + timedelta(days=duracao)
+                    elif cenario == 'futuro':
+                        inicio = date.today() + timedelta(days=random.randint(10, 60))
+                        fim = inicio + timedelta(days=duracao)
+                    else:
+                        inicio = date.today() - timedelta(days=random.randint(10, duracao-10))
+                        fim = inicio + timedelta(days=duracao)
 
                 Contrato.objects.create(
                     numero=num,
@@ -143,14 +160,17 @@ class Command(BaseCommand):
 
         # 8. CRIAR COMISSÕES
         agentes = list(Agente.objects.all())
-        funcao_gestor = Funcao.objects.get(titulo='Gestor')
-        funcao_fiscal = Funcao.objects.get(titulo='Fiscal Técnico')
+        
         funcao_presidente = Funcao.objects.get(titulo='Presidente')
         funcao_membro = Funcao.objects.get(titulo='Membro')
+        funcao_fiscal = Funcao.objects.get(titulo='Fiscal') # Antigo Gestor
+        funcao_fiscal_sub = Funcao.objects.get(titulo='Fiscal Substituto')
+        funcao_fiscal_tec = Funcao.objects.get(titulo='Fiscal Técnico')
+        funcao_pres_sub = Funcao.objects.get(titulo='Presidente Substituto')
         
         count_comiss = 0
         for contrato in Contrato.objects.all():
-            # Fiscalização (Padrão para todos)
+            # A. Fiscalização
             comissao_fisc = contrato.comissoes.filter(tipo='FISCALIZACAO').first()
             if comissao_fisc:
                 portaria = f"{random.randint(100, 999)}/GC"
@@ -166,16 +186,30 @@ class Command(BaseCommand):
                 comissao_fisc.ativa = True
                 comissao_fisc.save()
 
-                # Adicionar membros aleatórios
-                # Tentar não repetir o mesmo agente na comissão
-                possiveis = random.sample(agentes, k=2)
+                # RISCO: 10% de chance de NÃO ter fiscais (apenas se vigente)
+                eh_vigente = contrato.vigencia_fim >= date.today()
+                gerar_fiscais = True
+                if eh_vigente and random.random() < 0.10:
+                    gerar_fiscais = False
                 
-                if not comissao_fisc.integrantes.exists():
-                    Integrante.objects.create(comissao=comissao_fisc, agente=possiveis[0], funcao=funcao_gestor, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
-                    Integrante.objects.create(comissao=comissao_fisc, agente=possiveis[1], funcao=funcao_fiscal, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+                if gerar_fiscais and not comissao_fisc.integrantes.exists():
+                    possiveis = random.sample(agentes, k=5)
+                    
+                    # 1. Fiscal (Obrigatório)
+                    Integrante.objects.create(comissao=comissao_fisc, agente=possiveis[0], funcao=funcao_fiscal, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+                    
+                    # 2. Fiscal Substituto (Obrigatório)
+                    Integrante.objects.create(comissao=comissao_fisc, agente=possiveis[1], funcao=funcao_fiscal_sub, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+
+                    # 3. Fiscal Técnico (Condicional: TI ou Engenharia)
+                    objeto_lower = contrato.objeto.lower()
+                    if 'tecnologia' in objeto_lower or 'software' in objeto_lower or 'engenharia' in objeto_lower or 'instalações' in objeto_lower:
+                        # Hierarquia subordinada implícita na criação
+                        Integrante.objects.create(comissao=comissao_fisc, agente=possiveis[2], funcao=funcao_fiscal_tec, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+
                     count_comiss += 1
 
-            # Recebimento (Apenas se TIPO != RECEITA) e com 60% de chance
+            # B. Recebimento (Apenas se TIPO != RECEITA) e com 60% de chance
             if contrato.tipo != 'RECEITA' and random.random() > 0.4:
                 comissao_rec, created = Comissao.objects.get_or_create(
                     contrato=contrato, tipo='RECEBIMENTO',
@@ -195,10 +229,44 @@ class Command(BaseCommand):
                     comissao_rec.boletim_data = dt_port + timedelta(days=2)
                     comissao_rec.save()
 
-                    possiveis = random.sample(agentes, k=3)
+                    possiveis = random.sample(agentes, k=5)
+                    
+                    # Obrigatórios: Presidente, 2 Membros, Presidente Substituto
                     Integrante.objects.create(comissao=comissao_rec, agente=possiveis[0], funcao=funcao_presidente, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
                     Integrante.objects.create(comissao=comissao_rec, agente=possiveis[1], funcao=funcao_membro, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
                     Integrante.objects.create(comissao=comissao_rec, agente=possiveis[2], funcao=funcao_membro, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+                    Integrante.objects.create(comissao=comissao_rec, agente=possiveis[3], funcao=funcao_pres_sub, data_inicio=dt_port, portaria_numero=portaria, portaria_data=dt_port)
+
                     count_comiss += 1
         
-        self.stdout.write(self.style.SUCCESS('Base de testes MASSIVA criada com sucesso!'))
+        self.stdout.write(self.style.SUCCESS('Base de testes (REALISTA v2) criada com sucesso!'))
+
+        # 9. VERIFICAÇÃO AUTOMÁTICA
+        self.stdout.write(self.style.WARNING('--- Relatório de Verificação ---'))
+        
+        fiscal_tec_count = Integrante.objects.filter(funcao__titulo='Fiscal Técnico').count()
+        self.stdout.write(f'Fiscais Técnicos gerados: {fiscal_tec_count}')
+        
+        # Contratos em risco (Vigentes e sem fiscais)
+        contratos_risco = 0
+        for c in Contrato.objects.filter(vigencia_fim__gte=date.today()):
+            fisc = c.comissoes.filter(tipo='FISCALIZACAO').first()
+            if fisc and not fisc.integrantes.exists():
+                contratos_risco += 1
+        
+        self.stdout.write(f'Contratos em Risco (Sem fiscal): {contratos_risco}')
+        
+        # Contratos Críticos/Alerta
+        criticos = 0
+        alertas = 0
+        hoje = date.today()
+        for c in Contrato.objects.filter(vigencia_fim__gte=hoje):
+            dias = (c.vigencia_fim - hoje).days
+            if dias <= 7:
+                criticos += 1
+            elif dias <= 15:
+                alertas += 1
+        
+        self.stdout.write(f'Contratos Críticos (<=7 dias): {criticos}')
+        self.stdout.write(f'Contratos em Alerta (8-15 dias): {alertas}')
+        self.stdout.write('--------------------------------')
