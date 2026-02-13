@@ -14,9 +14,10 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala o Django e o conector do Postgres
+# Instala as dependências do projeto
 RUN pip install --upgrade pip
-RUN pip install django psycopg2-binary
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
 # Copia o código atual para dentro do container
 COPY . .
