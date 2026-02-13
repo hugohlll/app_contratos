@@ -443,22 +443,34 @@ Para encerrar uma designação antes do prazo:
 ```
 app_contratos/
 │
+├── .github/               # Workflows CI/CD
+│   └── workflows/
+│       └── ci.yml
 ├── contratos/              # Aplicação principal
+│   ├── management/        # Comandos de gerenciamento
+│   │   └── commands/
+│   │       ├── populate_db.py
+│   │       └── desativar_comissoes_expiradas.py
 │   ├── migrations/        # Migrações do banco de dados
-│   ├── templates/         # Templates HTML
+│   ├── templates/         # Templates HTML (incl. portal)
 │   │   └── contratos/
+│   │       ├── portal/    # Templates da área restrita
 │   │       ├── detalhe.html
 │   │       ├── militar.html
 │   │       ├── painel_controle.html
-│   │       ├── pesquisa.html
-│   │       ├── relatorio_periodo.html
-│   │       └── relatorio_transparencia.html
+│   │       └── ...
+│   ├── templatetags/      # Custom template filters
+│   ├── tests/             # Testes automatizados
 │   ├── views/             # Views organizadas por módulo
 │   │   ├── auditoria.py  # Painel de controle e relatórios
 │   │   ├── auth.py       # Autenticação
 │   │   ├── militar.py    # Consulta individual
-│   │   └── public.py     # Área pública
+│   │   ├── portal.py     # Portal administrativo
+│   │   ├── public.py     # Área pública
+│   │   └── users.py      # Gestão de usuários
 │   ├── admin.py          # Configuração do admin Django
+│   ├── apps.py           # Configuração do app
+│   ├── forms.py          # Formulários Django
 │   ├── models.py         # Modelos de dados
 │   ├── urls.py           # Rotas da aplicação
 │   └── utils.py          # Funções auxiliares
@@ -469,9 +481,14 @@ app_contratos/
 │   ├── wsgi.py           # WSGI config
 │   └── asgi.py           # ASGI config
 │
-├── docker-compose.yml     # Configuração Docker Compose
-├── Dockerfile            # Imagem Docker
+├── nginx/                 # Configuração do Nginx
+│   └── nginx.conf
+├── docker-compose.yml     # Configuração Docker (Dev/CI)
+├── docker-compose.prod.yml# Configuração Docker Produção
+├── Dockerfile            # Imagem Docker (Dev)
+├── Dockerfile.prod       # Imagem Docker (Prod)
 ├── manage.py             # Script de gerenciamento Django
+├── requirements.txt      # Dependências Python
 └── README.md             # Este arquivo
 ```
 
@@ -492,6 +509,8 @@ app_contratos/
 - **Infraestrutura:**
   - Docker & Docker Compose
   - PostgreSQL
+  - Nginx (Produção)
+  - GitHub Actions (CI/CD)
 
 ---
 
@@ -529,11 +548,14 @@ python manage.py shell
 
 ### **Criar Dados de Teste**
 
-Use o admin Django para criar dados de exemplo ou crie fixtures:
+O projeto inclui um comando personalizado para popular o banco de dados com dados de teste realistas:
 
 ```bash
-python manage.py dumpdata contratos > fixtures/initial_data.json
-python manage.py loaddata fixtures/initial_data.json
+# Via Docker
+docker-compose exec web python manage.py populate_db
+
+# Manualmente
+python manage.py populate_db
 ```
 
 ---
@@ -554,20 +576,20 @@ python manage.py loaddata fixtures/initial_data.json
 ```python
 # core/settings.py
 import os
+import dj_database_url
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'sua-chave-secreta')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
+# Configuração de Banco de Dados via URL (Padrão 12-Factor App)
+# Exemplo: postgres://user:password@host:port/dbname
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-    }
+    'default': dj_database_url.config(
+        default='sqlite:///db.sqlite3',
+        conn_max_age=600,
+        ssl_require=False
+    )
 }
 ```
 
@@ -605,7 +627,7 @@ docker-compose ps
 # Verifique os logs
 docker-compose logs db
 
-# Recrie o banco
+# Recrie o banco (CUIDADO: APAGA DADOS)
 docker-compose down -v
 docker-compose up -d
 ```
@@ -660,25 +682,14 @@ Contribuições são bem-vindas! Para contribuir:
 
 ## 📅 Changelog
 
-### **Versão 1.0.0**
-- ✅ Área pública de pesquisa e transparência
-- ✅ Área do militar para consulta individual
-- ✅ Painel de auditoria com gráficos interativos
-- ✅ Exportações em CSV
-- ✅ Sistema completo de gestão de contratos
-
-### **Versão 1.1.0 (Beta)**
-- ✨ **UX/UI Aprimorado**:
-    - Ordenação hierárquica de membros (Gestor > Fiscal, Presidente > Membro)
-    - Simplificação visual de tipos de comissão
-    - Formatação de valores monetários (R$) e datas (pt-br)
-- 🛡️ **Validação Robusta**:
-    - Sincronização visual de erros cliente/servidor
-    - Validação estrita de datas de comissão (impedir datas passadas para ativos)
-- 🔧 **Correções e Estabilidade**:
-    - Varredura e correção de erros de renderização (tags quebradas)
-    - Testes automatizados padronizados (20/20 passing)
-
----
+### **Versão 1.0.0 (MVP)**
+- ✅ **Gestão Completa de Contratos**: Cadastro, edição e visualização de contratos e comissões.
+- ✅ **Área Pública**: Pesquisa de contratos e Portal de Transparência.
+- ✅ **Área do Militar**: Consulta de histórico individual por SARAM/Nome.
+- ✅ **Painel de Auditoria**: Dashboard com gráficos, métricas e alertas de risco.
+- ✅ **Relatórios e Exportação**: Geração de CSVs para auditoria, vencimentos e histórico.
+- ✅ **UX/UI Aprimorado**: Ordenação hierárquica, validações visuais e design responsivo.
+- ✅ **Infraestrutura**: Configuração Docker completa (Dev/Prod), CI/CD pipeline e Nginx.
+- ✅ **Testes**: Cobertura de testes automatizados e script de população de dados (`populate_db`).
 
 **Desenvolvido por SO QSS SEL HUGO**
