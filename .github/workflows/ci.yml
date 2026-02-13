@@ -27,8 +27,13 @@ jobs:
           echo "Waiting for DB to be ready..."
           docker compose exec -T web python -c "
           import time
+          import os
+          import django
           from django.db import connections
           from django.db.utils import OperationalError
+          
+          os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+          django.setup()
           
           for i in range(30):
               try:
