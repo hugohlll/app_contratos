@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15
@@ -21,6 +19,7 @@ services:
     depends_on:
       - db
     environment:
+      - DATABASE_URL=postgres://admin_contratos:senha_segura_militar@db:5432/gestao_contratos_db
       - DB_NAME=gestao_contratos_db
       - DB_USER=admin_contratos
       - DB_PASSWORD=senha_segura_militar
