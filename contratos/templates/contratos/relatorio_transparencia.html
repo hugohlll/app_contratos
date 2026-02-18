@@ -130,9 +130,9 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <a href="{% url 'detalhe_contrato' contrato.id %}" class="text-decoration-none">
-                                    <h5 class="mb-1 text-primary"><i class="bi bi-file-earmark-text me-1"></i>{{ contrato.numero }}</h5>
+                                    <h5 class="mb-1 text-primary"><i class="bi bi-file-earmark-text me-1"></i>{{                                         contrato.numero }}</h5>
                                 </a>
-                                <small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>até {{ contrato.vigencia_fim|date:"d/m/Y" }}</small>
+                                <small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>até {{                                     contrato.vigencia_fim|date:"d/m/Y" }}</small>
                                 <div class="mt-2">
                                     <div class="fw-semibold">{{ contrato.empresa.razao_social }}</div>
                                     <small class="text-muted">{{ contrato.empresa.cnpj }}</small>
@@ -146,7 +146,7 @@
                                         {% if comissao.tipo == 'FISCALIZACAO' %}
                                         <div class="commission-block block-fiscalizacao">
                                             <div class="block-header block-header-fiscalizacao"><i
-                                                    class="bi bi-clipboard-check me-1"></i>{{ comissao.get_tipo_display }}</div>
+                                                    class="bi bi-clipboard-check me-1"></i>{{ comissao.get_tipo_display                                                 }}</div>
                                             {% for integrante in comissao.integrantes.all %}
                                             <div class="member-row">
                                                 {% if 'Gestor' in integrante.funcao.titulo %}
@@ -156,7 +156,8 @@
                                                 <span class="member-icon icon-fiscal"><i
                                                         class="bi bi-clipboard-check"></i></span>
                                                 {% endif %}
-                                                <span class="member-name"><span class="member-function">{{ integrante.funcao.sigla }}</span>{{ integrante.agente.nome_de_guerra }}</span>
+                                                <span class="member-name"><span class="member-function">{{                                                         integrante.funcao.sigla }}</span>{{
+                                                    integrante.agente.nome_de_guerra }}</span>
                                             </div>
                                             {% endfor %}
                                         </div>
@@ -174,7 +175,8 @@
                                                 <span class="member-icon icon-membro"><i
                                                         class="bi bi-person-fill"></i></span>
                                                 {% endif %}
-                                                <span class="member-name"><span class="member-function">{{ integrante.funcao.sigla }}</span>{{ integrante.agente.nome_de_guerra }}</span>
+                                                <span class="member-name"><span class="member-function">{{                                                         integrante.funcao.sigla }}</span>{{
+                                                    integrante.agente.nome_de_guerra }}</span>
                                             </div>
                                             {% endfor %}
                                         </div>

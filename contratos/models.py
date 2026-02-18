@@ -155,6 +155,9 @@ class Integrante(models.Model):
     boletim_data = models.DateField("Data do Boletim", blank=True, null=True)
 
     observacao = models.CharField("Obs", max_length=100, blank=True, null=True)
+    
+    # Campo para ordenação manual
+    ordem = models.PositiveIntegerField("Ordem", default=0)
 
     # --- AUTOMATIZAÇÃO: SALVAR O POSTO ATUAL NO HISTÓRICO ---
     def save(self, *args, **kwargs):
@@ -167,6 +170,14 @@ class Integrante(models.Model):
             self.data_inicio = self.comissao.data_inicio
         if not self.data_fim and self.comissao.data_fim:
             self.data_fim = self.comissao.data_fim
+
+        # Auto-incremento da ordem se for novo registro
+        if not self.pk and self.ordem == 0:
+            last_item = Integrante.objects.filter(comissao=self.comissao).order_by('-ordem').first()
+            if last_item:
+                self.ordem = last_item.ordem + 1
+            else:
+                self.ordem = 1
             
         super().save(*args, **kwargs)
 
@@ -192,4 +203,4 @@ class Integrante(models.Model):
     class Meta:
         verbose_name = "Integrante"
         verbose_name_plural = "Histórico de Integrantes"
-        ordering = ['-data_inicio']
+        ordering = ['ordem']

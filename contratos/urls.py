@@ -64,6 +64,7 @@ urlpatterns = [
     # Designações (Vinculadas a Comissão)
     path('portal/comissoes/<int:comissao_id>/designacao/nova/', portal.nova_designacao_comissao, name='nova_designacao_comissao'),
     path('portal/designacoes/editar/<int:pk>/', portal.editar_designacao_comissao, name='editar_designacao_comissao'),
+    path('portal/designacoes/reordenar/', portal.reordenar_integrantes, name='reordenar_integrantes'),
 
     # --- GERENCIAMENTO DE USUÁRIOS (Módulo users.py) ---
     path('portal/usuarios/', users.listar_usuarios, name='listar_usuarios'),

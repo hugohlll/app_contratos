@@ -4,8 +4,14 @@ from contratos.utils import admin_required, auditor_required
 from django.contrib import messages
 from django.contrib import messages
 from django.urls import reverse
-from ..models import Empresa, Contrato, Agente, Integrante, Comissao
+from django.db.models import Prefetch, Case, When, Value, IntegerField
+from ..models import Empresa, Contrato, Agente, Integrante, Comissao, Funcao
 from ..forms import EmpresaForm, ContratoForm, AgenteForm, IntegranteForm, ComissaoForm
+
+
+def _get_integrantes_ordenados():
+    """Retorna um queryset de Integrante ordenado pela ordem manual."""
+    return Integrante.objects.select_related('agente', 'funcao', 'posto_graduacao').order_by('ordem', 'funcao__titulo')
 
 @auditor_required
 def portal_home(request):
@@ -122,16 +128,12 @@ def exportar_contratos_csv(request):
 
 @auditor_required
 def detalhe_contrato(request, pk):
-    from django.db.models import Prefetch
-    from contratos.utils import get_filtro_ativos
-    
     contrato = get_object_or_404(Contrato, pk=pk)
-    filtro_integrante_ativo = get_filtro_ativos()
 
     comissoes_ativas = contrato.comissoes.filter(ativa=True).prefetch_related(
         Prefetch(
             'integrantes',
-            queryset=Integrante.objects.select_related('agente', 'funcao').order_by('funcao__ordem', 'funcao__titulo'),
+            queryset=_get_integrantes_ordenados(),
             to_attr='integrantes_lista'
         )
     )
@@ -271,7 +273,7 @@ def editar_comissao(request, pk):
         'form': form,
         'object': instance,
         'titulo': f'Editar {instance}',
-        'designacoes': instance.integrantes.all().select_related('agente', 'funcao')
+        'designacoes': _get_integrantes_ordenados().filter(comissao=instance)
     }
     return render(request, 'contratos/portal/detalhe_comissao.html', context)
 
@@ -355,3 +357,27 @@ def nova_designacao(request):
 def editar_designacao(request, pk):
     instance = get_object_or_404(Integrante, pk=pk)
     return generico_form(request, IntegranteForm, 'contratos/portal/form_generico.html', 'Editar Designação', 'listar_designacoes', instance)
+@admin_required
+def reordenar_integrantes(request):
+    """
+    Recebe um POST com uma lista de IDs de integrantes e atualiza a ordem deles.
+    Esperado JSON: {'ordem': [id1, id2, id3, ...]}
+    """
+    import json
+    from django.http import JsonResponse
+    from django.views.decorators.csrf import csrf_exempt
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            lista_ids = data.get('ordem', [])
+            
+            for index, integrante_id in enumerate(lista_ids):
+                # Usar update para ser mais rápido e evitar sinais desnecessários se houver
+                Integrante.objects.filter(pk=integrante_id).update(ordem=index + 1)
+                
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'error', 'message': 'Método inválido'}, status=405)

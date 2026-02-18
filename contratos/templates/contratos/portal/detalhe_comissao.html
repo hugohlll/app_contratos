@@ -129,6 +129,7 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
+                                <th style="width: 40px;"></th>
                                 <th>Militar</th>
                                 <th>Função</th>
                                 <th>Início</th>
@@ -139,7 +140,10 @@
                         </thead>
                         <tbody>
                             {% for integrante in designacoes %}
-                            <tr>
+                            <tr data-id="{{ integrante.pk }}">
+                                <td class="text-center drag-handle" style="cursor: move; width: 40px;">
+                                    ⋮⋮
+                                </td>
                                 <td>{{ integrante.agente }}</td>
                                 <td>{{ integrante.funcao }}</td>
                                 <td>{{ integrante.data_inicio|date:"d/m/Y" }}</td>
@@ -322,6 +326,49 @@
         // Executa validação ao carregar a página (para tratar retorno do servidor com erro)
         // Pequeno delay para garantir renderização
         setTimeout(validateStrict, 50);
+    });
+</script>
+
+<!-- Drag and Drop Sorting -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabela = document.querySelector('table tbody');
+        if (tabela) {
+            new Sortable(tabela, {
+                animation: 150,
+                ghostClass: 'bg-light',
+                handle: '.drag-handle', // Restrict drag to handle
+                onEnd: function (evt) {
+                    const rows = tabela.querySelectorAll('tr');
+                    const ordem = Array.from(rows).map(row => row.dataset.id).filter(id => id);
+
+                    if (ordem.length > 0) {
+                        fetch('{% url "reordenar_integrantes" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ ordem: ordem })
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    // Optional: Show toast or visual feedback
+                                    console.log('Ordem atualizada com sucesso');
+                                } else {
+                                    alert('Erro ao salvar a nova ordem: ' + data.message);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('Erro de conexão ao salvar a ordem.');
+                            });
+                    }
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

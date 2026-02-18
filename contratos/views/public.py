@@ -27,16 +27,7 @@ def buscar_contratos(request):
                 'comissoes',
                 queryset=Comissao.objects.filter(ativa=True).prefetch_related(
                     Prefetch('integrantes',
-                             queryset=Integrante.objects.filter(filtro_integrante_ativo).select_related('agente', 'funcao').annotate(
-                                 prioridade=Case(
-                                     When(funcao__titulo__icontains='Gestor', then=Value(1)),
-                                     When(funcao__titulo__icontains='Presidente', then=Value(1)),
-                                     When(funcao__titulo__icontains='Fiscal', then=Value(2)),
-                                     When(funcao__titulo__icontains='Membro', then=Value(2)),
-                                     default=Value(3),
-                                     output_field=IntegerField(),
-                                 )
-                             ).order_by('prioridade', 'funcao__titulo'))
+                             queryset=Integrante.objects.filter(filtro_integrante_ativo).select_related('agente', 'funcao').order_by('ordem', 'funcao__titulo'))
                 ),
                 to_attr='comissoes_vigentes'
             )
@@ -47,15 +38,16 @@ def buscar_contratos(request):
 
 def detalhe_contrato(request, contrato_id):
     contrato = Contrato.objects.get(id=contrato_id)
-    filtro_integrante_ativo = get_filtro_ativos()
+    # filtro_integrante_ativo = get_filtro_ativos() # Não aplicado aqui para mostrar histórico completo se desejado, 
+                                                    # ou aplique se a regra for apenas ativos. O código original mostrava all().
+                                                    # Manterei all() mas com a ordenação nova.
 
     # Busca todas as comissões (inclusive inativas) e todos os integrantes (inclusive desligados)
     comissoes_ativas = contrato.comissoes.all().prefetch_related(
         Prefetch(
             'integrantes',
-            # Ordenação por função para agrupar (Gestor, Fiscal..), ou poderia ser por data_inicio
-            queryset=Integrante.objects.all().select_related('agente', 'funcao').order_by('funcao__titulo'),
-            to_attr='integrantes_lista'  # Nome esperado pelo template detalhe.html
+            queryset=Integrante.objects.all().select_related('agente', 'funcao').order_by('ordem', 'funcao__titulo'),
+            to_attr='integrantes_lista'
         )
     )
 
@@ -78,16 +70,7 @@ def relatorio_transparencia(request):
             'comissoes',
             queryset=Comissao.objects.filter(ativa=True).prefetch_related(
                 Prefetch('integrantes',
-                         queryset=Integrante.objects.filter(filtro_integrante_ativo).select_related('agente', 'funcao').annotate(
-                             prioridade=Case(
-                                 When(funcao__titulo__icontains='Gestor', then=Value(1)),
-                                 When(funcao__titulo__icontains='Presidente', then=Value(1)),
-                                 When(funcao__titulo__icontains='Fiscal', then=Value(2)),
-                                 When(funcao__titulo__icontains='Membro', then=Value(2)),
-                                 default=Value(3),
-                                 output_field=IntegerField(),
-                             )
-                         ).order_by('prioridade', 'funcao__titulo'))
+                         queryset=Integrante.objects.filter(filtro_integrante_ativo).select_related('agente', 'funcao').order_by('ordem', 'funcao__titulo'))
             ),
             to_attr='comissoes_vigentes'
         )
