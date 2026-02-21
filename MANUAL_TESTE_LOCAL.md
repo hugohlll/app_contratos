@@ -62,3 +62,17 @@ Para parar os serviços e remover os volumes (apagando todos os dados do banco d
 ```bash
 docker-compose -f docker-compose.prod.yml down -v
 ```
+
+---
+
+## Solução de Problemas Comuns
+
+### Erro `ModuleNotFoundError: No module named 'distutils'`
+Se você rodar a aplicação fora do Docker em Ubuntu 24.04+ (Python 3.12+), instale `setuptools`:
+
+```bash
+sudo apt install python3-setuptools
+# ou
+pip install setuptools
+```
+**Nota:** O ambiente Docker já possui essa correção.

@@ -115,3 +115,17 @@ Sempre que houver uma nova versão do sistema (commit no Git), siga estes passos
   ```bash
   docker-compose -f docker-compose.prod.yml restart
   ```
+
+---
+
+## Solução de Problemas Comuns
+
+### Erro `ModuleNotFoundError: No module named 'distutils'`
+Em versões recentes do Ubuntu (24.04+) e Python (3.12+), o módulo `distutils` foi removido. Para corrigir em ambientes sem Docker:
+
+```bash
+sudo apt install python3-setuptools
+# ou
+pip install setuptools
+```
+No Dockerfile deste projeto, isso já é tratado automaticamente.
