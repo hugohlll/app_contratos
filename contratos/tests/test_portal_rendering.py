@@ -35,5 +35,7 @@ class PortalRenderingTest(TestCase):
         url = reverse('editar_comissao', args=[self.comissao.pk])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        # Check if reordenar_integrantes URL is in the content
-        self.assertContains(response, 'reordenar_integrantes')
+        # O template usa {% url 'reordenar_integrantes' %}, que o Django resolve
+        # para o path real. Por isso verificamos o path resolvido, não o nome da URL.
+        url_reordenar = reverse('reordenar_integrantes')
+        self.assertContains(response, url_reordenar)
