@@ -56,6 +56,7 @@ As views estão organizadas em um pacote `views/` para melhor modularização:
 - **`auditoria.py`**: Painel de auditoria, gráficos e relatórios gerenciais.
 - **`militar.py`**: Área de consulta individual do militar.
 - **`auth.py`**: Lógica de login e autenticação customizada.
+- **`users.py`**: Gestão de usuários (criar, editar, listar).
 
 ### 🎨 Templates (Frontend)
 Localizados em `contratos/templates/contratos/`:
@@ -73,6 +74,8 @@ Localizados em `contratos/tests/`:
 - **`test_models.py`**: Testes unitários dos modelos.
 - **`test_views.py`**: Testes de integração das views e URLs.
 - **`test_forms.py`**: Validação de formulários.
+- **`test_portal_rendering.py`**: Testes de renderização do portal administrativo.
+- **`test_view_ordering.py`**: Testes de ordenação de views.
 - **`test_regression_*.py`**: Testes específicos para bugs corrigidos (regressão).
 
 ### 💾 Migrations
@@ -82,10 +85,17 @@ Pasta `contratos/migrations/`: Contém o histórico de alterações no esquema d
 
 ## 🐳 Infraestrutura (Docker)
 
-- **`docker-compose.yml`**: Define dois serviços:
-    - `web`: A aplicação Django rodando em Gunicorn/Dev Server.
+- **`docker-compose.yml`**: Define dois serviços para **desenvolvimento e CI**:
+    - `web`: Aplicação Django via `runserver` (porta 8000).
     - `db`: Banco de dados PostgreSQL 15.
-- **`Dockerfile`**: Constrói a imagem Linux com Python 3.11 e dependências instaladas.
+- **`docker-compose.prod.yml`**: Define três serviços para **produção**:
+    - `web`: Aplicação Django via Gunicorn (porta 8000 interna).
+    - `db`: Banco de dados PostgreSQL 15.
+    - `nginx`: Proxy reverso servindo estáticos e redirecionando requisições (porta 80 externa).
+- **`Dockerfile`**: Constrói a imagem Linux com Python 3.12 e dependências para desenvolvimento.
+- **`Dockerfile.prod`**: Imagem otimizada para produção com Gunicorn e `collectstatic`.
+- **`nginx/nginx.conf`**: Configuração do Nginx como proxy reverso.
+- **`.env.prod.example`**: Modelo de variáveis de ambiente para produção.
 
 ---
 **Desenvolvido por SO QSS SEL HUGO**

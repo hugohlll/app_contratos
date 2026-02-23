@@ -147,7 +147,7 @@ Dashboard interativo com gráficos e indicadores:
 - Docker Compose 2.0+
 
 ### **Opção 2: Instalação Manual**
-- Python 3.11+
+- Python 3.12+
 - PostgreSQL 15+
 - pip (gerenciador de pacotes Python)
 
@@ -165,17 +165,17 @@ cd app_contratos
 
 2. **Inicie os containers:**
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 3. **Execute as migrações:**
 ```bash
-docker-compose exec web python manage.py migrate
+docker compose exec web python manage.py migrate
 ```
 
 4. **Crie um superusuário (para acessar o admin):**
 ```bash
-docker-compose exec web python manage.py createsuperuser
+docker compose exec web python manage.py createsuperuser
 ```
 
 5. **Acesse a aplicação:**
@@ -483,12 +483,16 @@ app_contratos/
 │
 ├── nginx/                 # Configuração do Nginx
 │   └── nginx.conf
+├── .env.prod.example      # Modelo de variáveis de ambiente
 ├── docker-compose.yml     # Configuração Docker (Dev/CI)
 ├── docker-compose.prod.yml# Configuração Docker Produção
 ├── Dockerfile            # Imagem Docker (Dev)
 ├── Dockerfile.prod       # Imagem Docker (Prod)
 ├── manage.py             # Script de gerenciamento Django
 ├── requirements.txt      # Dependências Python
+├── ESTRUTURA_PROJETO.md  # Documentação da estrutura
+├── MANUAL_INSTALACAO_TI.md # Manual de instalação (TI)
+├── MANUAL_TESTE_LOCAL.md # Manual de teste local
 └── README.md             # Este arquivo
 ```
 
@@ -498,7 +502,7 @@ app_contratos/
 
 - **Backend:**
   - Django 5.2.10
-  - Python 3.11
+  - Python 3.12
   - PostgreSQL 15
 
 - **Frontend:**
@@ -525,7 +529,7 @@ app_contratos/
 
 ```bash
 # Com Docker
-docker-compose up
+docker compose up
 
 # Manual
 python manage.py runserver
@@ -541,7 +545,7 @@ python manage.py migrate
 ### **Acessar o Shell do Django**
 
 ```bash
-docker-compose exec web python manage.py shell
+docker compose exec web python manage.py shell
 # ou
 python manage.py shell
 ```
@@ -552,7 +556,7 @@ O projeto inclui um comando personalizado para popular o banco de dados com dado
 
 ```bash
 # Via Docker
-docker-compose exec web python manage.py populate_db
+docker compose exec web python manage.py populate_db
 
 # Manualmente
 python manage.py populate_db
@@ -564,33 +568,27 @@ python manage.py populate_db
 
 ### **Configurações Importantes para Produção**
 
-1. **Altere o SECRET_KEY** em `core/settings.py`
-2. **Desative DEBUG**: `DEBUG = False`
-3. **Configure ALLOWED_HOSTS**: Adicione seu domínio
-4. **Use variáveis de ambiente** para credenciais sensíveis
-5. **Configure HTTPS** no servidor web (Nginx/Apache)
-6. **Use um banco de dados seguro** com senhas fortes
+1. **Configure o `.env.prod`** com variáveis de ambiente seguras (veja `.env.prod.example`)
+2. **`SECRET_KEY`**: Use uma chave longa e aleatória (mín. 50 caracteres)
+3. **`DEBUG=False`**: Nunca deixe `True` em produção
+4. **`DJANGO_ALLOWED_HOSTS`**: Configure com o IP/domínio real do servidor
+5. **Senhas do banco**: Use senhas fortes em `POSTGRES_PASSWORD`
+6. **Configure HTTPS** no servidor web (Nginx/Apache)
 
-### **Exemplo de Configuração com Variáveis de Ambiente**
+> **Nota:** O `core/settings.py` já lê `SECRET_KEY` e `DEBUG` de variáveis de ambiente automaticamente. Não é necessário editar o código.
 
-```python
-# core/settings.py
-import os
-import dj_database_url
+### **Exemplo de `.env.prod`**
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'sua-chave-secreta')
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+```env
+DEBUG=False
+SECRET_KEY=sua-chave-muito-segura-e-longa-com-mais-de-50-caracteres
+DJANGO_ALLOWED_HOSTS=10.0.0.5,portal.om.eb.mil.br
 
-# Configuração de Banco de Dados via URL (Padrão 12-Factor App)
-# Exemplo: postgres://user:password@host:port/dbname
-DATABASES = {
-    'default': dj_database_url.config(
-        default='sqlite:///db.sqlite3',
-        conn_max_age=600,
-        ssl_require=False
-    )
-}
+POSTGRES_USER=admin_siscont
+POSTGRES_PASSWORD=SenhaF0rte!2026
+POSTGRES_DB=siscont_db
+
+DATABASE_URL=postgres://admin_siscont:SenhaF0rte!2026@db:5432/siscont_db
 ```
 
 ---
@@ -622,14 +620,14 @@ DATABASES = {
 
 ```bash
 # Verifique se o PostgreSQL está rodando
-docker-compose ps
+docker compose ps
 
 # Verifique os logs
-docker-compose logs db
+docker compose logs db
 
 # Recrie o banco (CUIDADO: APAGA DADOS)
-docker-compose down -v
-docker-compose up -d
+docker compose down -v
+docker compose up -d
 ```
 
 ### **Erro de Migrações**
@@ -646,9 +644,14 @@ python manage.py migrate
 ### **Problemas com Static Files**
 
 ```bash
-# Colete arquivos estáticos
+# Coletar arquivos estáticos
 python manage.py collectstatic
 ```
+
+> **⚠️ Em produção (Docker):** O volume `static_volume` persiste os arquivos entre builds. Se uma imagem ou CSS foi alterado e o site mostra a versão antiga, force a atualização:
+> ```bash
+> docker compose -f docker-compose.prod.yml exec web python manage.py collectstatic --noinput --clear
+> ```
 
 ---
 
@@ -658,7 +661,7 @@ Para dúvidas, problemas ou sugestões:
 
 1. **Documentação Django**: https://docs.djangoproject.com/
 2. **Issues no GitHub**: Abra uma issue descrevendo o problema
-3. **Logs da Aplicação**: Verifique `docker-compose logs web`
+3. **Logs da Aplicação**: Verifique `docker compose logs web`
 
 ---
 
@@ -681,6 +684,14 @@ Contribuições são bem-vindas! Para contribuir:
 ---
 
 ## 📅 Changelog
+
+### **Versão 1.1.0**
+- ✅ **Upgrade Python 3.12**: Docker atualizado para Python 3.12 com `setuptools` para compatibilidade `distutils`.
+- ✅ **Manuais Atualizados**: Manuais de TI e teste local reescritos com Docker Compose v2, backup/restauração, e troubleshooting.
+- ✅ **Logo GAP-BR**: Escudo oficial atualizado.
+- ✅ **Variáveis de Ambiente**: `SECRET_KEY` e `DEBUG` lidos do `.env.prod` (não mais hardcoded).
+- ✅ **Correções de Templates**: Variáveis Django quebradas em múltiplas linhas nos templates de busca e transparência.
+- ✅ **CI/CD**: Correção do teste `test_editar_comissao_rendering` para verificar path resolvido.
 
 ### **Versão 1.0.0 (MVP)**
 - ✅ **Gestão Completa de Contratos**: Cadastro, edição e visualização de contratos e comissões.
