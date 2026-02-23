@@ -112,3 +112,10 @@ Se rodar fora do Docker em Ubuntu 24.04+ (Python 3.12+):
 sudo apt install python3-setuptools
 ```
 **Nota:** O ambiente Docker já possui essa correção.
+
+### Imagens ou estilos não atualizam após rebuild
+O Docker volume `static_volume` **persiste os arquivos estáticos** entre builds. Se você alterou uma imagem ou CSS e o site ainda mostra a versão antiga, force a atualização:
+```bash
+docker compose -f docker-compose.prod.yml exec web python manage.py collectstatic --noinput --clear
+```
+O `--clear` apaga os arquivos antigos do volume e recopia todos os estáticos da nova imagem.

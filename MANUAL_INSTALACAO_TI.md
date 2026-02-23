@@ -141,6 +141,23 @@ docker compose -f docker-compose.prod.yml exec web python manage.py migrate
 
 > **Nota:** O `collectstatic` já é executado automaticamente durante o build da imagem Docker (passo 3.2).
 
+### 3.4 Atualizar Arquivos Estáticos (Imagens, CSS, JS)
+
+> **⚠️ ATENÇÃO — Comportamento importante do Docker:** O volume `static_volume` **persiste os arquivos entre builds**. Isso significa que, mesmo após reconstruir a imagem com uma nova imagem ou CSS, o Nginx pode continuar a servir a versão anterior do arquivo estático.
+
+Para garantir que os arquivos estáticos sejam totalmente atualizados após um deploy que altere imagens, estilos ou scripts:
+
+```bash
+# Apaga os estáticos antigos do volume e recopia os novos
+docker compose -f docker-compose.prod.yml exec web python manage.py collectstatic --noinput --clear
+```
+
+Alternativamente, para atualizar um arquivo específico sem refazer tudo:
+
+```bash
+docker cp caminho/local/arquivo.png app_contratos-web-1:/app/staticfiles/caminho/destino/arquivo.png
+```
+
 ---
 
 ## 4. Backup e Restauração
