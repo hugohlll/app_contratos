@@ -1,5 +1,5 @@
 # Usa uma imagem leve do Python
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Evita que o Python gere arquivos .pyc e garante logs em tempo real
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Instala as dependências do projeto
-RUN pip install --upgrade pip
+RUN pip install --upgrade pip setuptools
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
