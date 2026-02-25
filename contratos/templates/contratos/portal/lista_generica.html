@@ -111,6 +111,7 @@
                         <td class="px-3">{{ item.cpf|default:"-" }}</td>
 
                         {% elif titulo == 'Comissões' %}
+                        <td class="px-3 fw-bold">#{{ item.id }}</td>
                         <td class="px-3">{{ item.contrato.numero }}</td>
                         <td class="px-3">{{ item.get_tipo_display }}</td>
                         <td class="px-3">

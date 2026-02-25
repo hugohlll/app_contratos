@@ -202,7 +202,7 @@ def listar_comissoes(request):
     return generico_listar(
         request, Comissao, 'contratos/portal/lista_generica.html', 'Comissões', 
         'nova_comissao', 'editar_comissao',
-        [('contrato', 'Contrato'), ('tipo', 'Tipo'), ('ativa', 'Ativa?')],
+        [('id', 'Nº'), ('contrato', 'Contrato'), ('tipo', 'Tipo'), ('ativa', 'Ativa?')],
         url_exportar='exportar_comissoes_csv',
         arquivo_exportacao='comissoes.csv'
     )
@@ -213,10 +213,11 @@ def exportar_comissoes_csv(request):
     response['Content-Disposition'] = 'attachment; filename="comissoes.csv"'
     
     writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Contrato', 'Empresa', 'Tipo', 'Ativa', 'Portaria Nº', 'Portaria Data', 'Boletim Nº', 'Boletim Data', 'Início', 'Fim'])
+    writer.writerow(['Nº', 'Contrato', 'Empresa', 'Tipo', 'Ativa', 'Portaria Nº', 'Portaria Data', 'Boletim Nº', 'Boletim Data', 'Início', 'Fim'])
     
     for comissao in Comissao.objects.select_related('contrato__empresa').all():
         writer.writerow([
+            comissao.id,
             comissao.contrato.numero,
             comissao.contrato.empresa.razao_social,
             comissao.get_tipo_display(),
