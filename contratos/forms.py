@@ -101,6 +101,16 @@ class ComissaoForm(EstiloFormMixin, forms.ModelForm):
             if data_fim < date.today():
                 self.add_error('data_fim', "Uma comissão ativa não pode ter data de término anterior à data atual.")
         
+        # Impedir duas comissões ativas do mesmo tipo para o mesmo contrato
+        if contrato and tipo_comissao and ativa:
+            qs = Comissao.objects.filter(contrato=contrato, tipo=tipo_comissao, ativa=True)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                tipo_display = dict(Comissao.TIPO_CHOICES).get(tipo_comissao, tipo_comissao)
+                self.add_error('ativa', f"Já existe uma comissão de {tipo_display} ativa para o contrato {contrato}. "
+                               f"Desative a comissão existente antes de ativar uma nova.")
+        
         return cleaned_data
 
 class IntegranteForm(EstiloFormMixin, forms.ModelForm):
