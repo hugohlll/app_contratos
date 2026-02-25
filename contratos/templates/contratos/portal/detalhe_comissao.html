@@ -5,7 +5,7 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="fw-bold">
-                {% if object %}Editar Comissão #{{ object.id }}{% else %}Nova Comissão{% endif %}
+                {% if object %}Editar Comissão {{ object.id }}{% else %}Nova Comissão{% endif %}
             </h2>
             <a href="{% url 'listar_comissoes' %}" class="btn btn-outline-secondary">
                 ← Voltar para Lista
