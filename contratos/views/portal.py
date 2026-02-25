@@ -337,6 +337,21 @@ def editar_designacao_comissao(request, pk):
         'titulo': 'Editar Designação'
     })
 
+@admin_required
+def excluir_designacao_comissao(request, pk):
+    instance = get_object_or_404(Integrante, pk=pk)
+    comissao = instance.comissao
+    
+    if request.method == 'POST':
+        instance.delete()
+        messages.success(request, 'Integrante removido da comissão com sucesso.')
+        return redirect('editar_comissao', pk=comissao.pk)
+    
+    # GET: exibe a página de confirmação
+    return render(request, 'contratos/portal/confirmar_exclusao_integrante.html', {
+        'integrante': instance,
+    })
+
 # --- OLD (REMOVER) ---
 @login_required
 def listar_designacoes(request):

@@ -1,0 +1,32 @@
+{% extends 'contratos/portal/base_portal.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="card card-custom text-center p-4" style="max-width: 540px;">
+        <div class="card-body">
+            <div class="display-1 text-danger mb-3">
+                ⚠️
+            </div>
+            <h3 class="fw-bold mb-3">Excluir Integrante da Comissão?</h3>
+            <p class="text-muted mb-2">
+                Você está prestes a remover <strong>{{ integrante.agente }}</strong> da comissão.
+            </p>
+            <div class="alert alert-danger text-start mb-4 py-2 px-3">
+                <strong>Atenção:</strong> A exclusão retira o integrante de todo o histórico da comissão. Esta ação não
+                pode ser desfeita.
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'editar_comissao' pk=integrante.comissao.pk %}"
+                        class="btn btn-outline-secondary px-4">← Cancelar</a>
+                    <button type="submit" class="btn btn-danger px-4">
+                        🗑️ Confirmar Exclusão
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

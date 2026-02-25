@@ -156,10 +156,16 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-end">
-                                    <a href="{% url 'editar_designacao_comissao' pk=integrante.pk %}"
-                                        class="btn btn-sm btn-outline-secondary" title="Editar">
-                                        ✏️
-                                    </a>
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a href="{% url 'editar_designacao_comissao' pk=integrante.pk %}"
+                                            class="btn btn-sm btn-outline-secondary" title="Editar">
+                                            ✏️
+                                        </a>
+                                        <a href="{% url 'excluir_designacao_comissao' pk=integrante.pk %}"
+                                            class="btn btn-sm btn-outline-danger" title="Excluir">
+                                            🗑️
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             {% empty %}
