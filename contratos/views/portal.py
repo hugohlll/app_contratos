@@ -295,7 +295,9 @@ def nova_designacao_comissao(request, comissao_id):
     }
     
     if request.method == 'POST':
-        form = IntegranteForm(request.POST)
+        post_data = request.POST.copy()
+        post_data['comissao'] = comissao.id
+        form = IntegranteForm(post_data)
         if form.is_valid():
             form.save()
             messages.success(request, 'Integrante adicionado com sucesso!')
@@ -317,7 +319,9 @@ def editar_designacao_comissao(request, pk):
     comissao = instance.comissao
     
     if request.method == 'POST':
-        form = IntegranteForm(request.POST, instance=instance)
+        post_data = request.POST.copy()
+        post_data['comissao'] = comissao.id
+        form = IntegranteForm(post_data, instance=instance)
         if form.is_valid():
             form.save()
             messages.success(request, 'Designação atualizada com sucesso!')

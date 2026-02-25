@@ -43,8 +43,8 @@ class ContratoForm(EstiloFormMixin, forms.ModelForm):
         model = Contrato
         fields = ['tipo', 'numero', 'empresa', 'objeto', 'vigencia_inicio', 'vigencia_fim', 'valor_total']
         widgets = {
-            'vigencia_inicio': forms.DateInput(attrs={'type': 'date'}),
-            'vigencia_fim': forms.DateInput(attrs={'type': 'date'}),
+            'vigencia_inicio': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'vigencia_fim': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
             'objeto': forms.Textarea(attrs={'rows': 4}),
         }
 
@@ -53,7 +53,7 @@ class AgenteForm(EstiloFormMixin, forms.ModelForm):
         model = Agente
         fields = ['nome_completo', 'nome_de_guerra', 'posto', 'saram', 'cpf', 'data_ultimo_curso']
         widgets = {
-            'data_ultimo_curso': forms.DateInput(attrs={'type': 'date'}),
+            'data_ultimo_curso': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
         }
 
     def clean_cpf(self):
@@ -72,10 +72,10 @@ class ComissaoForm(EstiloFormMixin, forms.ModelForm):
         model = Comissao
         fields = ['contrato', 'tipo', 'portaria_numero', 'portaria_data', 'boletim_numero', 'boletim_data', 'data_inicio', 'data_fim', 'ativa']
         widgets = {
-            'portaria_data': forms.DateInput(attrs={'type': 'date'}),
-            'boletim_data': forms.DateInput(attrs={'type': 'date'}),
-            'data_inicio': forms.DateInput(attrs={'type': 'date'}),
-            'data_fim': forms.DateInput(attrs={'type': 'date'}),
+            'portaria_data': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'boletim_data': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'data_inicio': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'data_fim': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -108,16 +108,33 @@ class IntegranteForm(EstiloFormMixin, forms.ModelForm):
         model = Integrante
         fields = ['comissao', 'agente', 'funcao', 'data_inicio', 'data_fim', 'portaria_numero', 'portaria_data', 'boletim_numero', 'boletim_data']
         widgets = {
-            'data_inicio': forms.DateInput(attrs={'type': 'date'}),
-            'data_fim': forms.DateInput(attrs={'type': 'date'}),
-            'portaria_data': forms.DateInput(attrs={'type': 'date'}),
-            'boletim_data': forms.DateInput(attrs={'type': 'date'}),
+            'data_inicio': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'data_fim': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'portaria_data': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'boletim_data': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Filtra apenas comissões ativas e contratos vigentes para facilitar
-        self.fields['comissao'].queryset = Comissao.objects.filter(ativa=True, contrato__vigencia_fim__gte=date.today())
+        qs = Comissao.objects.filter(ativa=True, contrato__vigencia_fim__gte=date.today())
+        
+        # Garante que a comissão atual (mesmo inativa ou vencida) esteja no queryset
+        comissao_id = None
+        
+        if hasattr(self, 'instance') and self.instance and hasattr(self.instance, 'comissao_id') and self.instance.comissao_id:
+            comissao_id = self.instance.comissao_id
+        elif hasattr(self, 'initial') and self.initial and self.initial.get('comissao'):
+            comp = self.initial['comissao']
+            comissao_id = comp.id if hasattr(comp, 'id') else comp
+        elif hasattr(self, 'data') and self.data and self.data.get('comissao'):
+            comissao_id = self.data.get('comissao')
+            
+        if comissao_id:
+            qs = qs | Comissao.objects.filter(id=comissao_id)
+            
+        self.fields['comissao'].queryset = qs.distinct()
+        
         # Customiza formato com datas para identificar validade
         self.fields['comissao'].label_from_instance = lambda obj: f"{obj.contrato.numero} ({obj.get_tipo_display()}) - Vigência: {obj.data_inicio or '?'} a {obj.data_fim or '?'}"
         
