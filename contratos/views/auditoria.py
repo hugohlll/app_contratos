@@ -283,7 +283,7 @@ def exportar_qualificacao_csv(request):
     hoje = date.today()
     data_limite_curso = hoje - timedelta(days=365)
     equipe_ativa = Integrante.objects.filter(get_filtro_ativos()).select_related(
-        'agente', 'funcao', 'comissao__contrato'
+        'agente', 'agente__posto', 'posto_graduacao', 'funcao', 'comissao__contrato'
     ).order_by('agente__nome_de_guerra')
 
     for item in equipe_ativa:
@@ -299,8 +299,11 @@ def exportar_qualificacao_csv(request):
             dt_fmt = dt_curso.strftime('%d/%m/%Y')
             validade_fmt = (dt_curso + timedelta(days=365)).strftime('%d/%m/%Y')
 
+        posto = item.posto_graduacao.sigla if item.posto_graduacao else item.agente.posto.sigla
+        nome_completo = f"{posto} {item.agente.nome_de_guerra}"
+
         writer.writerow([
-            item.agente.nome_de_guerra, item.agente.saram, item.funcao.titulo,
+            nome_completo, item.agente.saram, item.funcao.titulo,
             item.comissao.contrato.numero, dt_fmt, validade_fmt, situacao
         ])
         
