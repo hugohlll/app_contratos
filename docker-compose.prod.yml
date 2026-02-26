@@ -7,6 +7,7 @@ services:
     restart: always
 
   web:
+    image: app_contratos-web:latest
     build:
       context: .
       dockerfile: Dockerfile.prod
