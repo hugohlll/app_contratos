@@ -51,7 +51,7 @@ class ContratoForm(EstiloFormMixin, forms.ModelForm):
 class AgenteForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = Agente
-        fields = ['nome_completo', 'nome_de_guerra', 'posto', 'saram', 'cpf', 'data_ultimo_curso']
+        fields = ['nome_completo', 'nome_de_guerra', 'posto', 'saram', 'cpf', 'email', 'data_ultimo_curso']
         widgets = {
             'data_ultimo_curso': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
         }
@@ -66,6 +66,18 @@ class AgenteForm(EstiloFormMixin, forms.ModelForm):
             raise forms.ValidationError("O CPF deve conter exatamente 11 números.")
             
         return format_cpf(digits)
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not email:
+            return email
+
+        import re
+        pattern = r'^[^@\s]+@[^@\s]+\.[^@\s]+$'
+        if not re.match(pattern, email):
+            raise forms.ValidationError("Informe um e-mail válido no formato exemplo@dominio.com")
+
+        return email
 
 class ComissaoForm(EstiloFormMixin, forms.ModelForm):
     class Meta:

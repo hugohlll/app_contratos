@@ -23,6 +23,7 @@ class Agente(models.Model):
     posto = models.ForeignKey(PostoGraduacao, on_delete=models.PROTECT, verbose_name="Posto Atual")
     saram = models.CharField("SARAM/Matrícula", max_length=20, unique=True)
     cpf = models.CharField("CPF", max_length=14, blank=True, null=True)
+    email = models.EmailField("E-mail", max_length=254, blank=True, null=True)
 
     data_ultimo_curso = models.DateField(null=True, blank=True, verbose_name="Data do Último Curso de Gestão")
 

@@ -8,8 +8,8 @@ class PostoGraduacaoAdmin(admin.ModelAdmin):
 
 @admin.register(Agente)
 class AgenteAdmin(admin.ModelAdmin):
-    list_display = ('posto', 'nome_de_guerra', 'nome_completo', 'saram')
-    search_fields = ('nome_completo', 'nome_de_guerra', 'saram')
+    list_display = ('posto', 'nome_de_guerra', 'nome_completo', 'saram', 'email')
+    search_fields = ('nome_completo', 'nome_de_guerra', 'saram', 'email')
     list_filter = ('posto',)
 
 @admin.register(Empresa)

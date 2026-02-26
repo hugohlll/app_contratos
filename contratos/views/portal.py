@@ -163,7 +163,7 @@ def listar_agentes(request):
     return generico_listar(
         request, Agente, 'contratos/portal/lista_generica.html', 'Agentes', 
         'novo_agente', 'editar_agente',
-        [('posto', 'Posto'), ('nome_de_guerra', 'Nome de Guerra'), ('saram', 'SARAM'), ('cpf', 'CPF')],
+        [('posto', 'Posto'), ('nome_de_guerra', 'Nome de Guerra'), ('saram', 'SARAM'), ('cpf', 'CPF'), ('email', 'E-mail')],
         url_exportar='exportar_agentes_csv',
         arquivo_exportacao='agentes.csv'
     )
@@ -174,7 +174,7 @@ def exportar_agentes_csv(request):
     response['Content-Disposition'] = 'attachment; filename="agentes.csv"'
     
     writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Posto', 'Nome de Guerra', 'Nome Completo', 'SARAM', 'CPF', 'Data Último Curso'])
+    writer.writerow(['Posto', 'Nome de Guerra', 'Nome Completo', 'SARAM', 'CPF', 'E-mail', 'Data Último Curso'])
     
     for agente in Agente.objects.select_related('posto').all():
         writer.writerow([
@@ -183,6 +183,7 @@ def exportar_agentes_csv(request):
             agente.nome_completo, 
             agente.saram,
             agente.cpf if agente.cpf else '',
+            agente.email if agente.email else '',
             agente.data_ultimo_curso.strftime('%d/%m/%Y') if agente.data_ultimo_curso else ''
         ])
     
