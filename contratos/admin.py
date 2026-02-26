@@ -71,6 +71,6 @@ class IntegranteAdmin(admin.ModelAdmin):
 
 @admin.register(Contrato)
 class ContratoAdmin(admin.ModelAdmin):
-    list_display = ('numero', 'empresa', 'vigencia_fim')
-    search_fields = ('numero', 'empresa__razao_social')
+    list_display = ('numero', 'pag', 'empresa', 'vigencia_fim')
+    search_fields = ('numero', 'pag', 'empresa__razao_social')
     autocomplete_fields = ['empresa']

@@ -100,6 +100,7 @@
                 <h5 class="fw-bold mb-1">{{ contrato.empresa.razao_social }}</h5>
                 <div class="d-flex gap-3 text-muted mb-3">
                     <span><i class="bi bi-building me-1"></i>CNPJ: {{ contrato.empresa.cnpj }}</span>
+                    <span><i class="bi bi-hash me-1"></i>PAG: <strong>{{ contrato.pag|default:"-" }}</strong></span>
                     <span><i class="bi bi-tag me-1"></i>Tipo: <strong>{{ contrato.get_tipo_display }}</strong></span>
                 </div>
                 <div class="p-3 bg-light rounded">
@@ -111,7 +112,8 @@
                 <div class="mb-3">
                     <small class="text-muted d-block text-uppercase fw-bold"
                         style="font-size: 0.75rem;">Vigência</small>
-                    <div class="fs-5">{{ contrato.vigencia_inicio|date:"d/m/Y" }} a {{ contrato.vigencia_fim|date:"d/m/Y" }}</div>
+                    <div class="fs-5">{{ contrato.vigencia_inicio|date:"d/m/Y" }} a {{
+                        contrato.vigencia_fim|date:"d/m/Y" }}</div>
                 </div>
                 <div>
                     <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Valor
@@ -141,15 +143,18 @@
             <div class="row">
                 <div class="col-md-4">
                     <i class="bi bi-calendar-range me-1 text-primary"></i>
-                    <strong>Vigência:</strong> {{ comissao.data_inicio|date:"d/m/Y"|default:"-" }} a {{ comissao.data_fim|date:"d/m/Y"|default:"Indeterminado" }}
+                    <strong>Vigência:</strong> {{ comissao.data_inicio|date:"d/m/Y"|default:"-" }} a {{
+                    comissao.data_fim|date:"d/m/Y"|default:"Indeterminado" }}
                 </div>
                 <div class="col-md-4">
                     <i class="bi bi-file-earmark-text me-1 text-primary"></i>
-                    <strong>Portaria:</strong> {% if comissao.portaria_numero %}nº {{ comissao.portaria_numero }} ({{ comissao.portaria_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
+                    <strong>Portaria:</strong> {% if comissao.portaria_numero %}nº {{ comissao.portaria_numero }} ({{
+                    comissao.portaria_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
                 </div>
                 <div class="col-md-4">
                     <i class="bi bi-journal-text me-1 text-primary"></i>
-                    <strong>Boletim:</strong> {% if comissao.boletim_numero %}nº {{ comissao.boletim_numero }} ({{ comissao.boletim_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
+                    <strong>Boletim:</strong> {% if comissao.boletim_numero %}nº {{ comissao.boletim_numero }} ({{
+                    comissao.boletim_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
                 </div>
             </div>
         </div>
@@ -171,7 +176,8 @@
             <div class="col-md-5">
                 <div class="military-card">
                     <div class="fw-bold text-dark">
-                        {% if integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla }}{% else %}{{ integrante.agente.posto.sigla }}{% endif %}
+                        {% if integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla }}{% else %}{{
+                        integrante.agente.posto.sigla }}{% endif %}
                         {{ integrante.agente.nome_de_guerra }}
                     </div>
                     <small class="text-muted"><i class="bi bi-hash me-1"></i>SARAM: {{ integrante.agente.saram}}</small>
@@ -183,7 +189,8 @@
                     <span class="exception-badge"><i class="bi bi-exclamation-triangle me-1"></i>Designação
                         Específica</span>
                     <div class="mt-2 small">
-                        <div><i class="bi bi-calendar-event me-1"></i>{{ integrante.data_inicio|date:"d/m/Y" }}{% if integrante.data_fim %} - {{ integrante.data_fim|date:"d/m/Y" }}{% endif %}</div>
+                        <div><i class="bi bi-calendar-event me-1"></i>{{ integrante.data_inicio|date:"d/m/Y" }}{% if
+                            integrante.data_fim %} - {{ integrante.data_fim|date:"d/m/Y" }}{% endif %}</div>
                         <div>Port. {{ integrante.portaria_numero }}</div>
                     </div>
                 </div>
@@ -214,15 +221,18 @@
             <div class="row">
                 <div class="col-md-4">
                     <i class="bi bi-calendar-range me-1 text-success"></i>
-                    <strong>Vigência:</strong> {{ comissao.data_inicio|date:"d/m/Y"|default:"-" }} a {{ comissao.data_fim|date:"d/m/Y"|default:"Indeterminado" }}
+                    <strong>Vigência:</strong> {{ comissao.data_inicio|date:"d/m/Y"|default:"-" }} a {{
+                    comissao.data_fim|date:"d/m/Y"|default:"Indeterminado" }}
                 </div>
                 <div class="col-md-4">
                     <i class="bi bi-file-earmark-text me-1 text-success"></i>
-                    <strong>Portaria:</strong> {% if comissao.portaria_numero %}nº {{ comissao.portaria_numero }} ({{ comissao.portaria_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
+                    <strong>Portaria:</strong> {% if comissao.portaria_numero %}nº {{ comissao.portaria_numero }} ({{
+                    comissao.portaria_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
                 </div>
                 <div class="col-md-4">
                     <i class="bi bi-journal-text me-1 text-success"></i>
-                    <strong>Boletim:</strong> {% if comissao.boletim_numero %}nº {{ comissao.boletim_numero }} ({{ comissao.boletim_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
+                    <strong>Boletim:</strong> {% if comissao.boletim_numero %}nº {{ comissao.boletim_numero }} ({{
+                    comissao.boletim_data|date:"d/m/Y" }}){% else %}N/C{% endif %}
                 </div>
             </div>
         </div>
@@ -242,7 +252,8 @@
             <div class="col-md-5">
                 <div class="military-card">
                     <div class="fw-bold text-dark">
-                        {% if integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla }}{% else %}{{ integrante.agente.posto.sigla }}{% endif %}
+                        {% if integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla }}{% else %}{{
+                        integrante.agente.posto.sigla }}{% endif %}
                         {{ integrante.agente.nome_de_guerra }}
                     </div>
                     <small class="text-muted"><i class="bi bi-hash me-1"></i>SARAM: {{ integrante.agente.saram}}</small>
@@ -254,7 +265,8 @@
                     <span class="exception-badge"><i class="bi bi-exclamation-triangle me-1"></i>Designação
                         Específica</span>
                     <div class="mt-2 small">
-                        <div><i class="bi bi-calendar-event me-1"></i>{{ integrante.data_inicio|date:"d/m/Y" }}{% if integrante.data_fim %} - {{ integrante.data_fim|date:"d/m/Y" }}{% endif %}</div>
+                        <div><i class="bi bi-calendar-event me-1"></i>{{ integrante.data_inicio|date:"d/m/Y" }}{% if
+                            integrante.data_fim %} - {{ integrante.data_fim|date:"d/m/Y" }}{% endif %}</div>
                         <div>Port. {{ integrante.portaria_numero }}</div>
                     </div>
                 </div>

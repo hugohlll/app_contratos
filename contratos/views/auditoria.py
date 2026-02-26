@@ -112,10 +112,12 @@ def painel_controle(request):
     tem_permanencia = len(top_10_permanencia) > 0
 
     # 3. ESTATÍSTICAS DE QUALIFICAÇÃO
-    equipe_ativa_qs = Integrante.objects.filter(filtro_ativos).select_related('agente')
-    total_ativos = equipe_ativa_qs.count()
-    qtd_sem_curso = equipe_ativa_qs.filter(agente__data_ultimo_curso__isnull=True).count()
-    qtd_vencidos = equipe_ativa_qs.filter(agente__data_ultimo_curso__lt=data_limite_curso).count()
+    agentes_ativos_ids = Integrante.objects.filter(filtro_ativos).values_list('agente', flat=True).distinct()
+    agentes_ativos_qs = Agente.objects.filter(id__in=agentes_ativos_ids)
+    
+    total_ativos = agentes_ativos_qs.count()
+    qtd_sem_curso = agentes_ativos_qs.filter(data_ultimo_curso__isnull=True).count()
+    qtd_vencidos = agentes_ativos_qs.filter(data_ultimo_curso__lt=data_limite_curso).count()
     qtd_em_dia = total_ativos - qtd_sem_curso - qtd_vencidos
 
     dados_qualificacao = {

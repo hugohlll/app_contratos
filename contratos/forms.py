@@ -41,7 +41,7 @@ class EmpresaForm(EstiloFormMixin, forms.ModelForm):
 class ContratoForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = Contrato
-        fields = ['tipo', 'numero', 'empresa', 'objeto', 'vigencia_inicio', 'vigencia_fim', 'valor_total']
+        fields = ['tipo', 'numero', 'pag', 'empresa', 'objeto', 'vigencia_inicio', 'vigencia_fim', 'valor_total']
         widgets = {
             'vigencia_inicio': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
             'vigencia_fim': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),

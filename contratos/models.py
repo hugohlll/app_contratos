@@ -77,6 +77,7 @@ class Contrato(models.Model):
         ('DESPESA', 'Despesa'),
     ]
     numero = models.CharField("Número do Contrato", max_length=20, unique=True)
+    pag = models.CharField("Processo Administrativo de Gestão (PAG)", max_length=50, blank=True, null=True)
     tipo = models.CharField("Tipo", max_length=10, choices=TIPO_CHOICES, default='DESPESA')
     objeto = models.TextField("Objeto do Contrato")
     empresa = models.ForeignKey(Empresa, on_delete=models.PROTECT, verbose_name="Empresa Contratada")
