@@ -233,7 +233,7 @@
         <div class="col-md-6 mb-4">
             <div class="chart-container h-100">
                 <div class="chart-title">
-                    <span>📅 Distribuição de Vencimentos</span>
+                    <span>📅 Vencimento das Comissões</span>
                     <a href="{% url 'exportar_vencimentos_csv' %}"
                         class="btn btn-outline-secondary btn-sm rounded-pill">
                         <i class="bi bi-download me-2"></i> Ver Dados
@@ -261,7 +261,11 @@
                     </a>
                 </div>
                 <div class="chart-wrapper-large">
+                    {% if tem_permanencia %}
                     <canvas id="chartPermanencia"></canvas>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">Dados insuficientes para gerar o radar</div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -399,7 +403,7 @@
         // 1. Gráfico de Vencimentos
         const ctxVenc = document.getElementById('chartVencimentos');
         if (ctxVenc) {
-            const dataVenc = getSafeData('data-vencimentos', { critico: 0, alerta: 0, normal: 1 });
+            const dataVenc = getSafeData('data-vencimentos', { critico: 0, alerta: 0, normal: 0 });
             console.log('Vencimentos Data:', dataVenc);
             try {
                 new Chart(ctxVenc, {
