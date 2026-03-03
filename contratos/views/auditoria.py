@@ -1,6 +1,7 @@
 import csv
 import json
 import io
+import math
 from datetime import date, timedelta
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -127,14 +128,28 @@ def painel_controle(request):
         'total': total_ativos
     }
 
-    # 4. SOBRECARGA E RISCOS
-    agentes_sobrecarregados = Agente.objects.annotate(
-        total_atuacoes=Count('integrante', filter=Q(integrante__in=Integrante.objects.filter(filtro_ativos)))
+    # 4. SOBRECARGA DE FISCAIS E RISCOS
+    # Filtra apenas as designações ativas onde o título da função é exatamente "Fiscal"
+    integrantes_fiscais = Integrante.objects.filter(filtro_ativos, funcao__titulo='Fiscal')
+    
+    # Agrupa os agentes e conta as suas atuações exclusivas como Fiscais
+    fiscais_sobrecarregados = Agente.objects.filter(
+        integrante__in=integrantes_fiscais
+    ).annotate(
+        total_atuacoes=Count('integrante', filter=Q(integrante__in=integrantes_fiscais))
     ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes')[:10]
     
+    total_contratos_ativos = Contrato.objects.filter(vigencia_fim__gte=hoje).count()
+    
+    # Conta a quantidade de Fiscais ÚNICOS (agentes distintos) atuando no momento
+    total_fiscais_unicos = integrantes_fiscais.values('agente').distinct().count()
+    
+    # NOVO CÁLCULO DO LIMITE: (Nº Total de Contratos) / (Total de Fiscais Únicos)
+    media_limite_fiscais = math.ceil(total_contratos_ativos / total_fiscais_unicos) if total_fiscais_unicos > 0 else 0
+    
     # Dados para gráfico de sobrecarga - serializado como JSON
-    sobrecarga_labels = [f"{ag.posto.sigla} {ag.nome_de_guerra}" for ag in agentes_sobrecarregados]
-    sobrecarga_valores = [ag.total_atuacoes for ag in agentes_sobrecarregados]
+    sobrecarga_labels = [f"{ag.posto.sigla} {ag.nome_de_guerra}" for ag in fiscais_sobrecarregados]
+    sobrecarga_valores = [ag.total_atuacoes for ag in fiscais_sobrecarregados]
     sobrecarga_labels_json = mark_safe(json.dumps(sobrecarga_labels, ensure_ascii=False))
     sobrecarga_valores_json = mark_safe(json.dumps(sobrecarga_valores))
     tem_sobrecarga = len(sobrecarga_labels) > 0
@@ -166,10 +181,11 @@ def painel_controle(request):
         'permanencia_labels': permanencia_labels_json,
         'permanencia_dias': permanencia_dias_json,
         'tem_permanencia': tem_permanencia,
-        'agentes_sobrecarregados': agentes_sobrecarregados,
+        'agentes_sobrecarregados': fiscais_sobrecarregados,
         'sobrecarga_labels': sobrecarga_labels_json,
         'sobrecarga_valores': sobrecarga_valores_json,
         'tem_sobrecarga': tem_sobrecarga,
+        'media_limite_fiscais': media_limite_fiscais,
         'contratos_risco': contratos_risco,
         'total_contratos_ativos': total_contratos_ativos,
         'total_agentes_atuando': total_agentes_atuando,
@@ -419,20 +435,24 @@ def exportar_radar_permanencia_csv(request):
 
 
 @login_required
-def exportar_sobrecarga_agentes_csv(request):
+def exportar_sobrecarga_fiscais_csv(request):
     response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attachment; filename="sobrecarga_agentes.csv"'
+    response['Content-Disposition'] = 'attachment; filename="sobrecarga_fiscais.csv"'
     response.write('\ufeff')
     
     writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Militar', 'SARAM', 'Quantidade de Contratos'])
+    writer.writerow(['Militar (Fiscal)', 'SARAM', 'Quantidade de Contratos Fiscalizados'])
     
     filtro_ativos = get_filtro_ativos()
-    agentes_sobrecarregados = Agente.objects.annotate(
-        total_atuacoes=Count('integrante', filter=Q(integrante__in=Integrante.objects.filter(filtro_ativos)))
+    integrantes_fiscais = Integrante.objects.filter(filtro_ativos, funcao__titulo='Fiscal')
+    
+    fiscais_sobrecarregados = Agente.objects.filter(
+        integrante__in=integrantes_fiscais
+    ).annotate(
+        total_atuacoes=Count('integrante', filter=Q(integrante__in=integrantes_fiscais))
     ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes')
     
-    for agente in agentes_sobrecarregados:
+    for agente in fiscais_sobrecarregados:
         writer.writerow([
             f"{agente.posto.sigla} {agente.nome_de_guerra}",
             agente.saram,
