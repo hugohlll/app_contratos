@@ -56,6 +56,7 @@ def generico_form(request, form_class, template_name, titulo, url_sucesso, insta
 
 import csv
 import io
+import urllib.parse
 from django.http import HttpResponse
 
 # --- EMPRESAS ---
@@ -71,8 +72,15 @@ def listar_empresas(request):
 
 @auditor_required
 def exportar_empresas_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attachment; filename="empresas.csv"'
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    filename = "empresas.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     response.write('\ufeff')  # BOM
     
     writer = csv.writer(response, delimiter=';')
@@ -106,8 +114,15 @@ def listar_contratos(request):
 
 @auditor_required
 def exportar_contratos_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attachment; filename="contratos.csv"'
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    filename = "contratos.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     response.write('\ufeff')  # BOM
     
     writer = csv.writer(response, delimiter=';')
@@ -170,8 +185,16 @@ def listar_agentes(request):
 
 @auditor_required
 def exportar_agentes_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attachment; filename="agentes.csv"'
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    filename = "agentes.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+    response.write('\ufeff')  # BOM
     
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Posto', 'Nome de Guerra', 'Nome Completo', 'SARAM', 'CPF', 'E-mail', 'Data Último Curso'])
@@ -211,8 +234,16 @@ def listar_comissoes(request):
 
 @auditor_required
 def exportar_comissoes_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attachment; filename="comissoes.csv"'
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    filename = "comissoes.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+    response.write('\ufeff')  # BOM
     
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Nº', 'Contrato', 'Empresa', 'Tipo', 'Ativa', 'Portaria Nº', 'Portaria Data', 'Boletim Nº', 'Boletim Data', 'Início', 'Fim'])

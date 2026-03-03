@@ -1,5 +1,6 @@
 import csv
 import json
+import urllib.parse
 import io
 import math
 from datetime import date, timedelta
@@ -225,8 +226,15 @@ def painel_controle(request):
 
 @login_required
 def exportar_vencimentos_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attachment; filename="monitoramento_vencimentos.csv"'
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    filename = "monitoramento_vencimentos.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     response.write('\ufeff')  # BOM
     
     writer = csv.writer(response, delimiter=';')
@@ -295,8 +303,15 @@ def exportar_csv(request):
                                 "SEM COMISSÃO"
                             ] + ["-"] * 9)
     
-    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="auditoria_completa.csv"'
+    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv; charset=utf-8')
+    filename = "auditoria_completa.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     return response
 
 
@@ -354,8 +369,15 @@ def exportar_qualificacao_csv(request):
             item.comissao.contrato.numero, dt_fmt, validade_fmt, situacao
         ])
         
-    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="relatorio_qualificacao_agentes.csv"'
+    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv; charset=utf-8')
+    filename = "relatorio_qualificacao_agentes.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     return response
 
 
@@ -398,15 +420,29 @@ def exportar_relatorio_periodo_csv(request):
             ])
             
     nome_arquivo = f"relatorio_agentes_{data_inicial}_a_{data_final}.csv"
-    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv')
-    response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
+    encoded_filename = urllib.parse.quote(nome_arquivo)
+    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     return response
     
     
 @login_required
 def exportar_radar_permanencia_csv(request):
     response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attachment; filename="radar_permanencia.csv"'
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    filename = "radar_permanencia.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     response.write('\ufeff')
     
     writer = csv.writer(response, delimiter=';')
@@ -465,8 +501,16 @@ def exportar_radar_permanencia_csv(request):
 
 @login_required
 def exportar_sobrecarga_fiscais_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attachment; filename="sobrecarga_fiscais.csv"'
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    filename = "sobrecarga_fiscais.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    # Adicionando RFC 5987 para Chrome
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     response.write('\ufeff')
     
     writer = csv.writer(response, delimiter=';')
@@ -491,8 +535,15 @@ def exportar_sobrecarga_fiscais_csv(request):
     return response
 @login_required
 def exportar_contratos_vencimento_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attachment; filename="vencimento_contratos.csv"'
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    filename = "vencimento_contratos.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     response.write('\ufeff')
     
     writer = csv.writer(response, delimiter=';')

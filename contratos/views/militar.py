@@ -1,4 +1,5 @@
 import csv
+import urllib.parse
 from datetime import date
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -38,8 +39,16 @@ def consulta_militar(request):
 
 def exportar_historico_militar_csv(request):
     query = request.GET.get('q')
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="historico_comissoes.csv"'
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    filename = "historico_comissoes.csv"
+    encoded_filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+    response.write('\ufeff')  # BOM
 
     writer = csv.writer(response, delimiter=';')
     writer.writerow([

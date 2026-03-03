@@ -43,7 +43,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4>Resultados para "<span class="text-primary">{{ query }}</span>"</h4>
 
-            <a href="{% url 'exportar_historico_militar_csv' %}?q={{ query }}" class="btn btn-outline-primary">
+            <a href="{% url 'exportar_historico_militar_csv' %}?q={{ query }}" download class="btn btn-outline-primary">
                 <i class="bi bi-file-earmark-excel me-2"></i>Baixar Histórico Completo
             </a>
         </div>
@@ -89,9 +89,11 @@
                                     <div class="d-flex flex-column">
                                         <span><strong>Início:</strong> {{ item.data_inicio|date:"d/m/Y" }}</span>
                                         {% if item.data_desligamento %}
-                                        <span class="text-danger small">Saiu em: {{ item.data_desligamento|date:"d/m/Y" }}</span>
+                                        <span class="text-danger small">Saiu em: {{ item.data_desligamento|date:"d/m/Y"
+                                            }}</span>
                                         {% elif item.data_fim %}
-                                        <span class="text-muted small">Previsto até: {{ item.data_fim|date:"d/m/Y" }}</span>
+                                        <span class="text-muted small">Previsto até: {{ item.data_fim|date:"d/m/Y"
+                                            }}</span>
                                         {% else %}
                                         <span class="text-success small">Ativa</span>
                                         {% endif %}

@@ -44,7 +44,7 @@
                     {% if resultados %}
                     <div class="col-md-4 text-end">
                         <a href="{% url 'exportar_periodo_csv' %}?data_inicial={{ data_inicial }}&data_final={{ data_final }}"
-                            class="btn btn-success">
+                            download class="btn btn-success">
                             <i class="bi bi-file-earmark-spreadsheet me-2"></i>Baixar Relatório (.csv)
                         </a>
                     </div>
@@ -113,7 +113,8 @@
         <div class="text-center py-5">
             <div class="display-1 text-muted opacity-25 mb-3">🤷‍♂️</div>
             <div class="alert alert-warning d-inline-block">
-                Nenhum agente encontrado atuando entre <strong>{{ data_inicial }}</strong> e <strong>{{ data_final }}</strong>.
+                Nenhum agente encontrado atuando entre <strong>{{ data_inicial }}</strong> e <strong>{{ data_final
+                    }}</strong>.
             </div>
         </div>
         {% endif %}
