@@ -249,8 +249,23 @@
             </div>
         </div>
     </div>
-
-
+    <!-- Row: Radar de Permanência -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="chart-container">
+                <div class="chart-title">
+                    <span>⏱️ Radar de Permanência (Top 10)</span>
+                    <a href="{% url 'exportar_radar_permanencia_csv' %}" download
+                        class="btn btn-outline-secondary btn-sm rounded-pill">
+                        <i class="bi bi-download me-2"></i> Ver Dados
+                    </a>
+                </div>
+                <div class="chart-wrapper-large">
+                    <canvas id="chartPermanencia"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Gráficos Secundários e Velocímetro -->
     <div class="row mb-4">
@@ -504,7 +519,7 @@
                     }
                 },
                 plugins: [gaugeTextPlugin]
-                });
+            });
         }
 
         // 3. Radar de Permanência
