@@ -128,12 +128,25 @@ def painel_controle(request):
         'total': total_ativos
     }
 
-    # NOVO: CÁLCULO PARA O VELOCÍMETRO (90 DIAS)
-    limite_90_dias = hoje + timedelta(days=90)
-    contratos_90_dias = Contrato.objects.filter(
-        vigencia_fim__gte=hoje,
-        vigencia_fim__lte=limite_90_dias
-    ).count()
+    # CÁLCULO PARA O VELOCÍMETRO (Segmentado: 90 e 120 dias)
+    limite_90 = hoje + timedelta(days=90)
+    limite_120 = hoje + timedelta(days=120)
+
+    count_venc_90 = Contrato.objects.filter(vigencia_fim__gte=hoje, vigencia_fim__lte=limite_90).count()
+    count_venc_120 = Contrato.objects.filter(vigencia_fim__gt=limite_90, vigencia_fim__lte=limite_120).count()
+    count_venc_maior_120 = Contrato.objects.filter(vigencia_fim__gt=limite_120).count()
+
+    # Listagem completa de contratos ativos com cálculo de dias restantes
+    # (Usada para a nova tabela de monitoramento de prazos)
+    contratos_ativos_lista = Contrato.objects.filter(vigencia_fim__gte=hoje).select_related('empresa').order_by('vigencia_fim')
+    for c in contratos_ativos_lista:
+        c.dias_restantes = (c.vigencia_fim - hoje).days
+        if c.dias_restantes <= 90:
+            c.classe_vencimento = 'text-danger fw-bold'
+        elif c.dias_restantes <= 120:
+            c.classe_vencimento = 'text-warning fw-bold'
+        else:
+            c.classe_vencimento = 'text-success'
 
     # 4. SOBRECARGA DE FISCAIS E RISCOS
     # Filtra apenas as designações ativas onde o título da função é exatamente "Fiscal"
@@ -193,7 +206,13 @@ def painel_controle(request):
         'sobrecarga_valores': sobrecarga_valores_json,
         'tem_sobrecarga': tem_sobrecarga,
         'media_limite_fiscais': media_limite_fiscais,
-        'contratos_90_dias': contratos_90_dias,
+        'venc_data_json': mark_safe(json.dumps({
+            'ate_90': count_venc_90,
+            'entre_90_120': count_venc_120,
+            'apos_120': count_venc_maior_120,
+            'total': total_contratos_ativos
+        })),
+        'contratos_ativos_lista': contratos_ativos_lista,
         'contratos_risco': contratos_risco,
         'total_contratos_ativos': total_contratos_ativos,
         'total_agentes_atuando': total_agentes_atuando,
@@ -467,6 +486,35 @@ def exportar_sobrecarga_fiscais_csv(request):
             f"{agente.posto.sigla} {agente.nome_de_guerra}",
             agente.saram,
             agente.total_atuacoes
+        ])
+        
+    return response
+@login_required
+def exportar_contratos_vencimento_csv(request):
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="vencimento_contratos.csv"'
+    response.write('\ufeff')
+    
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Contrato', 'Empresa', 'Vencimento', 'Dias Restantes', 'Situação'])
+    
+    hoje = date.today()
+    contratos = Contrato.objects.filter(vigencia_fim__gte=hoje).select_related('empresa').order_by('vigencia_fim')
+    
+    for c in contratos:
+        dias = (c.vigencia_fim - hoje).days
+        situacao = "NORMAL"
+        if dias <= 90:
+            situacao = "CRÍTICO"
+        elif dias <= 120:
+            situacao = "ALERTA"
+            
+        writer.writerow([
+            c.numero,
+            c.empresa.razao_social,
+            c.vigencia_fim.strftime('%d/%m/%Y'),
+            dias,
+            situacao
         ])
         
     return response

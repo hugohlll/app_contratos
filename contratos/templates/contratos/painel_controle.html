@@ -234,7 +234,7 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>📅 Vencimento das Comissões</span>
-                    <a href="{% url 'exportar_vencimentos_csv' %}"
+                    <a href="{% url 'exportar_vencimentos_csv' %}" download
                         class="btn btn-outline-secondary btn-sm rounded-pill">
                         <i class="bi bi-download me-2"></i> Ver Dados
                     </a>
@@ -278,6 +278,10 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>⏱️ Vencimentos (≤ 90 dias)</span>
+                    <a href="{% url 'exportar_contratos_vencimento_csv' %}" download
+                        class="btn btn-outline-secondary btn-sm rounded-pill">
+                        <i class="bi bi-download me-2"></i> Ver Dados
+                    </a>
                 </div>
                 <div class="chart-wrapper" style="height: 250px;">
                     <canvas id="chartVelocimetro"></canvas>
@@ -290,7 +294,7 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>⚖️ Sobrecarga de Fiscais</span>
-                    <a href="{% url 'exportar_sobrecarga_fiscais_csv' %}"
+                    <a href="{% url 'exportar_sobrecarga_fiscais_csv' %}" download
                         class="btn btn-outline-secondary btn-sm rounded-pill">
                         <i class="bi bi-download me-2"></i> Ver Dados
                     </a>
@@ -305,6 +309,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Contratos em Risco -->
     {% if contratos_risco %}
@@ -332,7 +337,7 @@
     <div class="chart-container">
         <div class="chart-title"><span>📥 Relatórios</span></div>
         <div class="d-flex gap-3">
-            <a href="{% url 'exportar_csv' %}" class="btn btn-outline-primary"><i
+            <a href="{% url 'exportar_csv' %}" download class="btn btn-outline-primary"><i
                     class="bi bi-file-earmark-spreadsheet me-2"></i>Auditoria Completa</a>
             <a href="{% url 'relatorio_periodo' %}" class="btn btn-outline-info"><i
                     class="bi bi-calendar-range me-2"></i>Por Período</a>
@@ -372,10 +377,7 @@
 </script>
 
 <script id="data-velocimetro" type="application/json">
-    {
-        "no_prazo_90": {{ contratos_90_dias|default:"0" }},
-        "total": {{ total_contratos_ativos|default:"0" }}
-    }
+    {{ venc_data_json|safe }}
 </script>
 
 <script>
@@ -461,13 +463,12 @@
         // ==========================================
         const ctxVelocimetro = document.getElementById('chartVelocimetro');
         if (ctxVelocimetro) {
-            const velData = getSafeData('data-velocimetro', { no_prazo_90: 0, total: 1 });
-            const seguros = Math.max(0, velData.total - velData.no_prazo_90);
+            const vData = getSafeData('data-velocimetro', { ate_90: 0, entre_90_120: 0, apos_120: 0, total: 1 });
 
-            // Proteção contra divisão por zero
-            let percentagem = 0;
-            if (velData.total > 0) {
-                percentagem = Math.round((velData.no_prazo_90 / velData.total) * 100);
+            // Proporção para o texto central (percentagem crítica <= 90 dias)
+            let percentagemCritica = 0;
+            if (vData.total > 0) {
+                percentagemCritica = Math.round((vData.ate_90 / vData.total) * 100);
             }
 
             // Plugin para desenhar a percentagem no centro do anel
@@ -482,9 +483,9 @@
                     const fontSize = (height / 100).toFixed(2);
                     ctx.font = "bold " + fontSize + "em sans-serif";
                     ctx.textBaseline = "bottom";
-                    ctx.fillStyle = "#dc3545"; // Vermelho
+                    ctx.fillStyle = vData.ate_90 > 0 ? "#dc3545" : "#198754";
 
-                    const text = percentagem + "%";
+                    const text = percentagemCritica + "%";
                     const textX = Math.round((width - ctx.measureText(text).width) / 2);
                     const textY = chart.chartArea.bottom - 15;
 
@@ -493,7 +494,7 @@
                     // Texto secundário
                     ctx.font = "normal " + (fontSize * 0.4).toFixed(2) + "em sans-serif";
                     ctx.fillStyle = "#6c757d";
-                    const subText = velData.no_prazo_90 + " contratos";
+                    const subText = vData.ate_90 + " contratos < 90d";
                     const subTextX = Math.round((width - ctx.measureText(subText).width) / 2);
                     ctx.fillText(subText, subTextX, textY + 20);
 
@@ -504,10 +505,10 @@
             new Chart(ctxVelocimetro, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Vencem em ≤ 90 dias', 'Mais de 90 dias'],
+                    labels: ['≤ 90 dias', '90-120 dias', '> 120 dias'],
                     datasets: [{
-                        data: [velData.no_prazo_90, seguros],
-                        backgroundColor: ['#dc3545', '#e9ecef'],
+                        data: [vData.ate_90, vData.entre_90_120, vData.apos_120],
+                        backgroundColor: ['#dc3545', '#ffc107', '#198754'],
                         borderWidth: 0,
                         circumference: 180, // Cria o semi-círculo
                         rotation: 270       // Roda para começar na base esquerda
