@@ -1,6 +1,7 @@
 {% extends 'contratos/portal/base_portal.html' %}
 {% load static %}
 
+</script>
 {% block title %}Painel de Auditoria{% endblock %}
 
 {% block content %}
@@ -251,27 +252,22 @@
 
 
 
-    <!-- Gráficos Secundários -->
-    <div class="row">
-        <div class="col-md-6">
+    <!-- Gráficos Secundários e Velocímetro -->
+    <div class="row mb-4">
+        <!-- Gráfico: Velocímetro 90 dias -->
+        <div class="col-md-4">
             <div class="chart-container h-100">
                 <div class="chart-title">
-                    <span>⏱️ Radar de Permanência (Top 10)</span>
-                    <a href="{% url 'exportar_radar_permanencia_csv' %}"
-                        class="btn btn-outline-secondary btn-sm rounded-pill">
-                        <i class="bi bi-download me-2"></i> Ver Dados
-                    </a>
+                    <span>⏱️ Vencimentos (≤ 90 dias)</span>
                 </div>
-                {% if top_permanencia %}
-                <div class="chart-wrapper">
-                    <canvas id="chartPermanencia"></canvas>
+                <div class="chart-wrapper" style="height: 250px;">
+                    <canvas id="chartVelocimetro"></canvas>
                 </div>
-                {% else %}
-                <div class="text-center py-5 text-muted">Dados insuficientes</div>
-                {% endif %}
             </div>
         </div>
-        <div class="col-md-6">
+
+        <!-- Gráfico: Sobrecarga -->
+        <div class="col-md-8">
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>⚖️ Sobrecarga de Fiscais</span>
@@ -344,6 +340,25 @@
     {{ permanencia_dias|safe|default:"[]" }}
 </script>
 
+<script id="data-vencimentos" type="application/json">
+    {
+        "critico": {{ vencimentos_critico|default:0 }},
+        "alerta": {{ vencimentos_alerta|default:0 }},
+        "normal": {{ vencimentos_normal|default:0 }}
+    }
+</script>
+
+<script id="data-qualificacao" type="application/json">
+    {{ dados_qualificacao_json|safe|default:"{}" }}
+</script>
+
+<script id="data-velocimetro" type="application/json">
+    {
+        "no_prazo_90": {{ contratos_90_dias|default:"0" }},
+        "total": {{ total_contratos_ativos|default:"0" }}
+    }
+</script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // Função auxiliar robusta para ler dados JSON (Impede falhas de sintaxe)
@@ -369,232 +384,312 @@
         // 1. Gráfico de Vencimentos
         const ctxVenc = document.getElementById('chartVencimentos');
         if (ctxVenc) {
-            new Chart(ctxVenc, {
-                type: 'pie',
-                data: {
-                    labels: ['Crítico (≤7 dias)', 'Alerta (8-15 dias)', 'Normal (>15 dias)'],
-                    datasets: [{
-                        data: [{{ vencimentos_critico }}, {{ vencimentos_alerta }}, {{ vencimentos_normal }}],
-        backgroundColor: ['#dc3545', '#ffc107', '#198754'],
-            borderWidth: 0
-    }]
-                },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'right' } }
-    }
-            });
+            const dataVenc = getSafeData('data-vencimentos', { critico: 0, alerta: 0, normal: 1 });
+            console.log('Vencimentos Data:', dataVenc);
+            try {
+                new Chart(ctxVenc, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Crítico (≤7 dias)', 'Alerta (8-15 dias)', 'Normal (>15 dias)'],
+                        datasets: [{
+                            data: [dataVenc.critico, dataVenc.alerta, dataVenc.normal],
+                            backgroundColor: ['#dc3545', '#ffc107', '#198754'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+                console.log('Vencimentos Chart Created');
+            } catch (e) {
+                console.error('Error creating Vencimentos Chart:', e);
+            }
         }
 
-    // 2. Gráfico de Qualificação
-    const ctxQual = document.getElementById('chartQualificacao');
-    if (ctxQual) {
-        new Chart(ctxQual, {
-            type: 'pie',
-            data: {
-                labels: ['Em Dia', 'Vencido', 'Sem Curso'],
-                datasets: [{
-                    data: [{{ dados_qualificacao.em_dia }}, {{ dados_qualificacao.vencidos }}, {{ dados_qualificacao.sem_curso }}],
-    backgroundColor: ['#198754', '#dc3545', '#6c757d'],
-        borderWidth: 0
+        // 2. Gráfico de Qualificação
+        const ctxQual = document.getElementById('chartQualificacao');
+        if (ctxQual) {
+            const dataQual = getSafeData('data-qualificacao', { em_dia: 0, vencidos: 0, sem_curso: 0 });
+            console.log('Qualificacao Data:', dataQual);
+            try {
+                new Chart(ctxQual, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Em Dia', 'Vencido', 'Sem Curso'],
+                        datasets: [{
+                            data: [dataQual.em_dia, dataQual.vencidos, dataQual.sem_curso],
+                            backgroundColor: ['#198754', '#dc3545', '#6c757d'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+                console.log('Qualificacao Chart Created');
+            } catch (e) {
+                console.error('Error creating Qualificacao Chart:', e);
+            }
+        }
+
+        // ==========================================
+        // GRÁFICO: VELOCÍMETRO (90 DIAS)
+        // ==========================================
+        const ctxVelocimetro = document.getElementById('chartVelocimetro');
+        if (ctxVelocimetro) {
+            const velData = getSafeData('data-velocimetro', { no_prazo_90: 0, total: 1 });
+            const seguros = Math.max(0, velData.total - velData.no_prazo_90);
+
+            // Proteção contra divisão por zero
+            let percentagem = 0;
+            if (velData.total > 0) {
+                percentagem = Math.round((velData.no_prazo_90 / velData.total) * 100);
+            }
+
+            // Plugin para desenhar a percentagem no centro do anel
+            const gaugeTextPlugin = {
+                id: 'gaugeText',
+                beforeDraw: function (chart) {
+                    const width = chart.width;
+                    const height = chart.height;
+                    const ctx = chart.ctx;
+                    ctx.restore();
+
+                    const fontSize = (height / 100).toFixed(2);
+                    ctx.font = "bold " + fontSize + "em sans-serif";
+                    ctx.textBaseline = "bottom";
+                    ctx.fillStyle = "#dc3545"; // Vermelho
+
+                    const text = percentagem + "%";
+                    const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                    const textY = chart.chartArea.bottom - 15;
+
+                    ctx.fillText(text, textX, textY);
+
+                    // Texto secundário
+                    ctx.font = "normal " + (fontSize * 0.4).toFixed(2) + "em sans-serif";
+                    ctx.fillStyle = "#6c757d";
+                    const subText = velData.no_prazo_90 + " contratos";
+                    const subTextX = Math.round((width - ctx.measureText(subText).width) / 2);
+                    ctx.fillText(subText, subTextX, textY + 20);
+
+                    ctx.save();
+                }
+            };
+
+            new Chart(ctxVelocimetro, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Vencem em ≤ 90 dias', 'Mais de 90 dias'],
+                    datasets: [{
+                        data: [velData.no_prazo_90, seguros],
+                        backgroundColor: ['#dc3545', '#e9ecef'],
+                        borderWidth: 0,
+                        circumference: 180, // Cria o semi-círculo
+                        rotation: 270       // Roda para começar na base esquerda
                     }]
                 },
-    options: {
-        responsive: true,
-            maintainAspectRatio: false,
-                plugins: { legend: { position: 'right' } }
-    }
-            });
-        }
-
-    // 3. Radar de Permanência
-    const ctxPerm = document.getElementById('chartPermanencia');
-    if (ctxPerm) {
-        // Ler dados de forma segura
-        const labelsPerm = getSafeData('data-perm-labels', []);
-        const diasTotais = getSafeData('data-perm-dias', []);
-
-        if (labelsPerm.length > 0) {
-            // Separar em Base (<365) e Excesso (>365)
-            const baseData = diasTotais.map(d => Math.min(d, 365));
-            const excessData = diasTotais.map(d => Math.max(0, d - 365));
-
-            const limitLinePlugin = {
-                id: 'limitLine',
-                afterDraw: (chart) => {
-                    const ctx = chart.ctx;
-                    const xAxis = chart.scales.x;
-                    const yAxis = chart.scales.y;
-                    const xValue = 365;
-                    if (xValue < xAxis.min || xValue > xAxis.max) return;
-                    const xPixel = xAxis.getPixelForValue(xValue);
-                    const topPixel = yAxis.top;
-                    const bottomPixel = yAxis.bottom;
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 1.5;
-                    ctx.setLineDash([5, 5]);
-                    ctx.moveTo(xPixel, topPixel);
-                    ctx.lineTo(xPixel, bottomPixel);
-                    ctx.stroke();
-                    ctx.fillStyle = '#000000';
-                    ctx.textAlign = 'center';
-                    ctx.font = 'bold 12px Arial';
-                    ctx.fillText('limite ideal', xPixel, topPixel - 8);
-                    ctx.restore();
-                }
-            };
-
-            new Chart(ctxPerm, {
-                type: 'bar',
-                data: {
-                    labels: labelsPerm,
-                    datasets: [
-                        {
-                            label: 'Regular',
-                            data: baseData,
-                            backgroundColor: '#0dcaf0',
-                            borderRadius: 4,
-                            barPercentage: 0.6
-                        },
-                        {
-                            label: 'Excedente',
-                            data: excessData,
-                            borderRadius: 4,
-                            barPercentage: 0.6,
-                            backgroundColor: 'rgba(220, 53, 69, 0.8)'
-                        }
-                    ]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: { padding: { top: 30 } },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    const idx = context.dataIndex;
-                                    return `Total: ${diasTotais[idx]} dias`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            stacked: true,
-                            suggestedMax: 400,
-                            title: { display: true, text: 'Dias de Permanência' }
-                        },
-                        y: {
-                            stacked: true,
-                            title: { display: true, text: 'Militares' }
-                        }
-                    }
-                },
-                plugins: [limitLinePlugin]
-            });
-        }
-    }
-
-    // 4. Sobrecarga de Fiscais
-    const ctxSob = document.getElementById('chartSobrecarga');
-    if (ctxSob) {
-        // Ler dados de forma segura (Prevenção de quebra de renderização)
-        const labelsSob = getSafeData('data-sob-labels', []);
-        const valuesSob = getSafeData('data-sob-valores', []);
-        const avgSob = getSafeData('data-sob-avg', 0);
-
-        if (labelsSob.length > 0) {
-            // Separar em Base e Excesso
-            const baseDataSob = valuesSob.map(v => Math.min(v, avgSob));
-            const excessDataSob = valuesSob.map(v => Math.max(0, v - avgSob));
-
-            const averageLinePlugin = {
-                id: 'averageLine',
-                afterDraw: (chart) => {
-                    const ctx = chart.ctx;
-                    const xAxis = chart.scales.x;
-                    const yAxis = chart.scales.y;
-                    const yValue = avgSob;
-                    if (yValue < yAxis.min || yValue > yAxis.max) return;
-                    const yPixel = yAxis.getPixelForValue(yValue);
-                    const leftPixel = xAxis.left;
-                    const rightPixel = xAxis.right;
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 1.5;
-                    ctx.setLineDash([5, 5]);
-                    ctx.moveTo(leftPixel, yPixel);
-                    ctx.lineTo(rightPixel, yPixel);
-                    ctx.stroke();
-                    ctx.fillStyle = '#000000';
-                    ctx.textAlign = 'right';
-                    ctx.font = 'bold 12px Arial';
-                    ctx.fillText('limite ideal: ' + avgSob, rightPixel, yPixel - 5);
-                    ctx.restore();
-                }
-            };
-
-            new Chart(ctxSob, {
-                type: 'bar',
-                data: {
-                    labels: labelsSob,
-                    datasets: [
-                        {
-                            label: 'Regular',
-                            data: baseDataSob,
-                            backgroundColor: '#0dcaf0',
-                            borderRadius: 4,
-                            barPercentage: 0.6
-                        },
-                        {
-                            label: 'Excedente',
-                            data: excessDataSob,
-                            borderRadius: 4,
-                            barPercentage: 0.6,
-                            backgroundColor: 'rgba(220, 53, 69, 0.8)'
-                        }
-                    ]
-                },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { top: 20 } },
+                    cutout: '75%', // Grossura do anel
                     plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    const idx = context.dataIndex;
-                                    return `Contratos Fiscalizados: ${valuesSob[idx]}`;
+                        legend: { position: 'bottom' },
+                        tooltip: { enabled: true }
+                    }
+                },
+                plugins: [gaugeTextPlugin]
+                });
+        }
+
+        // 3. Radar de Permanência
+        const ctxPerm = document.getElementById('chartPermanencia');
+        if (ctxPerm) {
+            const labelsPerm = getSafeData('data-perm-labels', []);
+            const diasTotais = getSafeData('data-perm-dias', []);
+
+            if (labelsPerm.length > 0) {
+                const baseData = diasTotais.map(d => Math.min(d, 365));
+                const excessData = diasTotais.map(d => Math.max(0, d - 365));
+
+                const limitLinePlugin = {
+                    id: 'limitLine',
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const xAxis = chart.scales.x;
+                        const yAxis = chart.scales.y;
+                        const xValue = 365;
+                        if (xValue < xAxis.min || xValue > xAxis.max) return;
+                        const xPixel = xAxis.getPixelForValue(xValue);
+                        const topPixel = yAxis.top;
+                        const bottomPixel = yAxis.bottom;
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.strokeStyle = '#000000';
+                        ctx.lineWidth = 1.5;
+                        ctx.setLineDash([5, 5]);
+                        ctx.moveTo(xPixel, topPixel);
+                        ctx.lineTo(xPixel, bottomPixel);
+                        ctx.stroke();
+                        ctx.fillStyle = '#000000';
+                        ctx.textAlign = 'center';
+                        ctx.font = 'bold 12px Arial';
+                        ctx.fillText('limite ideal', xPixel, topPixel - 8);
+                        ctx.restore();
+                    }
+                };
+
+                new Chart(ctxPerm, {
+                    type: 'bar',
+                    data: {
+                        labels: labelsPerm,
+                        datasets: [
+                            {
+                                label: 'Regular',
+                                data: baseData,
+                                backgroundColor: '#0dcaf0',
+                                borderRadius: 4,
+                                barPercentage: 0.6
+                            },
+                            {
+                                label: 'Excedente',
+                                data: excessData,
+                                borderRadius: 4,
+                                barPercentage: 0.6,
+                                backgroundColor: 'rgba(220, 53, 69, 0.8)'
+                            }
+                        ]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { top: 30 } },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        const idx = context.dataIndex;
+                                        return `Total: ${diasTotais[idx]} dias`;
+                                    }
                                 }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                suggestedMax: 400,
+                                title: { display: true, text: 'Dias de Permanência' }
+                            },
+                            y: {
+                                stacked: true,
+                                title: { display: true, text: 'Militares' }
                             }
                         }
                     },
-                    scales: {
-                        x: {
-                            stacked: true,
-                            grid: { display: false },
-                            title: { display: true, text: 'Fiscais' }
-                        },
-                        y: {
-                            stacked: true,
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 },
-                            title: { display: true, text: 'Contratos Fiscalizados' }
-                        }
-                    }
-                },
-                plugins: [averageLinePlugin]
-            });
+                    plugins: [limitLinePlugin]
+                });
+            }
         }
-    }
+
+        // 4. Sobrecarga de Fiscais
+        const ctxSob = document.getElementById('chartSobrecarga');
+        if (ctxSob) {
+            const labelsSob = getSafeData('data-sob-labels', []);
+            const valuesSob = getSafeData('data-sob-valores', []);
+            const avgSob = getSafeData('data-sob-avg', 0);
+
+            if (labelsSob.length > 0) {
+                const baseDataSob = valuesSob.map(v => Math.min(v, avgSob));
+                const excessDataSob = valuesSob.map(v => Math.max(0, v - avgSob));
+
+                const averageLinePlugin = {
+                    id: 'averageLine',
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const xAxis = chart.scales.x;
+                        const yAxis = chart.scales.y;
+                        const yValue = avgSob;
+                        if (yValue < yAxis.min || yValue > yAxis.max) return;
+                        const yPixel = yAxis.getPixelForValue(yValue);
+                        const leftPixel = xAxis.left;
+                        const rightPixel = xAxis.right;
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.strokeStyle = '#000000';
+                        ctx.lineWidth = 1.5;
+                        ctx.setLineDash([5, 5]);
+                        ctx.moveTo(leftPixel, yPixel);
+                        ctx.lineTo(rightPixel, yPixel);
+                        ctx.stroke();
+                        ctx.fillStyle = '#000000';
+                        ctx.textAlign = 'right';
+                        ctx.font = 'bold 12px Arial';
+                        ctx.fillText('limite ideal: ' + avgSob, rightPixel, yPixel - 5);
+                        ctx.restore();
+                    }
+                };
+
+                new Chart(ctxSob, {
+                    type: 'bar',
+                    data: {
+                        labels: labelsSob,
+                        datasets: [
+                            {
+                                label: 'Regular',
+                                data: baseDataSob,
+                                backgroundColor: '#0dcaf0',
+                                borderRadius: 4,
+                                barPercentage: 0.6
+                            },
+                            {
+                                label: 'Excedente',
+                                data: excessDataSob,
+                                borderRadius: 4,
+                                barPercentage: 0.6,
+                                backgroundColor: 'rgba(220, 53, 69, 0.8)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { top: 20 } },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        const idx = context.dataIndex;
+                                        return `Contratos Fiscalizados: ${valuesSob[idx]}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                grid: { display: false },
+                                title: { display: true, text: 'Fiscais' }
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                ticks: { stepSize: 1 },
+                                title: { display: true, text: 'Contratos Fiscalizados' }
+                            }
+                        }
+                    },
+                    plugins: [averageLinePlugin]
+                });
+            }
+        }
     });
 </script>
 {% endblock %}

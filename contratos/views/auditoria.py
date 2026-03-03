@@ -128,6 +128,13 @@ def painel_controle(request):
         'total': total_ativos
     }
 
+    # NOVO: CÁLCULO PARA O VELOCÍMETRO (90 DIAS)
+    limite_90_dias = hoje + timedelta(days=90)
+    contratos_90_dias = Contrato.objects.filter(
+        vigencia_fim__gte=hoje,
+        vigencia_fim__lte=limite_90_dias
+    ).count()
+
     # 4. SOBRECARGA DE FISCAIS E RISCOS
     # Filtra apenas as designações ativas onde o título da função é exatamente "Fiscal"
     integrantes_fiscais = Integrante.objects.filter(filtro_ativos, funcao__titulo='Fiscal')
@@ -171,7 +178,7 @@ def painel_controle(request):
         ), to_attr='comissoes_ativas')
     ).order_by('vigencia_fim')
 
-    return render(request, 'contratos/painel_controle.html', {
+    context = {
         'lista_vencimentos': top_5_vencimentos,
         'total_vencimentos_count': total_vencimentos_count,
         'vencimentos_critico': vencimentos_critico,
@@ -186,12 +193,15 @@ def painel_controle(request):
         'sobrecarga_valores': sobrecarga_valores_json,
         'tem_sobrecarga': tem_sobrecarga,
         'media_limite_fiscais': media_limite_fiscais,
+        'contratos_90_dias': contratos_90_dias,
         'contratos_risco': contratos_risco,
         'total_contratos_ativos': total_contratos_ativos,
         'total_agentes_atuando': total_agentes_atuando,
         'tabela_contratos': tabela_contratos,
-        'dados_qualificacao': dados_qualificacao,
-    })
+        'dados_qualificacao_json': mark_safe(json.dumps(dados_qualificacao)),
+    }
+
+    return render(request, 'contratos/painel_controle.html', context)
 
 
 @login_required
