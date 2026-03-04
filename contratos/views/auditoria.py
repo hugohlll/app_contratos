@@ -10,7 +10,7 @@ from django.db.models import Count, Q, Prefetch
 from django.contrib.auth.decorators import login_required
 from django.utils.dateparse import parse_date
 from django.utils.safestring import mark_safe
-from contratos.models import Contrato, Agente, Comissao, Integrante
+from contratos.models import Contrato, Agente, Comissao, Integrante, DIAS_VALIDADE_QUALIFICACAO
 from contratos.utils import get_filtro_ativos
 
 
@@ -30,7 +30,7 @@ def get_classificacao_vencimento(dias):
 @login_required
 def painel_controle(request):
     hoje = date.today()
-    data_limite_curso = hoje - timedelta(days=365)
+    data_limite_curso = hoje - timedelta(days=DIAS_VALIDADE_QUALIFICACAO)
     filtro_ativos = get_filtro_ativos()
 
     # 1. MONITORAMENTO DE VENCIMENTOS (Lógica Refatorada)
@@ -343,7 +343,7 @@ def exportar_qualificacao_csv(request):
     writer.writerow(['Militar', 'SARAM', 'Função', 'Contrato', 'Data Último Curso', 'Validade', 'Situação'])
 
     hoje = date.today()
-    data_limite_curso = hoje - timedelta(days=365)
+    data_limite_curso = hoje - timedelta(days=DIAS_VALIDADE_QUALIFICACAO)
     equipe_ativa = Integrante.objects.filter(get_filtro_ativos()).select_related(
         'agente', 'agente__posto', 'posto_graduacao', 'funcao', 'comissao__contrato'
     ).order_by('agente__nome_de_guerra')
@@ -356,10 +356,10 @@ def exportar_qualificacao_csv(request):
         elif dt_curso < data_limite_curso:
             situacao = "VENCIDO (IRREGULAR)"
             dt_fmt = dt_curso.strftime('%d/%m/%Y')
-            validade_fmt = (dt_curso + timedelta(days=365)).strftime('%d/%m/%Y')
+            validade_fmt = (dt_curso + timedelta(days=DIAS_VALIDADE_QUALIFICACAO)).strftime('%d/%m/%Y')
         else:
             dt_fmt = dt_curso.strftime('%d/%m/%Y')
-            validade_fmt = (dt_curso + timedelta(days=365)).strftime('%d/%m/%Y')
+            validade_fmt = (dt_curso + timedelta(days=DIAS_VALIDADE_QUALIFICACAO)).strftime('%d/%m/%Y')
 
         posto = item.posto_graduacao.sigla if item.posto_graduacao else item.agente.posto.sigla
         nome_completo = f"{posto} {item.agente.nome_de_guerra}"

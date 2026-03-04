@@ -17,6 +17,10 @@ class PostoGraduacao(models.Model):
         ordering = ['senioridade']
 
 
+# Período de validade da qualificação dos agentes (em dias)
+DIAS_VALIDADE_QUALIFICACAO = 1825  # 5 anos
+
+
 class Agente(models.Model):
     nome_completo = models.CharField("Nome Completo", max_length=150)
     nome_de_guerra = models.CharField("Nome de Guerra", max_length=50)
@@ -33,11 +37,11 @@ class Agente(models.Model):
     @property
     def qualificacao_vencida(self):
         if not self.data_ultimo_curso: return True
-        return date.today() > (self.data_ultimo_curso + timedelta(days=365))
+        return date.today() > (self.data_ultimo_curso + timedelta(days=DIAS_VALIDADE_QUALIFICACAO))
 
     @property
     def data_validade_curso(self):
-        if self.data_ultimo_curso: return self.data_ultimo_curso + timedelta(days=365)
+        if self.data_ultimo_curso: return self.data_ultimo_curso + timedelta(days=DIAS_VALIDADE_QUALIFICACAO)
         return None
 
     class Meta:
