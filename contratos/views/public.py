@@ -85,7 +85,7 @@ def exportar_transparencia_csv(request):
     filename = "contratos_gap_br.csv"
     encoded_filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'

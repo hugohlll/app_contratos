@@ -35,7 +35,8 @@ def painel_controle(request):
 
     # 1. MONITORAMENTO DE VENCIMENTOS (Lógica Refatorada)
     integrantes_com_prazo = Integrante.objects.filter(filtro_ativos).filter(
-        data_fim__isnull=False
+        data_fim__isnull=False,
+        data_fim__gte=hoje
     ).select_related('agente', 'funcao', 'comissao__contrato')
 
     lista_completa = []
@@ -55,10 +56,16 @@ def painel_controle(request):
     top_5_vencimentos = lista_completa[:5]
     total_vencimentos_count = len(lista_completa)
     
-    # Dados agregados para gráfico de vencimentos
+    # Dados agregados para gráfico de vencimentos (serializado como JSON para evitar
+    # que o locale pt-BR formate números com separador de milhar no template)
     vencimentos_critico = sum(1 for i in lista_completa if i.dias_restantes <= 7)
     vencimentos_alerta = sum(1 for i in lista_completa if 8 <= i.dias_restantes <= 15)
     vencimentos_normal = sum(1 for i in lista_completa if i.dias_restantes > 15)
+    vencimentos_json = mark_safe(json.dumps({
+        'critico': vencimentos_critico,
+        'alerta': vencimentos_alerta,
+        'normal': vencimentos_normal,
+    }))
 
     # 2. RADAR DE PERMANÊNCIA (Cálculo de tempo de designação contínua)
     integrantes_ativos = Integrante.objects.filter(filtro_ativos).select_related(
@@ -198,6 +205,7 @@ def painel_controle(request):
         'vencimentos_critico': vencimentos_critico,
         'vencimentos_alerta': vencimentos_alerta,
         'vencimentos_normal': vencimentos_normal,
+        'vencimentos_json': vencimentos_json,
         'top_permanencia': top_10_permanencia,
         'permanencia_labels': permanencia_labels_json,
         'permanencia_dias': permanencia_dias_json,
@@ -230,7 +238,7 @@ def exportar_vencimentos_csv(request):
     filename = "monitoramento_vencimentos.csv"
     encoded_filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
@@ -307,7 +315,7 @@ def exportar_csv(request):
     filename = "auditoria_completa.csv"
     encoded_filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
@@ -373,7 +381,7 @@ def exportar_qualificacao_csv(request):
     filename = "relatorio_qualificacao_agentes.csv"
     encoded_filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
@@ -423,7 +431,7 @@ def exportar_relatorio_periodo_csv(request):
     encoded_filename = urllib.parse.quote(nome_arquivo)
     response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
@@ -438,7 +446,7 @@ def exportar_radar_permanencia_csv(request):
     filename = "radar_permanencia.csv"
     encoded_filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
@@ -506,7 +514,7 @@ def exportar_sobrecarga_fiscais_csv(request):
     encoded_filename = urllib.parse.quote(filename)
     # Adicionando RFC 5987 para Chrome
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
@@ -539,7 +547,7 @@ def exportar_contratos_vencimento_csv(request):
     filename = "vencimento_contratos.csv"
     encoded_filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'

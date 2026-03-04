@@ -7,23 +7,96 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        .contract-card { transition: transform 0.2s, box-shadow 0.2s; border-left: 4px solid #0d6efd; }
-        .contract-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-        .commission-block { padding: 10px; border-radius: 8px; margin-bottom: 8px; }
-        .commission-block:last-child { margin-bottom: 0; }
-        .block-fiscalizacao { background: #e7f1ff; border-left: 3px solid #0d6efd; }
-        .block-recebimento  { background: #e8f5e9; border-left: 3px solid #198754; }
-        .block-header { font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; }
-        .block-header-fiscalizacao { color: #0d6efd; }
-        .block-header-recebimento  { color: #198754; }
-        .member-row { display: flex; align-items: center; padding: 4px 0; }
-        .member-icon { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; font-size: 0.7rem; flex-shrink: 0; }
-        .icon-gestor     { background: #0d6efd; color: white; }
-        .icon-fiscal     { background: #17a2b8; color: white; }
-        .icon-presidente { background: #198754; color: white; }
-        .icon-membro     { background: #20c997; color: white; }
-        .member-name     { font-size: 0.9rem; }
-        .member-function { font-weight: 600; margin-right: 6px; }
+        .contract-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid #0d6efd;
+        }
+
+        .contract-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .commission-block {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .commission-block:last-child {
+            margin-bottom: 0;
+        }
+
+        .block-fiscalizacao {
+            background: #e7f1ff;
+            border-left: 3px solid #0d6efd;
+        }
+
+        .block-recebimento {
+            background: #e8f5e9;
+            border-left: 3px solid #198754;
+        }
+
+        .block-header {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .block-header-fiscalizacao {
+            color: #0d6efd;
+        }
+
+        .block-header-recebimento {
+            color: #198754;
+        }
+
+        .member-row {
+            display: flex;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .member-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .icon-gestor {
+            background: #0d6efd;
+            color: white;
+        }
+
+        .icon-fiscal {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .icon-presidente {
+            background: #198754;
+            color: white;
+        }
+
+        .icon-membro {
+            background: #20c997;
+            color: white;
+        }
+
+        .member-name {
+            font-size: 0.9rem;
+        }
+
+        .member-function {
+            font-weight: 600;
+            margin-right: 6px;
+        }
     </style>
 </head>
 
@@ -43,7 +116,7 @@
             </div>
             <div>
                 <a href="{% url 'pesquisa' %}" class="btn btn-outline-secondary me-2"><i class="bi bi-arrow-left me-1"></i>Voltar para Busca</a>
-                <a href="{% url 'exportar_transparencia_csv' %}" download class="btn btn-success"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Baixar Planilha (.csv)</a>
+                <a href="{% url 'exportar_transparencia_csv' %}" class="btn btn-success"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Baixar Planilha (.csv)</a>
             </div>
         </div>
 

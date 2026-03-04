@@ -152,7 +152,7 @@
                     <span class="info-icon" data-bs-toggle="tooltip" title="Contratos com vigência ativa.">
                         <svg viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" /><text x="12"
-                                y="16">i</text>
+                            y="16">i</text>
                         </svg>
                     </span>
                 </div>
@@ -166,7 +166,7 @@
                     <span class="info-icon" data-bs-toggle="tooltip" title="Militares únicos com designação ativa.">
                         <svg viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" /><text x="12"
-                                y="16">i</text>
+                            y="16">i</text>
                         </svg>
                     </span>
                 </div>
@@ -178,10 +178,10 @@
                 <div class="metric-label">
                     <span>Designações com Prazo</span>
                     <span class="info-icon" data-bs-toggle="tooltip"
-                        title="Designações ativas com data de término definida.">
+                    title="Designações ativas com data de término definida.">
                         <svg viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" /><text x="12"
-                                y="16">i</text>
+                            y="16">i</text>
                         </svg>
                     </span>
                 </div>
@@ -198,7 +198,7 @@
                     <span class="info-icon" data-bs-toggle="tooltip" title="Contratos sem equipe de fiscalização.">
                         <svg viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" /><text x="12"
-                                y="16">i</text>
+                            y="16">i</text>
                         </svg>
                     </span>
                 </div>
@@ -214,8 +214,8 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>🎓 Qualificação dos Agentes</span>
-                    <a href="{% url 'exportar_qualificacao_csv' %}" download
-                        class="btn btn-outline-secondary btn-sm rounded-pill">
+                    <a href="{% url 'exportar_qualificacao_csv' %}"
+                    class="btn btn-outline-secondary btn-sm rounded-pill">
                         <i class="bi bi-download me-2"></i> Ver Dados
                     </a>
                 </div>
@@ -234,8 +234,8 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>📅 Vencimento das Comissões</span>
-                    <a href="{% url 'exportar_vencimentos_csv' %}" download
-                        class="btn btn-outline-secondary btn-sm rounded-pill">
+                    <a href="{% url 'exportar_vencimentos_csv' %}"
+                    class="btn btn-outline-secondary btn-sm rounded-pill">
                         <i class="bi bi-download me-2"></i> Ver Dados
                     </a>
                 </div>
@@ -255,8 +255,8 @@
             <div class="chart-container">
                 <div class="chart-title">
                     <span>⏱️ Radar de Permanência (Top 10)</span>
-                    <a href="{% url 'exportar_radar_permanencia_csv' %}" download
-                        class="btn btn-outline-secondary btn-sm rounded-pill">
+                    <a href="{% url 'exportar_radar_permanencia_csv' %}"
+                    class="btn btn-outline-secondary btn-sm rounded-pill">
                         <i class="bi bi-download me-2"></i> Ver Dados
                     </a>
                 </div>
@@ -278,8 +278,8 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>⏱️ Vencimento dos Contratos (≤ 90 dias)</span>
-                    <a href="{% url 'exportar_contratos_vencimento_csv' %}" download
-                        class="btn btn-outline-secondary btn-sm rounded-pill">
+                    <a href="{% url 'exportar_contratos_vencimento_csv' %}"
+                    class="btn btn-outline-secondary btn-sm rounded-pill">
                         <i class="bi bi-download me-2"></i> Ver Dados
                     </a>
                 </div>
@@ -294,8 +294,8 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>⚖️ Sobrecarga de Fiscais</span>
-                    <a href="{% url 'exportar_sobrecarga_fiscais_csv' %}" download
-                        class="btn btn-outline-secondary btn-sm rounded-pill">
+                    <a href="{% url 'exportar_sobrecarga_fiscais_csv' %}"
+                    class="btn btn-outline-secondary btn-sm rounded-pill">
                         <i class="bi bi-download me-2"></i> Ver Dados
                     </a>
                 </div>
@@ -337,10 +337,10 @@
     <div class="chart-container">
         <div class="chart-title"><span>📥 Relatórios</span></div>
         <div class="d-flex gap-3">
-            <a href="{% url 'exportar_csv' %}" download class="btn btn-outline-primary"><i
-                    class="bi bi-file-earmark-spreadsheet me-2"></i>Auditoria Completa</a>
+            <a href="{% url 'exportar_csv' %}" class="btn btn-outline-primary"><i
+                class="bi bi-file-earmark-spreadsheet me-2"></i>Auditoria Completa</a>
             <a href="{% url 'relatorio_periodo' %}" class="btn btn-outline-info"><i
-                    class="bi bi-calendar-range me-2"></i>Por Período</a>
+                class="bi bi-calendar-range me-2"></i>Por Período</a>
         </div>
     </div>
 
@@ -365,11 +365,7 @@
 </script>
 
 <script id="data-vencimentos" type="application/json">
-    {
-        "critico": {{ vencimentos_critico|default:0 }},
-        "alerta": {{ vencimentos_alerta|default:0 }},
-        "normal": {{ vencimentos_normal|default:0 }}
-    }
+    {{ vencimentos_json|default:"{}" }}
 </script>
 
 <script id="data-qualificacao" type="application/json">

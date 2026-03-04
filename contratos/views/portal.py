@@ -76,7 +76,7 @@ def exportar_empresas_csv(request):
     filename = "empresas.csv"
     encoded_filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
@@ -118,7 +118,7 @@ def exportar_contratos_csv(request):
     filename = "contratos.csv"
     encoded_filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
@@ -189,7 +189,7 @@ def exportar_agentes_csv(request):
     filename = "agentes.csv"
     encoded_filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
@@ -238,7 +238,7 @@ def exportar_comissoes_csv(request):
     filename = "comissoes.csv"
     encoded_filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'

@@ -6,8 +6,7 @@
     <h2 class="fw-bold">{{ titulo }}</h2>
     <div class="d-flex gap-2">
         {% if url_exportar %}
-        <a href="{% url url_exportar %}" {% if arquivo_exportacao %}download="{{ arquivo_exportacao }}" {% endif %}
-            class="btn btn-outline-success">
+        <a href="{% url url_exportar %}" class="btn btn-outline-success">
             <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar CSV
         </a>
         {% endif %}
@@ -27,7 +26,7 @@
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Buscar..."
-                        autocomplete="off">
+                    autocomplete="off">
                 </div>
             </div>
 
@@ -89,9 +88,9 @@
                         {% elif titulo == 'Contratos' %}
                         <td class="px-3 fw-bold">
                             <a href="{% url 'detalhe_contrato_portal' pk=item.pk %}"
-                                class="text-decoration-none fw-bold" title="Ver Detalhes do Contrato">
+                            class="text-decoration-none fw-bold" title="Ver Detalhes do Contrato">
                                 {{ item.numero }} <i class="bi bi-box-arrow-up-right small ms-1"
-                                    style="font-size: 0.8rem;"></i>
+                                style="font-size: 0.8rem;"></i>
                             </a>
                         </td>
                         <td class="px-3">{{ item.pag|default:"-" }}</td>
@@ -99,8 +98,8 @@
                         <td class="px-3">{{ item.empresa.razao_social }}</td>
                         <td class="px-3">{{ item.empresa.cnpj }}</td>
                         <td class="px-3 text-muted small"
-                            style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                            title="{{ item.objeto }}">
+                        style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                        title="{{ item.objeto }}">
                             {{ item.objeto }}
                         </td>
                         <td class="px-3">{{ item.vigencia_fim|date:"d/m/Y" }}</td>
@@ -131,7 +130,7 @@
                         {% if request.user|is_admin %}
                         <td class="text-end px-3">
                             <a href="{% url url_editar pk=item.pk %}" class="btn btn-sm btn-outline-secondary"
-                                title="Editar">
+                            title="Editar">
                                 ✏️
                             </a>
                         </td>
