@@ -117,7 +117,7 @@ def painel_controle(request):
             'inicio_original': atual.data_inicio
         })
 
-    radar_permanencia.sort(key=lambda x: x['dias_totais'], reverse=True)
+    radar_permanencia.sort(key=lambda x: (-x['dias_totais'], x['agente'].posto.senioridade, x['agente'].nome_de_guerra))
     top_10_permanencia = radar_permanencia[:10]
     
     # Dados para gráfico de permanência (top 10) - serializado como JSON
@@ -503,7 +503,7 @@ def exportar_radar_permanencia_csv(request):
             'inicio_real': data_inicio_real,
         })
         
-    radar_permanencia.sort(key=lambda x: x['dias_totais'], reverse=True)
+    radar_permanencia.sort(key=lambda x: (-x['dias_totais'], x['agente'].posto.senioridade, x['agente'].nome_de_guerra))
     
     for item in radar_permanencia:
         writer.writerow([
