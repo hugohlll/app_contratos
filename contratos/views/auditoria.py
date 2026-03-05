@@ -172,7 +172,7 @@ def painel_controle(request):
         integrante__in=integrantes_fiscais
     ).annotate(
         total_atuacoes=Count('integrante', filter=Q(integrante__in=integrantes_fiscais))
-    ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes')[:10]
+    ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes', 'posto__senioridade', 'nome_de_guerra')[:10]
     
     total_contratos_ativos = Contrato.objects.filter(vigencia_fim__gte=hoje).count()
     
@@ -542,7 +542,7 @@ def exportar_sobrecarga_fiscais_csv(request):
         integrante__in=integrantes_fiscais
     ).annotate(
         total_atuacoes=Count('integrante', filter=Q(integrante__in=integrantes_fiscais))
-    ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes')
+    ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes', 'posto__senioridade', 'nome_de_guerra')
     
     for agente in fiscais_sobrecarregados:
         writer.writerow([

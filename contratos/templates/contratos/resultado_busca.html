@@ -116,7 +116,7 @@
             </div>
             <div>
                 <a href="{% url 'pesquisa' %}" class="btn btn-outline-secondary me-2"><i
-                        class="bi bi-arrow-left me-1"></i>Voltar para o Início</a>
+                    class="bi bi-arrow-left me-1"></i>Voltar para o Início</a>
             </div>
         </div>
 
@@ -128,9 +128,9 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <a href="{% url 'detalhe_contrato' contrato.id %}" class="text-decoration-none">
-                                    <h5 class="mb-1 text-primary"><i class="bi bi-file-earmark-text me-1"></i>{{ contrato.numero }}</h5>
+                                    <h5 class="mb-1 text-primary"><i class="bi bi-file-earmark-text me-1"></i>{{                    contrato.numero }}</h5>
                                 </a>
-                                <small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>até {{ contrato.vigencia_fim|date:"d/m/Y" }}</small>
+                                <small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>até {{                  contrato.vigencia_fim|date:"d/m/Y" }}</small>
                                 <div class="mt-2">
                                     <div class="fw-semibold">{{ contrato.empresa.razao_social }}</div>
                                     <small class="text-muted">{{ contrato.empresa.cnpj }}</small>
@@ -144,35 +144,36 @@
                                         {% if comissao.tipo == 'FISCALIZACAO' %}
                                         <div class="commission-block block-fiscalizacao">
                                             <div class="block-header block-header-fiscalizacao"><i
-                                                    class="bi bi-clipboard-check me-1"></i>{{ comissao.get_tipo_display }}</div>
+                                                class="bi bi-clipboard-check me-1"></i>{{ comissao.get_tipo_display }}
+                                            </div>
                                             {% for integrante in comissao.integrantes.all %}
                                             <div class="member-row">
                                                 {% if 'Gestor' in integrante.funcao.titulo %}
                                                 <span class="member-icon icon-gestor"><i
-                                                        class="bi bi-star-fill"></i></span>
+                                                    class="bi bi-star-fill"></i></span>
                                                 {% else %}
                                                 <span class="member-icon icon-fiscal"><i
-                                                        class="bi bi-clipboard-check"></i></span>
+                                                    class="bi bi-clipboard-check"></i></span>
                                                 {% endif %}
-                                                <span class="member-name"><span class="member-function">{{ integrante.funcao.sigla }}</span> {{ integrante.agente.nome_de_guerra }}</span>
+                                                <span class="member-name"><span class="member-function">{{                            integrante.funcao.sigla }}</span> {% if                          integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla                          }}{% else %}{{ integrante.agente.posto.sigla }}{% endif %} {{                          integrante.agente.nome_de_guerra }}</span>
                                             </div>
                                             {% endfor %}
                                         </div>
                                         {% else %}
                                         <div class="commission-block block-recebimento">
                                             <div class="block-header block-header-recebimento"><i
-                                                    class="bi bi-box-seam me-1"></i>{{ comissao.get_tipo_display }}
+                                                class="bi bi-box-seam me-1"></i>{{ comissao.get_tipo_display }}
                                             </div>
                                             {% for integrante in comissao.integrantes.all %}
                                             <div class="member-row">
                                                 {% if 'Presidente' in integrante.funcao.titulo %}
                                                 <span class="member-icon icon-presidente"><i
-                                                        class="bi bi-award-fill"></i></span>
+                                                    class="bi bi-award-fill"></i></span>
                                                 {% else %}
                                                 <span class="member-icon icon-membro"><i
-                                                        class="bi bi-person-fill"></i></span>
+                                                    class="bi bi-person-fill"></i></span>
                                                 {% endif %}
-                                                <span class="member-name"><span class="member-function">{{ integrante.funcao.sigla }}</span> {{ integrante.agente.nome_de_guerra }}</span>
+                                                <span class="member-name"><span class="member-function">{{                            integrante.funcao.sigla }}</span> {% if                          integrante.posto_graduacao %}{{ integrante.posto_graduacao.sigla                          }}{% else %}{{ integrante.agente.posto.sigla }}{% endif %} {{                          integrante.agente.nome_de_guerra }}</span>
                                             </div>
                                             {% endfor %}
                                         </div>
