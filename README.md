@@ -96,11 +96,12 @@ Dashboard interativo com gráficos e indicadores:
 - **🎓 Status de Qualificação**
   - Gráfico de distribuição (Em Dia / Vencido / Sem Curso)
   - Estatísticas detalhadas
-  - Curso de gestão válido por 365 dias
+  - Curso de gestão válido por **5 anos (1.825 dias)**
 
-- **📅 Monitoramento de Vencimentos**
+- **📅 Monitoramento de Vencimentos de Comissões**
   - Distribuição por status (Crítico ≤7 dias / Alerta 8-15 dias / Normal >15 dias)
-  - Top 5 designações mais urgentes
+  - Top 5 comissões com prazo mais próximo de expirar
+  - Usa `data_fim` da comissão ou, se ausente, `vigencia_fim` do contrato
   - Alertas visuais por criticidade
 
 - **⏱️ Radar de Permanência**
@@ -108,9 +109,14 @@ Dashboard interativo com gráficos e indicadores:
   - Cálculo de tempo contínuo (incluindo renovações)
   - Alertas para necessidade de rodízio (>1 ano)
 
-- **⚖️ Sobrecarga de Agentes**
-  - Identificação de militares com múltiplas designações simultâneas
-  - Gráfico de distribuição de carga de trabalho
+- **📆 Velocímetro de Vigência de Contratos**
+  - Distribuição de contratos por prazo de vencimento (≤90 dias / 90-120 dias / >120 dias)
+  - Tabela completa de contratos com dias restantes e classificação de risco
+
+- **⚖️ Sobrecarga de Fiscais**
+  - Identificação de Fiscais com múltiplos contratos simultâneos
+  - Gráfico com o top 10 fiscais mais sobrecarregados
+  - Cálculo de média de contratos por fiscal como referência
 
 - **🚨 Contratos em Risco**
   - Lista de contratos sem equipe de fiscalização ativa
@@ -121,16 +127,27 @@ Dashboard interativo com gráficos e indicadores:
 - **Auditoria Completa (CSV)**
   - Todos os contratos vigentes
   - Equipes ativas completas
-  - Dados de designações e documentos
+  - Dados de designações e documentos (portaria, boletim)
 
-- **Monitoramento de Vencimentos (CSV)**
-  - Lista completa de designações com prazo
-  - Classificação por status
-  - Dias restantes até vencimento
+- **Monitoramento de Vencimentos de Comissões (CSV)**
+  - Lista completa de comissões ativas com prazo de término
+  - Classificação por status (Crítico / Alerta / Normal)
+  - Dias restantes até vencimento da comissão
+
+- **Vencimento de Contratos (CSV)**
+  - Lista de contratos vigentes com prazo de vencimento
+  - Classificação em Crítico (≤90 dias) / Alerta (91-120 dias) / Normal (>120 dias)
+
+- **Radar de Permanência (CSV)**
+  - Lista de designações ativas ordenadas por tempo de permanência
+  - Calcula tempo contínuo (inclusive renovações)
+
+- **Sobrecarga de Fiscais (CSV)**
+  - Lista de Fiscais com o número de contratos que fiscalizam
 
 - **Relatório de Qualificação (CSV)**
-  - Status de curso de gestão de cada agente
-  - Datas de realização e validade
+  - Status de curso de gestão de cada agente ativo
+  - Datas de realização e validade (5 anos)
   - Situação (Em Dia / Vencido / Sem Curso)
 
 - **Relatório por Período**
@@ -288,6 +305,8 @@ Acesse http://localhost:8000/admin e faça login com o superusuário criado.
 2. Clique em **Adicionar Contrato**
 3. Preencha:
    - **Número do Contrato**: Ex: "CT 001/2024"
+   - **PAG**: Número do Processo Administrativo de Gestão (opcional)
+   - **Tipo**: "Despesa" (padrão) ou "Receita"
    - **Objeto do Contrato**: Descrição do objeto
    - **Empresa Contratada**: Selecione a empresa
    - **Início da Vigência**: Data de início
@@ -296,14 +315,22 @@ Acesse http://localhost:8000/admin e faça login com o superusuário criado.
 
 ### **4. Crie as Comissões**
 
+Ao criar um contrato, uma comissão de Fiscalização é criada automaticamente. Para adicionar uma comissão de Recebimento:
+
 1. Vá em **Contratos > Comissões**
 2. Clique em **Adicionar Comissão**
 3. Preencha:
    - **Contrato**: Selecione o contrato
    - **Tipo**: 
-     - **Fiscalização (Gestor/Fiscal)**: Para equipe de fiscalização
-     - **Recebimento (Pres/Membros)**: Para comissão de recebimento
+     - **Fiscalização**: Para equipe de fiscalização e gestão
+     - **Recebimento**: Para comissão de recebimento de serviços
    - **Ativa?**: Marque se a comissão está ativa
+   - **Nº Portaria da Comissão**: Número da portaria que institui a comissão (opcional)
+   - **Data da Portaria**: Data da portaria da comissão (opcional)
+   - **Nº Boletim**: Número do boletim de publicação (opcional)
+   - **Data do Boletim**: Data do boletim (opcional)
+   - **Início da Comissão**: Data de início da vigência da comissão (opcional; se omitido, usa vigência do contrato)
+   - **Fim da Comissão**: Data de fim da vigência da comissão (opcional; se omitido, usa fim do contrato)
 
 ### **5. Designe os Integrantes**
 
@@ -397,8 +424,8 @@ Para encerrar uma designação antes do prazo:
 - Badges vermelhos indicam alertas (ex: designações críticas)
 
 **🎓 Qualificação:**
-- **Verde (Em Dia)**: Curso válido (menos de 1 ano)
-- **Vermelho (Vencido)**: Curso realizado há mais de 1 ano
+- **Verde (Em Dia)**: Curso válido (realizado há menos de 5 anos)
+- **Vermelho (Vencido)**: Curso realizado há mais de 5 anos
 - **Cinza (Sem Curso)**: Nenhuma data cadastrada
 
 **📅 Vencimentos:**
@@ -688,16 +715,26 @@ Contribuições são bem-vindas! Para contribuir:
 ### **Versão 1.3.0**
 - ✅ **Estabilidade de Produção**: Versão estável com pacotes da versão 1.2.0 consolidados.
 - ✅ **Visualização de Versões (UI)**: Inclusão da exibição dinâmica e fixa da versão do sistema no rodapé público e na barra lateral do painel de auditoria.
-- ✅ **Dashboard de Auditoria**: Correção do problema de inversão de porcentagens na contagem de dias do radar de permanência e correção na métrica de contratos sem data fim definida.
-- ✅ **Exportação CSV**: Ordenação correta do radar de permanência por número de dias. Estabilização e melhorias variadas na formatação do Download via Google Chrome.
+- ✅ **Dashboard de Auditoria**: Correção do problema de inversão de porcentagens na contagem de dias do radar de permanência e correção na métrica de contratos sem data fim definida. Monitoramento de vencimentos agora usa a data da comissão (não da designação individual).
+- ✅ **Exportação CSV**: Ordenação correta do radar de permanência por número de dias. Estabilização e melhorias variadas na formatação do Download via Google Chrome. Nova coluna de ordenação no CSV de comissões expiradas.
+- ✅ **Identificação de Membros de Comissão**: Posto/graduação exibido junto ao nome de guerra na consulta pública.
 
-
+### **Versão 1.2.0**
 - ✅ **Upgrade Python 3.12**: Docker atualizado para Python 3.12 com `setuptools` para compatibilidade `distutils`.
 - ✅ **Manuais Atualizados**: Manuais de TI e teste local reescritos com Docker Compose v2, backup/restauração, e troubleshooting.
 - ✅ **Logo GAP-BR**: Escudo oficial atualizado.
 - ✅ **Variáveis de Ambiente**: `SECRET_KEY` e `DEBUG` lidos do `.env.prod` (não mais hardcoded).
 - ✅ **Correções de Templates**: Variáveis Django quebradas em múltiplas linhas nos templates de busca e transparência.
 - ✅ **CI/CD**: Correção do teste `test_editar_comissao_rendering` para verificar path resolvido.
+
+### **Versão 1.1.0**
+- ✅ **Prazo de Qualificação**: Período de validade do curso de gestão atualizado para 5 anos (1.825 dias).
+- ✅ **Velocímetro de Vigência**: Novo gráfico no painel de auditoria exibindo contratos por prazo de vencimento (≤90 / 90-120 / >120 dias).
+- ✅ **Sobrecarga de Fiscais**: Dashboard e exportação CSV para acompanhar fiscais com múltiplos contratos simultâneos.
+- ✅ **Vigência da Comissão**: Novos campos `data_inicio` e `data_fim` no modelo Comissão para controlar o prazo da comissão independentemente do contrato.
+- ✅ **Campo PAG e Tipo no Contrato**: Campos Processo Administrativo de Gestão e Tipo (Despesa/Receita) adicionados ao cadastro de contratos.
+- ✅ **Portaria e Boletim da Comissão**: Campos de portaria e boletim movidos para o nível da Comissão (além de já existirem no nível da Designação).
+- ✅ **Radar de Permanência e Sobrecarga (CSV)**: Novos relatórios de exportação para radar de permanência e sobrecarga de fiscais.
 
 ### **Versão 1.0.0 (MVP)**
 - ✅ **Gestão Completa de Contratos**: Cadastro, edição e visualização de contratos e comissões.
