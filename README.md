@@ -685,7 +685,13 @@ Contribuições são bem-vindas! Para contribuir:
 
 ## 📅 Changelog
 
-### **Versão 1.1.0**
+### **Versão 1.3.0**
+- ✅ **Estabilidade de Produção**: Versão estável com pacotes da versão 1.2.0 consolidados.
+- ✅ **Visualização de Versões (UI)**: Inclusão da exibição dinâmica e fixa da versão do sistema no rodapé público e na barra lateral do painel de auditoria.
+- ✅ **Dashboard de Auditoria**: Correção do problema de inversão de porcentagens na contagem de dias do radar de permanência e correção na métrica de contratos sem data fim definida.
+- ✅ **Exportação CSV**: Ordenação correta do radar de permanência por número de dias. Estabilização e melhorias variadas na formatação do Download via Google Chrome.
+
+
 - ✅ **Upgrade Python 3.12**: Docker atualizado para Python 3.12 com `setuptools` para compatibilidade `distutils`.
 - ✅ **Manuais Atualizados**: Manuais de TI e teste local reescritos com Docker Compose v2, backup/restauração, e troubleshooting.
 - ✅ **Logo GAP-BR**: Escudo oficial atualizado.
