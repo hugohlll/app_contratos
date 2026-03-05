@@ -61,26 +61,19 @@
 <body>
     <!-- Sidebar -->
     <div class="sidebar d-flex flex-column flex-shrink-0 p-3">
-        <a href="{% url 'portal_home' %}"
-        class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <a href="{% url 'portal_home' %}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
             <i class="bi bi-diagram-3-fill fs-3 me-3"></i>
             <div class="d-flex flex-column">
-                <span class="fw-bold fs-5">SISCONT <small class="fw-normal text-white-50"
-                    style="font-size: 0.6em;">v1.3.0</small></span>
+                <span class="fw-bold fs-5">SISCONT <small class="fw-normal text-white-50" style="font-size: 0.6em;">v1.3.0</small></span>
                 <span class="small text-white-50" style="font-size: 0.8rem;">
-                    {% if request.user|is_admin %}Administrador{% elif request.user.groups.all.0.name == "Auditores"
-                    %}Auditor{% else %}Usuário{% endif %}
+                    {% if request.user|is_admin %}Administrador{% elif request.user.groups.all.0.name == "Auditores" %}Auditor{% else %}Usuário{% endif %}
                 </span>
             </div>
         </a>
         <hr>
         <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item">
-                <a href="{% url 'portal_home' %}"
-                class="{% if request.resolver_match.url_name == 'portal_home' %}active{% endif %}">
             <li>
-                <a href="{% url 'portal_home' %}"
-                class="{% if request.resolver_match.url_name == 'portal_home' %}active{% endif %}">
+                <a href="{% url 'portal_home' %}" class="{% if request.resolver_match.url_name == 'portal_home' %}active{% endif %}">
                     🏠 Início
                 </a>
             </li>
@@ -120,10 +113,8 @@
 
         <!-- User Menu -->
         <div class="dropdown">
-            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-            id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&background=random" alt=""
-                width="32" height="32" class="rounded-circle me-2">
+            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&background=random" alt="" width="32" height="32" class="rounded-circle me-2">
                 <strong>{{ request.user.username }}</strong>
             </a>
             <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
