@@ -34,22 +34,23 @@ def painel_controle(request):
     filtro_ativos = get_filtro_ativos()
 
     # 1. MONITORAMENTO DE VENCIMENTOS (Lógica Refatorada)
-    integrantes_com_prazo = Integrante.objects.filter(filtro_ativos).filter(
+    comissoes_com_prazo = Comissao.objects.filter(
+        ativa=True,
         data_fim__isnull=False,
         data_fim__gte=hoje
-    ).select_related('agente', 'funcao', 'comissao__contrato')
+    ).select_related('contrato')
 
     lista_completa = []
-    for integrante in integrantes_com_prazo:
-        dias_restantes = (integrante.data_fim - hoje).days
+    for comissao in comissoes_com_prazo:
+        dias_restantes = (comissao.data_fim - hoje).days
 
         # Aplicação dos critérios: <=7 Crítico | 8-15 Alerta | >15 Normal
         classe_cor, status_texto = get_classificacao_vencimento(dias_restantes)
 
-        integrante.dias_restantes = dias_restantes
-        integrante.classe_cor = classe_cor
-        integrante.status_texto = status_texto
-        lista_completa.append(integrante)
+        comissao.dias_restantes = dias_restantes
+        comissao.classe_cor = classe_cor
+        comissao.status_texto = status_texto
+        lista_completa.append(comissao)
 
     # Ordena pelos mais próximos de vencer
     lista_completa.sort(key=lambda x: x.dias_restantes)
@@ -246,28 +247,28 @@ def exportar_vencimentos_csv(request):
     response.write('\ufeff')  # BOM
     
     writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Status', 'Dias Restantes', 'Militar', 'Função', 'Contrato', 'Término Previsto'])
+    writer.writerow(['Status', 'Dias Restantes', 'Comissão', 'Contrato', 'Término Previsto'])
 
     hoje = date.today()
-    integrantes = Integrante.objects.filter(get_filtro_ativos()).filter(
+    comissoes = Comissao.objects.filter(
+        ativa=True,
         data_fim__isnull=False
-    ).select_related('agente', 'funcao', 'comissao__contrato')
+    ).select_related('contrato')
 
     lista_export = []
-    for integrante in integrantes:
-        dias = (integrante.data_fim - hoje).days
+    for comissao in comissoes:
+        dias = (comissao.data_fim - hoje).days
         _, status = get_classificacao_vencimento(dias)
-        lista_export.append((dias, status, integrante))
+        lista_export.append((dias, status, comissao))
 
     lista_export.sort(key=lambda x: x[0])
-    for dias, status, integrante in lista_export:
+    for dias, status, comissao in lista_export:
         writer.writerow([
             status,
             dias,
-            f"{integrante.agente.posto.sigla} {integrante.agente.nome_de_guerra}",
-            integrante.funcao.titulo,
-            integrante.comissao.contrato.numero,
-            integrante.data_fim.strftime('%d/%m/%Y')
+            f"Comissão de {comissao.get_tipo_display()}",
+            comissao.contrato.numero,
+            comissao.data_fim.strftime('%d/%m/%Y')
         ])
     
     return response
