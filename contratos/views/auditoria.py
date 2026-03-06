@@ -250,7 +250,7 @@ def exportar_vencimentos_csv(request):
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write('\ufeff')  # BOM
+    response.write(b'\xef\xbb\xbf')
     
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Contrato', 'Empresa', 'Comissão', 'Término Previsto', 'Status', 'Dias Restantes'])
@@ -462,7 +462,7 @@ def exportar_radar_permanencia_csv(request):
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write('\ufeff')
+    response.write(b'\xef\xbb\xbf')
     
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Militar', 'Função', 'Contrato', 'Dias Totais', 'Tempo Formatado', 'Início Real'])
@@ -530,7 +530,7 @@ def exportar_sobrecarga_fiscais_csv(request):
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write('\ufeff')
+    response.write(b'\xef\xbb\xbf')
     
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Militar (Fiscal)', 'SARAM', 'Quantidade de Contratos Fiscalizados'])
@@ -563,7 +563,7 @@ def exportar_contratos_vencimento_csv(request):
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write('\ufeff')
+    response.write(b'\xef\xbb\xbf')
     
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Contrato', 'Empresa', 'Vencimento', 'Dias Restantes', 'Situação'])

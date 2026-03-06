@@ -81,7 +81,7 @@ def exportar_empresas_csv(request):
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write('\ufeff')  # BOM
+    response.write(b'\xef\xbb\xbf')
     
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Razão Social', 'CNPJ'])
@@ -123,7 +123,7 @@ def exportar_contratos_csv(request):
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write('\ufeff')  # BOM
+    response.write(b'\xef\xbb\xbf')
     
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Número', 'PAG', 'Objeto', 'Empresa', 'CNPJ', 'Início Vigência', 'Fim Vigência', 'Valor Total'])
@@ -194,7 +194,7 @@ def exportar_agentes_csv(request):
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write('\ufeff')  # BOM
+    response.write(b'\xef\xbb\xbf')
     
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Posto', 'Nome de Guerra', 'Nome Completo', 'SARAM', 'CPF', 'E-mail', 'Data Último Curso'])
@@ -243,7 +243,7 @@ def exportar_comissoes_csv(request):
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write('\ufeff')  # BOM
+    response.write(b'\xef\xbb\xbf')
     
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Nº', 'Contrato', 'Empresa', 'Tipo', 'Ativa', 'Portaria Nº', 'Portaria Data', 'Boletim Nº', 'Boletim Data', 'Início', 'Fim'])

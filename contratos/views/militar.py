@@ -48,7 +48,7 @@ def exportar_historico_militar_csv(request):
     response['Expires'] = '0'
     response['X-Content-Type-Options'] = 'nosniff'
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write('\ufeff')  # BOM
+    response.write(b'\xef\xbb\xbf')
 
     writer = csv.writer(response, delimiter=';')
     writer.writerow([
