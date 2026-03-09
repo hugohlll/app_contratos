@@ -6,9 +6,15 @@
     <h2 class="fw-bold">{{ titulo }}</h2>
     <div class="d-flex gap-2">
         {% if url_exportar %}
-        <a href="{% url url_exportar %}" class="btn btn-outline-success">
-            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar CSV
-        </a>
+        <form action="{% url url_exportar %}" method="get" class="d-flex gap-2 m-0">
+            <select name="formato" class="form-select form-select-sm bg-light" style="width: auto;">
+                <option value="csv">CSV</option>
+                <option value="xlsx" selected>XLSX (Excel)</option>
+            </select>
+            <button type="submit" class="btn btn-outline-success btn-sm d-flex align-items-center">
+                <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar
+            </button>
+        </form>
         {% endif %}
         {% if url_novo and request.user|is_admin %}
         <a href="{% url url_novo %}" class="btn btn-success">

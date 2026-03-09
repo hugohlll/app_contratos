@@ -61,3 +61,51 @@ def format_cnpj(value):
     v = clean_digits(value)
     if len(v) != 14: return value
     return f"{v[:2]}.{v[2:5]}.{v[5:8]}/{v[8:12]}-{v[12:]}"
+
+# --- EXPORT HELPERS ---
+import csv
+import urllib.parse
+from django.http import HttpResponse
+
+def export_csv_or_xlsx(request, filename_base, headers, data_rows):
+    """
+    Gera um arquivo XLSX ou CSV com base em '?formato=xlsx|csv'.
+    :param request: Django HttpRequest.
+    :param filename_base: String com o nome base ('empresas'). A extensão será adicionada via lógica.
+    :param headers: Lista com o texto das colunas.
+    :param data_rows: Lista/Generator contendo as colunas em ordem para cada linha.
+    """
+    formato = request.GET.get('formato', 'csv')
+    
+    if formato == 'xlsx':
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(headers)
+        for row in data_rows:
+            # openpyxl lida bem com tipos embutidos, converte strings formatadas
+            ws.append([str(i) if i is not None else '' for i in row])
+        
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        encoded_filename = urllib.parse.quote(f"{filename_base}.xlsx")
+        response['Content-Disposition'] = f'attachment; filename="{filename_base}.xlsx"; filename*=UTF-8\'\'{encoded_filename}'
+        wb.save(response)
+        return response
+    
+    # CSV Padrão (UTF-8 com BOM)
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    encoded_filename = urllib.parse.quote(f"{filename_base}.csv")
+    response['Content-Disposition'] = f'attachment; filename="{filename_base}.csv"; filename*=UTF-8\'\'{encoded_filename}'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+    response.write(b'\xef\xbb\xbf')
+    
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(headers)
+    for row in data_rows:
+        writer.writerow(row)
+        
+    return response

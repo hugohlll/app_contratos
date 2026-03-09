@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.dateparse import parse_date
 from django.utils.safestring import mark_safe
 from contratos.models import Contrato, Agente, Comissao, Integrante, DIAS_VALIDADE_QUALIFICACAO
-from contratos.utils import get_filtro_ativos
+from contratos.utils import get_filtro_ativos, export_csv_or_xlsx
 
 
 def get_classificacao_vencimento(dias):
@@ -241,19 +241,8 @@ def painel_controle(request):
 
 @login_required
 def exportar_vencimentos_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    filename = "monitoramento_vencimentos.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write(b'\xef\xbb\xbf')
-    
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Contrato', 'Empresa', 'Comissão', 'Término Previsto', 'Status', 'Dias Restantes'])
+    headers = ['Contrato', 'Empresa', 'Comissão', 'Término Previsto', 'Status', 'Dias Restantes']
+    data = []
 
     hoje = date.today()
     comissoes = Comissao.objects.filter(
@@ -272,7 +261,7 @@ def exportar_vencimentos_csv(request):
 
     lista_export.sort(key=lambda x: x[0])
     for dias, status, comissao, data_fim_efetiva in lista_export:
-        writer.writerow([
+        data.append([
             comissao.contrato.numero,
             comissao.contrato.empresa.razao_social,
             comissao.get_tipo_display(),
@@ -281,20 +270,18 @@ def exportar_vencimentos_csv(request):
             dias
         ])
     
-    return response
+    return export_csv_or_xlsx(request, 'monitoramento_vencimentos', headers, data)
 
 
 @login_required
 def exportar_csv(request):
     """Exportação geral da auditoria"""
-    buffer = io.StringIO()
-    writer = csv.writer(buffer, delimiter=';')
-    
-    writer.writerow([
+    headers = [
         'Contrato', 'Empresa', 'Vigência Contrato', 'Comissão', 'Função',
         'Militar', 'SARAM', 'Início Designação', 'Término Previsto',
         'Nº Portaria', 'Data Portaria', 'Nº Boletim', 'Data Boletim'
-    ])
+    ]
+    data = []
 
     hoje = date.today()
     contratos = Contrato.objects.filter(vigencia_fim__gte=hoje)
@@ -309,29 +296,20 @@ def exportar_csv(request):
                     fim = integrante.data_fim.strftime('%d/%m/%Y') if integrante.data_fim else "Ativa"
                     data_port = integrante.portaria_data.strftime('%d/%m/%Y') if integrante.portaria_data else "-"
                     data_bol = integrante.boletim_data.strftime('%d/%m/%Y') if integrante.boletim_data else "-"
-                    writer.writerow([
+                    data.append([
                         contrato.numero, contrato.empresa.razao_social, contrato.vigencia_fim.strftime('%d/%m/%Y'),
                         com.get_tipo_display(), integrante.funcao.titulo, integrante.agente.nome_de_guerra,
                         integrante.agente.saram, inicio, fim, integrante.portaria_numero, data_port,
                         integrante.boletim_numero, data_bol
                     ])
         else:
-            writer.writerow([
+            data.append([
                                 contrato.numero, contrato.empresa.razao_social,
                                 contrato.vigencia_fim.strftime('%d/%m/%Y'),
                                 "SEM COMISSÃO"
                             ] + ["-"] * 9)
     
-    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv; charset=utf-8')
-    filename = "auditoria_completa.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    return response
+    return export_csv_or_xlsx(request, 'auditoria_completa', headers, data)
 
 
 @login_required
@@ -357,9 +335,8 @@ def relatorio_por_periodo(request):
 
 @login_required
 def exportar_qualificacao_csv(request):
-    buffer = io.StringIO()
-    writer = csv.writer(buffer, delimiter=';')
-    writer.writerow(['Militar', 'SARAM', 'Função', 'Contrato', 'Data Último Curso', 'Validade', 'Situação'])
+    headers = ['Militar', 'SARAM', 'Função', 'Contrato', 'Data Último Curso', 'Validade', 'Situação']
+    data = []
 
     hoje = date.today()
     data_limite_curso = hoje - timedelta(days=DIAS_VALIDADE_QUALIFICACAO)
@@ -383,21 +360,12 @@ def exportar_qualificacao_csv(request):
         posto = item.posto_graduacao.sigla if item.posto_graduacao else item.agente.posto.sigla
         nome_completo = f"{posto} {item.agente.nome_de_guerra}"
 
-        writer.writerow([
+        data.append([
             nome_completo, item.agente.saram, item.funcao.titulo,
             item.comissao.contrato.numero, dt_fmt, validade_fmt, situacao
         ])
         
-    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv; charset=utf-8')
-    filename = "relatorio_qualificacao_agentes.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    return response
+    return export_csv_or_xlsx(request, 'relatorio_qualificacao_agentes', headers, data)
 
 
 @login_required
@@ -405,12 +373,11 @@ def exportar_relatorio_periodo_csv(request):
     data_inicial = request.GET.get('data_inicial')
     data_final = request.GET.get('data_final')
     
-    buffer = io.StringIO()
-    writer = csv.writer(buffer, delimiter=';')
-    writer.writerow([
+    headers = [
         'Contrato', 'Tipo Comissão', 'Empresa', 'Militar', 'SARAM', 'CPF', 'Função',
         'Início', 'Término (Previsão)', 'Nº Portaria', 'Data Portaria', 'Nº Boletim', 'Data Boletim'
-    ])
+    ]
+    data = []
     
     if data_inicial and data_final:
         dt_ini = parse_date(data_inicial)
@@ -431,41 +398,21 @@ def exportar_relatorio_periodo_csv(request):
             
             tipo_label = "Fiscalização" if r.comissao.tipo == 'FISCALIZACAO' else "Recebimento"
             
-            writer.writerow([
+            data.append([
                 r.comissao.contrato.numero, tipo_label, r.comissao.contrato.empresa.razao_social,
                 nome_completo, r.agente.saram, r.agente.cpf or '-', r.funcao.titulo,
                 r.data_inicio.strftime('%d/%m/%Y'), fim_fmt, 
                 r.portaria_numero, data_port, bol_num, bol_data
             ])
             
-    nome_arquivo = f"relatorio_agentes_{data_inicial}_a_{data_final}.csv"
-    encoded_filename = urllib.parse.quote(nome_arquivo)
-    response = HttpResponse(buffer.getvalue().encode('utf-8-sig'), content_type='text/csv; charset=utf-8')
-    response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    return response
+    nome_arquivo = f"relatorio_agentes_{data_inicial}_a_{data_final}"
+    return export_csv_or_xlsx(request, nome_arquivo, headers, data)
     
     
 @login_required
 def exportar_radar_permanencia_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    filename = "radar_permanencia.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write(b'\xef\xbb\xbf')
-    
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Militar', 'Função', 'Contrato', 'Dias Totais', 'Tempo Formatado', 'Início Real'])
+    headers = ['Militar', 'Função', 'Contrato', 'Dias Totais', 'Tempo Formatado', 'Início Real']
+    data = []
     
     hoje = date.today()
     filtro_ativos = get_filtro_ativos()
@@ -506,7 +453,7 @@ def exportar_radar_permanencia_csv(request):
     radar_permanencia.sort(key=lambda x: (-x['dias_totais'], x['agente'].posto.senioridade, x['agente'].nome_de_guerra))
     
     for item in radar_permanencia:
-        writer.writerow([
+        data.append([
             f"{item['agente'].posto.sigla} {item['agente'].nome_de_guerra}",
             item['funcao'].titulo,
             item['contrato'].numero,
@@ -515,25 +462,13 @@ def exportar_radar_permanencia_csv(request):
             item['inicio_real'].strftime('%d/%m/%Y')
         ])
         
-    return response
+    return export_csv_or_xlsx(request, 'radar_permanencia', headers, data)
 
 
 @login_required
 def exportar_sobrecarga_fiscais_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    filename = "sobrecarga_fiscais.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    # Adicionando RFC 5987 para Chrome
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write(b'\xef\xbb\xbf')
-    
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Militar (Fiscal)', 'SARAM', 'Quantidade de Contratos Fiscalizados'])
+    headers = ['Militar (Fiscal)', 'SARAM', 'Quantidade de Contratos Fiscalizados']
+    data = []
     
     filtro_ativos = get_filtro_ativos()
     integrantes_fiscais = Integrante.objects.filter(filtro_ativos, funcao__titulo='Fiscal')
@@ -545,28 +480,17 @@ def exportar_sobrecarga_fiscais_csv(request):
     ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes', 'posto__senioridade', 'nome_de_guerra')
     
     for agente in fiscais_sobrecarregados:
-        writer.writerow([
+        data.append([
             f"{agente.posto.sigla} {agente.nome_de_guerra}",
             agente.saram,
             agente.total_atuacoes
         ])
         
-    return response
+    return export_csv_or_xlsx(request, 'sobrecarga_fiscais', headers, data)
 @login_required
 def exportar_contratos_vencimento_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    filename = "vencimento_contratos.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write(b'\xef\xbb\xbf')
-    
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Contrato', 'Empresa', 'Vencimento', 'Dias Restantes', 'Situação'])
+    headers = ['Contrato', 'Empresa', 'Vencimento', 'Dias Restantes', 'Situação']
+    data = []
     
     hoje = date.today()
     contratos = Contrato.objects.filter(vigencia_fim__gte=hoje).select_related('empresa').order_by('vigencia_fim')
@@ -579,7 +503,7 @@ def exportar_contratos_vencimento_csv(request):
         elif dias <= 120:
             situacao = "ALERTA"
             
-        writer.writerow([
+        data.append([
             c.numero,
             c.empresa.razao_social,
             c.vigencia_fim.strftime('%d/%m/%Y'),
@@ -587,4 +511,4 @@ def exportar_contratos_vencimento_csv(request):
             situacao
         ])
         
-    return response
+    return export_csv_or_xlsx(request, 'vencimento_contratos', headers, data)

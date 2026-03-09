@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.db.models import Q, Prefetch, Case, When, Value, IntegerField
 from contratos.models import Contrato, Comissao, Integrante
-from contratos.utils import get_filtro_ativos
+from contratos.utils import get_filtro_ativos, export_csv_or_xlsx
 
 
 def pesquisa_publica(request):
@@ -81,29 +81,18 @@ def relatorio_transparencia(request):
 
 
 def exportar_transparencia_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    filename = "contratos_gap_br.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write(b'\xef\xbb\xbf')
-
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow([
+    headers = [
         'Contrato', 'Empresa', 'Vigência Contrato',
         'Comissão', 'Função', 'Posto/Grad', 'Nome',
         'Início Designação', 'Término Previsto',
         'Nº Portaria', 'Data Portaria',
         'Nº Boletim', 'Data Boletim'
-    ])
+    ]
 
     hoje = date.today()
     filtro_integrante_ativo = get_filtro_ativos()
     contratos = Contrato.objects.filter(vigencia_fim__gte=hoje)
+    data = []
 
     for contrato in contratos:
         comissoes = contrato.comissoes.filter(ativa=True)
@@ -116,7 +105,7 @@ def exportar_transparencia_csv(request):
                     data_bol = integrante.boletim_data.strftime('%d/%m/%Y') if integrante.boletim_data else "-"
                     posto = integrante.posto_graduacao.sigla if integrante.posto_graduacao else integrante.agente.posto.sigla
 
-                    writer.writerow([
+                    data.append([
                         contrato.numero,
                         contrato.empresa.razao_social,
                         contrato.vigencia_fim.strftime('%d/%m/%Y'),
@@ -132,7 +121,7 @@ def exportar_transparencia_csv(request):
                         data_bol
                     ])
         else:
-            writer.writerow([contrato.numero, contrato.empresa.razao_social, contrato.vigencia_fim.strftime('%d/%m/%Y'),
+            data.append([contrato.numero, contrato.empresa.razao_social, contrato.vigencia_fim.strftime('%d/%m/%Y'),
                              "SEM COMISSÃO"] + ["-"] * 9)
 
-    return response
+    return export_csv_or_xlsx(request, 'contratos_gap_br', headers, data)

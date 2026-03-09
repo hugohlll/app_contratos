@@ -214,10 +214,15 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>🎓 Qualificação dos Agentes</span>
-                    <a href="{% url 'exportar_qualificacao_csv' %}"
-                    class="btn btn-outline-secondary btn-sm rounded-pill">
-                        <i class="bi bi-download me-2"></i> Ver Dados
-                    </a>
+                    <form action="{% url 'exportar_qualificacao_csv' %}" method="get" class="d-inline-flex m-0">
+                        <select name="formato" class="form-select form-select-sm border-secondary text-secondary me-1" style="width: auto; height: 31px; border-radius: 50rem;">
+                            <option value="csv">CSV</option>
+                            <option value="xlsx" selected>XLS</option>
+                        </select>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                            <i class="bi bi-download me-1"></i> Baixar
+                        </button>
+                    </form>
                 </div>
                 <div class="row">
                     <div class="col-md-12">
@@ -234,10 +239,15 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>📅 Vencimento das Comissões</span>
-                    <a href="{% url 'exportar_vencimentos_csv' %}"
-                    class="btn btn-outline-secondary btn-sm rounded-pill">
-                        <i class="bi bi-download me-2"></i> Ver Dados
-                    </a>
+                    <form action="{% url 'exportar_vencimentos_csv' %}" method="get" class="d-inline-flex m-0">
+                        <select name="formato" class="form-select form-select-sm border-secondary text-secondary me-1" style="width: auto; height: 31px; border-radius: 50rem;">
+                            <option value="csv">CSV</option>
+                            <option value="xlsx" selected>XLS</option>
+                        </select>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                            <i class="bi bi-download me-1"></i> Baixar
+                        </button>
+                    </form>
                 </div>
                 <div class="row">
                     <div class="col-md-12">
@@ -255,10 +265,15 @@
             <div class="chart-container">
                 <div class="chart-title">
                     <span>⏱️ Radar de Permanência (Top 10)</span>
-                    <a href="{% url 'exportar_radar_permanencia_csv' %}"
-                    class="btn btn-outline-secondary btn-sm rounded-pill">
-                        <i class="bi bi-download me-2"></i> Ver Dados
-                    </a>
+                    <form action="{% url 'exportar_radar_permanencia_csv' %}" method="get" class="d-inline-flex m-0">
+                        <select name="formato" class="form-select form-select-sm border-secondary text-secondary me-1" style="width: auto; height: 31px; border-radius: 50rem;">
+                            <option value="csv">CSV</option>
+                            <option value="xlsx" selected>XLS</option>
+                        </select>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                            <i class="bi bi-download me-1"></i> Baixar
+                        </button>
+                    </form>
                 </div>
                 <div class="chart-wrapper-large">
                     {% if tem_permanencia %}
@@ -278,10 +293,15 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>⏱️ Vencimento dos Contratos (≤ 90 dias)</span>
-                    <a href="{% url 'exportar_contratos_vencimento_csv' %}"
-                    class="btn btn-outline-secondary btn-sm rounded-pill">
-                        <i class="bi bi-download me-2"></i> Ver Dados
-                    </a>
+                    <form action="{% url 'exportar_contratos_vencimento_csv' %}" method="get" class="d-inline-flex m-0">
+                        <select name="formato" class="form-select form-select-sm border-secondary text-secondary me-1" style="width: auto; height: 31px; border-radius: 50rem;">
+                            <option value="csv">CSV</option>
+                            <option value="xlsx" selected>XLS</option>
+                        </select>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                            <i class="bi bi-download me-1"></i> Baixar
+                        </button>
+                    </form>
                 </div>
                 <div class="chart-wrapper" style="height: 250px;">
                     <canvas id="chartVelocimetro"></canvas>
@@ -294,10 +314,15 @@
             <div class="chart-container h-100">
                 <div class="chart-title">
                     <span>⚖️ Sobrecarga de Fiscais</span>
-                    <a href="{% url 'exportar_sobrecarga_fiscais_csv' %}"
-                    class="btn btn-outline-secondary btn-sm rounded-pill">
-                        <i class="bi bi-download me-2"></i> Ver Dados
-                    </a>
+                    <form action="{% url 'exportar_sobrecarga_fiscais_csv' %}" method="get" class="d-inline-flex m-0">
+                        <select name="formato" class="form-select form-select-sm border-secondary text-secondary me-1" style="width: auto; height: 31px; border-radius: 50rem;">
+                            <option value="csv">CSV</option>
+                            <option value="xlsx" selected>XLS</option>
+                        </select>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                            <i class="bi bi-download me-1"></i> Baixar
+                        </button>
+                    </form>
                 </div>
                 {% if tem_sobrecarga %}
                 <div class="chart-wrapper">
@@ -336,9 +361,16 @@
     <!-- Exportações -->
     <div class="chart-container">
         <div class="chart-title"><span>📥 Relatórios</span></div>
-        <div class="d-flex gap-3">
-            <a href="{% url 'exportar_csv' %}" class="btn btn-outline-primary"><i
-                class="bi bi-file-earmark-spreadsheet me-2"></i>Auditoria Completa</a>
+        <div class="d-flex gap-3 align-items-center">
+            <form action="{% url 'exportar_csv' %}" method="get" class="d-flex gap-2 m-0">
+                <select name="formato" class="form-select bg-light" style="width: auto;">
+                    <option value="csv">CSV</option>
+                    <option value="xlsx" selected>XLSX (Excel)</option>
+                </select>
+                <button type="submit" class="btn btn-outline-primary d-flex align-items-center">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Auditoria Completa
+                </button>
+            </form>
             <a href="{% url 'relatorio_periodo' %}" class="btn btn-outline-info"><i
                 class="bi bi-calendar-range me-2"></i>Por Período</a>
         </div>

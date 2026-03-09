@@ -43,9 +43,16 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4>Resultados para "<span class="text-primary">{{ query }}</span>"</h4>
 
-            <a href="{% url 'exportar_historico_militar_csv' %}?q={{ query }}" class="btn btn-outline-primary">
-                <i class="bi bi-file-earmark-excel me-2"></i>Baixar Histórico Completo
-            </a>
+            <form action="{% url 'exportar_historico_militar_csv' %}" method="get" class="d-flex gap-2 m-0">
+                <input type="hidden" name="q" value="{{ query }}">
+                <select name="formato" class="form-select bg-light" style="width: auto;">
+                    <option value="csv">CSV</option>
+                    <option value="xlsx" selected>XLSX (Excel)</option>
+                </select>
+                <button type="submit" class="btn btn-outline-primary d-flex align-items-center">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Baixar
+                </button>
+            </form>
         </div>
 
         <div class="card border-0 shadow-sm">

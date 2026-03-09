@@ -114,11 +114,18 @@
                 <h2><i class="bi bi-building me-2"></i>Contratos GAP-BR</h2>
                 <p class="text-muted mb-0">Relação completa de contratos vigentes e detalhamento das designações.</p>
             </div>
-            <div>
-                <a href="{% url 'pesquisa' %}" class="btn btn-outline-secondary me-2"><i
-                    class="bi bi-arrow-left me-1"></i>Voltar para Busca</a>
-                <a href="{% url 'exportar_transparencia_csv' %}" class="btn btn-success"><i
-                    class="bi bi-file-earmark-spreadsheet me-1"></i>Baixar Planilha (.csv)</a>
+            <div class="d-flex align-items-center">
+                <a href="{% url 'pesquisa' %}" class="btn btn-outline-secondary me-3"><i
+                    class="bi bi-arrow-left me-1"></i>Voltar</a>
+                <form action="{% url 'exportar_transparencia_csv' %}" method="get" class="d-flex gap-2 m-0">
+                    <select name="formato" class="form-select bg-light" style="width: auto;">
+                        <option value="csv">CSV</option>
+                        <option value="xlsx" selected>XLSX (Excel)</option>
+                    </select>
+                    <button type="submit" class="btn btn-success d-flex align-items-center">
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i>Baixar
+                    </button>
+                </form>
             </div>
         </div>
 

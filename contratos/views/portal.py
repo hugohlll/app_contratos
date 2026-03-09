@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from contratos.utils import admin_required, auditor_required
+from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx
 from django.contrib import messages
 from django.contrib import messages
 from django.urls import reverse
@@ -72,24 +72,11 @@ def listar_empresas(request):
 
 @auditor_required
 def exportar_empresas_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    filename = "empresas.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write(b'\xef\xbb\xbf')
-    
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Razão Social', 'CNPJ'])
-    
+    headers = ['Razão Social', 'CNPJ']
+    data = []
     for empresa in Empresa.objects.all():
-        writer.writerow([empresa.razao_social, empresa.cnpj])
-        
-    return response
+        data.append([empresa.razao_social, empresa.cnpj])
+    return export_csv_or_xlsx(request, 'empresas', headers, data)
 
 @admin_required
 def nova_empresa(request):
@@ -114,22 +101,10 @@ def listar_contratos(request):
 
 @auditor_required
 def exportar_contratos_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    filename = "contratos.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write(b'\xef\xbb\xbf')
-    
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Número', 'PAG', 'Objeto', 'Empresa', 'CNPJ', 'Início Vigência', 'Fim Vigência', 'Valor Total'])
-    
+    headers = ['Número', 'PAG', 'Objeto', 'Empresa', 'CNPJ', 'Início Vigência', 'Fim Vigência', 'Valor Total']
+    data = []
     for contrato in Contrato.objects.select_related('empresa').all():
-        writer.writerow([
+        data.append([
             contrato.numero, 
             contrato.pag if contrato.pag else '',
             contrato.objeto, 
@@ -139,8 +114,7 @@ def exportar_contratos_csv(request):
             contrato.vigencia_fim.strftime('%d/%m/%Y'),
             str(contrato.valor_total).replace('.', ',')
         ])
-    
-    return response
+    return export_csv_or_xlsx(request, 'contratos', headers, data)
 
 @auditor_required
 def detalhe_contrato(request, pk):
@@ -185,22 +159,10 @@ def listar_agentes(request):
 
 @auditor_required
 def exportar_agentes_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    filename = "agentes.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write(b'\xef\xbb\xbf')
-    
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Posto', 'Nome de Guerra', 'Nome Completo', 'SARAM', 'CPF', 'E-mail', 'Data Último Curso'])
-    
+    headers = ['Posto', 'Nome de Guerra', 'Nome Completo', 'SARAM', 'CPF', 'E-mail', 'Data Último Curso']
+    data = []
     for agente in Agente.objects.select_related('posto').all():
-        writer.writerow([
+        data.append([
             agente.posto.sigla, 
             agente.nome_de_guerra, 
             agente.nome_completo, 
@@ -209,8 +171,7 @@ def exportar_agentes_csv(request):
             agente.email if agente.email else '',
             agente.data_ultimo_curso.strftime('%d/%m/%Y') if agente.data_ultimo_curso else ''
         ])
-    
-    return response
+    return export_csv_or_xlsx(request, 'agentes', headers, data)
 
 @admin_required
 def novo_agente(request):
@@ -234,22 +195,10 @@ def listar_comissoes(request):
 
 @auditor_required
 def exportar_comissoes_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    filename = "comissoes.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write(b'\xef\xbb\xbf')
-    
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Nº', 'Contrato', 'Empresa', 'Tipo', 'Ativa', 'Portaria Nº', 'Portaria Data', 'Boletim Nº', 'Boletim Data', 'Início', 'Fim'])
-    
+    headers = ['Nº', 'Contrato', 'Empresa', 'Tipo', 'Ativa', 'Portaria Nº', 'Portaria Data', 'Boletim Nº', 'Boletim Data', 'Início', 'Fim']
+    data = []
     for comissao in Comissao.objects.select_related('contrato__empresa').all():
-        writer.writerow([
+        data.append([
             comissao.id,
             comissao.contrato.numero,
             comissao.contrato.empresa.razao_social,
@@ -262,8 +211,7 @@ def exportar_comissoes_csv(request):
             comissao.data_inicio.strftime('%d/%m/%Y') if comissao.data_inicio else '',
             comissao.data_fim.strftime('%d/%m/%Y') if comissao.data_fim else ''
         ])
-    
-    return response
+    return export_csv_or_xlsx(request, 'comissoes', headers, data)
 
 @admin_required
 def nova_comissao(request):

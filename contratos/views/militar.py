@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.db.models import Q
 from contratos.models import Integrante
-from contratos.utils import get_filtro_ativos
+from contratos.utils import get_filtro_ativos, export_csv_or_xlsx
 
 
 def consulta_militar(request):
@@ -39,25 +39,13 @@ def consulta_militar(request):
 
 def exportar_historico_militar_csv(request):
     query = request.GET.get('q')
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    filename = "historico_comissoes.csv"
-    encoded_filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.write(b'\xef\xbb\xbf')
-
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow([
+    headers = [
         'Militar', 'SARAM', 'Status', 'Contrato', 'Objeto',
         'Função', 'Início', 'Fim Previsto', 'Fim Efetivo (Desligamento)', 'Motivo Saída', 'Portaria'
-    ])
+    ]
+    data = []
 
     if query:
-        hoje = date.today()
         historico_completo = Integrante.objects.filter(
             Q(agente__saram=query) |
             Q(agente__nome_de_guerra__icontains=query) |
@@ -72,7 +60,7 @@ def exportar_historico_militar_csv(request):
             fim_real = item.data_desligamento.strftime('%d/%m/%Y') if item.data_desligamento else "-"
             motivo = item.motivo_desligamento if item.motivo_desligamento else "-"
 
-            writer.writerow([
+            data.append([
                 item.agente.nome_de_guerra,
                 item.agente.saram,
                 status,
@@ -86,4 +74,4 @@ def exportar_historico_militar_csv(request):
                 item.portaria_numero
             ])
 
-    return response
+    return export_csv_or_xlsx(request, 'historico_comissoes', headers, data)
