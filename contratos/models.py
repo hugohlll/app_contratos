@@ -97,12 +97,7 @@ class Contrato(models.Model):
         verbose_name = "Contrato"
         verbose_name_plural = "Contratos"
 
-    def save(self, *args, **kwargs):
-        is_new = self.pk is None
-        super().save(*args, **kwargs)
-        if is_new:
-            # Cria automaticamente uma comissão de fiscalização padrão
-            Comissao.objects.create(contrato=self, tipo='FISCALIZACAO', ativa=True)
+
 
 
 class Comissao(models.Model):

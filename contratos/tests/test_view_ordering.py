@@ -18,11 +18,14 @@ class ContractDetailOrderingTest(TestCase):
             vigencia_fim=date(2024, 12, 31),
             valor_total=1000.00
         )
-        # Contrato.save() creates a default FISCALIZACAO commission. Use it.
-        self.comissao_fisc = self.contrato.comissoes.filter(tipo='FISCALIZACAO').first()
-        self.comissao_fisc.data_inicio = date(2024, 1, 1)
-        self.comissao_fisc.data_fim = date(2024, 12, 31)
-        self.comissao_fisc.save()
+        # Contrato.save() doesn't create a commission anymore. Create it manually.
+        self.comissao_fisc = Comissao.objects.create(
+            contrato=self.contrato,
+            tipo='FISCALIZACAO',
+            ativa=True,
+            data_inicio=date(2024, 1, 1),
+            data_fim=date(2024, 12, 31)
+        )
 
         self.comissao_rec = Comissao.objects.create(
             contrato=self.contrato,

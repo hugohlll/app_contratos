@@ -100,8 +100,8 @@ class ComissaoFormTest(TestCase):
         Testa se editar a comissão ativa existente (mesma instância) não
         dispara o erro de duplicidade.
         """
-        # Contrato.save() cria automaticamente uma comissão FISCALIZACAO ativa
-        comissao = Comissao.objects.get(contrato=self.contrato, tipo='FISCALIZACAO')
+        # Agora precisamos criar manualmente
+        comissao = Comissao.objects.create(contrato=self.contrato, tipo='FISCALIZACAO', ativa=True)
 
         # Editar a mesma comissão deve ser permitido
         form = ComissaoForm(data=self._form_data(), instance=comissao)
