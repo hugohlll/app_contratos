@@ -108,7 +108,7 @@ class Comissao(models.Model):
 
     contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='comissoes')
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='FISCALIZACAO')
-    ativa = models.BooleanField(default=True)
+    ativa = models.BooleanField(default=False)
 
     # --- CAMPOS DA PORTARIA DA COMISSÃO ---
     portaria_numero = models.CharField("Nº Portaria da Comissão", max_length=50, blank=True, null=True)

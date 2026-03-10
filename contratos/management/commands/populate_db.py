@@ -171,8 +171,13 @@ class Command(BaseCommand):
         count_comiss = 0
         for contrato in Contrato.objects.all():
             # A. Fiscalização
-            comissao_fisc = contrato.comissoes.filter(tipo='FISCALIZACAO').first()
-            if comissao_fisc:
+            comissao_fisc, created = Comissao.objects.get_or_create(
+                contrato=contrato, 
+                tipo='FISCALIZACAO',
+                defaults={'ativa': False}
+            )
+            
+            if comissao_fisc or created:
                 portaria = f"{random.randint(100, 999)}/GC"
                 dt_port = contrato.vigencia_inicio
                 boletim = f"{random.randint(1, 52)}/{dt_port.year}"
