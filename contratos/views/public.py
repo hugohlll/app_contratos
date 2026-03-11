@@ -39,15 +39,13 @@ def buscar_contratos(request):
 
 def detalhe_contrato(request, contrato_id):
     contrato = Contrato.objects.get(id=contrato_id)
-    # filtro_integrante_ativo = get_filtro_ativos() # Não aplicado aqui para mostrar histórico completo se desejado, 
-                                                    # ou aplique se a regra for apenas ativos. O código original mostrava all().
-                                                    # Manterei all() mas com a ordenação nova.
+    filtro_integrante_ativo = get_filtro_ativos() 
 
-    # Busca todas as comissões (inclusive inativas) e todos os integrantes (inclusive desligados)
-    comissoes_ativas = contrato.comissoes.all().prefetch_related(
+    # Busca apenas as comissões ativas e apenas os integrantes ativos
+    comissoes_ativas = contrato.comissoes.filter(ativa=True).prefetch_related(
         Prefetch(
             'integrantes',
-            queryset=Integrante.objects.all().select_related('agente', 'funcao').order_by('ordem', 'funcao__titulo'),
+            queryset=Integrante.objects.filter(filtro_integrante_ativo).select_related('agente', 'funcao').order_by('ordem', 'funcao__titulo'),
             to_attr='integrantes_lista'
         )
     )

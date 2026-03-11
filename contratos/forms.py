@@ -112,6 +112,12 @@ class ComissaoForm(EstiloFormMixin, forms.ModelForm):
         if ativa and data_fim:
             if data_fim < date.today():
                 self.add_error('data_fim', "Uma comissão ativa não pode ter data de término anterior à data atual.")
+                
+        # Validação: Impedir que a data_fim da comissão seja menor do que a data_inicio de algum integrante
+        if self.instance and self.instance.pk and data_fim:
+            integrantes_invalidos = self.instance.integrantes.filter(data_inicio__gt=data_fim)
+            if integrantes_invalidos.exists():
+                self.add_error('data_fim', "A data de término da comissão não pode ser anterior à data de início de algum integrante.")
         
         # Impedir duas comissões ativas do mesmo tipo para o mesmo contrato
         if contrato and tipo_comissao and ativa:
@@ -174,7 +180,7 @@ class IntegranteForm(EstiloFormMixin, forms.ModelForm):
             if comissao.data_inicio and data_inicio < comissao.data_inicio:
                 self.add_error('data_inicio', f"A data de início não pode ser anterior ao início da comissão ({comissao.data_inicio.strftime('%d/%m/%Y')}).")
             
-            # Valida fim
+            # Valida fim (Não pode ser superior ao término da comissão)
             if data_fim and comissao.data_fim and data_fim > comissao.data_fim:
                  self.add_error('data_fim', f"A data de término não pode ultrapassar o fim da comissão ({comissao.data_fim.strftime('%d/%m/%Y')}).")
             

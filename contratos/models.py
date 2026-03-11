@@ -122,6 +122,20 @@ class Comissao(models.Model):
     data_inicio = models.DateField("Início da Comissão", blank=True, null=True)
     data_fim = models.DateField("Fim da Comissão", blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        
+        # Se a data fim da comissão mudar, precisamos garantir que as designações (integrantes)
+        # não fiquem ativas além da nova data de término da comissão
+        if self.data_fim:
+            integrantes_afetados = self.integrantes.filter(data_fim__gt=self.data_fim)
+            for integrante in integrantes_afetados:
+                integrante.data_fim = self.data_fim
+                # Usa update em vez de save para evitar o chamado do clean do integrante que poderia
+                # falhar caso a data início fosse violada (isso será verificado no ComissaoForm)
+                # O update não chama sinais ou o método save()
+                Integrante.objects.filter(pk=integrante.pk).update(data_fim=self.data_fim)
+
     def __str__(self):
         return f"Comissão de {self.get_tipo_display()} - {self.contrato}"
 
@@ -187,6 +201,13 @@ class Integrante(models.Model):
             raise ValidationError("A data de término previsto não pode ser anterior ao início.")
         if self.data_desligamento and self.data_inicio > self.data_desligamento:
             raise ValidationError("A data efetiva de saída não pode ser anterior ao início da designação.")
+            
+        comissao = getattr(self, 'comissao', None)
+        if comissao:
+            if comissao.data_inicio and self.data_inicio and self.data_inicio < comissao.data_inicio:
+                raise ValidationError(f"A data de início da designação não pode ser anterior ao início da comissão ({comissao.data_inicio.strftime('%d/%m/%Y')}).")
+            if comissao.data_fim and self.data_fim and self.data_fim > comissao.data_fim:
+                raise ValidationError(f"A data de término da designação não pode ultrapassar o fim da comissão ({comissao.data_fim.strftime('%d/%m/%Y')}).")
 
     @property
     def is_ativo(self):
