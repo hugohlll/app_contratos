@@ -55,9 +55,9 @@ Garantir **transparência**, **controle** e **conformidade** no gerenciamento de
 
 #### 2. **Detalhes do Contrato**
 - Informações completas do contrato (número, objeto, empresa, vigência, valor)
-- Visualização de todas as comissões ativas (Fiscalização e Recebimento)
-- Lista de integrantes ativos com suas funções
-- Histórico de designações
+- Visualização exclusiva de comissões ativas (Fiscalização e Recebimento)
+- Lista filtrada de integrantes vigentes e ativos com suas funções
+- Histórico completo omitido na visão pública para focar na equipe atual
 
 #### 3. **Relatório de Transparência**
 - Lista todos os contratos vigentes
@@ -332,6 +332,8 @@ Ao criar um contrato, uma comissão de Fiscalização é criada automaticamente.
    - **Início da Comissão**: Data de início da vigência da comissão (opcional; se omitido, usa vigência do contrato)
    - **Fim da Comissão**: Data de fim da vigência da comissão (opcional; se omitido, usa fim do contrato)
 
+**Nota**: Comissões expiram automaticamente (status inativo) via script diário quando sua data fim é ultrapassada. Além disso, não podem possuir data final anterior à data inicial de qualquer de seus membros designados. Ao encurtar o prazo de uma comissão, todas as designações associadas têm seu prazo reduzido automaticamente.
+
 ### **5. Designe os Integrantes**
 
 Ao criar ou editar uma Comissão, você pode adicionar integrantes diretamente na página da comissão:
@@ -348,7 +350,7 @@ Ao criar ou editar uma Comissão, você pode adicionar integrantes diretamente n
    - **Data do Boletim**: Data do boletim (opcional)
    - **Obs**: Observações (opcional)
 
-**Nota**: O sistema automaticamente salva o posto do militar na época da designação, preservando o histórico mesmo se o militar for promovido.
+**Nota**: O sistema salva automaticamente o posto do militar na época, preservando o histórico. Adicionalmente, o sistema garante que **a Data de Término de um integrante jamais ultrapasse a Data Fim da comissão**.
 
 ### **6. Encerrar Designações**
 
@@ -711,6 +713,10 @@ Contribuições são bem-vindas! Para contribuir:
 ---
 
 ## 📅 Changelog
+
+### **Versão 1.3.1**
+- ✅ **Regras de Comissão e Designação**: Validação rigorosa impede integrante de possuir data final superior à comissão. Encurtar prazo de comissão ajusta designações em cascata.
+- ✅ **Portal Público Afunilado**: Consulta de contrato passou a exibir unicamente comissões ativas e integrantes ainda vigentes na atuação.
 
 ### **Versão 1.3.0**
 - ✅ **Estabilidade de Produção**: Versão estável com pacotes da versão 1.2.0 consolidados.
