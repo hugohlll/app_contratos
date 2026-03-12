@@ -64,7 +64,7 @@
         <a href="{% url 'portal_home' %}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
             <i class="bi bi-diagram-3-fill fs-3 me-3"></i>
             <div class="d-flex flex-column">
-                <span class="fw-bold fs-5">SISCONT <small class="fw-normal text-white-50" style="font-size: 0.6em;">v1.3.0</small></span>
+                <span class="fw-bold fs-5">SISCONT <small class="fw-normal text-white-50" style="font-size: 0.6em;">v1.3.1</small></span>
                 <span class="small text-white-50" style="font-size: 0.8rem;">
                     {% if request.user|is_admin %}Administrador{% elif request.user.groups.all.0.name == "Auditores" %}Auditor{% else %}Usuário{% endif %}
                 </span>
