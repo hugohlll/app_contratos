@@ -1,5 +1,5 @@
 from django.test import TestCase
-from contratos.models import Contrato, Empresa, Agente, PostoGraduacao, Comissao, Integrante, Funcao
+from contratos.models import Contrato, Empresa, Agente, PostoGraduacao, Comissao, Integrante, Funcao, ExtensaoSaram
 from datetime import date, timedelta
 
 class ContratoModelTest(TestCase):
@@ -27,6 +27,35 @@ class ContratoModelTest(TestCase):
     def test_valores_default(self):
          """Testa valores padrão ou constraints se existirem"""
          self.assertTrue(self.contrato.valor_total > 0)
+
+class ComissaoOrderingTest(TestCase):
+    def setUp(self):
+        self.empresa = Empresa.objects.create(cnpj="11.111.111/1111-11", razao_social="Empresa Teste", situacao="Ativo")
+        self.contrato = Contrato.objects.create(
+            empresa=self.empresa,
+            numero="123/2025",
+            tipo="Continuo",
+            objeto="Teste",
+            vigencia_inicio=date.today(),
+            vigencia_fim=date.today() + timedelta(days=365),
+            valor_total=1000.00
+        )
+
+    def test_ordenacao_comissoes_por_tipo(self):
+        # Cria primeiro a de Recebimento, depois a de Fiscalização
+        c_recebimento = Comissao.objects.create(
+            contrato=self.contrato, tipo='RECEBIMENTO', ativa=True
+        )
+        c_fiscalizacao = Comissao.objects.create(
+            contrato=self.contrato, tipo='FISCALIZACAO', ativa=True
+        )
+        
+        comissoes = list(Comissao.objects.all())
+        
+        # Como Fiscalização (F) vem antes de Recebimento (R) alfabeticamente,
+        # o default ordering = ['tipo'] deve forçar essa ordem independente do ID de criação
+        self.assertEqual(comissoes[0].tipo, 'FISCALIZACAO')
+        self.assertEqual(comissoes[1].tipo, 'RECEBIMENTO')
 
 class AgenteModelTest(TestCase):
     def setUp(self):

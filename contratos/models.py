@@ -150,6 +150,7 @@ class Comissao(models.Model):
     class Meta:
         verbose_name = "Comissão"
         verbose_name_plural = "Comissões"
+        ordering = ['tipo']  # FISCALIZACAO (F) vem antes de RECEBIMENTO (R)
 
 
 class Integrante(models.Model):

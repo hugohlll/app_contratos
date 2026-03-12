@@ -26,7 +26,7 @@ def buscar_contratos(request):
         ).prefetch_related(
             Prefetch(
                 'comissoes',
-                queryset=Comissao.objects.filter(ativa=True).prefetch_related(
+                queryset=Comissao.objects.filter(ativa=True).order_by('tipo').prefetch_related(
                     Prefetch('integrantes',
                              queryset=Integrante.objects.filter(filtro_integrante_ativo).select_related('agente', 'funcao').order_by('ordem', 'funcao__titulo'))
                 ),
@@ -67,7 +67,7 @@ def relatorio_transparencia(request):
     contratos = Contrato.objects.filter(vigencia_fim__gte=hoje).prefetch_related(
         Prefetch(
             'comissoes',
-            queryset=Comissao.objects.filter(ativa=True).prefetch_related(
+            queryset=Comissao.objects.filter(ativa=True).order_by('tipo').prefetch_related(
                 Prefetch('integrantes',
                          queryset=Integrante.objects.filter(filtro_integrante_ativo).select_related('agente', 'funcao').order_by('ordem', 'funcao__titulo'))
             ),
@@ -93,7 +93,7 @@ def exportar_transparencia_csv(request):
     data = []
 
     for contrato in contratos:
-        comissoes = contrato.comissoes.filter(ativa=True)
+        comissoes = contrato.comissoes.filter(ativa=True).order_by('tipo')
         if comissoes.exists():
             for com in comissoes:
                 for integrante in com.integrantes.filter(filtro_integrante_ativo):
