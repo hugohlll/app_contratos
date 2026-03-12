@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Instalação de dependências do sistema para PostgreSQL
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc \
+    libpq-dev gcc cron \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Instalação de dependências Python

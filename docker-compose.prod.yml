@@ -29,6 +29,16 @@ services:
       - web
     restart: always
 
+  cron:
+    image: app_contratos-web:latest
+    env_file: .env.prod
+    depends_on:
+      - db
+    restart: always
+    volumes:
+      - ./crontab.prod:/etc/cron.d/app_contratos
+    entrypoint: sh -c "chmod 0644 /etc/cron.d/app_contratos && cron -f"
+
 volumes:
   postgres_data:
   static_volume:
