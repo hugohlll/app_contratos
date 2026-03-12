@@ -24,6 +24,11 @@ def portal_home(request):
     }
     return render(request, 'contratos/portal/home.html', context)
 
+@login_required
+def manual_usuario(request):
+    """Renderiza a página com o Manual do Usuário (wiki)"""
+    return render(request, 'contratos/portal/manual_usuario.html')
+
 # --- GENERIC CRUD HELPERS ---
 
 def generico_listar(request, model, template_name, titulo, url_novo, url_editar, fields_display, url_exportar=None, arquivo_exportacao=None):

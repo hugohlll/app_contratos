@@ -136,7 +136,14 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-grow-1 main-content">
+    <div class="flex-grow-1 main-content position-relative">
+        <!-- Header Rápido (Top Right) -->
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{% url 'manual_usuario' %}" class="btn btn-outline-info rounded-pill d-flex align-items-center">
+                <i class="bi bi-question-circle-fill me-2"></i> Manual de Ajuda
+            </a>
+        </div>
+
         <!-- Messages -->
         {% if messages %}
         {% for message in messages %}

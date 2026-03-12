@@ -1,0 +1,213 @@
+{% extends 'contratos/portal/base_portal.html' %}
+{% load static %}
+
+{% block title %}Manual do Usuário - SISCONT{% endblock %}
+
+{% block content %}
+<style>
+    .wiki-container {
+        display: flex;
+        gap: 2rem;
+        height: calc(100vh - 120px);
+    }
+    .wiki-sidebar {
+        width: 300px;
+        flex-shrink: 0;
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        overflow-y: auto;
+        position: sticky;
+        top: 0;
+    }
+    .wiki-content {
+        flex-grow: 1;
+        background: white;
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        overflow-y: auto;
+        scroll-behavior: smooth;
+    }
+    .wiki-sidebar .nav-link {
+        color: #495057;
+        border-radius: 6px;
+        margin-bottom: 0.2rem;
+        padding: 0.5rem 1rem;
+        transition: all 0.2s;
+    }
+    .wiki-sidebar .nav-link:hover, .wiki-sidebar .nav-link.active {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+        font-weight: 600;
+    }
+    .wiki-sidebar .nav-link.ms-3 {
+        font-size: 0.9em;
+        padding-left: 2rem;
+    }
+    .wiki-content h2 {
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+        margin-top: 2.5rem;
+        margin-bottom: 1.5rem;
+        color: #2c3e50;
+    }
+    .wiki-content h2:first-child {
+        margin-top: 0;
+    }
+    .wiki-content h3 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        color: #34495e;
+        font-size: 1.3rem;
+    }
+    .concept-box {
+        background-color: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+        padding: 1rem;
+        border-radius: 0 8px 8px 0;
+        margin-bottom: 1.5rem;
+    }
+    .alert-automation {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        color: #664d03;
+    }
+</style>
+
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold m-0" style="color: #2c3e50;">
+            <i class="bi bi-book-half me-2"></i> Manual do Usuário e Base de Conhecimento
+        </h2>
+    </div>
+</div>
+
+<div class="wiki-container">
+    <!-- Menu de Navegação Lateral (ScrollSpy Tracker) -->
+    <nav id="wiki-navbar" class="wiki-sidebar">
+        <h5 class="fw-bold mb-3 text-secondary">Tópicos</h5>
+        <ul class="nav nav-pills flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="#introducao">1. Introdução</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#dashboard">2. Dashboard de Auditoria</a>
+                <ul class="nav flex-column border-start border-2 ms-2 mt-1 mb-2">
+                    <li class="nav-item"><a class="nav-link ms-3" href="#radar-permanencia">Radar de Permanência</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#vencimento-comissoes">Vencimento de Comissões</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#sobrecarga-fiscais">Sobrecarga de Fiscais</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#contratos-risco">Velocímetro & Risco</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#contratos">3. Gestão de Contratos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#comissoes">4. Comissões e Designações</a>
+                <ul class="nav flex-column border-start border-2 ms-2 mt-1 mb-2">
+                    <li class="nav-item"><a class="nav-link ms-3" href="#comissoes-automacoes">🤖 Automações de Ativação</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#militares">5. Militares e Qualificações</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#relatorios">6. Exportação e Relatórios</a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Conteúdo do Manual -->
+    <div class="wiki-content" data-bs-spy="scroll" data-bs-target="#wiki-navbar" data-bs-smooth-scroll="true" tabindex="0">
+        
+        <!-- SEÇÃO 1: INTRODUÇÃO -->
+        <section id="introducao">
+            <h2>1. Introdução</h2>
+            <p>O <strong>SISCONT (Sistema de Gestão de Contratos e Comissões)</strong> foi desenvolvido para otimizar e monitorar a distribuição de militares em atividades de Fiscalização e Recebimento de contratos.</p>
+            <div class="concept-box">
+                <strong>Objetivo Principal:</strong> Prevenir que militares permaneçam tempo excessivo na mesma função (evitando vícios de gestão), garantir que todos possuam os cursos obrigatórios em dia, e evitar a sobrecarga de contratos sob a fiscalização de um mesmo militar.
+            </div>
+        </section>
+
+        <!-- SEÇÃO 2: DASHBOARD -->
+        <section id="dashboard">
+            <h2>2. Dashboard de Auditoria (Painel Principal)</h2>
+            <p>O Painel de Auditoria é a ferramenta visual de tomada de decisões para os gestores. Ele compila todas as informações do banco de dados em gráficos interativos e em tempo real.</p>
+            
+            <h3 id="radar-permanencia">🎯 Radar de Permanência</h3>
+            <p>Este painel busca identificar <strong>militares que estão há muito tempo exercendo a mesma designação dentro de um mesmo contrato</strong> ininterruptamente.</p>
+            <ul>
+                <li>O sistema soma automaticamente os dias de atuação.</li>
+                <li>Se um militar tiver a portaria renovada, não há problema! <strong>Desde que não haja dias de intervalo ("buracos")</strong> entre o fim de uma portaria e o início da nova na mesma função e contrato, o sistema somará o tempo contínuo perfeitamente.</li>
+                <li><strong>Métricas:</strong> Permaneceu mais de <strong>1 ano</strong> (Alerta Amarelo). Permaneceu mais de <strong>2 anos</strong> (Crítico Vermelho e passou do "limite ideal").</li>
+            </ul>
+
+            <h3 id="vencimento-comissoes">📅 Vencimento de Comissões</h3>
+            <p>Acompanha o prazo final de atuação das equipes contadas a partir do dia de hoje. A coloração muda conforme o tempo restante:</p>
+            <ul>
+                <li><strong>Verde (Normal):</strong> Mais de 15 dias para vencer.</li>
+                <li><strong>Amarelo (Alerta):</strong> Entre 8 e 15 dias.</li>
+                <li><strong>Vermelho (Crítico):</strong> 7 dias ou menos.</li>
+            </ul>
+
+            <h3 id="sobrecarga-fiscais">⚖️ Sobrecarga de Fiscais</h3>
+            <p>O sistema divide o <em>Total de Contratos Ativos</em> pelo <em>Total de Fiscais Disponíveis/Atuando</em> para encontrar uma "média limite" justa. Os fiscais que excederem essa média ideal aparecerão no gráfico vermelho de sobrecarga.</p>
+
+            <h3 id="contratos-risco">🚨 Contratos em Risco</h3>
+            <p>Lista imediatamente todos os contratos que ainda estão vigentes (ativos) mas <strong>não possuem uma comissão de Fiscalização com auditores ativos</strong> cadastradas no presente dia.</p>
+        </section>
+
+        <!-- SEÇÃO 3: CONTRATOS -->
+        <section id="contratos">
+            <h2>3. Gestão de Contratos</h2>
+            <p>Na aba "Contratos" você cadastra os acordos firmados. É obrigatório vincular a uma "Empresa" previamente cadastrada.</p>
+            <div class="alert alert-info py-2">
+                <i class="bi bi-info-circle-fill me-2"></i> <strong>Atenção:</strong> Vários cálculos do sistema (como o Radar de Risco) dependem da aba "Vigência Fim" do contrato. Atualize as vigências sempre que houver aditivos de tempo.
+            </div>
+        </section>
+
+        <!-- SEÇÃO 4: COMISSÕES -->
+        <section id="comissoes">
+            <h2>4. Comissões e Designações</h2>
+            <p>Uma <strong>Comissão</strong> é o bloco que liga um Contrato à uma equipe (Militares). O sistema prevê dois tipos de comissão: Recebimento e Fiscalização.</p>
+            
+            <h3 id="comissoes-automacoes">🤖 Automações Recentes de Ativação (Cron)</h3>
+            <p>Para evitar esquecimentos humanos em ligar e desligar comissões, o sistema foi equipado com <strong>Automações de Ciclo de Vida</strong>:</p>
+            
+            <div class="alert alert-automation">
+                <h5 class="alert-heading"><i class="bi bi-robot"></i> O Trabalho Invisível do Sistema (Todo dia à 00h00):</h5>
+                <ol class="mb-0 mt-2">
+                    <li><strong>Ativação Automática:</strong> Se você cadastrar uma Comissão com data de início <em>futura</em>, ela não pode ser marcada como ativa hoje (o sistema bloqueia). Deixe-a inativa. <strong>No dia exato em que a vigência dela começar</strong>, o sistema a marcará como "Ativa" automaticamente à meia-noite.</li>
+                    <li><strong>Desativação Automática:</strong> Se a "Data Fim" de uma comissão foi atingida ontem, logo que o dia virar à meia-noite, o sistema localizará a comissão e vai <strong>desativá-la sozinha</strong>, impedindo que ela suje o radar de designações ativas.</li>
+                </ol>
+            </div>
+            <p><em>Portanto, basta cadastrar as portarias com Início e Fim corretos e o sistema cuidará de quem entra e quem sai da base de cálculos diários sozinho!</em></p>
+        </section>
+
+        <!-- SEÇÃO 5: MILITARES -->
+        <section id="militares">
+            <h2>5. Militares, Qualificação e Promoções</h2>
+            <p>Na aba "Agentes", listamos o efetivo. Três pontos cruciais:</p>
+            <ul>
+                <li><strong>SARAM / CPF Únicos:</strong> O sistema vincula e acha o histórico do militar pela matrícula e CPF.</li>
+                <li><strong>Cursos de Gestão:</strong> Militares cujos cursos de gestão tem mais de 5 anos (1825 dias) são exibidos como VENCIDOS (Vermelho) no gráfico de qualificações na aba de Auditoria.</li>
+                <li><strong>Histórico de Postos (Promoção):</strong> Quando um Sargento for promovido à Tenente e você alterar o posto dele no cadastro (Agentes), o sistema manterá o histórico perfeitamente. Na comissão antiga ele aparecerá como "Sargento" (o posto gravado na época), e nas designações futuras, aparecerá como "Tenente".</li>
+            </ul>
+        </section>
+
+        <!-- SEÇÃO 6: RELATÓRIOS -->
+        <section id="relatorios">
+            <h2>6. Exportação e Relatórios</h2>
+            <p>A tela de Auditoria possui pequenos botões de "Baixar" instalados junto ao título de cada gráfico. Eles geram exportações em Excel estruturadas para relatórios gerenciais das esferas superiores.</p>
+            <ul>
+                <li><strong>Auditoria Completa:</strong> Você pode exportar na extensão <code>.csv</code> ou nativo <code>.xlsx</code> toda a estrutura do banco em uma listagem imensa de histórico.</li>
+                <li><strong>Relatório por Período:</strong> É possível cruzar dados de militares escolhendo datas de "Início" e "Fim". O sistema varrerá as portarias com vigência dentro do período especificado.</li>
+            </ul>
+        </section>
+        
+        <br><br><br> <!-- Space at bottom for scrolling -->
+    </div>
+</div>
+{% endblock %}
