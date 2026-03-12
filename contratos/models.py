@@ -122,6 +122,14 @@ class Comissao(models.Model):
     data_inicio = models.DateField("Início da Comissão", blank=True, null=True)
     data_fim = models.DateField("Fim da Comissão", blank=True, null=True)
 
+    def clean(self):
+        if self.ativa and self.data_inicio and self.data_inicio > date.today():
+            raise ValidationError(
+                "Uma comissão não pode ser marcada como ativa com data de início futura "
+                f"({self.data_inicio.strftime('%d/%m/%Y')}). "
+                "Deixe-a inativa até que a data de início seja atingida."
+            )
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         
