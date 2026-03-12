@@ -47,10 +47,10 @@ class ReproductionTest(TestCase):
             portaria_numero="111", portaria_data=date.today()
         )
 
-    def test_inactive_commission_member_visible(self):
+    def test_inactive_commission_member_not_visible(self):
         url = reverse('detalhe_contrato', kwargs={'contrato_id': self.contrato.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         
-        # This assert is expected to FAIL currently
-        self.assertContains(response, "Inativo")
+        # Agora o membro inativo (nome de guerra "Inativo") não deve mais aparecer na visão pública
+        self.assertNotContains(response, "Inativo")

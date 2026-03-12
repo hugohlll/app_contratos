@@ -10,12 +10,12 @@ class ContractDetailOrderingTest(TestCase):
         # Setup basic data
         self.empresa = Empresa.objects.create(razao_social="Empresa Teste", cnpj="00.000.000/0000-00")
         self.contrato = Contrato.objects.create(
-            numero="001/2024",
+            numero="001/2099",
             tipo="DESPESA",
             empresa=self.empresa,
             objeto="Teste",
-            vigencia_inicio=date(2024, 1, 1),
-            vigencia_fim=date(2024, 12, 31),
+            vigencia_inicio=date(2099, 1, 1),
+            vigencia_fim=date(2099, 12, 31),
             valor_total=1000.00
         )
         # Contrato.save() doesn't create a commission anymore. Create it manually.
@@ -23,16 +23,16 @@ class ContractDetailOrderingTest(TestCase):
             contrato=self.contrato,
             tipo='FISCALIZACAO',
             ativa=True,
-            data_inicio=date(2024, 1, 1),
-            data_fim=date(2024, 12, 31)
+            data_inicio=date(2099, 1, 1),
+            data_fim=date(2099, 12, 31)
         )
 
         self.comissao_rec = Comissao.objects.create(
             contrato=self.contrato,
             tipo='RECEBIMENTO',
             ativa=True,
-            data_inicio=date(2024, 1, 1),
-            data_fim=date(2024, 12, 31)
+            data_inicio=date(2099, 1, 1),
+            data_fim=date(2099, 12, 31)
         )
         
         self.posto = PostoGraduacao.objects.create(sigla="Cb", descricao="Cabo", senioridade=1)
@@ -58,9 +58,9 @@ class ContractDetailOrderingTest(TestCase):
             'comissao': comissao,
             'funcao': funcao,
             'agente': self.agente,
-            'data_inicio': date(2024, 1, 1),
-            'portaria_numero': '123/2024',
-            'portaria_data': date(2024, 1, 1)
+            'data_inicio': date(2099, 1, 1),
+            'portaria_numero': '123/2099',
+            'portaria_data': date(2099, 1, 1)
         }
         defaults.update(kwargs)
         return Integrante.objects.create(**defaults)
@@ -80,11 +80,11 @@ class ContractDetailOrderingTest(TestCase):
         funcao_membro = self.f_membro
 
         # Insert in random/reverse order to test sorting
-        self.comissao_fisc.integrantes.create(agente=a1, funcao=funcao_fiscal, data_inicio=date(2024, 1, 1), ordem=2, portaria_data=date(2024, 1, 1), portaria_numero='1')
-        self.comissao_fisc.integrantes.create(agente=a2, funcao=funcao_substituto, data_inicio=date(2024, 1, 1), ordem=1, portaria_data=date(2024, 1, 1), portaria_numero='1')
-        self.comissao_fisc.integrantes.create(agente=a3, funcao=funcao_admin, data_inicio=date(2024, 1, 1), ordem=3, portaria_data=date(2024, 1, 1), portaria_numero='1')
-        self.comissao_fisc.integrantes.create(agente=a4, funcao=funcao_tecnico, data_inicio=date(2024, 1, 1), ordem=5, portaria_data=date(2024, 1, 1), portaria_numero='1')
-        self.comissao_fisc.integrantes.create(agente=a5, funcao=funcao_membro, data_inicio=date(2024, 1, 1), ordem=4, portaria_data=date(2024, 1, 1), portaria_numero='1')
+        self.comissao_fisc.integrantes.create(agente=a1, funcao=funcao_fiscal, data_inicio=date(2099, 1, 1), ordem=2, portaria_data=date(2099, 1, 1), portaria_numero='1')
+        self.comissao_fisc.integrantes.create(agente=a2, funcao=funcao_substituto, data_inicio=date(2099, 1, 1), ordem=1, portaria_data=date(2099, 1, 1), portaria_numero='1')
+        self.comissao_fisc.integrantes.create(agente=a3, funcao=funcao_admin, data_inicio=date(2099, 1, 1), ordem=3, portaria_data=date(2099, 1, 1), portaria_numero='1')
+        self.comissao_fisc.integrantes.create(agente=a4, funcao=funcao_tecnico, data_inicio=date(2099, 1, 1), ordem=5, portaria_data=date(2099, 1, 1), portaria_numero='1')
+        self.comissao_fisc.integrantes.create(agente=a5, funcao=funcao_membro, data_inicio=date(2099, 1, 1), ordem=4, portaria_data=date(2099, 1, 1), portaria_numero='1')
 
         url = reverse('detalhe_contrato', args=[self.contrato.id])
         response = self.client.get(url)
