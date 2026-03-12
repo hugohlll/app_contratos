@@ -82,11 +82,12 @@ def painel_controle(request):
 
     for atual in integrantes_ativos:
         data_inicio_real = atual.data_inicio
-        # Busca recursiva simples para encontrar a data de início real da sequência de designações
+        # Busca recursiva simples para encontrar a data de início real da sequência de designações no mesmo contrato e tipo de comissão
         while True:
             dia_anterior = data_inicio_real - timedelta(days=1)
             designacao_anterior = Integrante.objects.filter(
-                comissao=atual.comissao,
+                comissao__contrato=atual.comissao.contrato,
+                comissao__tipo=atual.comissao.tipo,
                 agente=atual.agente,
                 funcao=atual.funcao
             ).filter(Q(data_fim=dia_anterior) | Q(data_desligamento=dia_anterior)).first()
@@ -428,7 +429,8 @@ def exportar_radar_permanencia_csv(request):
         while True:
             dia_anterior = data_inicio_real - timedelta(days=1)
             designacao_anterior = Integrante.objects.filter(
-                comissao=atual.comissao,
+                comissao__contrato=atual.comissao.contrato,
+                comissao__tipo=atual.comissao.tipo,
                 agente=atual.agente,
                 funcao=atual.funcao
             ).filter(Q(data_fim=dia_anterior) | Q(data_desligamento=dia_anterior)).first()
