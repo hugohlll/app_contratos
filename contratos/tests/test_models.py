@@ -1,5 +1,5 @@
 from django.test import TestCase
-from contratos.models import Contrato, Empresa, Agente, PostoGraduacao, Comissao, Integrante, Funcao, ExtensaoSaram
+from contratos.models import Contrato, Empresa, Agente, PostoGraduacao, Comissao, Integrante, Funcao
 from datetime import date, timedelta
 
 class ContratoModelTest(TestCase):
@@ -30,11 +30,11 @@ class ContratoModelTest(TestCase):
 
 class ComissaoOrderingTest(TestCase):
     def setUp(self):
-        self.empresa = Empresa.objects.create(cnpj="11.111.111/1111-11", razao_social="Empresa Teste", situacao="Ativo")
+        self.empresa = Empresa.objects.create(cnpj="11.111.111/1111-11", razao_social="Empresa Teste")
         self.contrato = Contrato.objects.create(
             empresa=self.empresa,
             numero="123/2025",
-            tipo="Continuo",
+            tipo="DESPESA",
             objeto="Teste",
             vigencia_inicio=date.today(),
             vigencia_fim=date.today() + timedelta(days=365),
