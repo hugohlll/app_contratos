@@ -17,6 +17,8 @@ class Command(BaseCommand):
             # Não reativa comissões que já expiraram (data_fim no passado)
             data_fim__lt=hoje,
         )
+        # Atenção: Se data_fim for nulo, a comissão NÃO será excluída (ou seja, será ativada).
+        # Isso atende comissões por tempo indeterminado.
         total = comissoes_para_ativar.count()
 
         if total == 0:
