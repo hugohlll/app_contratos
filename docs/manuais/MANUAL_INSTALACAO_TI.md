@@ -218,3 +218,11 @@ Em versões recentes do Ubuntu (24.04+) e Python (3.12+), o módulo `distutils` 
 sudo apt install python3-setuptools
 ```
 No ambiente Docker deste projeto, isso já é tratado automaticamente.
+
+### Erro `fatal: detected dubious ownership in repository` no Git
+Este erro ocorre quando o usuário que está rodando o comando `git` (ex: `root`) não é o mesmo usuário que é dono da pasta `/opt/app_contratos` (ou o local onde você colocou o projeto), o que é uma medida de segurança introduzida em versões recentes do Git. Nas máquinas de produção é um problema muito comum.
+Para resolver de forma global para esse servidor, adicione a pasta à lista de exceções de segurança do Git rodando:
+```bash
+git config --global --add safe.directory /opt/app_contratos
+```
+*(Atenção: verifique se o caminho bate com o caminho real do repositório no seu servidor)*
