@@ -16,6 +16,7 @@ app_contratos/
 ├── scripts/               # 🛠️ Scripts utilitários e testes avulsos
 ├── docs/                  # 📚 Documentação (Manuais e roteiros)
 ├── logs/                  # 📝 Arquivos de log gerados pelo sistema ou testes
+├── secrets/               # 🔐 Repositório seguro de credenciais e tokens (Gmail API)
 ├── docker-compose.yml     # Orquestração (Desenvolvimento)
 ├── docker-compose.prod.yml # 🚀 Orquestração (Produção)
 ├── Dockerfile             # Imagem Docker (Desenvolvimento)
@@ -47,6 +48,9 @@ Toda a documentação que não é o `README`.
 
 ### `logs/`
 Arquivos `.log` gerados por falhas de teste ou execução, ignorados pelo Git.
+
+### `secrets/`
+Repositório mapeado e seguro para as chaves JSON confidenciais (ex: `credentials.json`, `token.json` do Gmail API). Todos os arquivos aqui são terminantemente ignorados pelo Git.
 
 
 ---

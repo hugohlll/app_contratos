@@ -1,3 +1,6 @@
 # Roda todo dia à meia-noite
 # A desativação das comissões encerradas roda primeiro, seguida da ativação das iniciadas
 0 0 * * * root python /app/manage.py desativar_comissoes_expiradas >> /var/log/cron.log 2>&1 && python /app/manage.py ativar_comissoes_iniciadas >> /var/log/cron.log 2>&1
+
+# Opcional (Recomendado): Verifica e resgata tokens do Gmail periodicamente (roda às 01:00 da manhã)
+0 1 * * * root python /app/scripts/check_gmail_health.py >> /var/log/cron.log 2>&1

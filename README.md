@@ -479,6 +479,7 @@ app_contratos/
 ├── data/                  # 📊 Arquivos de dados (CSVs e dumps SQL)
 ├── docs/                  # 📚 Documentação (Manuais e roteiros)
 ├── logs/                  # 📝 Logs do sistema e de testes
+├── secrets/               # 🔐 Repositório seguro de credenciais e tokens (Gmail API)
 ├── nginx/                 # Configuração do Nginx
 ├── scripts/               # 🛠️ Scripts utilitários e testes avulsos
 ├── .env.prod.example      # Modelo de variáveis de ambiente
