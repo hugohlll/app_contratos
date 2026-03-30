@@ -157,8 +157,8 @@ Este documento descreve o processo completo para implementar o envio automatizad
 services:
   web:
     volumes:
-      # NÃO exponha credentials.json e token.json no volume público
-      - .:/app
+      # NÃO monte .:/app no docker-compose. Use apenas arquivos específicos:
+      - static_volume:/app/staticfiles
       - ./secrets/credentials.json:/app/credentials.json:ro
       - ./secrets/token.json:/app/token.json:ro
     environment:
@@ -392,9 +392,9 @@ gmail_client = GmailAPIClient()
 # core/settings.py
 
 # Configurações Gmail API
-GMAIL_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'credentials.json')
-GMAIL_TOKEN_PATH = os.path.join(BASE_DIR, 'token.json')
-EMAIL_PADRAO = 'notificacoes@suaempresa.com.br'
+GMAIL_CREDENTIALS_PATH = os.getenv('GMAIL_CREDENTIALS_PATH', os.path.join(BASE_DIR, 'credentials.json'))
+GMAIL_TOKEN_PATH = os.getenv('GMAIL_TOKEN_PATH', os.path.join(BASE_DIR, 'token.json'))
+EMAIL_PADRAO = os.getenv('EMAIL_PADRAO', 'notificacoes@suaempresa.com.br')
 
 # Logging para e-mails
 LOGGING = {
