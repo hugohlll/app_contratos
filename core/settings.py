@@ -133,3 +133,33 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Authentication Redirects
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/portal/'
+
+# Configurações Gmail API
+GMAIL_CREDENTIALS_PATH = os.getenv('GMAIL_CREDENTIALS_PATH', os.path.join(BASE_DIR, 'credentials.json'))
+GMAIL_TOKEN_PATH = os.getenv('GMAIL_TOKEN_PATH', os.path.join(BASE_DIR, 'token.json'))
+EMAIL_PADRAO = os.getenv('EMAIL_PADRAO', 'notificacoes@suaempresa.com.br')
+
+# Configuração Padrão do Diretório de Logs
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(LOGS_DIR):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+
+# Logging para e-mails
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'email_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOGS_DIR, 'email.log'),
+        },
+    },
+    'loggers': {
+        'contratos.utils_gmail': {
+            'handlers': ['email_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
