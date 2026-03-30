@@ -682,18 +682,12 @@ if __name__ == '__main__':
   docker-compose exec web python manage.py testar_email --destinatario=admin@suaempresa.com.br
   ```
 
-- [ ] **Teste 2:** Envio de notificação de vencimento
-  ```bash
-  docker-compose exec web python manage.py testar_email \
-    --destinatario=gestor@suaempresa.com.br
-  ```
-
-- [ ] **Teste 3:** Health check da API
+- [ ] **Teste 2:** Health check da API
   ```bash
   docker-compose exec web python scripts/check_gmail_health.py
   ```
 
-- [ ] **Teste 4:** Verificação de logs
+- [ ] **Teste 3:** Verificação de logs
   ```bash
   docker-compose exec web tail -f logs/email.log
   ```
