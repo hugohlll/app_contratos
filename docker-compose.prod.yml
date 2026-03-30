@@ -16,6 +16,13 @@ services:
       - ./secrets/credentials.json:/app/credentials.json:ro
       - ./secrets/token.json:/app/token.json:ro
     env_file: .env.prod
+    environment:
+      - GMAIL_CREDENTIALS_PATH=/app/credentials.json
+      - GMAIL_TOKEN_PATH=/app/token.json
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     depends_on:
       - db
     restart: always
@@ -37,6 +44,13 @@ services:
       context: .
       dockerfile: Dockerfile.prod
     env_file: .env.prod
+    environment:
+      - GMAIL_CREDENTIALS_PATH=/app/credentials.json
+      - GMAIL_TOKEN_PATH=/app/token.json
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     depends_on:
       - db
     restart: always
