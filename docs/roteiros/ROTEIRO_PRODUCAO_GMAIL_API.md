@@ -201,29 +201,24 @@ ENV PYTHONUNBUFFERED 1
 
 WORKDIR /app
 
-# Instala dependências do sistema
-RUN apt-get update && apt-get install -y \
-    gcc \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Instalação de dependências do sistema para PostgreSQL e Cron
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev gcc cron \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Instala dependências Python
-RUN pip install --upgrade pip setuptools
+# Instalação de dependências Python
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir setuptools -r requirements.txt
+RUN pip install gunicorn
 
-# Copia apenas o necessário (não copia secrets)
-COPY manage.py .
-COPY contratos/ ./contratos/
-COPY core/ ./core/
+# Cópia do código fonte (Certifique-se de que secrets/ está no .dockerignore)
+COPY . .
 
-# Cria diretório para secrets (será montado via volume)
-RUN mkdir -p /app/secrets
+# Execução do Collectstatic (Agrupar ficheiros CSS/JS)
+RUN python manage.py collectstatic --noinput
 
-EXPOSE 8000
-
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Inicialização com Gunicorn (Apontando para core.wsgi)
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "core.wsgi:application"]
 ```
 
 ---
