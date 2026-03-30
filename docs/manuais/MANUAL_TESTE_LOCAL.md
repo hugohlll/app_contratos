@@ -27,7 +27,12 @@ POSTGRES_PASSWORD=admin
 POSTGRES_DB=siscont_db
 
 DATABASE_URL=postgres://admin:admin@db:5432/siscont_db
+
+# (Opcional) Configurações de envio automático de e-mail (Gmail API)
+# EMAIL_PADRAO=notificacoes@suaempresa.com.br
 ```
+
+> **Dica**: Se quiser testar o envio de e-mails, crie a pasta `secrets/` na raiz do projeto e insira os arquivos `credentials.json` e `token.json` nela antes de subir os containers, conforme descrito no [Roteiro do Gmail API](../roteiros/ROTEIRO_PRODUCAO_GMAIL_API.md).
 
 ### 2. Construir e Subir os Containers
 ```bash

@@ -75,6 +75,23 @@ docker compose -f docker-compose.prod.yml exec web python manage.py createsuperu
 ```
 Informe nome de usuário, e-mail e senha quando solicitado.
 
+### 1.8 Configurar Envio Automático de E-mails (Gmail API)
+O sistema suporta o envio automático de alertas (ex: vencimento de comissões e contratos) via Gmail API. Para habilitar essa funcionalidade:
+
+1. Acesse o guia completo na documentação da aplicação: **[Roteiro de Implementação: Gmail API](../roteiros/ROTEIRO_PRODUCAO_GMAIL_API.md)**.
+2. O guia explicará como criar as credenciais OAuth 2.0 no Google Cloud.
+3. Ao gerar as credenciais, você baixará um arquivo chamado `credentials.json` e, após a autenticação inicial simulada no script, também será gerado o arquivo `token.json`.
+4. Crie uma pasta `secrets/` na raiz do projeto (onde fica o `docker-compose.prod.yml`) e mova ambos os arquivos JSON para dentro dela:
+   ```bash
+   mkdir -p /opt/app_contratos/secrets
+   mv credentials.json /opt/app_contratos/secrets/
+   mv token.json /opt/app_contratos/secrets/
+   ```
+5. O `docker-compose.prod.yml` já está configurado de fábrica para ler as credenciais automaticamente desta pasta nos serviços `.web` e `.cron`. Reinicie a arquitetura para carregar os novos arquivos:
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d
+   ```
+
 ---
 
 ## 2. Modos de Operação
