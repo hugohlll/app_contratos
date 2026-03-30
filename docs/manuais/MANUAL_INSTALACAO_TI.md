@@ -61,6 +61,7 @@ Todos os 3 serviços devem estar com status `Up`:
 |---|---|---|
 | `db` | Banco de dados PostgreSQL | 5432 (interna) |
 | `web` | Aplicação Django via Gunicorn | 8000 (interna) |
+| `cron` | Serviço para rodar scripts automatizados (rotinas diárias) | - |
 | `nginx` | Proxy reverso e arquivos estáticos | **80** (externa) |
 
 ### 1.6 Inicializar o Banco de Dados

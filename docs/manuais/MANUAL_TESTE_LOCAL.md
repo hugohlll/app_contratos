@@ -38,7 +38,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 ```bash
 docker compose -f docker-compose.prod.yml ps
 ```
-Deve mostrar 3 serviços com status `Up`: **db**, **web** e **nginx**.
+Deve mostrar 4 serviços com status `Up`: **db**, **web**, **cron** e **nginx**.
 
 ### 4. Executar Migrações do Banco de Dados
 ```bash

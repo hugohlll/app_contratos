@@ -8,11 +8,14 @@ Este documento detalha a organização de pastas e arquivos do sistema SISCONT, 
 
 A raiz do projeto contém os arquivos de configuração de infraestrutura, dependências e o ponto de entrada da aplicação.
 
-```
 app_contratos/
 │
 ├── core/                  # ⚙️ Configurações Globais do Projeto
 ├── contratos/             # 📦 Aplicação Principal (Lógica de Negócio)
+├── data/                  # 📊 Arquivos de dados e backups (CSVs, dumps SQL)
+├── scripts/               # 🛠️ Scripts utilitários e testes avulsos
+├── docs/                  # 📚 Documentação (Manuais e roteiros)
+├── logs/                  # 📝 Arquivos de log gerados pelo sistema ou testes
 ├── docker-compose.yml     # Orquestração (Desenvolvimento)
 ├── docker-compose.prod.yml # 🚀 Orquestração (Produção)
 ├── Dockerfile             # Imagem Docker (Desenvolvimento)
@@ -20,10 +23,31 @@ app_contratos/
 ├── nginx/                 # 🌐 Configuração do Proxy Reverso
 ├── manage.py              # Utilitário de linha de comando
 ├── requirements.txt       # Dependências Python
-├── README.md              # Documentação geral
-├── MANUAL_INSTALACAO_TI.md # 📘 Guia de instalação em servidor
-└── MANUAL_TESTE_LOCAL.md   # 📘 Guia de teste local (simulação)
+└── README.md              # Documentação geral
 ```
+
+---
+
+## 📂 Organização Auxiliar
+
+### `data/`
+Centraliza insumos para carga e backups do banco de dados.
+- Contém arquivos `.csv` para importação e backups `.sql`.
+
+### `scripts/`
+Scripts que não fazem parte do código central do projeto.
+- `load_data.py`: Script para povoar o banco.
+- `tests/`: Scripts isolados de teste (ex: `teste_email_producao.py`).
+- `debug/`: Scripts para debugar requests e headers.
+
+### `docs/`
+Toda a documentação que não é o `README`.
+- `manuais/`: Manuais de instalação, teste local e correção de CSVs.
+- `roteiros/`: Roteiros de teste e documentação de integração (ex: Gmail API).
+
+### `logs/`
+Arquivos `.log` gerados por falhas de teste ou execução, ignorados pelo Git.
+
 
 ---
 

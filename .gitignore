@@ -7,6 +7,8 @@ pycache/
 --- Django ---
 
 *.log
+logs/
+data/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -17,6 +19,8 @@ staticfiles/
 
 .env
 .env.prod
+credentials.json
+token.json
 
 --- Ambientes Virtuais (Virtualenvs) ---
 

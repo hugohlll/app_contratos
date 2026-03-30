@@ -40,7 +40,8 @@ Garantir **transparência**, **controle** e **conformidade** no gerenciamento de
 ✅ **Transparência Pública**: Acesso público a informações sobre contratos vigentes e equipes designadas  
 ✅ **Controle Interno**: Painel de auditoria com monitoramento de riscos e conformidade  
 ✅ **Gestão Eficiente**: Rastreamento completo de designações, qualificações e histórico  
-✅ **Conformidade Regulatória**: Alertas automáticos para vencimentos, qualificações e rodízios  
+✅ **Conformidade Regulatória**: Alertas automáticos para vencimentos, qualificações e rodízios
+✅ **Notificações**: Envio automatizado de e-mails via Gmail API para comissões e contratos próximos do vencimento
 
 ---
 
@@ -332,7 +333,7 @@ Ao criar um contrato, uma comissão de Fiscalização é criada automaticamente.
    - **Início da Comissão**: Data de início da vigência da comissão (opcional; se omitido, usa vigência do contrato)
    - **Fim da Comissão**: Data de fim da vigência da comissão (opcional; se omitido, usa fim do contrato)
 
-**Nota**: Comissões expiram automaticamente (status inativo) via script diário quando sua data fim é ultrapassada. Além disso, não podem possuir data final anterior à data inicial de qualquer de seus membros designados. Ao encurtar o prazo de uma comissão, todas as designações associadas têm seu prazo reduzido automaticamente.
+**Nota**: Comissões expiram automaticamente (status inativo) via script diário (`cron`) quando sua data fim é ultrapassada, da mesma forma que comissões futuras são ativadas na data correta. Além disso, não podem possuir data final anterior à data inicial de qualquer de seus membros designados. Ao encurtar o prazo de uma comissão, todas as designações associadas têm seu prazo reduzido automaticamente. A ordem visual das comissões no sistema prioriza **Fiscalização** antes de **Recebimento**.
 
 ### **5. Designe os Integrantes**
 
@@ -469,60 +470,26 @@ Para encerrar uma designação antes do prazo:
 
 ## 📁 Estrutura do Projeto
 
-```
+```text
 app_contratos/
 │
 ├── .github/               # Workflows CI/CD
-│   └── workflows/
-│       └── ci.yml
-├── contratos/              # Aplicação principal
-│   ├── management/        # Comandos de gerenciamento
-│   │   └── commands/
-│   │       ├── populate_db.py
-│   │       └── desativar_comissoes_expiradas.py
-│   ├── migrations/        # Migrações do banco de dados
-│   ├── templates/         # Templates HTML (incl. portal)
-│   │   └── contratos/
-│   │       ├── portal/    # Templates da área restrita
-│   │       ├── detalhe.html
-│   │       ├── militar.html
-│   │       ├── painel_controle.html
-│   │       └── ...
-│   ├── templatetags/      # Custom template filters
-│   ├── tests/             # Testes automatizados
-│   ├── views/             # Views organizadas por módulo
-│   │   ├── auditoria.py  # Painel de controle e relatórios
-│   │   ├── auth.py       # Autenticação
-│   │   ├── militar.py    # Consulta individual
-│   │   ├── portal.py     # Portal administrativo
-│   │   ├── public.py     # Área pública
-│   │   └── users.py      # Gestão de usuários
-│   ├── admin.py          # Configuração do admin Django
-│   ├── apps.py           # Configuração do app
-│   ├── forms.py          # Formulários Django
-│   ├── models.py         # Modelos de dados
-│   ├── urls.py           # Rotas da aplicação
-│   └── utils.py          # Funções auxiliares
-│
-├── core/                  # Configurações do projeto
-│   ├── settings.py       # Configurações Django
-│   ├── urls.py           # URLs principais
-│   ├── wsgi.py           # WSGI config
-│   └── asgi.py           # ASGI config
-│
+├── contratos/             # Aplicação principal
+├── core/                  # Configurações do projeto Django
+├── data/                  # 📊 Arquivos de dados (CSVs e dumps SQL)
+├── docs/                  # 📚 Documentação (Manuais e roteiros)
+├── logs/                  # 📝 Logs do sistema e de testes
 ├── nginx/                 # Configuração do Nginx
-│   └── nginx.conf
+├── scripts/               # 🛠️ Scripts utilitários e testes avulsos
 ├── .env.prod.example      # Modelo de variáveis de ambiente
 ├── docker-compose.yml     # Configuração Docker (Dev/CI)
 ├── docker-compose.prod.yml# Configuração Docker Produção
-├── Dockerfile            # Imagem Docker (Dev)
-├── Dockerfile.prod       # Imagem Docker (Prod)
-├── manage.py             # Script de gerenciamento Django
-├── requirements.txt      # Dependências Python
-├── ESTRUTURA_PROJETO.md  # Documentação da estrutura
-├── MANUAL_INSTALACAO_TI.md # Manual de instalação (TI)
-├── MANUAL_TESTE_LOCAL.md # Manual de teste local
-└── README.md             # Este arquivo
+├── Dockerfile             # Imagem Docker (Dev)
+├── Dockerfile.prod        # Imagem Docker (Prod)
+├── manage.py              # Script de gerenciamento Django
+├── requirements.txt       # Dependências Python
+├── ESTRUTURA_PROJETO.md   # Documentação da estrutura
+└── README.md              # Este arquivo
 ```
 
 ---
@@ -713,6 +680,12 @@ Contribuições são bem-vindas! Para contribuir:
 ---
 
 ## 📅 Changelog
+
+### **Versão 1.4.0**
+- ✅ **Notificações Automáticas**: Integração com a Gmail API para envio de e-mails em processos importantes (como alertas de vencimento).
+- ✅ **Rotinas Automatizadas**: Serviço de cron implementado no Docker para ativar e desativar comissões diariamente sob demanda temporal.
+- ✅ **Reorganização de Estrutura**: Repositório otimizado com novas pastas para dados (`data/`), scripts isolados (`scripts/`), documentação centralizada (`docs/`) e logs locais (`logs/`).
+- ✅ **Ordenação Padrão**: Comissões automaticamente ordenadas para apresentar Fiscalização antes de Recebimento (`F > R`).
 
 ### **Versão 1.3.1**
 - ✅ **Regras de Comissão e Designação**: Validação rigorosa impede integrante de possuir data final superior à comissão. Encurtar prazo de comissão ajusta designações em cascata.

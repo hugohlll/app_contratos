@@ -24,6 +24,9 @@ services:
       - DB_USER=admin_contratos
       - DB_PASSWORD=senha_segura_militar
       - DB_HOST=db
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     restart: always
 
 volumes:
