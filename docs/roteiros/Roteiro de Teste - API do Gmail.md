@@ -1,4 +1,9 @@
-# **Roteiro de Teste: Envio de E-mails via Gmail API (HTTPS)**
+# **Roteiro de Teste (Local/Draft): Envio de E-mails via Gmail API**
+
+> ⚠️ **AVISO IMPORTANTE:** Este documento reflete os primeiros testes técnicos de desenvolvimento realizados em máquina local. Ele é mantido aqui apenas para fins de histórico.
+> **Para configurar e enviar e-mails no servidor oficial da instituição, consulte obrigatoriamente o manual definitivo:** `ROTEIRO_PRODUCAO_GMAIL_API.md`.
+
+---
 
 Este documento descreve o passo a passo para configurar e testar o envio automatizado de e-mails utilizando a API do Gmail com Python. Essa abordagem foi escolhida por utilizar tráfego HTTPS (porta 443), permitindo contornar bloqueios de portas SMTP (587/465) comuns em firewalls e proxies de redes corporativas.
 
