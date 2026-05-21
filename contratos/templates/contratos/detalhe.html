@@ -263,7 +263,118 @@
         <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Nenhuma comissão ativa
             cadastrada para este contrato no momento.</div>
         {% endif %}
+
+        <!-- PRESTAÇÃO DE CONTAS -->
+        <div class="card shadow-sm border-0 mb-4 border-top border-4 border-info mt-4">
+            <div class="card-header bg-white">
+                <h4 class="m-0 text-info"><i class="bi bi-file-earmark-pdf-fill me-2"></i>Prestação de Contas Mensal</h4>
+            </div>
+            <div class="card-body p-4">
+                {% if sucesso_envio %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>Prestação de contas recebida com sucesso!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
+                
+                {% if form_prestacao.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form_prestacao.non_field_errors|join:", " }}
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-6 border-end pe-4">
+                        <h5 class="mb-4"><i class="bi bi-cloud-upload me-2 text-secondary"></i>Enviar Relatório</h5>
+                        <form action="{% url 'upload_prestacao' contrato_id=contrato.id %}" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="{{ form_prestacao.agente.id_for_label }}" class="form-label fw-bold">Fiscal Responsável</label>
+                                {{ form_prestacao.agente }}
+                                {% if form_prestacao.agente.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form_prestacao.agente.errors|join:", " }}</div>{% endif %}
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label for="{{ form_prestacao.mes_referencia.id_for_label }}" class="form-label fw-bold">Mês Referência</label>
+                                    {{ form_prestacao.mes_referencia }}
+                                </div>
+                                <div class="col-6">
+                                    <label for="{{ form_prestacao.ano_referencia.id_for_label }}" class="form-label fw-bold">Ano Referência</label>
+                                    {{ form_prestacao.ano_referencia }}
+                                </div>
+                            </div>
+                            {% if form_prestacao.mes_referencia.errors or form_prestacao.ano_referencia.errors %}
+                            <div class="text-danger small mb-3">
+                                {{ form_prestacao.mes_referencia.errors|join:", " }} {{ form_prestacao.ano_referencia.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-3 p-3 bg-light rounded border border-dashed">
+                                <label for="{{ form_prestacao.arquivo.id_for_label }}" class="form-label fw-bold text-primary"><i class="bi bi-file-pdf me-2"></i>Selecionar Arquivo PDF</label>
+                                {{ form_prestacao.arquivo }}
+                                {% if form_prestacao.arquivo.errors %}<div class="text-danger small mt-1 fw-bold">{{ form_prestacao.arquivo.errors|join:", " }}</div>{% endif %}
+                                <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>Apenas formato PDF (Máximo 10 MB).</div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="{{ form_prestacao.observacao.id_for_label }}" class="form-label fw-bold text-secondary">Observações (opcional)</label>
+                                {{ form_prestacao.observacao }}
+                            </div>
+                            
+                            <button type="submit" class="btn btn-info w-100 fw-bold text-white shadow-sm p-2 fs-5">
+                                <i class="bi bi-send-fill me-2"></i>Enviar Arquivo
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="col-md-6 ps-4">
+                        <h5 class="mb-4"><i class="bi bi-clock-history me-2 text-secondary"></i>Últimos Envios</h5>
+                        {% if prestacoes_recentes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ref.</th>
+                                        <th>Enviado em</th>
+                                        <th>Fiscal</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in prestacoes_recentes %}
+                                    <tr>
+                                        <td class="fw-bold"><span class="badge bg-secondary fs-6">{{ p.mes_referencia|stringformat:"02d" }}/{{ p.ano_referencia }}</span></td>
+                                        <td class="small text-muted">{{ p.data_envio|date:"d/m/Y \à\s H:i" }}</td>
+                                        <td>
+                                            {% if p.agente %}
+                                            <span class="badge bg-light text-dark border"><i class="bi bi-person me-1"></i>{{ p.agente.nome_de_guerra }}</span>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-5"></i></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted d-block mt-3"><i class="bi bi-info-circle me-1"></i>Mostrando o histórico dos últimos 6 meses para este contrato.</small>
+                        {% else %}
+                        <div class="alert alert-light border border-2 border-dashed text-center text-muted p-5 mt-2">
+                            <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
+                            <h6 class="fw-bold">Nenhum envio registrado</h6>
+                            <p class="mb-0 small">As prestações de contas mensais aparecerão aqui após o envio.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,174 @@
+{% extends "contratos/portal/base_portal.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-file-earmark-pdf me-2 text-primary"></i>Prestação de Contas Mensal</h1>
+    
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <form method="get" class="d-flex me-2">
+            <select name="mes" class="form-select form-select-sm me-2">
+                {% for m_val, m_nome in meses_choices %}
+                <option value="{{ m_val }}" {% if m_val == filtro_mes %}selected{% endif %}>{{ m_nome }}</option>
+                {% endfor %}
+            </select>
+            <select name="ano" class="form-select form-select-sm me-2">
+                {% for a in anos_choices %}
+                <option value="{{ a }}" {% if a == filtro_ano %}selected{% endif %}>{{ a }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-filter"></i> Filtrar</button>
+        </form>
+        
+        <a href="{% url 'exportar_prestacao_csv' %}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-file-excel"></i> Exportar Base
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="messages mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- CARDS INDICADORES (Mês Filtrado) -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase fw-bold text-white-50">Contratos Ativos</h6>
+                <h2 class="mb-0 fw-bold">{{ total_contratos }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase fw-bold text-white-50">Entregues no Mês</h6>
+                <h2 class="mb-0 fw-bold">{{ entregues_no_mes }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase fw-bold text-white-50">Pendentes no Mês</h6>
+                <h2 class="mb-0 fw-bold">{{ pendentes_no_mes }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white {% if perc_conformidade > 80 %}bg-success{% elif perc_conformidade > 50 %}bg-warning{% else %}bg-danger{% endif %} shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase fw-bold text-white-50">Conformidade</h6>
+                <h2 class="mb-0 fw-bold">{{ perc_conformidade }}%</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- GRÁFICO (Últimos 6 meses) -->
+    <div class="col-md-12">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h6 class="m-0 fw-bold text-secondary">Evolução de Entregas (Últimos 6 meses)</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="prestacoesChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MATRIZ DE PRESTAÇÕES -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="m-0 text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento (Últimos 6 meses)</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-start" style="min-width: 200px;">Contrato / Empresa</th>
+                        {% for a, m in ultimos_6_meses_tuplas %}
+                        <th style="min-width: 120px;">{{ m|stringformat:"02d" }}/{{ a }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c_data in matriz_contratos %}
+                    <tr>
+                        <td class="text-start">
+                            <div class="fw-bold text-primary">{{ c_data.contrato.numero }}</div>
+                            <div class="small text-muted text-truncate" style="max-width: 250px;">{{ c_data.contrato.empresa.razao_social }}</div>
+                        </td>
+                        {% for entrega in c_data.entregas %}
+                        <td class="p-2">
+                            {% if entrega.status == 'entregue' %}
+                                <div class="d-flex flex-column align-items-center">
+                                    <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="btn btn-sm btn-outline-success border-0 p-1 px-2" title="Baixar PDF">
+                                        <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                                        <span style="font-size: 0.75rem;">Entregue</span>
+                                    </a>
+                                    {% if request.user.is_superuser %}
+                                    <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="text-danger mt-1" style="font-size: 0.7rem;" title="Excluir"><i class="bi bi-trash"></i></a>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="text-muted opacity-50 py-2">
+                                    <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
+                                    <span style="font-size: 0.75rem;">Pendente</span>
+                                </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">Nenhum contrato ativo no momento.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var ctx = document.getElementById('prestacoesChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ ultimos_6_meses_labels|safe }},
+                datasets: [{
+                    label: 'Prestações Entregues',
+                    data: {{ ultimos_6_meses_dados|safe }},
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

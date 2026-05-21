@@ -83,6 +83,11 @@
                 </a>
             </li>
             <li>
+                <a href="{% url 'dashboard_prestacao' %}" class="{% if 'prestacao' in request.path %}active{% endif %}">
+                    📋 Prestação de Contas
+                </a>
+            </li>
+            <li>
                 <a href="{% url 'listar_empresas' %}" class="{% if 'empresas' in request.path %}active{% endif %}">
                     🏢 Empresas
                 </a>

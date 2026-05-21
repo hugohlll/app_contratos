@@ -74,3 +74,12 @@ class ContratoAdmin(admin.ModelAdmin):
     list_display = ('numero', 'pag', 'empresa', 'vigencia_fim')
     search_fields = ('numero', 'pag', 'empresa__razao_social')
     autocomplete_fields = ['empresa']
+
+from .models import PrestacaoContas
+
+@admin.register(PrestacaoContas)
+class PrestacaoContasAdmin(admin.ModelAdmin):
+    list_display = ('contrato', 'mes_referencia', 'ano_referencia', 'data_envio', 'agente')
+    list_filter = ('ano_referencia', 'mes_referencia')
+    search_fields = ('contrato__numero', 'agente__nome_de_guerra')
+    readonly_fields = ('data_envio',)

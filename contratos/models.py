@@ -235,3 +235,47 @@ class Integrante(models.Model):
         verbose_name = "Integrante"
         verbose_name_plural = "Histórico de Integrantes"
         ordering = ['ordem']
+
+
+import re
+from django.utils.text import slugify
+
+def upload_prestacao_path(instance, filename):
+    """
+    Gera caminho: prestacoes/{posto}_{nome_guerra}_{empresa}_{contrato}_{mes_referencia}.pdf
+    """
+    posto = slugify(instance.agente.posto.sigla) if instance.agente and instance.agente.posto else "sem-posto"
+    nome_guerra = slugify(instance.agente.nome_de_guerra) if instance.agente else "sem-nome"
+    empresa = slugify(instance.contrato.empresa.razao_social)[:30] # Limitado a 30 chars
+    contrato = instance.contrato.numero.replace('/', '-')
+    
+    nome = f"{posto}_{nome_guerra}_{empresa}_{contrato}_{instance.mes_referencia:02d}-{instance.ano_referencia}.pdf"
+    
+    # Limpa caracteres múltiplos indesejados
+    nome = re.sub(r'_+', '_', nome)
+    return f"prestacoes/{nome}"
+
+
+class PrestacaoContas(models.Model):
+    contrato = models.ForeignKey(
+        Contrato, on_delete=models.CASCADE, related_name='prestacoes'
+    )
+    agente = models.ForeignKey(
+        'Agente', on_delete=models.SET_NULL, null=True, verbose_name="Fiscal"
+    )
+    ano_referencia = models.IntegerField("Ano de Referência")
+    mes_referencia = models.IntegerField("Mês de Referência")  # 1–12
+    arquivo = models.FileField(
+        "Arquivo PDF", upload_to=upload_prestacao_path
+    )
+    data_envio = models.DateTimeField(auto_now_add=True)
+    observacao = models.TextField("Observação", blank=True)
+
+    class Meta:
+        unique_together = ('contrato', 'ano_referencia', 'mes_referencia')
+        verbose_name = "Prestação de Contas"
+        verbose_name_plural = "Prestações de Contas"
+        ordering = ['-ano_referencia', '-mes_referencia']
+
+    def __str__(self):
+        return f"PC {self.contrato.numero} - {self.mes_referencia:02d}/{self.ano_referencia}"

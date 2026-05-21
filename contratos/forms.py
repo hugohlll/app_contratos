@@ -216,3 +216,49 @@ class AlterarSenhaForm(EstiloFormMixin, DjangoPasswordChangeForm):
         
         # Remove help text da senha antiga
         self.fields['old_password'].help_text = None
+
+
+from .models import PrestacaoContas
+from django import forms
+from datetime import date
+
+class PrestacaoContasUploadForm(EstiloFormMixin, forms.ModelForm):
+    class Meta:
+        model = PrestacaoContas
+        fields = ['agente', 'mes_referencia', 'ano_referencia', 'arquivo', 'observacao']
+        widgets = {
+            'observacao': forms.Textarea(attrs={'rows': 2}),
+        }
+
+    MES_CHOICES = [(i, f"{i:02d}") for i in range(1, 13)]
+    mes_referencia = forms.ChoiceField(choices=MES_CHOICES, label="Mês de Referência")
+    ano_referencia = forms.ChoiceField(choices=[], label="Ano de Referência")
+
+    def __init__(self, *args, **kwargs):
+        contrato = kwargs.pop('contrato', None)
+        super().__init__(*args, **kwargs)
+        
+        ano_atual = date.today().year
+        self.fields['ano_referencia'].choices = [
+            (a, str(a)) for a in range(ano_atual - 1, ano_atual + 2)
+        ]
+        self.fields['ano_referencia'].initial = ano_atual
+        
+        # Filtra os agentes apenas para aqueles que compõem alguma comissão ativa deste contrato
+        if contrato:
+            agentes_ids = Integrante.objects.filter(
+                comissao__contrato=contrato,
+                comissao__ativa=True,
+                data_desligamento__isnull=True
+            ).values_list('agente_id', flat=True).distinct()
+            self.fields['agente'].queryset = Agente.objects.filter(id__in=agentes_ids).select_related('posto')
+            self.fields['agente'].empty_label = "Selecione o Fiscal..."
+
+    def clean_arquivo(self):
+        f = self.cleaned_data.get('arquivo')
+        if f:
+            if not f.name.lower().endswith('.pdf'):
+                raise forms.ValidationError("Apenas arquivos PDF são aceitos.")
+            if f.size > 10 * 1024 * 1024:
+                raise forms.ValidationError("O arquivo não pode exceder 10 MB.")
+        return f

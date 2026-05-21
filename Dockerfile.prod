@@ -18,6 +18,9 @@ RUN pip install gunicorn
 # Cópia do código fonte
 COPY . .
 
+# Criar pasta para uploads de media e permissões
+RUN mkdir -p /app/mediafiles/prestacoes
+
 # Execução do Collectstatic (Agrupar ficheiros CSS/JS)
 RUN python manage.py collectstatic --noinput
 

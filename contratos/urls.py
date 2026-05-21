@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from contratos.views import public, militar, auditoria, auth, portal, users
+from contratos.views import public, militar, auditoria, auth, portal, users, prestacao
 
 urlpatterns = [
     # --- ÁREA PÚBLICA (Módulo public.py) ---
@@ -76,4 +76,14 @@ urlpatterns = [
     path('portal/usuarios/editar/<int:pk>/', users.editar_usuario, name='editar_usuario'),
     path('portal/usuarios/excluir/<int:pk>/', users.excluir_usuario, name='excluir_usuario'),
     path('portal/alterar-senha/', users.alterar_senha, name='alterar_senha'),
+
+    # --- PRESTAÇÃO DE CONTAS ---
+    # Upload público (sem login)
+    path('contrato/<int:contrato_id>/prestacao/enviar/', prestacao.upload_prestacao, name='upload_prestacao'),
+
+    # Dashboard e controles restritos
+    path('portal/prestacao/', prestacao.dashboard_prestacao, name='dashboard_prestacao'),
+    path('portal/prestacao/download/<int:pk>/', prestacao.download_prestacao, name='download_prestacao'),
+    path('portal/prestacao/excluir/<int:pk>/', prestacao.excluir_prestacao, name='excluir_prestacao'),
+    path('portal/prestacao/exportar/', prestacao.exportar_prestacao_csv, name='exportar_prestacao_csv'),
 ]
