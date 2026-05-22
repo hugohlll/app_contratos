@@ -160,8 +160,7 @@ services:
       # NÃO monte .:/app no docker-compose. Use apenas arquivos específicos:
       - static_volume:/app/staticfiles
       - ./secrets/credentials.json:/app/credentials.json:ro
-      # token.json SEM :ro — precisa de escrita para renovação automática do OAuth
-      - ./secrets/token.json:/app/token.json
+      - ./secrets/token.json:/app/token.json:ro
     environment:
       - GMAIL_CREDENTIALS_PATH=/app/credentials.json
       - GMAIL_TOKEN_PATH=/app/token.json
