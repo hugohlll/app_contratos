@@ -129,9 +129,62 @@ Para o ambiente final de produção:
 3. Cadastre os usuários e dados reais manualmente via sistema.
 
 ### Persistência dos Dados
-Os dados do banco de dados são salvos no volume Docker `postgres_data`.
+Os dados do banco de dados são salvos no volume Docker nomeado `siscont_pg_data_prod`.
 - **Segurança:** Se você parar os containers (`docker compose stop`) ou reiniciar a máquina, os dados **PERMANECEM SALVOS**.
-- **⚠️ Perigo:** Os dados só serão apagados se você rodar `docker compose down -v` (com a flag `-v` de volumes). **NUNCA use essa flag em produção.**
+- **⚠️ Perigo:** Os dados só serão apagados se você rodar `docker compose -f docker-compose.prod.yml down -v` (com a flag `-v` de volumes). **NUNCA use essa flag em produção.**
+
+> **Nota:** Os volumes de produção possuem nomes explícitos para evitar conflitos:
+> | Volume | Conteúdo |
+> |---|---|
+> | `siscont_pg_data_prod` | Banco de dados PostgreSQL |
+> | `siscont_static_prod` | Arquivos estáticos (CSS, JS, imagens) |
+> | `siscont_media_prod` | Uploads de mídia (prestações de contas, etc.) |
+
+---
+
+## 2.1 Segregação de Ambientes (Desenvolvimento vs Produção)
+
+O SISCONT utiliza dois ambientes Docker completamente isolados que podem coexistir **no mesmo servidor** sem risco de colisão de dados:
+
+| Aspecto | Desenvolvimento | Produção |
+|---|---|---|
+| **Arquivo Docker Compose** | `docker-compose.yml` | `docker-compose.prod.yml` |
+| **Nome do Projeto** | `siscont_dev` | `siscont_prod` |
+| **Rede Docker** | `siscont_dev_default` (automática) | `siscont_prod_default` (automática) |
+| **Volume do Banco** | `siscont_pg_data_dev` | `siscont_pg_data_prod` |
+| **Porta Externa** | `8000` (Django runserver) | `80` (Nginx) |
+| **Credenciais do Banco** | `admin_contratos` / `gestao_contratos_db` | Definidas no `.env.prod` |
+
+### Como o Isolamento Funciona
+
+O isolamento é garantido pelo atributo `name:` na primeira linha de cada arquivo Docker Compose (recurso do Docker Compose V2):
+
+```yaml
+# docker-compose.yml (Desenvolvimento)
+name: siscont_dev
+
+# docker-compose.prod.yml (Produção)
+name: siscont_prod
+```
+
+Esse atributo automaticamente:
+1. **Cria uma rede interna exclusiva** para cada ambiente (`siscont_dev_default` e `siscont_prod_default`). Os containers de um ambiente **não conseguem resolver DNS** para containers do outro.
+2. **Prefixa todos os containers** com o nome do projeto (ex: `siscont_prod-db-1`, `siscont_dev-web-1`), evitando conflitos de ciclo de vida.
+3. **Isola os volumes** com nomes explícitos definidos no bloco `volumes:` de cada arquivo.
+
+### Camadas de Defesa (Resumo)
+
+| Camada | Mecanismo | Efeito |
+|---|---|---|
+| **Rede** | Redes Docker separadas | Dev não encontra o banco de Prod |
+| **Namespace** | Atributo `name:` distinto | Docker não mistura containers |
+| **Disco** | Volumes com nomes explícitos | Dados em diretórios físicos separados |
+| **Porta** | Prod usa 80, Dev usa 8000 | Sem conflito de porta |
+| **Autenticação** | Credenciais diferentes | Dev é rejeitado pelo Postgres de Prod |
+
+> **⚠️ IMPORTANTE — Volumes Legados:** Em servidores onde o sistema foi instalado antes da segregação, podem existir volumes antigos com o prefixo `app_contratos_` (ex: `app_contratos_postgres_data`). Estes volumes podem ser removidos com `docker volume rm <nome>` **somente após confirmação de que a migração dos dados para os novos volumes nomeados já foi concluída.**
+
+> Para consultar o guia técnico completo sobre o isolamento, veja: **[Guia de Isolamento Docker: Produção vs Desenvolvimento](../../Guia%20de%20Isolamento%20Docker_%20Produção%20vs%20Desenvolvimento.md)**.
 
 ---
 
@@ -209,6 +262,62 @@ docker compose -f docker-compose.prod.yml exec db bash -c "psql -U admin_siscont
 | Parar sem perder dados | `docker compose -f docker-compose.prod.yml stop` |
 | Verificar status | `docker compose -f docker-compose.prod.yml ps` |
 | Acessar shell do container | `docker compose -f docker-compose.prod.yml exec web bash` |
+| Ativar modo de manutenção | `bash scripts/maintenance_on.sh` |
+| Desativar modo de manutenção | `bash scripts/maintenance_off.sh` |
+
+---
+
+## 6. Modo de Manutenção (Página de Indisponibilidade)
+
+O sistema possui uma funcionalidade integrada para exibir uma **página de manutenção** a todos os usuários enquanto ajustes estão sendo realizados. Essa página é servida diretamente pelo Nginx, sem depender do Django.
+
+### Como Funciona
+
+1. O Nginx verifica, a cada requisição, se o arquivo `/usr/share/nginx/html/maintenance.on` existe dentro do container.
+2. Se o arquivo existir, **todas as requisições** retornam HTTP 503 com a página `maintenance.html` (uma tela estilizada informando sobre a manutenção).
+3. Se o arquivo não existir, as requisições são encaminhadas normalmente para o Django.
+
+> **Nota:** A mudança de estado é **instantânea** e **não requer reinicialização** de nenhum container.
+
+### Ativar o Modo de Manutenção
+
+No terminal do servidor, na pasta raiz do projeto:
+```bash
+cd /opt/app_contratos
+bash scripts/maintenance_on.sh
+```
+
+Saída esperada:
+```
+✅ Modo de manutenção ATIVADO.
+   Todos os acessos receberão a página de manutenção (HTTP 503).
+```
+
+### Desativar o Modo de Manutenção
+
+```bash
+cd /opt/app_contratos
+bash scripts/maintenance_off.sh
+```
+
+Saída esperada:
+```
+✅ Modo de manutenção DESATIVADO.
+   O sistema voltou ao funcionamento normal.
+```
+
+### Ativação/Desativação Manual (Alternativa)
+
+Caso prefira não usar os scripts, os comandos equivalentes são:
+```bash
+# Ativar
+docker exec siscont_prod-nginx-1 touch /usr/share/nginx/html/maintenance.on
+
+# Desativar
+docker exec siscont_prod-nginx-1 rm -f /usr/share/nginx/html/maintenance.on
+```
+
+> **⚠️ ATENÇÃO:** Certifique-se de **desativar** o modo de manutenção após concluir os ajustes. Caso contrário, o sistema permanecerá inacessível para todos os usuários.
 
 ---
 

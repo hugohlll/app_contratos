@@ -38,6 +38,8 @@ Centraliza insumos para carga e backups do banco de dados.
 ### `scripts/`
 Scripts que não fazem parte do código central do projeto.
 - `load_data.py`: Script para povoar o banco.
+- `maintenance_on.sh`: Script para ativar o Modo de Manutenção no Nginx.
+- `maintenance_off.sh`: Script para desativar o Modo de Manutenção no Nginx.
 - `tests/`: Scripts isolados de teste (ex: `teste_email_producao.py`).
 - `debug/`: Scripts para debugar requests e headers.
 
@@ -116,13 +118,15 @@ Pasta `contratos/migrations/`: Contém o histórico de alterações no esquema d
 - **`docker-compose.yml`**: Define dois serviços para **desenvolvimento e CI**:
     - `web`: Aplicação Django via `runserver` (porta 8000).
     - `db`: Banco de dados PostgreSQL 15.
-- **`docker-compose.prod.yml`**: Define três serviços para **produção**:
+- **`docker-compose.prod.yml`**: Define quatro serviços para **produção**:
     - `web`: Aplicação Django via Gunicorn (porta 8000 interna).
     - `db`: Banco de dados PostgreSQL 15.
-    - `nginx`: Proxy reverso servindo estáticos e redirecionando requisições (porta 80 externa).
+    - `nginx`: Proxy reverso servindo estáticos, a página de manutenção e redirecionando requisições (porta 80 externa).
+    - `cron`: Serviço de tarefas automatizadas e rotinas diárias.
 - **`Dockerfile`**: Constrói a imagem Linux com Python 3.12 e dependências para desenvolvimento.
-- **`Dockerfile.prod`**: Imagem otimizada para produção com Gunicorn e `collectstatic`.
-- **`nginx/nginx.conf`**: Configuração do Nginx como proxy reverso.
+- **`Dockerfile.prod`**: Imagem otimizada para produção com Gunicorn, cron e `collectstatic`.
+- **`nginx/nginx.conf`**: Configuração do Nginx como proxy reverso com suporte à rota de manutenção.
+- **`nginx/maintenance.html`**: Tela de manutenção (HTTP 503) servida de forma nativa pelo Nginx.
 - **`.env.prod.example`**: Modelo de variáveis de ambiente para produção.
 
 ---

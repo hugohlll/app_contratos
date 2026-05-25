@@ -206,8 +206,24 @@ docker compose exec web python manage.py createsuperuser
 
 Para implantar o sistema em um servidor real (Linux/Docker/Nginx), consulte os manuais dedicados:
 
-- **[Manual de Instalação (TI)](MANUAL_INSTALACAO_TI.md)**: Guia completo para instalação no servidor da OM.
-- **[Manual de Teste Local](MANUAL_TESTE_LOCAL.md)**: Guia para simular o ambiente de produção na sua máquina.
+- **[Manual de Instalação (TI)](docs/manuais/MANUAL_INSTALACAO_TI.md)**: Guia completo para instalação no servidor da OM.
+- **[Manual de Teste Local](docs/manuais/MANUAL_TESTE_LOCAL.md)**: Guia para simular o ambiente de produção na sua máquina.
+
+---
+
+### **🔧 Modo de Manutenção**
+
+O sistema possui scripts integrados para ativar e desativar uma página de indisponibilidade estilizada (HTTP 503) servida de forma nativa pelo Nginx durante atualizações no servidor de produção.
+
+Para utilizar, execute a partir da pasta raiz do projeto:
+
+```bash
+# Ativar o Modo de Manutenção (exibe a landing page)
+bash scripts/maintenance_on.sh
+
+# Desativar o Modo de Manutenção (retorna ao fluxo normal do Django)
+bash scripts/maintenance_off.sh
+```
 
 ---
 
@@ -681,6 +697,11 @@ Contribuições são bem-vindas! Para contribuir:
 ---
 
 ## 📅 Changelog
+
+### **Versão 1.5.0**
+- ✅ **Segregação de Ambientes**: Separação total de volumes físicos, portas e redes entre desenvolvimento e produção através de namespaces nativos do Compose V2 (`name: siscont_dev` e `name: siscont_prod`).
+- ✅ **Modo de Manutenção**: Adicionada tela estilizada de indisponibilidade (`maintenance.html`) servida diretamente pelo Nginx e scripts utilitários `maintenance_on.sh` / `maintenance_off.sh` para ativação em tempo real sem downtime do proxy.
+- ✅ **Atualização de Guias**: Manual do TI, Guia de Isolamento Docker e Manual de Teste Local reestruturados com base na infraestrutura real.
 
 ### **Versão 1.4.0**
 - ✅ **Notificações Automáticas**: Integração com a Gmail API para envio de e-mails em processos importantes (como alertas de vencimento).

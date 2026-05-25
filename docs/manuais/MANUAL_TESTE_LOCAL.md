@@ -78,6 +78,20 @@ Usuários criados:
 ### 6. Acessar a Aplicação
 Abra o navegador em: **[http://localhost](http://localhost)**
 
+### 7. Testar Modo de Manutenção (Simulação)
+É possível simular o Modo de Manutenção no ambiente local de testes (pois a configuração local sobe o Nginx e os scripts apontam para o container `siscont_prod-nginx-1`):
+
+1. **Ative a manutenção** rodando a partir da raiz do projeto:
+   ```bash
+   bash scripts/maintenance_on.sh
+   ```
+2. **Acesse** `http://localhost` no navegador. O sistema deverá retornar um erro HTTP 503 com a tela estilizada de manutenção.
+3. **Desative a manutenção** para retornar ao normal:
+   ```bash
+   bash scripts/maintenance_off.sh
+   ```
+4. **Recarregue a página** `http://localhost` para confirmar que a aplicação voltou a funcionar normalmente.
+
 ---
 
 ## Parar e Limpar
