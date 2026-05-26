@@ -59,9 +59,17 @@ def dashboard_prestacao(request):
     mes_atual = hoje.month
     ano_atual = hoje.year
 
-    # Obtém meses e anos dos filtros (se não houver, usa atual)
-    filtro_mes = int(request.GET.get('mes', mes_atual))
-    filtro_ano = int(request.GET.get('ano', ano_atual))
+    # Obtém meses e anos dos filtros de forma robusta
+    try:
+        filtro_mes = int(request.GET.get('mes', mes_atual))
+    except (ValueError, TypeError):
+        filtro_mes = mes_atual
+
+    try:
+        raw_ano = request.GET.get('ano', str(ano_atual)).replace('.', '')
+        filtro_ano = int(raw_ano)
+    except (ValueError, TypeError):
+        filtro_ano = ano_atual
 
     contratos_vigentes = Contrato.objects.filter(
         vigencia_inicio__lte=hoje,
