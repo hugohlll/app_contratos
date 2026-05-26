@@ -212,10 +212,10 @@ def exportar_prestacao_csv(request):
     headers = ['Contrato', 'Empresa', 'Mês', 'Ano', 'Data de Envio', 'Fiscal']
     data = []
     
-    prestacoes = PrestacaoContas.objects.select_related('contrato__empresa', 'agente').all()
+    prestacoes = PrestacaoContas.objects.select_related('contrato__empresa', 'agente__posto').all()
     
     for p in prestacoes:
-        fiscal = p.agente.nome_de_guerra if p.agente else "Não informado"
+        fiscal = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
         data.append([
             p.contrato.numero,
             p.contrato.empresa.razao_social,
