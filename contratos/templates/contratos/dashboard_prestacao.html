@@ -14,7 +14,7 @@
             </select>
             <select name="ano" class="form-select form-select-sm me-2">
                 {% for a in anos_choices %}
-                <option value="{{ a }}" {% if a == filtro_ano %}selected{% endif %}>{{ a }}</option>
+                <option value="{{ a }}" {% if a == filtro_ano %}selected{% endif %}>{{ a|stringformat:"d" }}</option>
                 {% endfor %}
             </select>
             <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-filter"></i> Filtrar</button>
@@ -99,7 +99,7 @@
                     <tr>
                         <th class="text-start" style="min-width: 200px;">Contrato / Empresa</th>
                         {% for a, m in ultimos_6_meses_tuplas %}
-                        <th style="min-width: 120px;">{{ m|stringformat:"02d" }}/{{ a }}</th>
+                        <th style="min-width: 120px;">{{ m|stringformat:"02d" }}/{{ a|stringformat:"d" }}</th>
                         {% endfor %}
                     </tr>
                 </thead>

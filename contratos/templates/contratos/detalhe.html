@@ -345,7 +345,7 @@
                                 <tbody>
                                     {% for p in prestacoes_recentes %}
                                     <tr>
-                                        <td class="fw-bold"><span class="badge bg-secondary fs-6">{{ p.mes_referencia|stringformat:"02d" }}/{{ p.ano_referencia }}</span></td>
+                                        <td class="fw-bold"><span class="badge bg-secondary fs-6">{{ p.mes_referencia|stringformat:"02d" }}/{{ p.ano_referencia|stringformat:"d" }}</span></td>
                                         <td class="small text-muted">{{ p.data_envio|date:"d/m/Y \à\s H:i" }}</td>
                                         <td>
                                             {% if p.agente %}
