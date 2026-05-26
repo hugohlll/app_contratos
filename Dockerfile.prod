@@ -18,6 +18,9 @@ RUN pip install gunicorn
 # Cópia do código fonte
 COPY . .
 
+# Remove comandos de desenvolvimento que não devem existir em produção
+RUN rm -f /app/contratos/management/commands/populate_db.py
+
 # Criar pasta para uploads de media e permissões
 RUN mkdir -p /app/mediafiles/prestacoes
 

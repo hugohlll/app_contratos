@@ -6,7 +6,7 @@ from datetime import date, timedelta
 import random
 
 class Command(BaseCommand):
-    help = 'Popula o banco de dados com dados de teste MASSIVOS'
+    help = 'Popula o banco de dados com dados de teste MASSIVOS (SOMENTE DESENVOLVIMENTO)'
 
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.WARNING('Iniciando carga de dados MASSIVA (Modo Realista v2)...'))
