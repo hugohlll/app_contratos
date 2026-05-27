@@ -354,7 +354,17 @@
                                             <span class="text-muted">-</span>
                                             {% endif %}
                                         </td>
-                                        <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-5"></i></td>
+                                        <td class="text-center" title="{{ p.get_status_display }}">
+                                            {% if p.status == 'entregue' %}
+                                            <i class="bi bi-file-earmark-arrow-up text-primary fs-5"></i>
+                                            {% elif p.status == 'correcao' %}
+                                            <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                                            {% elif p.status == 'ok' %}
+                                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>

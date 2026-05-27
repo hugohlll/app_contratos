@@ -9,7 +9,7 @@ from django.conf import settings
 
 from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente
 from contratos.forms import PrestacaoContasUploadForm
-from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx, get_filtro_ativos
+from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx, get_filtro_ativos, is_admin, is_auditor
 
 def upload_prestacao(request, contrato_id):
     """View pública para envio do PDF de prestação de contas."""
@@ -79,17 +79,16 @@ def dashboard_prestacao(request):
     total_contratos = contratos_vigentes.count()
     
     # Prestações no mês/ano filtrado para contratos vigentes
-    entregues_no_mes = PrestacaoContas.objects.filter(
-        mes_referencia=filtro_mes, 
+    prestacoes_filtradas = PrestacaoContas.objects.filter(
+        mes_referencia=filtro_mes,
         ano_referencia=filtro_ano,
         contrato__in=contratos_vigentes
-    ).count()
+    )
     
-    pendentes_no_mes = total_contratos - entregues_no_mes
-    
-    perc_conformidade = 0
-    if total_contratos > 0:
-        perc_conformidade = int((entregues_no_mes / total_contratos) * 100)
+    ok_no_mes = prestacoes_filtradas.filter(status='ok').count()
+    entregues_no_mes = prestacoes_filtradas.filter(status='entregue').count()
+    correcao_no_mes = prestacoes_filtradas.filter(status='correcao').count()
+    pendentes_no_mes = total_contratos - prestacoes_filtradas.count()
     
     # Construir tabela-matriz (Últimos 3 meses)
     # Lista de tuplas (ano, mes) dos últimos 3 meses
@@ -129,7 +128,7 @@ def dashboard_prestacao(request):
                 'ano': ano,
                 'mes': mes,
                 'prestacao': prestacao, # Pode ser None
-                'status': 'entregue' if prestacao else 'pendente'
+                'status': prestacao.status if prestacao else 'pendente'
             })
             
         matriz_contratos.append({
@@ -141,9 +140,12 @@ def dashboard_prestacao(request):
 
     context = {
         'total_contratos': total_contratos,
+        'ok_no_mes': ok_no_mes,
         'entregues_no_mes': entregues_no_mes,
+        'correcao_no_mes': correcao_no_mes,
         'pendentes_no_mes': pendentes_no_mes,
-        'perc_conformidade': perc_conformidade,
+        'is_admin': is_admin(request.user),
+        'is_auditor': is_auditor(request.user),
         
         'matriz_contratos': matriz_contratos,
         'ultimos_3_meses_tuplas': ultimos_3_meses,
@@ -246,7 +248,7 @@ def exportar_prestacao_csv(request):
     for c in contratos_vigentes:
         p = prestacoes_map.get(c.id)
         if p:
-            situacao = 'Entregue'
+            situacao = p.get_status_display()
             responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
             data_envio = p.data_envio.strftime("%d/%m/%Y %H:%M")
         else:
@@ -271,3 +273,21 @@ def exportar_prestacao_csv(request):
 
     nome_arquivo = f"prestacao_contas_{filtro_mes:02d}_{filtro_ano}"
     return export_csv_or_xlsx(request, nome_arquivo, headers, data)
+
+
+@login_required
+def alterar_status_prestacao(request, pk, novo_status):
+    """Altera o status de uma prestação de contas (Administradores/Auditores)."""
+    if not is_auditor(request.user):
+        messages.error(request, "Acesso não autorizado.")
+        return redirect('dashboard_prestacao')
+
+    prestacao = get_object_or_404(PrestacaoContas, pk=pk)
+    if novo_status not in ['entregue', 'correcao', 'ok']:
+        messages.error(request, "Status inválido.")
+        return redirect('dashboard_prestacao')
+
+    prestacao.status = novo_status
+    prestacao.save()
+    messages.success(request, f"Status da prestação do contrato {prestacao.contrato.numero} alterado para {prestacao.get_status_display()}.")
+    return redirect('dashboard_prestacao')

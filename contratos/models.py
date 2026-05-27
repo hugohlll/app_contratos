@@ -268,6 +268,14 @@ class PrestacaoContas(models.Model):
     arquivo = models.FileField(
         "Arquivo PDF", upload_to=upload_prestacao_path
     )
+    STATUS_CHOICES = [
+        ('entregue', 'Entregue'),
+        ('correcao', 'Aguardando Correção'),
+        ('ok', 'Conformidade (OK!)'),
+    ]
+    status = models.CharField(
+        "Status", max_length=15, choices=STATUS_CHOICES, default='entregue'
+    )
     data_envio = models.DateTimeField(auto_now_add=True)
     observacao = models.TextField("Observação", blank=True)
 

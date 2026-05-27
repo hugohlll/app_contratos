@@ -91,12 +91,62 @@
                         <td class="p-2">
                             {% if entrega.status == 'entregue' %}
                                 <div class="d-flex flex-column align-items-center">
-                                    <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="btn btn-sm btn-outline-success border-0 p-1 px-2" title="Baixar PDF">
-                                        <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                                    <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                        <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
                                         <span style="font-size: 0.75rem;">Entregue</span>
                                     </a>
-                                    {% if request.user.is_superuser %}
-                                    <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="text-danger mt-1" style="font-size: 0.7rem;" title="Excluir"><i class="bi bi-trash"></i></a>
+                                    {% if is_auditor %}
+                                    <div class="d-flex gap-1 mt-1">
+                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                            <i class="bi bi-check-lg"></i>
+                                        </a>
+                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                        </a>
+                                        {% if is_admin %}
+                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            {% elif entrega.status == 'correcao' %}
+                                <div class="d-flex flex-column align-items-center">
+                                    <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="text-warning text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                        <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
+                                        <span style="font-size: 0.75rem;">Corrigir</span>
+                                    </a>
+                                    {% if is_auditor %}
+                                    <div class="d-flex gap-1 mt-1">
+                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                            <i class="bi bi-check-lg"></i>
+                                        </a>
+                                        {% if is_admin %}
+                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            {% elif entrega.status == 'ok' %}
+                                <div class="d-flex flex-column align-items-center">
+                                    <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                        <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                                        <span style="font-size: 0.75rem;">Conformidade</span>
+                                    </a>
+                                    {% if is_auditor %}
+                                    <div class="d-flex gap-1 mt-1">
+                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                        </a>
+                                        {% if is_admin %}
+                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
                                     {% endif %}
                                 </div>
                             {% else %}
@@ -126,10 +176,10 @@
         var myChart = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['Entregues', 'Pendentes'],
+                labels: ['Conformidade (OK!)', 'Entregue', 'Ajustes Necessários', 'Pendente'],
                 datasets: [{
-                    data: [{{ entregues_no_mes }}, {{ pendentes_no_mes }}],
-                    backgroundColor: ['#10b981', '#f59e0b'],
+                    data: [{{ ok_no_mes }}, {{ entregues_no_mes }}, {{ correcao_no_mes }}, {{ pendentes_no_mes }}],
+                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#9ca3af'],
                     borderWidth: 0
                 }]
             },

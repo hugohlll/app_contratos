@@ -133,7 +133,7 @@ class PrestacaoContasTests(TestCase):
 
     def test_exportar_prestacao_csv(self):
         """Testa a exportação das prestações de contas (entregues e pendentes) filtradas por mês/ano"""
-        # Criar uma prestação de contas no mês 5 de 2026
+        # Criar uma prestação de contas no mês 5 de 2026 com status default (entregue)
         pdf_file = SimpleUploadedFile("arq_teste.pdf", b"pdf_data", content_type="application/pdf")
         prestacao = PrestacaoContas.objects.create(
             contrato=self.contrato,
@@ -174,6 +174,23 @@ class PrestacaoContasTests(TestCase):
                 
         self.assertTrue(found_entregue)
 
+        # Atualizar status para 'ok' (Conformidade (OK!)) e exportar novamente
+        prestacao.status = 'ok'
+        prestacao.save()
+        
+        response_ok = self.client.get(url, {'mes': 5, 'ano': 2026, 'formato': 'csv'})
+        content_ok = response_ok.content.decode('utf-8-sig')
+        lines_ok = content_ok.split('\r\n')
+        found_ok = False
+        for line in lines_ok[1:]:
+            if not line:
+                continue
+            cols = line.split(';')
+            if cols[0] == "10/2026":
+                self.assertEqual(cols[9], "Conformidade (OK!)")
+                found_ok = True
+        self.assertTrue(found_ok)
+
         # Testar exportação para outro mês (por exemplo, mês 6 de 2026) onde não há prestação (deve constar como Pendente)
         response_pending = self.client.get(url, {'mes': 6, 'ano': 2026, 'formato': 'csv'})
         self.assertEqual(response_pending.status_code, 200)
@@ -194,3 +211,81 @@ class PrestacaoContasTests(TestCase):
         # Limpar arquivo gerado no teste
         if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
             os.remove(prestacao.arquivo.path)
+
+    def test_alterar_status_workflow(self):
+        """Testa as transições de status da prestação de contas e permissões de acesso"""
+        # Criar prestação de contas
+        pdf_file = SimpleUploadedFile("arq_wf.pdf", b"pdf_data", content_type="application/pdf")
+        prestacao = PrestacaoContas.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            arquivo=pdf_file
+        )
+        self.assertEqual(prestacao.status, 'entregue')
+
+        # Criar usuários de teste com diferentes permissões
+        from django.contrib.auth.models import Group
+        
+        # 1. Usuário normal (sem privilégios)
+        user_normal = User.objects.create_user(username="normal", password="password123")
+        
+        # 2. Auditor (grupo Auditores)
+        grupo_auditores, _ = Group.objects.get_or_create(name='Auditores')
+        user_auditor = User.objects.create_user(username="auditor", password="password123")
+        user_auditor.groups.add(grupo_auditores)
+        
+        # 3. Administrador (Superuser ou grupo Administradores)
+        user_admin = User.objects.create_superuser(username="superadmin", email="admin@test.com", password="password123")
+
+        # Tentar alterar status sem login
+        url_status_ok = reverse('alterar_status_prestacao', kwargs={'pk': prestacao.id, 'novo_status': 'ok'})
+        response = self.client.get(url_status_ok)
+        self.assertEqual(response.status_code, 302) # Redireciona para login
+
+        # Tentar alterar status como usuário normal (deve ser rejeitado com redirect para dashboard_prestacao)
+        self.client.login(username="normal", password="password123")
+        response = self.client.get(url_status_ok)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue("portal/prestacao" in response.url)
+        prestacao.refresh_from_db()
+        self.assertEqual(prestacao.status, 'entregue') # Não alterado
+
+        # Alterar status como Auditor (deve funcionar)
+        self.client.login(username="auditor", password="password123")
+        response = self.client.get(url_status_ok)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue("portal/prestacao" in response.url)
+        prestacao.refresh_from_db()
+        self.assertEqual(prestacao.status, 'ok') # Alterado para OK
+
+        # Verifica se o novo status reflete na matriz renderizada no dashboard
+        response_dash = self.client.get(reverse('dashboard_prestacao'))
+        self.assertEqual(response_dash.status_code, 200)
+        self.assertContains(response_dash, "Conformidade")
+
+        # Alterar status para 'correcao' como Administrador (deve funcionar)
+        self.client.login(username="superadmin", password="password123")
+        url_status_correcao = reverse('alterar_status_prestacao', kwargs={'pk': prestacao.id, 'novo_status': 'correcao'})
+        response = self.client.get(url_status_correcao)
+        self.assertEqual(response.status_code, 302)
+        prestacao.refresh_from_db()
+        self.assertEqual(prestacao.status, 'correcao') # Alterado para correção
+
+        # Verifica se o status de correção reflete na matriz renderizada no dashboard
+        response_dash = self.client.get(reverse('dashboard_prestacao'))
+        self.assertEqual(response_dash.status_code, 200)
+        self.assertContains(response_dash, "Corrigir")
+
+        # Tentar passar status inválido
+        url_status_invalido = reverse('alterar_status_prestacao', kwargs={'pk': prestacao.id, 'novo_status': 'invalido'})
+        response = self.client.get(url_status_invalido)
+        self.assertEqual(response.status_code, 302)
+        prestacao.refresh_from_db()
+        self.assertEqual(prestacao.status, 'correcao') # Permanece o mesmo
+
+        # Limpar arquivo gerado no teste
+        if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
+            os.remove(prestacao.arquivo.path)
+
