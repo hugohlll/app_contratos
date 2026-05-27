@@ -5,8 +5,8 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2"><i class="bi bi-file-earmark-pdf me-2 text-primary"></i>Prestação de Contas Mensal</h1>
     
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <form method="get" class="d-flex me-2">
+    <div class="btn-toolbar mb-2 mb-md-0 align-items-center">
+        <form method="get" class="d-flex me-3">
             <select name="mes" class="form-select form-select-sm me-2">
                 {% for m_val, m_nome in meses_choices %}
                 <option value="{{ m_val }}" {% if m_val == filtro_mes %}selected{% endif %}>{{ m_nome }}</option>
@@ -20,9 +20,17 @@
             <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-filter"></i> Filtrar</button>
         </form>
         
-        <a href="{% url 'exportar_prestacao_csv' %}" class="btn btn-sm btn-outline-success">
-            <i class="bi bi-file-excel"></i> Exportar Base
-        </a>
+        <form action="{% url 'exportar_prestacao_csv' %}" method="get" class="d-inline-flex m-0 align-items-center">
+            <input type="hidden" name="mes" value="{{ filtro_mes }}">
+            <input type="hidden" name="ano" value="{{ filtro_ano }}">
+            <select name="formato" class="form-select form-select-sm border-secondary text-secondary me-2" style="width: auto; height: 31px; border-radius: 50rem;">
+                <option value="csv">CSV</option>
+                <option value="xlsx" selected>XLS</option>
+            </select>
+            <button type="submit" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                <i class="bi bi-download me-1"></i> Baixar
+            </button>
+        </form>
     </div>
 </div>
 
@@ -37,51 +45,20 @@
 </div>
 {% endif %}
 
-<!-- CARDS INDICADORES (Mês Filtrado) -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary shadow-sm h-100">
-            <div class="card-body">
-                <h6 class="card-title text-uppercase fw-bold text-white-50">Contratos Ativos</h6>
-                <h2 class="mb-0 fw-bold">{{ total_contratos }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success shadow-sm h-100">
-            <div class="card-body">
-                <h6 class="card-title text-uppercase fw-bold text-white-50">Entregues no Mês</h6>
-                <h2 class="mb-0 fw-bold">{{ entregues_no_mes }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning shadow-sm h-100">
-            <div class="card-body">
-                <h6 class="card-title text-uppercase fw-bold text-white-50">Pendentes no Mês</h6>
-                <h2 class="mb-0 fw-bold">{{ pendentes_no_mes }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white {% if perc_conformidade > 80 %}bg-success{% elif perc_conformidade > 50 %}bg-warning{% else %}bg-danger{% endif %} shadow-sm h-100">
-            <div class="card-body">
-                <h6 class="card-title text-uppercase fw-bold text-white-50">Conformidade</h6>
-                <h2 class="mb-0 fw-bold">{{ perc_conformidade }}%</h2>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mb-4">
-    <!-- GRÁFICO (Últimos 6 meses) -->
-    <div class="col-md-12">
+<!-- GRÁFICO DE PIZZA (Mês Filtrado) -->
+<div class="row mb-4 justify-content-center">
+    <div class="col-md-6 col-lg-5">
         <div class="card shadow-sm h-100">
-            <div class="card-header bg-white">
-                <h6 class="m-0 fw-bold text-secondary">Evolução de Entregas (Últimos 6 meses)</h6>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h6 class="m-0 fw-bold text-secondary">
+                    <i class="bi bi-pie-chart-fill me-2 text-info"></i>Situação das Entregas
+                </h6>
+                <span class="badge bg-primary rounded-pill px-3 py-2">Total: {{ total_contratos }} Contrato{{ total_contratos|pluralize }}</span>
             </div>
-            <div class="card-body">
-                <canvas id="prestacoesChart" height="80"></canvas>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
+                    <canvas id="prestacoesPieChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -145,26 +122,44 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var ctx = document.getElementById('prestacoesChart').getContext('2d');
+        var ctx = document.getElementById('prestacoesPieChart').getContext('2d');
         var myChart = new Chart(ctx, {
-            type: 'bar',
+            type: 'pie',
             data: {
-                labels: {{ ultimos_6_meses_labels|safe }},
+                labels: ['Entregues', 'Pendentes'],
                 datasets: [{
-                    label: 'Prestações Entregues',
-                    data: {{ ultimos_6_meses_dados|safe }},
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                    borderRadius: 4
+                    data: [{{ entregues_no_mes }}, {{ pendentes_no_mes }}],
+                    backgroundColor: ['#10b981', '#f59e0b'],
+                    borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 }
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 13
+                            },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                var value = context.raw || 0;
+                                var total = {{ total_contratos }};
+                                var percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                label += value + ' (' + percentage + '%)';
+                                return label;
+                            }
+                        }
                     }
                 }
             }

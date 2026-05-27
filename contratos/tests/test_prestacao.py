@@ -130,3 +130,67 @@ class PrestacaoContasTests(TestCase):
         response2 = self.client.get(url)
         # Sucesso
         self.assertEqual(response2.status_code, 200)
+
+    def test_exportar_prestacao_csv(self):
+        """Testa a exportação das prestações de contas (entregues e pendentes) filtradas por mês/ano"""
+        # Criar uma prestação de contas no mês 5 de 2026
+        pdf_file = SimpleUploadedFile("arq_teste.pdf", b"pdf_data", content_type="application/pdf")
+        prestacao = PrestacaoContas.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            arquivo=pdf_file
+        )
+
+        self.client.login(username="admin", password="password123")
+        url = reverse('exportar_prestacao_csv')
+        
+        # Testar exportação para o mês 5 de 2026 (deve ter a prestação como Entregue)
+        response = self.client.get(url, {'mes': 5, 'ano': 2026, 'formato': 'csv'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+        
+        # O CSV é delimitado por ';'
+        content = response.content.decode('utf-8-sig')
+        lines = content.split('\r\n')
+        
+        # Verificar cabeçalhos
+        headers = lines[0].split(';')
+        self.assertIn('Contrato', headers)
+        self.assertIn('Situação', headers)
+        self.assertIn('Responsável pela Entrega', headers)
+        
+        # Verificar que o contrato 10/2026 está listado como Entregue pelo agente SGT Silva
+        found_entregue = False
+        for line in lines[1:]:
+            if not line:
+                continue
+            cols = line.split(';')
+            if cols[0] == "10/2026":
+                self.assertEqual(cols[9], "Entregue") # Coluna 9 é Situação
+                self.assertEqual(cols[10], "SGT Silva") # Coluna 10 é Responsável pela Entrega
+                found_entregue = True
+                
+        self.assertTrue(found_entregue)
+
+        # Testar exportação para outro mês (por exemplo, mês 6 de 2026) onde não há prestação (deve constar como Pendente)
+        response_pending = self.client.get(url, {'mes': 6, 'ano': 2026, 'formato': 'csv'})
+        self.assertEqual(response_pending.status_code, 200)
+        content_pending = response_pending.content.decode('utf-8-sig')
+        lines_pending = content_pending.split('\r\n')
+        
+        found_pending = False
+        for line in lines_pending[1:]:
+            if not line:
+                continue
+            cols = line.split(';')
+            if cols[0] == "10/2026":
+                self.assertEqual(cols[9], "Pendente")
+                self.assertEqual(cols[10], "-")
+                found_pending = True
+        self.assertTrue(found_pending)
+
+        # Limpar arquivo gerado no teste
+        if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
+            os.remove(prestacao.arquivo.path)

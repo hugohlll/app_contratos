@@ -208,21 +208,77 @@ def excluir_prestacao(request, pk):
 
 @login_required
 def exportar_prestacao_csv(request):
-    """Exporta todas as prestações."""
-    headers = ['Contrato', 'Empresa', 'Mês', 'Ano', 'Data de Envio', 'Fiscal']
+    """Exporta as prestações de contas (entregues e pendentes) do mês e ano selecionados."""
+    hoje = date.today()
+    mes_atual = hoje.month
+    ano_atual = hoje.year
+
+    try:
+        filtro_mes = int(request.GET.get('mes', mes_atual))
+    except (ValueError, TypeError):
+        filtro_mes = mes_atual
+
+    try:
+        raw_ano = request.GET.get('ano', str(ano_atual)).replace('.', '')
+        filtro_ano = int(raw_ano)
+    except (ValueError, TypeError):
+        filtro_ano = ano_atual
+
+    contratos_vigentes = Contrato.objects.filter(
+        vigencia_inicio__lte=hoje,
+        vigencia_fim__gte=hoje
+    ).order_by('numero').select_related('empresa')
+
+    # Prestações no mês/ano filtrado para contratos vigentes
+    prestacoes = PrestacaoContas.objects.filter(
+        mes_referencia=filtro_mes,
+        ano_referencia=filtro_ano,
+        contrato__in=contratos_vigentes
+    ).select_related('contrato', 'agente__posto')
+
+    prestacoes_map = {p.contrato_id: p for p in prestacoes}
+
+    headers = [
+        'Contrato',
+        'PAG',
+        'Tipo',
+        'Objeto',
+        'Início da Vigência',
+        'Fim da Vigência',
+        'Valor Total',
+        'Empresa',
+        'CNPJ',
+        'Situação',
+        'Responsável pela Entrega',
+        'Data/Hora do Último Envio'
+    ]
     data = []
-    
-    prestacoes = PrestacaoContas.objects.select_related('contrato__empresa', 'agente__posto').all()
-    
-    for p in prestacoes:
-        fiscal = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
+
+    for c in contratos_vigentes:
+        p = prestacoes_map.get(c.id)
+        if p:
+            situacao = 'Entregue'
+            responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
+            data_envio = p.data_envio.strftime("%d/%m/%Y %H:%M")
+        else:
+            situacao = 'Pendente'
+            responsavel = '-'
+            data_envio = '-'
+
         data.append([
-            p.contrato.numero,
-            p.contrato.empresa.razao_social,
-            f"{p.mes_referencia:02d}",
-            str(p.ano_referencia),
-            p.data_envio.strftime("%d/%m/%Y %H:%M"),
-            fiscal
+            c.numero,
+            c.pag or '-',
+            c.get_tipo_display(),
+            c.objeto,
+            c.vigencia_inicio.strftime("%d/%m/%Y"),
+            c.vigencia_fim.strftime("%d/%m/%Y"),
+            float(c.valor_total),
+            c.empresa.razao_social,
+            c.empresa.cnpj,
+            situacao,
+            responsavel,
+            data_envio
         ])
-        
-    return export_csv_or_xlsx(request, 'prestacoes_contas', headers, data)
+
+    nome_arquivo = f"prestacao_contas_{filtro_mes:02d}_{filtro_ano}"
+    return export_csv_or_xlsx(request, nome_arquivo, headers, data)
