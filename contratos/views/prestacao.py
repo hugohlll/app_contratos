@@ -91,26 +91,26 @@ def dashboard_prestacao(request):
     if total_contratos > 0:
         perc_conformidade = int((entregues_no_mes / total_contratos) * 100)
     
-    # Construir tabela-matriz (Últimos 6 meses)
-    # Lista de tuplas (ano, mes) dos últimos 6 meses
-    ultimos_6_meses = []
+    # Construir tabela-matriz (Últimos 3 meses)
+    # Lista de tuplas (ano, mes) dos últimos 3 meses
+    ultimos_3_meses = []
     _ano = hoje.year
     _mes = hoje.month
-    for _ in range(6):
-        ultimos_6_meses.append((_ano, _mes))
+    for _ in range(3):
+        ultimos_3_meses.append((_ano, _mes))
         _mes -= 1
         if _mes == 0:
             _mes = 12
             _ano -= 1
-    ultimos_6_meses.reverse() # Colocar em ordem cronológica
+    ultimos_3_meses.reverse() # Colocar em ordem cronológica
     
     # Mapear as entregas por contrato para acesso rápido na view
     # estrutura: {contrato_id: {(ano, mes): prestacao_id}}
     prestacoes_map = {}
     
-    # Busca todas as prestações dos últimos 6 meses
+    # Busca todas as prestações dos últimos 3 meses
     todas_prestacoes = PrestacaoContas.objects.filter(
-        ano_referencia__gte=ultimos_6_meses[0][0],
+        ano_referencia__gte=ultimos_3_meses[0][0],
         contrato__in=contratos_vigentes
     )
     
@@ -123,7 +123,7 @@ def dashboard_prestacao(request):
     matriz_contratos = []
     for c in contratos_vigentes:
         entregas = []
-        for ano, mes in ultimos_6_meses:
+        for ano, mes in ultimos_3_meses:
             prestacao = prestacoes_map.get(c.id, {}).get((ano, mes))
             entregas.append({
                 'ano': ano,
@@ -137,16 +137,7 @@ def dashboard_prestacao(request):
             'entregas': entregas
         })
 
-    # Preparar labels para o gráfico
     meses_nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
-    
-    labels_6_meses = [f"{meses_nomes[m-1]}/{str(a)[-2:]}" for a, m in ultimos_6_meses]
-    
-    # Conta total de entregas por mês (para o gráfico de barras)
-    dados_6_meses = []
-    for a, m in ultimos_6_meses:
-        count = PrestacaoContas.objects.filter(ano_referencia=a, mes_referencia=m, contrato__in=contratos_vigentes).count()
-        dados_6_meses.append(count)
 
     context = {
         'total_contratos': total_contratos,
@@ -155,9 +146,7 @@ def dashboard_prestacao(request):
         'perc_conformidade': perc_conformidade,
         
         'matriz_contratos': matriz_contratos,
-        'ultimos_6_meses_labels': labels_6_meses,
-        'ultimos_6_meses_dados': dados_6_meses,
-        'ultimos_6_meses_tuplas': ultimos_6_meses,
+        'ultimos_3_meses_tuplas': ultimos_3_meses,
         
         'filtro_mes': filtro_mes,
         'filtro_ano': filtro_ano,

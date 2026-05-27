@@ -67,7 +67,7 @@
 <!-- MATRIZ DE PRESTAÇÕES -->
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="m-0 text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento (Últimos 6 meses)</h5>
+        <h5 class="m-0 text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento (Últimos 3 meses)</h5>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -75,7 +75,7 @@
                 <thead class="table-light">
                     <tr>
                         <th class="text-start" style="min-width: 200px;">Contrato / Empresa</th>
-                        {% for a, m in ultimos_6_meses_tuplas %}
+                        {% for a, m in ultimos_3_meses_tuplas %}
                         <th style="min-width: 120px;">{{ m|stringformat:"02d" }}/{{ a|stringformat:"d" }}</th>
                         {% endfor %}
                     </tr>
