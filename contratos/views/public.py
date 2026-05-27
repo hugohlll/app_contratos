@@ -2,7 +2,7 @@ import csv
 import urllib.parse
 from datetime import date
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.db.models import Q, Prefetch, Case, When, Value, IntegerField
 from contratos.models import Contrato, Comissao, Integrante, PrestacaoContas
 from contratos.utils import get_filtro_ativos, export_csv_or_xlsx
@@ -19,11 +19,14 @@ def buscar_contratos(request):
     
     if query:
         filtro_integrante_ativo = get_filtro_ativos()
+        hoje = date.today()
         
         contratos = Contrato.objects.filter(
             Q(numero__icontains=query) |
             Q(objeto__icontains=query) |
             Q(empresa__razao_social__icontains=query)
+        ).filter(
+            vigencia_fim__gte=hoje
         ).prefetch_related(
             Prefetch(
                 'comissoes',
@@ -39,7 +42,8 @@ def buscar_contratos(request):
 
 
 def detalhe_contrato(request, contrato_id):
-    contrato = Contrato.objects.get(id=contrato_id)
+    hoje = date.today()
+    contrato = get_object_or_404(Contrato, id=contrato_id, vigencia_fim__gte=hoje)
     filtro_integrante_ativo = get_filtro_ativos() 
 
     # Busca apenas as comissões ativas e apenas os integrantes ativos

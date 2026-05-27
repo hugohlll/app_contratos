@@ -29,6 +29,36 @@ class PublicViewsTest(TestCase):
         self.assertContains(response, "Objeto Público")
         self.assertContains(response, "Receita") # Verifica se o tipo aparece
 
+    def test_expired_contrato_not_searchable(self):
+        contrato_expirado = Contrato.objects.create(
+            numero="999/2025",
+            tipo="DESPESA",
+            empresa=self.empresa,
+            objeto="Objeto Expirado",
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() - timedelta(days=1),
+            valor_total=10000.00
+        )
+        url = reverse('buscar_contratos') + '?q=Objeto'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "003/2026")
+        self.assertNotContains(response, "999/2025")
+
+    def test_expired_contrato_detail_returns_404(self):
+        contrato_expirado = Contrato.objects.create(
+            numero="999/2025",
+            tipo="DESPESA",
+            empresa=self.empresa,
+            objeto="Objeto Expirado",
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() - timedelta(days=1),
+            valor_total=10000.00
+        )
+        url = reverse('detalhe_contrato', args=[contrato_expirado.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
 from django.contrib.auth.models import User, Group
 
 class PortalViewsTest(TestCase):
