@@ -45,9 +45,9 @@
 </div>
 {% endif %}
 
-<!-- GRÁFICO DE PIZZA (Mês Filtrado) -->
+<!-- GRÁFICOS (Mês Filtrado) -->
 <div class="row mb-4 justify-content-center">
-    <div class="col-md-6 col-lg-5">
+    <div class="col-md-6 mb-3 mb-md-0">
         <div class="card shadow-sm h-100">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                 <h6 class="m-0 fw-bold text-secondary">
@@ -58,6 +58,21 @@
             <div class="card-body d-flex flex-column align-items-center justify-content-center">
                 <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
                     <canvas id="prestacoesPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h6 class="m-0 fw-bold text-secondary">
+                    <i class="bi bi-bar-chart-fill me-2 text-warning"></i>Entregas Prioritárias
+                </h6>
+            </div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
+                    <canvas id="prioritariosBarChart"></canvas>
                 </div>
             </div>
         </div>
@@ -230,6 +245,51 @@
                 }
             }
         });
+        var ctxBar = document.getElementById('prioritariosBarChart').getContext('2d');
+        window.myBarChart = new Chart(ctxBar, {
+            type: 'doughnut',
+            data: {
+                labels: ['Conformidade (OK!)', 'Aguardando análise', 'Ajustes Necessários', 'Pendente'],
+                datasets: [{
+                    data: [{{ prio_ok }}, {{ prio_entregues }}, {{ prio_correcao }}, {{ prio_pendentes }}],
+                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#9ca3af'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        align: 'center',
+                        labels: {
+                            font: {
+                                size: 13
+                            },
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                var value = context.raw || 0;
+                                // Para rosca, o total é a soma dos prioritários
+                                var datasetData = context.chart.data.datasets[0].data;
+                                var total = datasetData.reduce((a, b) => a + b, 0);
+                                var percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                label += value + ' (' + percentage + '%)';
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         // URLs base para o Javascript (evita problemas com subdiretórios no servidor)
         const URL_DOWNLOAD_BASE = "{% url 'download_prestacao' 999999 %}";
@@ -389,7 +449,7 @@
                         // Atualiza o conteúdo da célula
                         td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao);
                         
-                        // Atualiza o gráfico se os dados de estatística estiverem disponíveis
+                        // Atualiza os gráficos se os dados de estatística estiverem disponíveis
                         if (window.myChart && data.stats) {
                             window.myChart.data.datasets[0].data = [
                                 data.stats.ok_no_mes,
@@ -398,6 +458,15 @@
                                 data.stats.pendentes_no_mes
                             ];
                             window.myChart.update();
+                        }
+                        if (window.myBarChart && data.stats) {
+                            window.myBarChart.data.datasets[0].data = [
+                                data.stats.prio_ok,
+                                data.stats.prio_entregues,
+                                data.stats.prio_correcao,
+                                data.stats.prio_pendentes
+                            ];
+                            window.myBarChart.update();
                         }
                     } else {
                         alert('Erro ao alterar status: ' + (data.error || 'Erro desconhecido'));
@@ -435,7 +504,11 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ checked: isChecked })
+                body: JSON.stringify({ 
+                    checked: isChecked,
+                    mes: '{{ filtro_mes }}',
+                    ano: '{{ filtro_ano }}'
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -443,6 +516,17 @@
                     // Reverte se deu erro
                     checkbox.checked = !isChecked;
                     alert('Erro: ' + (data.error || 'Não foi possível alterar a seleção do slide.'));
+                } else {
+                    // Atualiza o gráfico de prioritários
+                    if (window.myBarChart && data.stats) {
+                        window.myBarChart.data.datasets[0].data = [
+                            data.stats.prio_ok,
+                            data.stats.prio_entregues,
+                            data.stats.prio_correcao,
+                            data.stats.prio_pendentes
+                        ];
+                        window.myBarChart.update();
+                    }
                 }
                 checkbox.disabled = false;
             })

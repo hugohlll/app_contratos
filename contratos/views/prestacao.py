@@ -62,8 +62,46 @@ def upload_prestacao(request, contrato_id):
                     messages.error(request, f"{field.capitalize()}: {error}")
             return redirect('detalhe_contrato', contrato_id=contrato.id)
     else:
-        # Se for GET na URL de upload, redireciona para o detalhe
         return redirect('detalhe_contrato', contrato_id=contrato.id)
+
+
+def _get_dashboard_stats(ano, mes):
+    """Retorna as estatísticas do dashboard consolidadas para um dado mês/ano."""
+    from datetime import date
+    hoje = date.today()
+    
+    contratos_vigentes = Contrato.objects.filter(
+        vigencia_inicio__lte=hoje,
+        vigencia_fim__gte=hoje
+    )
+    total_contratos = contratos_vigentes.count()
+    
+    prestacoes_filtradas = PrestacaoContas.objects.filter(
+        mes_referencia=mes,
+        ano_referencia=ano,
+        contrato__in=contratos_vigentes
+    )
+    
+    ok = prestacoes_filtradas.filter(status='ok').count()
+    entregues = prestacoes_filtradas.filter(status='entregue').count()
+    correcao = prestacoes_filtradas.filter(status='correcao').count()
+    pendentes = total_contratos - prestacoes_filtradas.count()
+    
+    prio_ok = prestacoes_filtradas.filter(status='ok', compor_apresentacao=True).count()
+    prio_entregues = prestacoes_filtradas.filter(status='entregue', compor_apresentacao=True).count()
+    prio_correcao = prestacoes_filtradas.filter(status='correcao', compor_apresentacao=True).count()
+    
+    return {
+        'total_contratos': total_contratos,
+        'ok_no_mes': ok,
+        'entregues_no_mes': entregues,
+        'correcao_no_mes': correcao,
+        'pendentes_no_mes': pendentes,
+        'prio_ok': prio_ok,
+        'prio_entregues': prio_entregues,
+        'prio_correcao': prio_correcao,
+        'prio_pendentes': 0
+    }
 
 
 @login_required
@@ -84,24 +122,7 @@ def dashboard_prestacao(request):
     except (ValueError, TypeError):
         filtro_ano = ano_atual
 
-    contratos_vigentes = Contrato.objects.filter(
-        vigencia_inicio__lte=hoje,
-        vigencia_fim__gte=hoje
-    ).order_by('numero')
-    
-    total_contratos = contratos_vigentes.count()
-    
-    # Prestações no mês/ano filtrado para contratos vigentes
-    prestacoes_filtradas = PrestacaoContas.objects.filter(
-        mes_referencia=filtro_mes,
-        ano_referencia=filtro_ano,
-        contrato__in=contratos_vigentes
-    )
-    
-    ok_no_mes = prestacoes_filtradas.filter(status='ok').count()
-    entregues_no_mes = prestacoes_filtradas.filter(status='entregue').count()
-    correcao_no_mes = prestacoes_filtradas.filter(status='correcao').count()
-    pendentes_no_mes = total_contratos - prestacoes_filtradas.count()
+    stats = _get_dashboard_stats(filtro_ano, filtro_mes)
     
     # Construir tabela-matriz (Últimos 3 meses)
     # Lista de tuplas (ano, mes) dos últimos 3 meses
@@ -121,6 +142,11 @@ def dashboard_prestacao(request):
     prestacoes_map = {}
     
     # Busca todas as prestações dos últimos 3 meses
+    contratos_vigentes = Contrato.objects.filter(
+        vigencia_inicio__lte=hoje,
+        vigencia_fim__gte=hoje
+    ).order_by('numero')
+    
     todas_prestacoes = PrestacaoContas.objects.filter(
         ano_referencia__gte=ultimos_3_meses[0][0],
         contrato__in=contratos_vigentes
@@ -150,13 +176,8 @@ def dashboard_prestacao(request):
         })
 
     meses_nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
-
+    
     context = {
-        'total_contratos': total_contratos,
-        'ok_no_mes': ok_no_mes,
-        'entregues_no_mes': entregues_no_mes,
-        'correcao_no_mes': correcao_no_mes,
-        'pendentes_no_mes': pendentes_no_mes,
         'is_admin': is_admin(request.user),
         'is_auditor': is_auditor(request.user),
         
@@ -168,6 +189,8 @@ def dashboard_prestacao(request):
         'meses_choices': [(i, meses_nomes[i-1]) for i in range(1, 13)],
         'anos_choices': range(ano_atual - 2, ano_atual + 1),
     }
+    
+    context.update(stats)
     
     return render(request, 'contratos/dashboard_prestacao.html', context)
 
@@ -222,15 +245,7 @@ def excluir_prestacao(request, pk):
                 mes = hoje.month
                 ano = hoje.year
 
-            total_contratos = Contrato.objects.filter(
-                vigencia_inicio__lte=hoje,
-                vigencia_fim__gte=hoje
-            ).count()
-            
-            entregues_no_mes = PrestacaoContas.objects.filter(mes_referencia=mes, ano_referencia=ano, status='entregue').count()
-            correcao_no_mes = PrestacaoContas.objects.filter(mes_referencia=mes, ano_referencia=ano, status='correcao').count()
-            ok_no_mes = PrestacaoContas.objects.filter(mes_referencia=mes, ano_referencia=ano, status='ok').count()
-            pendentes_no_mes = total_contratos - (entregues_no_mes + correcao_no_mes + ok_no_mes)
+            stats = _get_dashboard_stats(ano, mes)
 
             return JsonResponse({
                 'success': True,
@@ -240,13 +255,7 @@ def excluir_prestacao(request, pk):
                 'compor_apresentacao': False,
                 'is_admin': is_admin(request.user),
                 'is_auditor': is_auditor(request.user),
-                'stats': {
-                    'ok_no_mes': ok_no_mes,
-                    'entregues_no_mes': entregues_no_mes,
-                    'correcao_no_mes': correcao_no_mes,
-                    'pendentes_no_mes': pendentes_no_mes,
-                    'total_contratos': total_contratos
-                }
+                'stats': stats
             })
             
         messages.success(request, "Prestação de Contas excluída com sucesso.")
@@ -372,21 +381,7 @@ def alterar_status_prestacao(request, pk, novo_status):
         except (ValueError, TypeError):
             filtro_ano = hoje.year
 
-        contratos_vigentes = Contrato.objects.filter(
-            vigencia_inicio__lte=hoje,
-            vigencia_fim__gte=hoje
-        )
-        total_contratos = contratos_vigentes.count()
-        prestacoes_filtradas = PrestacaoContas.objects.filter(
-            mes_referencia=filtro_mes,
-            ano_referencia=filtro_ano,
-            contrato__in=contratos_vigentes
-        )
-        
-        ok_no_mes = prestacoes_filtradas.filter(status='ok').count()
-        entregues_no_mes = prestacoes_filtradas.filter(status='entregue').count()
-        correcao_no_mes = prestacoes_filtradas.filter(status='correcao').count()
-        pendentes_no_mes = total_contratos - prestacoes_filtradas.count()
+        stats = _get_dashboard_stats(filtro_ano, filtro_mes)
 
         return JsonResponse({
             'success': True,
@@ -396,13 +391,7 @@ def alterar_status_prestacao(request, pk, novo_status):
             'compor_apresentacao': prestacao.compor_apresentacao,
             'is_admin': is_admin(request.user),
             'is_auditor': is_auditor(request.user),
-            'stats': {
-                'ok_no_mes': ok_no_mes,
-                'entregues_no_mes': entregues_no_mes,
-                'correcao_no_mes': correcao_no_mes,
-                'pendentes_no_mes': pendentes_no_mes,
-                'total_contratos': total_contratos
-            }
+            'stats': stats
         })
 
     messages.success(request, f"Status da prestação do contrato {prestacao.contrato.numero} alterado para {prestacao.get_status_display()}.")
@@ -423,10 +412,26 @@ def toggle_apresentacao_prestacao(request, pk):
         try:
             data = json.loads(request.body)
             checked = data.get('checked', False)
+            mes = data.get('mes')
+            ano = data.get('ano')
+            
+            try:
+                mes = int(mes) if mes else prestacao.mes_referencia
+                ano = int(ano) if ano else prestacao.ano_referencia
+            except ValueError:
+                mes = prestacao.mes_referencia
+                ano = prestacao.ano_referencia
                 
             prestacao.compor_apresentacao = checked
             prestacao.save(update_fields=['compor_apresentacao'])
-            return JsonResponse({'success': True, 'checked': prestacao.compor_apresentacao})
+            
+            stats = _get_dashboard_stats(ano, mes)
+            
+            return JsonResponse({
+                'success': True, 
+                'checked': prestacao.compor_apresentacao,
+                'stats': stats
+            })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
             

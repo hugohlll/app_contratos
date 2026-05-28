@@ -12,8 +12,10 @@ Cobre:
 - Formulário inválido (campos obrigatórios)
 - Renomeação automática do arquivo
 - Alteração de status via AJAX (sem recarregar página)
-- Estatísticas retornadas via AJAX
+- Estatísticas retornadas via AJAX (gerais + prioritários)
 - Permissões de acesso à alteração de status via AJAX
+- Toggle de apresentação (prioritário): permissões, método, stats
+- Dashboard: contexto com estatísticas de prioritários
 """
 import os
 import json
@@ -406,6 +408,132 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         self.assertTrue(data['success'])
         self.assertEqual(data['status'], 'pendente')
         self.assertFalse(PrestacaoContas.objects.filter(id=pk).exists())
+
+    # --- Testes de Estatísticas de Prioritários ---
+
+    def test_ajax_status_retorna_stats_prioritarios(self):
+        """AJAX de alteração de status deve retornar estatísticas de prioritários."""
+        self.client.login(username="auditor_ajax", password="pass123")
+        # Marca como prioritário antes de alterar status
+        self.prestacao.compor_apresentacao = True
+        self.prestacao.save(update_fields=['compor_apresentacao'])
+        
+        url = reverse('alterar_status_prestacao', kwargs={'pk': self.prestacao.id, 'novo_status': 'ok'})
+        response = self._ajax_get(url)
+        data = response.json()
+        
+        self.assertIn('stats', data)
+        stats = data['stats']
+        self.assertIn('prio_ok', stats)
+        self.assertIn('prio_entregues', stats)
+        self.assertIn('prio_correcao', stats)
+        self.assertIn('prio_pendentes', stats)
+        # Após marcar como OK e sendo prioritário, prio_ok deve ser >= 1
+        self.assertGreaterEqual(stats['prio_ok'], 1)
+
+    def test_ajax_excluir_retorna_stats_prioritarios(self):
+        """AJAX de exclusão deve retornar estatísticas de prioritários."""
+        self.client.login(username="admin_ajax", password="pass123")
+        pk = self.prestacao.id
+        url = reverse('excluir_prestacao', kwargs={'pk': pk})
+        
+        response = self._ajax_get(url)
+        data = response.json()
+        
+        self.assertIn('stats', data)
+        stats = data['stats']
+        self.assertIn('prio_ok', stats)
+        self.assertIn('prio_entregues', stats)
+        self.assertIn('prio_correcao', stats)
+        self.assertIn('prio_pendentes', stats)
+
+    def test_toggle_retorna_stats(self):
+        """Toggle de apresentação deve retornar estatísticas no JSON."""
+        self.client.login(username="auditor_ajax", password="pass123")
+        pk = self.prestacao.id
+        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        
+        response = self.client.post(
+            url, data=json.dumps({'checked': True, 'mes': 5, 'ano': 2026}),
+            content_type='application/json'
+        )
+        data = response.json()
+        
+        self.assertTrue(data['success'])
+        self.assertIn('stats', data)
+        stats = data['stats']
+        self.assertIn('prio_ok', stats)
+        self.assertIn('prio_entregues', stats)
+        self.assertIn('prio_correcao', stats)
+        # A prestação está como 'entregue' e marcada, então prio_entregues >= 1
+        self.assertGreaterEqual(stats['prio_entregues'], 1)
+
+    def test_toggle_desmarcar_reduz_prioritarios(self):
+        """Desmarcar prioritário deve reduzir a contagem de prioritários."""
+        self.client.login(username="auditor_ajax", password="pass123")
+        self.prestacao.compor_apresentacao = True
+        self.prestacao.save(update_fields=['compor_apresentacao'])
+        
+        pk = self.prestacao.id
+        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        
+        # Desmarcar
+        response = self.client.post(
+            url, data=json.dumps({'checked': False, 'mes': 5, 'ano': 2026}),
+            content_type='application/json'
+        )
+        data = response.json()
+        
+        self.assertTrue(data['success'])
+        self.assertFalse(data['checked'])
+        # Após desmarcar, prio_entregues deve ser 0 (só temos 1 prestação no setup)
+        self.assertEqual(data['stats']['prio_entregues'], 0)
+
+    # --- Testes de Permissão do Toggle ---
+
+    def test_toggle_usuario_normal_retorna_403(self):
+        """Usuário sem permissão não pode alterar o checkbox de prioritário."""
+        self.client.login(username="normal_ajax", password="pass123")
+        pk = self.prestacao.id
+        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        
+        response = self.client.post(
+            url, data=json.dumps({'checked': True}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 403)
+        data = response.json()
+        self.assertFalse(data['success'])
+        
+        # Garante que o valor não mudou no banco
+        self.prestacao.refresh_from_db()
+        self.assertFalse(self.prestacao.compor_apresentacao)
+
+    def test_toggle_metodo_get_retorna_405(self):
+        """Requisição GET no toggle deve retornar 405 (Method Not Allowed)."""
+        self.client.login(username="auditor_ajax", password="pass123")
+        pk = self.prestacao.id
+        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 405)
+        data = response.json()
+        self.assertFalse(data['success'])
+
+    # --- Teste do Dashboard Context ---
+
+    def test_dashboard_contexto_contem_stats_prioritarios(self):
+        """O contexto do dashboard deve conter as variáveis de estatísticas de prioritários."""
+        self.client.login(username="auditor_ajax", password="pass123")
+        response = self.client.get(reverse('dashboard_prestacao'))
+        self.assertEqual(response.status_code, 200)
+        
+        context = response.context
+        self.assertIn('prio_ok', context)
+        self.assertIn('prio_entregues', context)
+        self.assertIn('prio_correcao', context)
+        self.assertIn('prio_pendentes', context)
+        self.assertIn('total_contratos', context)
 
 
 class ModelPrestacaoContasTests(BaseTestSetup):
