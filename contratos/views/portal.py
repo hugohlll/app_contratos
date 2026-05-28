@@ -70,17 +70,17 @@ def listar_empresas(request):
     return generico_listar(
         request, Empresa, 'contratos/portal/lista_generica.html', 'Empresas', 
         'nova_empresa', 'editar_empresa', 
-        [('razao_social', 'Razão Social'), ('cnpj', 'CNPJ')],
+        [('razao_social', 'Razão Social'), ('nome_fantasia', 'Nome Fantasia'), ('cnpj', 'CNPJ')],
         url_exportar='exportar_empresas_csv',
         arquivo_exportacao='empresas.csv'
     )
 
 @auditor_required
 def exportar_empresas_csv(request):
-    headers = ['Razão Social', 'CNPJ']
+    headers = ['Razão Social', 'Nome Fantasia', 'CNPJ']
     data = []
     for empresa in Empresa.objects.all():
-        data.append([empresa.razao_social, empresa.cnpj])
+        data.append([empresa.razao_social, empresa.nome_fantasia or '', empresa.cnpj])
     return export_csv_or_xlsx(request, 'empresas', headers, data)
 
 @admin_required

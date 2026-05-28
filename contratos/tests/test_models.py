@@ -111,3 +111,14 @@ class ComissaoModelTest(TestCase):
         )
         
         self.assertIn(integrante, self.comissao_fisc.integrantes.all())
+
+class EmpresaModelTest(TestCase):
+    def test_empresa_str_with_razao_social_only(self):
+        empresa = Empresa.objects.create(razao_social="Empresa A", cnpj="12.345.678/0001-90")
+        self.assertEqual(empresa.nome_exibicao, "Empresa A")
+        self.assertEqual(str(empresa), "Empresa A (12.345.678/0001-90)")
+
+    def test_empresa_str_with_nome_fantasia(self):
+        empresa = Empresa.objects.create(razao_social="Empresa A LTDA", nome_fantasia="Empresa A", cnpj="12.345.678/0001-90")
+        self.assertEqual(empresa.nome_exibicao, "Empresa A")
+        self.assertEqual(str(empresa), "Empresa A (12.345.678/0001-90)")

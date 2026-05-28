@@ -1,5 +1,5 @@
 from django.test import TestCase
-from contratos.forms import ComissaoForm
+from contratos.forms import ComissaoForm, EmpresaForm
 from contratos.models import Contrato, Empresa, Comissao
 from datetime import date, timedelta
 
@@ -106,3 +106,31 @@ class ComissaoFormTest(TestCase):
         # Editar a mesma comissão deve ser permitido
         form = ComissaoForm(data=self._form_data(), instance=comissao)
         self.assertTrue(form.is_valid(), f"Deveria permitir editar a própria comissão ativa: {form.errors}")
+
+class EmpresaFormTest(TestCase):
+    def test_empresa_form_has_nome_fantasia(self):
+        form = EmpresaForm()
+        self.assertIn('nome_fantasia', form.fields)
+
+    def test_empresa_form_valid(self):
+        data = {
+            'razao_social': 'Empresa Teste LTDA',
+            'nome_fantasia': 'Empresa Teste',
+            'cnpj': '12.345.678/0001-90',
+        }
+        form = EmpresaForm(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+        empresa = form.save()
+        self.assertEqual(empresa.nome_fantasia, 'Empresa Teste')
+        self.assertEqual(empresa.razao_social, 'Empresa Teste LTDA')
+
+    def test_empresa_form_valid_without_nome_fantasia(self):
+        data = {
+            'razao_social': 'Empresa Teste LTDA',
+            'nome_fantasia': '',
+            'cnpj': '12.345.678/0001-90',
+        }
+        form = EmpresaForm(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+        empresa = form.save()
+        self.assertFalse(empresa.nome_fantasia)

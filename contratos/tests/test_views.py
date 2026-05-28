@@ -85,6 +85,23 @@ class PublicViewsTest(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
+    def test_search_by_nome_fantasia_public(self):
+        empresa_fantasia = Empresa.objects.create(razao_social="Empresa Fantasia LTDA", nome_fantasia="Fantasia Legal", cnpj="12.121.121/0001-12")
+        contrato_fantasia = Contrato.objects.create(
+            numero="555/2026",
+            tipo="DESPESA",
+            empresa=empresa_fantasia,
+            objeto="Objeto Fantasia",
+            vigencia_inicio=date.today(),
+            vigencia_fim=date.today() + timedelta(days=365),
+            valor_total=10000.00
+        )
+        url = reverse('buscar_contratos') + '?q=Fantasia'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "555/2026")
+        self.assertContains(response, "Fantasia Legal")
+
 from django.contrib.auth.models import User, Group
 
 class PortalViewsTest(TestCase):
@@ -160,6 +177,23 @@ class PortalViewsTest(TestCase):
         # Deve mostrar o nome do integrante mesmo expirado
         self.assertContains(response, "Sgt")
         self.assertContains(response, "Antigo")
+
+    def test_listar_empresas_portal_contains_nome_fantasia(self):
+        empresa_fantasia = Empresa.objects.create(razao_social="Outra Empresa LTDA", nome_fantasia="Apelido Legal", cnpj="13.131.131/0001-13")
+        url = reverse('listar_empresas')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Outra Empresa LTDA")
+        self.assertContains(response, "Apelido Legal")
+
+    def test_exportar_empresas_csv_contains_nome_fantasia(self):
+        empresa_fantasia = Empresa.objects.create(razao_social="Outra Empresa LTDA", nome_fantasia="Apelido Legal", cnpj="13.131.131/0001-13")
+        url = reverse('exportar_empresas_csv')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8-sig')
+        self.assertIn("Outra Empresa LTDA", content)
+        self.assertIn("Apelido Legal", content)
 
 class AuditoriaViewsTest(TestCase):
     def setUp(self):

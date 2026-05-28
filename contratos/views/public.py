@@ -24,7 +24,8 @@ def buscar_contratos(request):
         contratos = Contrato.objects.filter(
             Q(numero__icontains=query) |
             Q(objeto__icontains=query) |
-            Q(empresa__razao_social__icontains=query)
+            Q(empresa__razao_social__icontains=query) |
+            Q(empresa__nome_fantasia__icontains=query)
         ).filter(
             vigencia_fim__gte=hoje
         ).prefetch_related(

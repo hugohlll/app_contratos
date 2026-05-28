@@ -89,6 +89,7 @@
 
                         {% elif titulo == 'Empresas' %}
                         <td class="px-3">{{ item.razao_social }}</td>
+                        <td class="px-3">{{ item.nome_fantasia|default:"-" }}</td>
                         <td class="px-3">{{ item.cnpj }}</td>
 
                         {% elif titulo == 'Contratos' %}

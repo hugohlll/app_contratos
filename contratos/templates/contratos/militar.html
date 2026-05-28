@@ -88,8 +88,8 @@
                                     class="text-decoration-none fw-bold">
                                         {{ item.comissao.contrato.numero }}
                                     </a>
-                                    <div class="small text-muted text-truncate" style="max-width: 250px;">
-                                        {{ item.comissao.contrato.empresa.razao_social }}
+                                    <div class="small text-muted text-truncate" style="max-width: 250px;" title="{% if item.comissao.contrato.empresa.nome_fantasia %}{{ item.comissao.contrato.empresa.razao_social }}{% endif %}">
+                                        {{ item.comissao.contrato.empresa.nome_exibicao }}
                                     </div>
                                 </td>
                                 <td>

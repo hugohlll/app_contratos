@@ -19,7 +19,7 @@ class EstiloFormMixin:
 class EmpresaForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = Empresa
-        fields = ['razao_social', 'cnpj']
+        fields = ['razao_social', 'nome_fantasia', 'cnpj']
         help_texts = {
             'cnpj': 'Apenas números ou formato padrão xx.xxx.xxx/0001-xx',
         }

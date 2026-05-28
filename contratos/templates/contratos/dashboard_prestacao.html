@@ -150,8 +150,8 @@
                     {% for c_data in matriz_contratos %}
                     <tr>
                         <td class="text-start">
-                            <div class="fw-bold text-primary">{{ c_data.contrato.numero }}</div>
-                            <div class="small text-muted text-truncate" style="max-width: 250px;">{{ c_data.contrato.empresa.razao_social }}</div>
+                             <div class="fw-bold text-primary">{{ c_data.contrato.numero }}</div>
+                             <div class="small text-muted text-truncate" style="max-width: 250px;" title="{% if c_data.contrato.empresa.nome_fantasia %}{{ c_data.contrato.empresa.razao_social }}{% endif %}">{{ c_data.contrato.empresa.nome_exibicao }}</div>
                         </td>
                         {% for entrega in c_data.entregas %}
                         <td class="p-2">

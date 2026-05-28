@@ -348,7 +348,7 @@
                 <div class="card bg-light border-danger h-100">
                     <div class="card-body">
                         <h5 class="card-title text-danger">Contrato {{ contrato.numero }}</h5>
-                        <p class="mb-1">{{ contrato.empresa.razao_social }}</p>
+                        <p class="mb-1" title="{% if contrato.empresa.nome_fantasia %}{{ contrato.empresa.razao_social }}{% endif %}">{{ contrato.empresa.nome_exibicao }}</p>
                         <small class="text-muted">Vence em: {{ contrato.vigencia_fim|date:"d/m/Y" }}</small>
                     </div>
                 </div>

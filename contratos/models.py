@@ -52,10 +52,15 @@ class Agente(models.Model):
 
 class Empresa(models.Model):
     razao_social = models.CharField("Razão Social", max_length=200)
+    nome_fantasia = models.CharField("Nome Fantasia", max_length=200, blank=True, null=True)
     cnpj = models.CharField("CNPJ", max_length=18, unique=True)
 
     def __str__(self):
-        return f"{self.razao_social} ({self.cnpj})"
+        return f"{self.nome_exibicao} ({self.cnpj})"
+
+    @property
+    def nome_exibicao(self):
+        return self.nome_fantasia if self.nome_fantasia else self.razao_social
 
     class Meta:
         verbose_name = "Empresa"
