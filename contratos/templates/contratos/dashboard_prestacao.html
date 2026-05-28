@@ -7,17 +7,17 @@
     
     <div class="btn-toolbar mb-2 mb-md-0 align-items-center">
         <form method="get" class="d-flex me-3">
-            <select name="mes" class="form-select form-select-sm me-2">
+            <select name="mes" class="form-select form-select-sm no-tomselect me-2" style="width: 110px; height: 31px;">
                 {% for m_val, m_nome in meses_choices %}
                 <option value="{{ m_val }}" {% if m_val == filtro_mes %}selected{% endif %}>{{ m_nome }}</option>
                 {% endfor %}
             </select>
-            <select name="ano" class="form-select form-select-sm me-2">
+            <select name="ano" class="form-select form-select-sm no-tomselect me-2" style="width: 85px; height: 31px;">
                 {% for a in anos_choices %}
                 <option value="{{ a }}" {% if a == filtro_ano %}selected{% endif %}>{{ a|stringformat:"d" }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-filter"></i> Filtrar</button>
+            <button type="submit" class="btn btn-sm btn-outline-secondary" style="height: 31px; display: inline-flex; align-items: center;"><i class="bi bi-filter me-1"></i> Filtrar</button>
         </form>
         
         <form action="{% url 'exportar_prestacao_csv' %}" method="get" class="d-inline-flex m-0 align-items-center">
