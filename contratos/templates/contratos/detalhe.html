@@ -309,17 +309,35 @@
                                 {% if form_prestacao.agente.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form_prestacao.agente.errors|join:", " }}</div>{% endif %}
                             </div>
                             
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    <label for="{{ form_prestacao.mes_referencia.id_for_label }}" class="form-label fw-bold">Mês Referência</label>
-                                    {{ form_prestacao.mes_referencia }}
-                                    <div id="error-mes_referencia" class="text-danger small mt-1 d-none fw-bold"><i class="bi bi-exclamation-circle me-1"></i><span></span></div>
+                            {{ form_prestacao.mes_referencia }}
+                            {{ form_prestacao.ano_referencia }}
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold d-block">Mês/Ano de Referência</label>
+                                <div class="alert alert-info d-flex align-items-center mb-0 p-2 py-3" style="font-size: 0.95rem;">
+                                    <i class="bi bi-calendar-check fs-5 me-2"></i>
+                                    <div>
+                                        Este relatório é referente a: 
+                                        <strong>
+                                            {% if form_prestacao.mes_referencia.value == 1 %}Janeiro
+                                            {% elif form_prestacao.mes_referencia.value == 2 %}Fevereiro
+                                            {% elif form_prestacao.mes_referencia.value == 3 %}Março
+                                            {% elif form_prestacao.mes_referencia.value == 4 %}Abril
+                                            {% elif form_prestacao.mes_referencia.value == 5 %}Maio
+                                            {% elif form_prestacao.mes_referencia.value == 6 %}Junho
+                                            {% elif form_prestacao.mes_referencia.value == 7 %}Julho
+                                            {% elif form_prestacao.mes_referencia.value == 8 %}Agosto
+                                            {% elif form_prestacao.mes_referencia.value == 9 %}Setembro
+                                            {% elif form_prestacao.mes_referencia.value == 10 %}Outubro
+                                            {% elif form_prestacao.mes_referencia.value == 11 %}Novembro
+                                            {% elif form_prestacao.mes_referencia.value == 12 %}Dezembro
+                                            {% endif %} de {{ form_prestacao.ano_referencia.value|stringformat:"d" }}
+                                        </strong> 
+                                        (mês anterior ao atual).
+                                    </div>
                                 </div>
-                                <div class="col-6">
-                                    <label for="{{ form_prestacao.ano_referencia.id_for_label }}" class="form-label fw-bold">Ano Referência</label>
-                                    {{ form_prestacao.ano_referencia }}
-                                    <div id="error-ano_referencia" class="text-danger small mt-1 d-none fw-bold"><i class="bi bi-exclamation-circle me-1"></i><span></span></div>
-                                </div>
+                                <div id="error-mes_referencia" class="text-danger small mt-1 d-none fw-bold"><i class="bi bi-exclamation-circle me-1"></i><span></span></div>
+                                <div id="error-ano_referencia" class="text-danger small mt-1 d-none fw-bold"><i class="bi bi-exclamation-circle me-1"></i><span></span></div>
                             </div>
                             {% if form_prestacao.mes_referencia.errors or form_prestacao.ano_referencia.errors %}
                             <div class="text-danger small mb-3">

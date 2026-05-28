@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from django import forms
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -228,21 +228,23 @@ class PrestacaoContasUploadForm(EstiloFormMixin, forms.ModelForm):
         fields = ['agente', 'mes_referencia', 'ano_referencia', 'arquivo', 'observacao']
         widgets = {
             'observacao': forms.Textarea(attrs={'rows': 2}),
+            'mes_referencia': forms.HiddenInput(),
+            'ano_referencia': forms.HiddenInput(),
         }
-
-    MES_CHOICES = [(i, f"{i:02d}") for i in range(1, 13)]
-    mes_referencia = forms.ChoiceField(choices=MES_CHOICES, label="Mês de Referência")
-    ano_referencia = forms.ChoiceField(choices=[], label="Ano de Referência")
 
     def __init__(self, *args, **kwargs):
         contrato = kwargs.pop('contrato', None)
         super().__init__(*args, **kwargs)
         
-        ano_atual = date.today().year
-        self.fields['ano_referencia'].choices = [
-            (a, str(a)) for a in range(ano_atual - 1, ano_atual + 2)
-        ]
-        self.fields['ano_referencia'].initial = ano_atual
+        # Calcula o mês e ano anterior ao atual
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_prev = ultimo_dia_mes_anterior.month
+        ano_prev = ultimo_dia_mes_anterior.year
+        
+        self.fields['mes_referencia'].initial = mes_prev
+        self.fields['ano_referencia'].initial = ano_prev
         
         # Filtra os agentes apenas para aqueles que compõem alguma comissão ativa deste contrato
         if contrato:
