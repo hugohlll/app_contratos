@@ -97,10 +97,10 @@
                                     </a>
                                     {% if is_auditor %}
                                     <div class="d-flex gap-1 mt-1">
-                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
                                             <i class="bi bi-check-lg"></i>
                                         </a>
-                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
                                             <i class="bi bi-exclamation-triangle"></i>
                                         </a>
                                         {% if is_admin %}
@@ -119,7 +119,7 @@
                                     </a>
                                     {% if is_auditor %}
                                     <div class="d-flex gap-1 mt-1">
-                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
                                             <i class="bi bi-check-lg"></i>
                                         </a>
                                         {% if is_admin %}
@@ -138,7 +138,7 @@
                                     </a>
                                     {% if is_auditor %}
                                     <div class="d-flex gap-1 mt-1">
-                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
                                             <i class="bi bi-exclamation-triangle"></i>
                                         </a>
                                         {% if is_admin %}
@@ -173,7 +173,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         var ctx = document.getElementById('prestacoesPieChart').getContext('2d');
-        var myChart = new Chart(ctx, {
+        window.myChart = new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: ['Conformidade (OK!)', 'Entregue', 'Ajustes Necessários', 'Pendente'],
@@ -213,6 +213,149 @@
                     }
                 }
             }
+        });
+
+        // Função para gerar o HTML da célula baseado no novo status
+        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor) {
+            let html = '<div class="d-flex flex-column align-items-center">';
+            
+            if (status === 'entregue') {
+                html += `
+                    <a href="/portal/prestacao/download/${prestacaoId}/" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
+                        <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
+                        <span style="font-size: 0.75rem;">Entregue</span>
+                    </a>
+                `;
+                if (isAuditor) {
+                    html += `
+                        <div class="d-flex gap-1 mt-1">
+                            <a href="/portal/prestacao/status/${prestacaoId}/ok/" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                <i class="bi bi-check-lg"></i>
+                            </a>
+                            <a href="/portal/prestacao/status/${prestacaoId}/correcao/" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </a>
+                    `;
+                    if (isAdmin) {
+                        html += `
+                            <a href="/portal/prestacao/excluir/${prestacaoId}/" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        `;
+                    }
+                    html += '</div>';
+                }
+            } else if (status === 'correcao') {
+                html += `
+                    <a href="/portal/prestacao/download/${prestacaoId}/" target="_blank" class="text-warning text-decoration-none fw-bold p-1" title="Baixar PDF">
+                        <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
+                        <span style="font-size: 0.75rem;">Corrigir</span>
+                    </a>
+                `;
+                if (isAuditor) {
+                    html += `
+                        <div class="d-flex gap-1 mt-1">
+                            <a href="/portal/prestacao/status/${prestacaoId}/ok/" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                <i class="bi bi-check-lg"></i>
+                            </a>
+                    `;
+                    if (isAdmin) {
+                        html += `
+                            <a href="/portal/prestacao/excluir/${prestacaoId}/" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        `;
+                    }
+                    html += '</div>';
+                }
+            } else if (status === 'ok') {
+                html += `
+                    <a href="/portal/prestacao/download/${prestacaoId}/" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
+                        <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                        <span style="font-size: 0.75rem;">Conformidade</span>
+                    </a>
+                `;
+                if (isAuditor) {
+                    html += `
+                        <div class="d-flex gap-1 mt-1">
+                            <a href="/portal/prestacao/status/${prestacaoId}/correcao/" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </a>
+                    `;
+                    if (isAdmin) {
+                        html += `
+                            <a href="/portal/prestacao/excluir/${prestacaoId}/" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        `;
+                    }
+                    html += '</div>';
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // Intercepta os cliques nos botões de alteração de status
+        document.addEventListener("click", function(event) {
+            const btn = event.target.closest('.btn-alterar-status');
+            if (!btn) return;
+            
+            event.preventDefault();
+            
+            const url = btn.getAttribute('href');
+            const td = btn.closest('td');
+            
+            if (td) {
+                td.style.opacity = '0.5';
+            }
+            
+            const urlObj = new URL(url, window.location.origin);
+            urlObj.searchParams.set('ajax', '1');
+            urlObj.searchParams.set('mes', '{{ filtro_mes }}');
+            urlObj.searchParams.set('ano', '{{ filtro_ano }}');
+            
+            fetch(urlObj.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro na requisição');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (td) {
+                    td.style.opacity = '1';
+                    if (data.success) {
+                        // Atualiza o conteúdo da célula
+                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor);
+                        
+                        // Atualiza o gráfico se os dados de estatística estiverem disponíveis
+                        if (window.myChart && data.stats) {
+                            window.myChart.data.datasets[0].data = [
+                                data.stats.ok_no_mes,
+                                data.stats.entregues_no_mes,
+                                data.stats.correcao_no_mes,
+                                data.stats.pendentes_no_mes
+                            ];
+                            window.myChart.update();
+                        }
+                    } else {
+                        alert('Erro ao alterar status: ' + (data.error || 'Erro desconhecido'));
+                    }
+                }
+            })
+            .catch(error => {
+                if (td) {
+                    td.style.opacity = '1';
+                }
+                console.error(error);
+                alert('Erro ao tentar atualizar o status.');
+            });
         });
     });
 </script>

@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count, Q, Prefetch
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.conf import settings
 
 from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente
@@ -278,16 +278,70 @@ def exportar_prestacao_csv(request):
 @login_required
 def alterar_status_prestacao(request, pk, novo_status):
     """Altera o status de uma prestação de contas (Administradores/Auditores)."""
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
+
     if not is_auditor(request.user):
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': 'Acesso não autorizado.'}, status=403)
         messages.error(request, "Acesso não autorizado.")
         return redirect('dashboard_prestacao')
 
     prestacao = get_object_or_404(PrestacaoContas, pk=pk)
     if novo_status not in ['entregue', 'correcao', 'ok']:
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': 'Status inválido.'}, status=400)
         messages.error(request, "Status inválido.")
         return redirect('dashboard_prestacao')
 
     prestacao.status = novo_status
     prestacao.save()
+
+    if is_ajax:
+        # Se for AJAX, não inserimos a mensagem de sucesso para não poluir futuras páginas
+        # e calculamos as estatísticas atualizadas do mês para o gráfico
+        hoje = date.today()
+        try:
+            filtro_mes = int(request.GET.get('mes', hoje.month))
+        except (ValueError, TypeError):
+            filtro_mes = hoje.month
+
+        try:
+            raw_ano = request.GET.get('ano', str(hoje.year)).replace('.', '')
+            filtro_ano = int(raw_ano)
+        except (ValueError, TypeError):
+            filtro_ano = hoje.year
+
+        contratos_vigentes = Contrato.objects.filter(
+            vigencia_inicio__lte=hoje,
+            vigencia_fim__gte=hoje
+        )
+        total_contratos = contratos_vigentes.count()
+        prestacoes_filtradas = PrestacaoContas.objects.filter(
+            mes_referencia=filtro_mes,
+            ano_referencia=filtro_ano,
+            contrato__in=contratos_vigentes
+        )
+        
+        ok_no_mes = prestacoes_filtradas.filter(status='ok').count()
+        entregues_no_mes = prestacoes_filtradas.filter(status='entregue').count()
+        correcao_no_mes = prestacoes_filtradas.filter(status='correcao').count()
+        pendentes_no_mes = total_contratos - prestacoes_filtradas.count()
+
+        return JsonResponse({
+            'success': True,
+            'status': prestacao.status,
+            'status_display': prestacao.get_status_display(),
+            'prestacao_id': prestacao.id,
+            'is_admin': is_admin(request.user),
+            'is_auditor': is_auditor(request.user),
+            'stats': {
+                'ok_no_mes': ok_no_mes,
+                'entregues_no_mes': entregues_no_mes,
+                'correcao_no_mes': correcao_no_mes,
+                'pendentes_no_mes': pendentes_no_mes,
+                'total_contratos': total_contratos
+            }
+        })
+
     messages.success(request, f"Status da prestação do contrato {prestacao.contrato.numero} alterado para {prestacao.get_status_display()}.")
     return redirect('dashboard_prestacao')
