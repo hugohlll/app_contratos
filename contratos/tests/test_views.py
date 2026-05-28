@@ -102,6 +102,23 @@ class PublicViewsTest(TestCase):
         self.assertContains(response, "555/2026")
         self.assertContains(response, "Empresa Fantasia LTDA (Fantasia Legal)")
 
+    def test_transparency_report_shows_razao_social_and_nome_fantasia_in_parentheses(self):
+        empresa_fantasia = Empresa.objects.create(razao_social="Empresa Transparencia LTDA", nome_fantasia="Transparencia Legal", cnpj="14.141.141/0001-14")
+        contrato_fantasia = Contrato.objects.create(
+            numero="666/2026",
+            tipo="DESPESA",
+            empresa=empresa_fantasia,
+            objeto="Objeto Transparencia",
+            vigencia_inicio=date.today(),
+            vigencia_fim=date.today() + timedelta(days=365),
+            valor_total=10000.00
+        )
+        url = reverse('transparencia')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "666/2026")
+        self.assertContains(response, "Empresa Transparencia LTDA (Transparencia Legal)")
+
 from django.contrib.auth.models import User, Group
 
 class PortalViewsTest(TestCase):
