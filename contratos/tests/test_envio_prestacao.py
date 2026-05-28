@@ -15,6 +15,8 @@ Cobre:
 - Estatísticas retornadas via AJAX (gerais + prioritários)
 - Permissões de acesso à alteração de status via AJAX
 - Toggle de apresentação (prioritário): permissões, método, stats
+- Toggle de prioritário em pendentes (criação de placeholder)
+- Upload sobre placeholder pendente (preservação da flag compor_apresentacao)
 - Dashboard: contexto com estatísticas de prioritários
 - Tabela de gestores prioritários: estrutura, conteúdo e ordenação (antiguidade + alfabética)
 - Consolidação de PDF: download, filtros (somente OK+prioritário), permissões
@@ -384,14 +386,17 @@ class AlterarStatusAjaxTests(BaseTestSetup):
     def test_toggle_apresentacao_prestacao(self):
         """Testa o toggle da seleção para compor apresentação (Prioritário)."""
         self.client.login(username="auditor_ajax", password="pass123")
-        pk = self.prestacao.id
-        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        url = reverse('toggle_apresentacao_prestacao')
         
         # Garante que status não é 'ok' inicialmente
         self.assertNotEqual(self.prestacao.status, 'ok')
         
         # Agora deve funcionar mesmo sem ser OK
-        response = self.client.post(url, data='{"checked": true}', content_type='application/json')
+        response = self.client.post(
+            url,
+            data=json.dumps({'checked': True, 'contrato_id': self.contrato.id, 'mes': 5, 'ano': 2026}),
+            content_type='application/json'
+        )
         data = response.json()
         self.assertTrue(data['success'])
         self.assertTrue(data['checked'])
@@ -452,11 +457,10 @@ class AlterarStatusAjaxTests(BaseTestSetup):
     def test_toggle_retorna_stats(self):
         """Toggle de apresentação deve retornar estatísticas no JSON."""
         self.client.login(username="auditor_ajax", password="pass123")
-        pk = self.prestacao.id
-        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        url = reverse('toggle_apresentacao_prestacao')
         
         response = self.client.post(
-            url, data=json.dumps({'checked': True, 'mes': 5, 'ano': 2026}),
+            url, data=json.dumps({'checked': True, 'contrato_id': self.contrato.id, 'mes': 5, 'ano': 2026}),
             content_type='application/json'
         )
         data = response.json()
@@ -476,12 +480,11 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         self.prestacao.compor_apresentacao = True
         self.prestacao.save(update_fields=['compor_apresentacao'])
         
-        pk = self.prestacao.id
-        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        url = reverse('toggle_apresentacao_prestacao')
         
         # Desmarcar
         response = self.client.post(
-            url, data=json.dumps({'checked': False, 'mes': 5, 'ano': 2026}),
+            url, data=json.dumps({'checked': False, 'contrato_id': self.contrato.id, 'mes': 5, 'ano': 2026}),
             content_type='application/json'
         )
         data = response.json()
@@ -496,11 +499,10 @@ class AlterarStatusAjaxTests(BaseTestSetup):
     def test_toggle_usuario_normal_retorna_403(self):
         """Usuário sem permissão não pode alterar o checkbox de prioritário."""
         self.client.login(username="normal_ajax", password="pass123")
-        pk = self.prestacao.id
-        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        url = reverse('toggle_apresentacao_prestacao')
         
         response = self.client.post(
-            url, data=json.dumps({'checked': True}),
+            url, data=json.dumps({'checked': True, 'contrato_id': self.contrato.id, 'mes': 5, 'ano': 2026}),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 403)
@@ -514,8 +516,7 @@ class AlterarStatusAjaxTests(BaseTestSetup):
     def test_toggle_metodo_get_retorna_405(self):
         """Requisição GET no toggle deve retornar 405 (Method Not Allowed)."""
         self.client.login(username="auditor_ajax", password="pass123")
-        pk = self.prestacao.id
-        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        url = reverse('toggle_apresentacao_prestacao')
         
         response = self.client.get(url)
         self.assertEqual(response.status_code, 405)
@@ -543,11 +544,10 @@ class AlterarStatusAjaxTests(BaseTestSetup):
     def test_toggle_retorna_gestores_prio_com_estrutura_correta(self):
         """O toggle deve retornar gestores_prio como lista de dicts com gestor, contrato, status."""
         self.client.login(username="auditor_ajax", password="pass123")
-        pk = self.prestacao.id
-        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        url = reverse('toggle_apresentacao_prestacao')
         
         response = self.client.post(
-            url, data=json.dumps({'checked': True, 'mes': 5, 'ano': 2026}),
+            url, data=json.dumps({'checked': True, 'contrato_id': self.contrato.id, 'mes': 5, 'ano': 2026}),
             content_type='application/json'
         )
         data = response.json()
@@ -616,10 +616,10 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         self.prestacao.compor_apresentacao = True
         self.prestacao.save(update_fields=['compor_apresentacao'])
         
-        # Buscar stats via toggle (qualquer endpoint que retorne stats serve)
-        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': self.prestacao.id})
+        # Buscar stats via toggle
+        url = reverse('toggle_apresentacao_prestacao')
         response = self.client.post(
-            url, data=json.dumps({'checked': True, 'mes': 5, 'ano': 2026}),
+            url, data=json.dumps({'checked': True, 'contrato_id': self.contrato.id, 'mes': 5, 'ano': 2026}),
             content_type='application/json'
         )
         data = response.json()
@@ -636,6 +636,251 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         # Cleanup
         self._cleanup(p2)
         self._cleanup(p3)
+
+
+class TogglePendentePrioritarioTests(BaseTestSetup):
+    """Testes para marcação de slides prioritários em contratos com status pendente."""
+
+    def setUp(self):
+        super().setUp()
+        self.grupo_auditores, _ = Group.objects.get_or_create(name='Auditores')
+        self.user_auditor = User.objects.create_user(username="auditor_pend", password="pass123")
+        self.user_auditor.groups.add(self.grupo_auditores)
+        self.user_admin = User.objects.create_superuser(username="admin_pend", email="ap@t.com", password="pass123")
+        self.user_normal = User.objects.create_user(username="normal_pend", password="pass123")
+
+    def tearDown(self):
+        for p in PrestacaoContas.objects.all():
+            self._cleanup(p)
+
+    def test_toggle_pendente_cria_placeholder(self):
+        """Marcar prioritário em contrato pendente deve criar um registro placeholder."""
+        self.client.login(username="auditor_pend", password="pass123")
+        url = reverse('toggle_apresentacao_prestacao')
+
+        # Não existe prestação para este mês/ano
+        self.assertEqual(PrestacaoContas.objects.filter(
+            contrato=self.contrato, mes_referencia=5, ano_referencia=2026
+        ).count(), 0)
+
+        response = self.client.post(
+            url, data=json.dumps({
+                'checked': True,
+                'contrato_id': self.contrato.id,
+                'mes': 5, 'ano': 2026
+            }),
+            content_type='application/json'
+        )
+        data = response.json()
+
+        self.assertTrue(data['success'])
+        self.assertTrue(data['checked'])
+        self.assertIn('prestacao_id', data)
+
+        # Verifica que o placeholder foi criado no banco
+        p = PrestacaoContas.objects.get(
+            contrato=self.contrato, mes_referencia=5, ano_referencia=2026
+        )
+        self.assertEqual(p.status, 'pendente')
+        self.assertTrue(p.compor_apresentacao)
+        self.assertFalse(bool(p.arquivo))  # Sem arquivo
+
+    def test_placeholder_sem_arquivo(self):
+        """O placeholder criado pelo toggle não deve ter arquivo PDF."""
+        self.client.login(username="auditor_pend", password="pass123")
+        url = reverse('toggle_apresentacao_prestacao')
+
+        self.client.post(
+            url, data=json.dumps({
+                'checked': True,
+                'contrato_id': self.contrato.id,
+                'mes': 3, 'ano': 2026
+            }),
+            content_type='application/json'
+        )
+
+        p = PrestacaoContas.objects.get(
+            contrato=self.contrato, mes_referencia=3, ano_referencia=2026
+        )
+        self.assertFalse(bool(p.arquivo))
+        self.assertIsNone(p.agente)
+
+    def test_upload_sobre_placeholder_preserva_flag(self):
+        """Upload de PDF sobre um placeholder pendente deve preservar compor_apresentacao=True."""
+        self.client.login(username="auditor_pend", password="pass123")
+
+        # 1. Cria o placeholder com prioritário marcado
+        PrestacaoContas.objects.create(
+            contrato=self.contrato,
+            mes_referencia=6, ano_referencia=2026,
+            status='pendente',
+            compor_apresentacao=True
+        )
+
+        # 2. Faz upload do PDF (view pública, sem login necessário)
+        self.client.logout()
+        url_upload = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        response = self.client.post(url_upload, {
+            'agente': self.agente.id,
+            'mes_referencia': 6, 'ano_referencia': 2026,
+            'arquivo': self._make_pdf("junho.pdf"),
+            'observacao': 'Envio junho'
+        })
+
+        self.assertEqual(response.status_code, 302)
+        # Deve continuar sendo 1 registro (atualizado, não duplicado)
+        self.assertEqual(PrestacaoContas.objects.filter(
+            contrato=self.contrato, mes_referencia=6, ano_referencia=2026
+        ).count(), 1)
+
+        p = PrestacaoContas.objects.get(
+            contrato=self.contrato, mes_referencia=6, ano_referencia=2026
+        )
+        self.assertEqual(p.status, 'entregue')
+        self.assertTrue(p.compor_apresentacao)  # Flag preservada!
+        self.assertTrue(bool(p.arquivo))  # Agora tem arquivo
+        self.assertEqual(p.agente_id, self.agente.id)
+        self.assertEqual(p.observacao, 'Envio junho')
+
+    def test_upload_sobre_placeholder_nao_duplica(self):
+        """Upload sobre placeholder não deve criar registro duplicado."""
+        PrestacaoContas.objects.create(
+            contrato=self.contrato,
+            mes_referencia=7, ano_referencia=2026,
+            status='pendente',
+            compor_apresentacao=False
+        )
+
+        url_upload = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        self.client.post(url_upload, {
+            'agente': self.agente.id,
+            'mes_referencia': 7, 'ano_referencia': 2026,
+            'arquivo': self._make_pdf("julho.pdf"),
+        })
+
+        total = PrestacaoContas.objects.filter(
+            contrato=self.contrato, mes_referencia=7, ano_referencia=2026
+        ).count()
+        self.assertEqual(total, 1)
+
+    def test_desmarcar_pendente_mantem_placeholder(self):
+        """Desmarcar prioritário em pendente deve manter o registro mas com compor_apresentacao=False."""
+        self.client.login(username="auditor_pend", password="pass123")
+        url = reverse('toggle_apresentacao_prestacao')
+
+        # Marca
+        self.client.post(
+            url, data=json.dumps({
+                'checked': True,
+                'contrato_id': self.contrato.id,
+                'mes': 8, 'ano': 2026
+            }),
+            content_type='application/json'
+        )
+
+        # Desmarca
+        response = self.client.post(
+            url, data=json.dumps({
+                'checked': False,
+                'contrato_id': self.contrato.id,
+                'mes': 8, 'ano': 2026
+            }),
+            content_type='application/json'
+        )
+        data = response.json()
+
+        self.assertTrue(data['success'])
+        self.assertFalse(data['checked'])
+
+        p = PrestacaoContas.objects.get(
+            contrato=self.contrato, mes_referencia=8, ano_referencia=2026
+        )
+        self.assertFalse(p.compor_apresentacao)
+
+    def test_stats_incluem_prio_pendentes(self):
+        """As estatísticas devem incluir a contagem de prioritários pendentes."""
+        self.client.login(username="auditor_pend", password="pass123")
+        url = reverse('toggle_apresentacao_prestacao')
+
+        response = self.client.post(
+            url, data=json.dumps({
+                'checked': True,
+                'contrato_id': self.contrato.id,
+                'mes': 5, 'ano': 2026
+            }),
+            content_type='application/json'
+        )
+        data = response.json()
+
+        self.assertIn('stats', data)
+        stats = data['stats']
+        self.assertIn('prio_pendentes', stats)
+        self.assertGreaterEqual(stats['prio_pendentes'], 1)
+
+    def test_toggle_sem_parametros_retorna_400(self):
+        """Toggle sem contrato_id/mes/ano deve retornar 400."""
+        self.client.login(username="auditor_pend", password="pass123")
+        url = reverse('toggle_apresentacao_prestacao')
+
+        response = self.client.post(
+            url, data=json.dumps({'checked': True}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertFalse(data['success'])
+
+    def test_toggle_contrato_inexistente_retorna_404(self):
+        """Toggle com contrato_id inexistente deve retornar 404."""
+        self.client.login(username="auditor_pend", password="pass123")
+        url = reverse('toggle_apresentacao_prestacao')
+
+        response = self.client.post(
+            url, data=json.dumps({
+                'checked': True,
+                'contrato_id': 99999,
+                'mes': 5, 'ano': 2026
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_toggle_usuario_normal_pendente_retorna_403(self):
+        """Usuário sem permissão não pode marcar prioritário nem em pendentes."""
+        self.client.login(username="normal_pend", password="pass123")
+        url = reverse('toggle_apresentacao_prestacao')
+
+        response = self.client.post(
+            url, data=json.dumps({
+                'checked': True,
+                'contrato_id': self.contrato.id,
+                'mes': 5, 'ano': 2026
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 403)
+        # Nenhum placeholder deve ter sido criado
+        self.assertEqual(PrestacaoContas.objects.filter(
+            contrato=self.contrato, mes_referencia=5, ano_referencia=2026
+        ).count(), 0)
+
+    def test_dashboard_pendente_com_checkbox_marcado(self):
+        """Dashboard deve exibir o checkbox marcado para pendentes prioritários."""
+        self.client.login(username="auditor_pend", password="pass123")
+
+        # Cria placeholder pendente prioritário
+        PrestacaoContas.objects.create(
+            contrato=self.contrato,
+            mes_referencia=date.today().month, ano_referencia=date.today().year,
+            status='pendente',
+            compor_apresentacao=True
+        )
+
+        response = self.client.get(reverse('dashboard_prestacao'))
+        self.assertEqual(response.status_code, 200)
+        # A checkbox deve estar presente e marcada (checked)
+        self.assertContains(response, 'checkbox-apresentacao')
+        self.assertContains(response, 'Pendente')
 
 
 class ModelPrestacaoContasTests(BaseTestSetup):

@@ -256,9 +256,10 @@ class PrestacaoContasUploadForm(EstiloFormMixin, forms.ModelForm):
 
     def clean_arquivo(self):
         f = self.cleaned_data.get('arquivo')
-        if f:
-            if not f.name.lower().endswith('.pdf'):
-                raise forms.ValidationError("Apenas arquivos PDF são aceitos.")
-            if f.size > 10 * 1024 * 1024:
-                raise forms.ValidationError("O arquivo não pode exceder 10 MB.")
+        if not f:
+            raise forms.ValidationError("Este campo é obrigatório. Envie um arquivo PDF.")
+        if not f.name.lower().endswith('.pdf'):
+            raise forms.ValidationError("Apenas arquivos PDF são aceitos.")
+        if f.size > 10 * 1024 * 1024:
+            raise forms.ValidationError("O arquivo não pode exceder 10 MB.")
         return f

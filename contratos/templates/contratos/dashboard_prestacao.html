@@ -96,7 +96,7 @@
                     </thead>
                     <tbody id="tabelaGestoresPrioritarios">
                         {% for gestor in gestores_prio %}
-                        <tr>
+                        <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" style="cursor: grab;">
                             <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
                             <td>{{ gestor.contrato }}</td>
                             <td class="text-center">
@@ -369,7 +369,7 @@
                 }
                 
                 html += `
-                    <tr>
+                    <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" style="cursor: grab;">
                         <td class="ps-3"><strong>${g.gestor}</strong></td>
                         <td>${g.contrato}</td>
                         <td class="text-center">${statusBadge}</td>
@@ -641,6 +641,51 @@
                 alert('Erro de rede ao tentar alterar a seleção do slide.');
             });
         });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const tbodyPrioritarios = document.getElementById('tabelaGestoresPrioritarios');
+        if (tbodyPrioritarios) {
+            Sortable.create(tbodyPrioritarios, {
+                animation: 150,
+                handle: '.gestor-row',
+                onMove: function (evt) {
+                    // Permitir arrastar apenas se o alvo tiver o mesmo posto_id
+                    const draggedPosto = evt.dragged.getAttribute('data-posto-id');
+                    const targetPosto = evt.related.getAttribute('data-posto-id');
+                    if (draggedPosto !== targetPosto) {
+                        return false; 
+                    }
+                },
+                onEnd: function (evt) {
+                    const postoId = evt.item.getAttribute('data-posto-id');
+                    if (!postoId || postoId === "None" || postoId === "null") return;
+                    
+                    const rows = Array.from(tbodyPrioritarios.querySelectorAll(`tr[data-posto-id="${postoId}"]`));
+                    const agenteIds = rows.map(row => row.getAttribute('data-agente-id')).filter(id => id && id !== "None" && id !== "null");
+                    
+                    if (agenteIds.length > 0) {
+                        fetch("{% url 'reordenar_gestores_prio' %}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ agente_ids: agenteIds })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status !== 'success') {
+                                console.error('Erro ao salvar nova ordem:', data.message);
+                            }
+                        })
+                        .catch(err => console.error('Erro na requisição AJAX:', err));
+                    }
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

@@ -28,6 +28,7 @@ class Agente(models.Model):
     saram = models.CharField("SARAM/Matrícula", max_length=20, unique=True)
     cpf = models.CharField("CPF", max_length=14, blank=True, null=True)
     email = models.EmailField("E-mail", max_length=254, blank=True, null=True)
+    ordem_manual = models.FloatField("Ordem Manual", default=0.0)
 
     data_ultimo_curso = models.DateField(null=True, blank=True, verbose_name="Data do Último Curso de Gestão")
 
@@ -266,9 +267,10 @@ class PrestacaoContas(models.Model):
     ano_referencia = models.IntegerField("Ano de Referência")
     mes_referencia = models.IntegerField("Mês de Referência")  # 1–12
     arquivo = models.FileField(
-        "Arquivo PDF", upload_to=upload_prestacao_path
+        "Arquivo PDF", upload_to=upload_prestacao_path, null=True, blank=True
     )
     STATUS_CHOICES = [
+        ('pendente', 'Pendente'),
         ('entregue', 'Entregue'),
         ('correcao', 'Aguardando Correção'),
         ('ok', 'Conformidade (OK!)'),

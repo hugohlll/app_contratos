@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count, Q, Prefetch
 from django.http import HttpResponse, Http404, JsonResponse
+from django.views.decorators.http import require_POST
+import json
 from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -105,13 +107,15 @@ def _get_dashboard_stats(ano, mes):
     lista_gestores_prio = prestacoes_filtradas.filter(
         compor_apresentacao=True
     ).select_related('agente', 'agente__posto', 'contrato').order_by(
-        'agente__posto__senioridade', 'agente__nome_de_guerra'
+        'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
     )
     
     gestores_prio = []
     for g in lista_gestores_prio:
         gestores_prio.append({
             'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
+            'agente_id': g.agente.id if g.agente else None,
+            'posto_id': g.agente.posto.id if g.agente and g.agente.posto else None,
             'contrato': g.contrato.numero,
             'status': g.status
         })
@@ -560,3 +564,26 @@ def consolidar_apresentacao(request):
     response = HttpResponse(buffer.read(), content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
     return response
+
+@login_required
+@require_POST
+def reordenar_gestores_prio(request):
+    """
+    Recebe um array ordenado de IDs de agentes e atualiza 
+    seus campos 'ordem_manual' de acordo com a ordem da lista.
+    Restrito a auditores/administradores.
+    """
+    if not is_auditor(request.user):
+        return JsonResponse({'status': 'error', 'message': 'Acesso não autorizado.'}, status=403)
+        
+    try:
+        data = json.loads(request.body)
+        agente_ids = data.get('agente_ids', [])
+        
+        # O array agente_ids vem na ordem estabelecida via drag-and-drop
+        for index, agente_id in enumerate(agente_ids):
+            Agente.objects.filter(id=agente_id).update(ordem_manual=float(index))
+            
+        return JsonResponse({'status': 'success', 'message': 'Ordem atualizada com sucesso.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

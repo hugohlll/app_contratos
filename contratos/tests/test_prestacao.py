@@ -289,3 +289,187 @@ class PrestacaoContasTests(TestCase):
         if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
             os.remove(prestacao.arquivo.path)
 
+    def test_reordenar_gestores_prio_permissoes(self):
+        """Apenas auditores/admins podem chamar o endpoint de reordenação"""
+        import json
+        from django.contrib.auth.models import Group
+
+        url = reverse('reordenar_gestores_prio')
+        payload = json.dumps({'agente_ids': [self.agente.id]})
+
+        # Sem login → 302 para login
+        response = self.client.post(
+            url, data=payload, content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 302)
+
+        # Usuário sem permissão → 403
+        user_normal = User.objects.create_user(username='normal_reord', password='password123')
+        self.client.login(username='normal_reord', password='password123')
+        response = self.client.post(
+            url, data=payload, content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 403)
+        data = response.json()
+        self.assertEqual(data['status'], 'error')
+
+        # Auditor → 200 com sucesso
+        grupo_auditores, _ = Group.objects.get_or_create(name='Auditores')
+        user_auditor = User.objects.create_user(username='auditor_reord', password='password123')
+        user_auditor.groups.add(grupo_auditores)
+        self.client.login(username='auditor_reord', password='password123')
+        response = self.client.post(
+            url, data=payload, content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'success')
+
+    def test_reordenar_gestores_prio_persiste_ordem(self):
+        """O endpoint deve atualizar o campo ordem_manual de cada agente na ordem correta"""
+        import json
+        from django.contrib.auth.models import Group
+
+        # Criar segundo agente do mesmo posto
+        agente2 = Agente.objects.create(
+            nome_completo="Maria Costa",
+            nome_de_guerra="Costa",
+            posto=self.posto,
+            saram="9999999"
+        )
+
+        # Configurar auditor
+        grupo_auditores, _ = Group.objects.get_or_create(name='Auditores')
+        user_auditor = User.objects.create_user(username='auditor_persist', password='password123')
+        user_auditor.groups.add(grupo_auditores)
+        self.client.login(username='auditor_persist', password='password123')
+
+        url = reverse('reordenar_gestores_prio')
+        # Enviar agente2 primeiro, self.agente depois (inverso da criação)
+        payload = json.dumps({'agente_ids': [agente2.id, self.agente.id]})
+        response = self.client.post(url, data=payload, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'success')
+
+        # Verificar no banco
+        agente2.refresh_from_db()
+        self.agente.refresh_from_db()
+        self.assertEqual(agente2.ordem_manual, 0.0)
+        self.assertEqual(self.agente.ordem_manual, 1.0)
+
+    def test_reordenar_gestores_prio_payload_invalido(self):
+        """Payload inválido deve retornar 400"""
+        import json
+        from django.contrib.auth.models import Group
+
+        grupo_auditores, _ = Group.objects.get_or_create(name='Auditores')
+        user_auditor = User.objects.create_user(username='auditor_inv', password='password123')
+        user_auditor.groups.add(grupo_auditores)
+        self.client.login(username='auditor_inv', password='password123')
+
+        url = reverse('reordenar_gestores_prio')
+        # Enviar JSON malformado
+        response = self.client.post(url, data='NAO_EH_JSON', content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['status'], 'error')
+
+    def test_detalhe_publico_status_prestacao(self):
+        """A página pública de detalhamento deve exibir o ícone correto para cada status"""
+        import os
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        url = reverse('detalhe_contrato', kwargs={'contrato_id': self.contrato.id})
+
+        pdf_file = SimpleUploadedFile("arq_detalhe.pdf", b"pdf_data", content_type="application/pdf")
+        prestacao = PrestacaoContas.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            arquivo=pdf_file,
+            status='entregue'
+        )
+
+        # Status 'entregue' → ícone bi-file-earmark-arrow-up
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'bi-file-earmark-arrow-up')
+
+        # Status 'correcao' → ícone bi-exclamation-triangle-fill
+        prestacao.status = 'correcao'
+        prestacao.save()
+        response = self.client.get(url)
+        self.assertContains(response, 'bi-exclamation-triangle-fill')
+
+        # Status 'ok' → ícone bi-check-circle-fill
+        prestacao.status = 'ok'
+        prestacao.save()
+        response = self.client.get(url)
+        self.assertContains(response, 'bi-check-circle-fill')
+
+        # Limpar arquivo gerado no teste
+        if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
+            os.remove(prestacao.arquivo.path)
+
+    def test_gestores_prio_ordem_manual(self):
+        """No dashboard, dois agentes do mesmo posto devem aparecer na ordem definida por ordem_manual"""
+        from django.contrib.auth.models import Group
+
+        # Criar segundo agente do mesmo posto com ordem_manual diferente
+        agente2 = Agente.objects.create(
+            nome_completo="Pedro Ramos",
+            nome_de_guerra="Ramos",
+            posto=self.posto,
+            saram="8888888",
+            ordem_manual=0.0  # Deve vir ANTES de self.agente
+        )
+        self.agente.ordem_manual = 1.0
+        self.agente.save()
+
+        # Criar contratos e prestações marcadas como prioritárias para ambos
+        contrato2 = Contrato.objects.create(
+            numero="20/2026",
+            objeto="Serviços de Teste 2",
+            empresa=self.empresa,
+            vigencia_inicio=date(2026, 1, 1),
+            vigencia_fim=date(2026, 12, 31),
+            valor_total=2000.00
+        )
+
+        hoje = date.today()
+        pdf1 = SimpleUploadedFile("arq_prio1.pdf", b"pdf", content_type="application/pdf")
+        pdf2 = SimpleUploadedFile("arq_prio2.pdf", b"pdf", content_type="application/pdf")
+
+        prest1 = PrestacaoContas.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=hoje.month, ano_referencia=hoje.year,
+            arquivo=pdf1, compor_apresentacao=True, status='ok'
+        )
+        prest2 = PrestacaoContas.objects.create(
+            contrato=contrato2, agente=agente2,
+            mes_referencia=hoje.month, ano_referencia=hoje.year,
+            arquivo=pdf2, compor_apresentacao=True, status='ok'
+        )
+
+        # Autenticar como auditor para acessar o dashboard
+        grupo_auditores, _ = Group.objects.get_or_create(name='Auditores')
+        user_auditor = User.objects.create_user(username='auditor_ordem', password='password123')
+        user_auditor.groups.add(grupo_auditores)
+        self.client.login(username='auditor_ordem', password='password123')
+
+        response = self.client.get(reverse('dashboard_prestacao'))
+        self.assertEqual(response.status_code, 200)
+
+        gestores_prio = response.context['gestores_prio']
+        nomes = [g['gestor'] for g in gestores_prio]
+
+        # agente2 tem ordem_manual=0.0, deve vir antes de self.agente (ordem_manual=1.0)
+        self.assertIn('SGT Ramos', nomes)
+        self.assertIn('SGT Silva', nomes)
+        self.assertLess(nomes.index('SGT Ramos'), nomes.index('SGT Silva'))
+
+        # Limpar arquivos gerados no teste
+        for prest in [prest1, prest2]:
+            if prest.arquivo and os.path.isfile(prest.arquivo.path):
+                os.remove(prest.arquivo.path)
+
+
