@@ -29,6 +29,32 @@ class PublicViewsTest(TestCase):
         self.assertContains(response, "Objeto Público")
         self.assertContains(response, "Receita") # Verifica se o tipo aparece
 
+    def test_detalhe_contrato_exibe_posto_agente_prestacao(self):
+        """Teste se a tabela de Últimos Envios exibe a string formatada do agente (posto + nome)."""
+        from contratos.models import PostoGraduacao, Agente, PrestacaoContas
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        posto = PostoGraduacao.objects.create(sigla="Cel", descricao="Coronel", senioridade=1)
+        agente = Agente.objects.create(nome_completo="Fulano Silva", nome_de_guerra="Fulano", posto=posto, saram="123456")
+        
+        pdf_file = SimpleUploadedFile("arq.pdf", b"pdf_data", content_type="application/pdf")
+        prestacao = PrestacaoContas.objects.create(
+            contrato=self.contrato,
+            agente=agente,
+            mes_referencia=1,
+            ano_referencia=2026,
+            arquivo=pdf_file
+        )
+        
+        url = reverse('detalhe_contrato', args=[self.contrato.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Cel Fulano") # String nativa do agente deve aparecer
+        
+        # Limpar arquivo de teste
+        import os
+        if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
+            os.remove(prestacao.arquivo.path)
+
     def test_expired_contrato_not_searchable(self):
         contrato_expirado = Contrato.objects.create(
             numero="999/2025",

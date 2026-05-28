@@ -85,6 +85,17 @@
                 Lista Completa</a>
         </div>
 
+        {% if messages %}
+        <div class="messages mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-primary text-white">
                 <h4 class="m-0"><i class="bi bi-file-earmark-text me-2"></i>Contrato {{ contrato.numero }}</h4>
@@ -286,12 +297,16 @@
                 <div class="row">
                     <div class="col-md-6 border-end pe-4">
                         <h5 class="mb-4"><i class="bi bi-cloud-upload me-2 text-secondary"></i>Enviar Relatório</h5>
-                        <form action="{% url 'upload_prestacao' contrato_id=contrato.id %}" method="post" enctype="multipart/form-data">
+                        
+                        <div id="ajax-message-container"></div>
+                        
+                        <form id="form-upload-prestacao" action="{% url 'upload_prestacao' contrato_id=contrato.id %}" method="post" enctype="multipart/form-data">
                             {% csrf_token %}
                             
                             <div class="mb-3">
                                 <label for="{{ form_prestacao.agente.id_for_label }}" class="form-label fw-bold">Fiscal Responsável</label>
                                 {{ form_prestacao.agente }}
+                                <div id="error-agente" class="text-danger small mt-1 d-none fw-bold"><i class="bi bi-exclamation-circle me-1"></i><span></span></div>
                                 {% if form_prestacao.agente.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form_prestacao.agente.errors|join:", " }}</div>{% endif %}
                             </div>
                             
@@ -299,10 +314,12 @@
                                 <div class="col-6">
                                     <label for="{{ form_prestacao.mes_referencia.id_for_label }}" class="form-label fw-bold">Mês Referência</label>
                                     {{ form_prestacao.mes_referencia }}
+                                    <div id="error-mes_referencia" class="text-danger small mt-1 d-none fw-bold"><i class="bi bi-exclamation-circle me-1"></i><span></span></div>
                                 </div>
                                 <div class="col-6">
                                     <label for="{{ form_prestacao.ano_referencia.id_for_label }}" class="form-label fw-bold">Ano Referência</label>
                                     {{ form_prestacao.ano_referencia }}
+                                    <div id="error-ano_referencia" class="text-danger small mt-1 d-none fw-bold"><i class="bi bi-exclamation-circle me-1"></i><span></span></div>
                                 </div>
                             </div>
                             {% if form_prestacao.mes_referencia.errors or form_prestacao.ano_referencia.errors %}
@@ -314,6 +331,7 @@
                             <div class="mb-3 p-3 bg-light rounded border border-dashed">
                                 <label for="{{ form_prestacao.arquivo.id_for_label }}" class="form-label fw-bold text-primary"><i class="bi bi-file-pdf me-2"></i>Selecionar Arquivo PDF</label>
                                 {{ form_prestacao.arquivo }}
+                                <div id="error-arquivo" class="text-danger small mt-1 d-none fw-bold"><i class="bi bi-exclamation-circle me-1"></i><span></span></div>
                                 {% if form_prestacao.arquivo.errors %}<div class="text-danger small mt-1 fw-bold">{{ form_prestacao.arquivo.errors|join:", " }}</div>{% endif %}
                                 <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>Apenas formato PDF (Máximo 10 MB).</div>
                             </div>
@@ -321,10 +339,11 @@
                             <div class="mb-4">
                                 <label for="{{ form_prestacao.observacao.id_for_label }}" class="form-label fw-bold text-secondary">Observações (opcional)</label>
                                 {{ form_prestacao.observacao }}
+                                <div id="error-observacao" class="text-danger small mt-1 d-none fw-bold"><i class="bi bi-exclamation-circle me-1"></i><span></span></div>
                             </div>
                             
-                            <button type="submit" class="btn btn-info w-100 fw-bold text-white shadow-sm p-2 fs-5">
-                                <i class="bi bi-send-fill me-2"></i>Enviar Arquivo
+                            <button type="submit" id="btn-submit-prestacao" class="btn btn-info w-100 fw-bold text-white shadow-sm p-2 fs-5">
+                                <i class="bi bi-send-fill me-2"></i><span>Enviar Arquivo</span>
                             </button>
                         </form>
                     </div>
@@ -349,7 +368,7 @@
                                         <td class="small text-muted">{{ p.data_envio|date:"d/m/Y \à\s H:i" }}</td>
                                         <td>
                                             {% if p.agente %}
-                                            <span class="badge bg-light text-dark border"><i class="bi bi-person me-1"></i>{{ p.agente.nome_de_guerra }}</span>
+                                            <span class="badge bg-light text-dark border"><i class="bi bi-person me-1"></i>{{ p.agente }}</span>
                                             {% else %}
                                             <span class="text-muted">-</span>
                                             {% endif %}
@@ -385,6 +404,97 @@
 
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('form-upload-prestacao');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const btnSubmit = document.getElementById('btn-submit-prestacao');
+                    const btnSpan = btnSubmit.querySelector('span');
+                    const originalBtnText = btnSpan.innerText;
+                    
+                    // Limpar erros anteriores
+                    document.querySelectorAll('[id^="error-"]').forEach(el => el.classList.add('d-none'));
+                    const msgContainer = document.getElementById('ajax-message-container');
+                    msgContainer.innerHTML = '';
+                    
+                    // Mostrar loading no botão
+                    btnSubmit.disabled = true;
+                    btnSpan.innerText = 'Enviando...';
+                    
+                    const formData = new FormData(form);
+                    const url = form.getAttribute('action');
+                    
+                    fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        return response.json().then(data => ({ status: response.status, data: data }));
+                    })
+                    .then(result => {
+                        if (result.status === 200 && result.data.success) {
+                            // Sucesso! Mostra mensagem e recarrega a página para atualizar o histórico
+                            msgContainer.innerHTML = `
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-check-circle-fill me-2"></i>${result.data.message}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `;
+                            form.reset();
+                            // Recarrega em 1.5s para mostrar a tabela atualizada
+                            setTimeout(() => {
+                                window.location.href = window.location.pathname + '?enviado=1';
+                            }, 1500);
+                        } else if (result.status === 400 && result.data.errors) {
+                            // Erro de validação
+                            btnSubmit.disabled = false;
+                            btnSpan.innerText = originalBtnText;
+                            
+                            const errors = result.data.errors;
+                            
+                            if (errors.__all__) {
+                                msgContainer.innerHTML = `
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>${errors.__all__.join('<br>')}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                `;
+                            }
+                            
+                            // Mostrar erros específicos em cada campo
+                            for (const [field, fieldErrors] of Object.entries(errors)) {
+                                if (field !== '__all__') {
+                                    const errorDiv = document.getElementById(`error-${field}`);
+                                    if (errorDiv) {
+                                        errorDiv.querySelector('span').innerText = fieldErrors.join(', ');
+                                        errorDiv.classList.remove('d-none');
+                                    }
+                                }
+                            }
+                        } else {
+                            throw new Error('Erro desconhecido.');
+                        }
+                    })
+                    .catch(error => {
+                        btnSubmit.disabled = false;
+                        btnSpan.innerText = originalBtnText;
+                        msgContainer.innerHTML = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-octagon me-2"></i>Ocorreu um erro inesperado ao enviar o arquivo.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

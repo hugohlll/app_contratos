@@ -176,7 +176,7 @@
         window.myChart = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['Conformidade (OK!)', 'Entregue', 'Ajustes Necessários', 'Pendente'],
+                labels: ['Conformidade (OK!)', 'Aguardando análise', 'Ajustes Necessários', 'Pendente'],
                 datasets: [{
                     data: [{{ ok_no_mes }}, {{ entregues_no_mes }}, {{ correcao_no_mes }}, {{ pendentes_no_mes }}],
                     backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#9ca3af'],
@@ -188,12 +188,13 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'bottom',
+                        position: 'right',
+                        align: 'center',
                         labels: {
                             font: {
                                 size: 13
                             },
-                            padding: 20
+                            padding: 15
                         }
                     },
                     tooltip: {
@@ -215,13 +216,23 @@
             }
         });
 
+        // URLs base para o Javascript (evita problemas com subdiretórios no servidor)
+        const URL_DOWNLOAD_BASE = "{% url 'download_prestacao' 999999 %}";
+        const URL_STATUS_BASE = "{% url 'alterar_status_prestacao' 999999 'STATUS_PLACEHOLDER' %}";
+        const URL_EXCLUIR_BASE = "{% url 'excluir_prestacao' 999999 %}";
+
         // Função para gerar o HTML da célula baseado no novo status
         function renderCellHtml(prestacaoId, status, isAdmin, isAuditor) {
             let html = '<div class="d-flex flex-column align-items-center">';
             
+            const urlDownload = URL_DOWNLOAD_BASE.replace('999999', prestacaoId);
+            const urlOk = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'ok');
+            const urlCorrecao = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'correcao');
+            const urlExcluir = URL_EXCLUIR_BASE.replace('999999', prestacaoId);
+            
             if (status === 'entregue') {
                 html += `
-                    <a href="/portal/prestacao/download/${prestacaoId}/" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
+                    <a href="${urlDownload}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
                         <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
                         <span style="font-size: 0.75rem;">Entregue</span>
                     </a>
@@ -229,16 +240,16 @@
                 if (isAuditor) {
                     html += `
                         <div class="d-flex gap-1 mt-1">
-                            <a href="/portal/prestacao/status/${prestacaoId}/ok/" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                            <a href="${urlOk}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
                                 <i class="bi bi-check-lg"></i>
                             </a>
-                            <a href="/portal/prestacao/status/${prestacaoId}/correcao/" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                            <a href="${urlCorrecao}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
                                 <i class="bi bi-exclamation-triangle"></i>
                             </a>
                     `;
                     if (isAdmin) {
                         html += `
-                            <a href="/portal/prestacao/excluir/${prestacaoId}/" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
                                 <i class="bi bi-trash"></i>
                             </a>
                         `;
@@ -247,7 +258,7 @@
                 }
             } else if (status === 'correcao') {
                 html += `
-                    <a href="/portal/prestacao/download/${prestacaoId}/" target="_blank" class="text-warning text-decoration-none fw-bold p-1" title="Baixar PDF">
+                    <a href="${urlDownload}" target="_blank" class="text-warning text-decoration-none fw-bold p-1" title="Baixar PDF">
                         <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
                         <span style="font-size: 0.75rem;">Corrigir</span>
                     </a>
@@ -255,13 +266,13 @@
                 if (isAuditor) {
                     html += `
                         <div class="d-flex gap-1 mt-1">
-                            <a href="/portal/prestacao/status/${prestacaoId}/ok/" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                            <a href="${urlOk}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
                                 <i class="bi bi-check-lg"></i>
                             </a>
                     `;
                     if (isAdmin) {
                         html += `
-                            <a href="/portal/prestacao/excluir/${prestacaoId}/" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
                                 <i class="bi bi-trash"></i>
                             </a>
                         `;
@@ -270,7 +281,7 @@
                 }
             } else if (status === 'ok') {
                 html += `
-                    <a href="/portal/prestacao/download/${prestacaoId}/" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
+                    <a href="${urlDownload}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
                         <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
                         <span style="font-size: 0.75rem;">Conformidade</span>
                     </a>
@@ -278,13 +289,13 @@
                 if (isAuditor) {
                     html += `
                         <div class="d-flex gap-1 mt-1">
-                            <a href="/portal/prestacao/status/${prestacaoId}/correcao/" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                            <a href="${urlCorrecao}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
                                 <i class="bi bi-exclamation-triangle"></i>
                             </a>
                     `;
                     if (isAdmin) {
                         html += `
-                            <a href="/portal/prestacao/excluir/${prestacaoId}/" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
                                 <i class="bi bi-trash"></i>
                             </a>
                         `;
