@@ -104,12 +104,17 @@
                                             <i class="bi bi-exclamation-triangle"></i>
                                         </a>
                                         {% if is_admin %}
-                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                         {% endif %}
                                     </div>
                                     {% endif %}
+                                    
+                                    <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-id="{{ entrega.prestacao.id }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                        <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                    </div>
                                 </div>
                             {% elif entrega.status == 'correcao' %}
                                 <div class="d-flex flex-column align-items-center">
@@ -123,12 +128,17 @@
                                             <i class="bi bi-check-lg"></i>
                                         </a>
                                         {% if is_admin %}
-                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                         {% endif %}
                                     </div>
                                     {% endif %}
+                                    
+                                    <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-id="{{ entrega.prestacao.id }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                        <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                    </div>
                                 </div>
                             {% elif entrega.status == 'ok' %}
                                 <div class="d-flex flex-column align-items-center">
@@ -142,12 +152,17 @@
                                             <i class="bi bi-exclamation-triangle"></i>
                                         </a>
                                         {% if is_admin %}
-                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                         {% endif %}
                                     </div>
                                     {% endif %}
+                                    
+                                    <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-id="{{ entrega.prestacao.id }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                        <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                    </div>
                                 </div>
                             {% else %}
                                 <div class="text-muted opacity-50 py-2">
@@ -222,7 +237,16 @@
         const URL_EXCLUIR_BASE = "{% url 'excluir_prestacao' 999999 %}";
 
         // Função para gerar o HTML da célula baseado no novo status
-        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor) {
+        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor, comporApresentacao) {
+            if (status === 'pendente') {
+                return `
+                    <div class="text-muted opacity-50 py-2 text-center">
+                        <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
+                        <span style="font-size: 0.75rem;">Pendente</span>
+                    </div>
+                `;
+            }
+            
             let html = '<div class="d-flex flex-column align-items-center">';
             
             const urlDownload = URL_DOWNLOAD_BASE.replace('999999', prestacaoId);
@@ -249,7 +273,7 @@
                     `;
                     if (isAdmin) {
                         html += `
-                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
                                 <i class="bi bi-trash"></i>
                             </a>
                         `;
@@ -272,7 +296,7 @@
                     `;
                     if (isAdmin) {
                         html += `
-                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
                                 <i class="bi bi-trash"></i>
                             </a>
                         `;
@@ -295,7 +319,7 @@
                     `;
                     if (isAdmin) {
                         html += `
-                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
                                 <i class="bi bi-trash"></i>
                             </a>
                         `;
@@ -304,17 +328,37 @@
                 }
             }
             
+            // Adiciona o checkbox de prioritário
+            let checkboxState = comporApresentacao ? 'checked' : '';
+            let tooltipText = 'Marcar como prioritário na apresentação';
+            
+            html += `
+                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-id="${prestacaoId}" ${checkboxState} title="${tooltipText}">
+                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="${tooltipText}">Prioritário</label>
+                </div>
+            `;
+            
             html += '</div>';
             return html;
         }
 
         // Intercepta os cliques nos botões de alteração de status
         document.addEventListener("click", function(event) {
-            const btn = event.target.closest('.btn-alterar-status');
-            if (!btn) return;
+            const btnAlterar = event.target.closest('.btn-alterar-status');
+            const btnExcluir = event.target.closest('.btn-excluir-ajax');
+            
+            if (!btnAlterar && !btnExcluir) return;
             
             event.preventDefault();
             
+            if (btnExcluir) {
+                if (!confirm("Tem certeza que deseja excluir esta prestação de contas? Essa ação não pode ser desfeita.")) {
+                    return;
+                }
+            }
+            
+            const btn = btnAlterar || btnExcluir;
             const url = btn.getAttribute('href');
             const td = btn.closest('td');
             
@@ -343,7 +387,7 @@
                     td.style.opacity = '1';
                     if (data.success) {
                         // Atualiza o conteúdo da célula
-                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor);
+                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao);
                         
                         // Atualiza o gráfico se os dados de estatística estiverem disponíveis
                         if (window.myChart && data.stats) {
@@ -366,6 +410,47 @@
                 }
                 console.error(error);
                 alert('Erro ao tentar atualizar o status.');
+            });
+        });
+        
+        // Intercepta os cliques nos checkboxes de apresentação
+        const TOGGLE_URL_BASE = "{% url 'toggle_apresentacao_prestacao' 999999 %}";
+        
+        document.addEventListener("change", function(event) {
+            if (!event.target.classList.contains('checkbox-apresentacao')) return;
+            
+            const checkbox = event.target;
+            const prestacaoId = checkbox.getAttribute('data-id');
+            if (!prestacaoId) return;
+            
+            const url = TOGGLE_URL_BASE.replace('999999', prestacaoId);
+            const isChecked = checkbox.checked;
+            
+            checkbox.disabled = true; // Desabilita enquanto carrega
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ checked: isChecked })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    // Reverte se deu erro
+                    checkbox.checked = !isChecked;
+                    alert('Erro: ' + (data.error || 'Não foi possível alterar a seleção do slide.'));
+                }
+                checkbox.disabled = false;
+            })
+            .catch(error => {
+                console.error(error);
+                checkbox.checked = !isChecked;
+                checkbox.disabled = false;
+                alert('Erro de rede ao tentar alterar a seleção do slide.');
             });
         });
     });

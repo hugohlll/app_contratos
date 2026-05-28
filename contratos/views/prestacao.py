@@ -17,6 +17,8 @@ def upload_prestacao(request, contrato_id):
     
     if request.method == 'POST':
         form = PrestacaoContasUploadForm(request.POST, request.FILES, contrato=contrato)
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
+        
         if form.is_valid():
             mes = form.cleaned_data['mes_referencia']
             ano = form.cleaned_data['ano_referencia']
@@ -40,17 +42,28 @@ def upload_prestacao(request, contrato_id):
             prestacao.contrato = contrato
             prestacao.save()
             
+            if is_ajax:
+                return JsonResponse({'success': True, 'message': 'Prestação de contas recebida com sucesso!'})
+            
             # Redireciona com query param de sucesso
             return redirect(f"/contrato/{contrato.id}/?enviado=1")
         else:
+            if is_ajax:
+                errors = {}
+                for field, error_list in form.errors.items():
+                    errors[field] = [str(e) for e in error_list]
+                if form.non_field_errors():
+                    errors['__all__'] = [str(e) for e in form.non_field_errors()]
+                return JsonResponse({'success': False, 'errors': errors}, status=400)
+                
             # Form inválido: Adiciona mensagens de erro e redireciona de volta
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field.capitalize()}: {error}")
-            return redirect('detalhe_contrato_publico', contrato_id=contrato.id)
+            return redirect('detalhe_contrato', contrato_id=contrato.id)
     else:
         # Se for GET na URL de upload, redireciona para o detalhe
-        return redirect('detalhe_contrato_publico', contrato_id=contrato.id)
+        return redirect('detalhe_contrato', contrato_id=contrato.id)
 
 
 @login_required
@@ -182,12 +195,60 @@ def excluir_prestacao(request, pk):
     """Excluir entrega (Apenas Admin)."""
     prestacao = get_object_or_404(PrestacaoContas, pk=pk)
     
-    if request.method == 'POST':
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
+    
+    if request.method == 'POST' or is_ajax:
         # Apagar o arquivo físico
         if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
             os.remove(prestacao.arquivo.path)
             
         prestacao.delete()
+        
+        if is_ajax:
+            # Recalcular estatísticas para o gráfico
+            hoje = date.today()
+            mes = request.GET.get('mes')
+            ano = request.GET.get('ano')
+            
+            if mes and ano:
+                try:
+                    mes = int(mes)
+                    ano = int(ano)
+                except ValueError:
+                    mes = ano = None
+            
+            # Se não vieram filtros válidos na requisição AJAX, pegamos do mês atual
+            if not mes or not ano:
+                mes = hoje.month
+                ano = hoje.year
+
+            total_contratos = Contrato.objects.filter(
+                vigencia_inicio__lte=hoje,
+                vigencia_fim__gte=hoje
+            ).count()
+            
+            entregues_no_mes = PrestacaoContas.objects.filter(mes_referencia=mes, ano_referencia=ano, status='entregue').count()
+            correcao_no_mes = PrestacaoContas.objects.filter(mes_referencia=mes, ano_referencia=ano, status='correcao').count()
+            ok_no_mes = PrestacaoContas.objects.filter(mes_referencia=mes, ano_referencia=ano, status='ok').count()
+            pendentes_no_mes = total_contratos - (entregues_no_mes + correcao_no_mes + ok_no_mes)
+
+            return JsonResponse({
+                'success': True,
+                'status': 'pendente',
+                'status_display': 'Pendente',
+                'prestacao_id': None,
+                'compor_apresentacao': False,
+                'is_admin': is_admin(request.user),
+                'is_auditor': is_auditor(request.user),
+                'stats': {
+                    'ok_no_mes': ok_no_mes,
+                    'entregues_no_mes': entregues_no_mes,
+                    'correcao_no_mes': correcao_no_mes,
+                    'pendentes_no_mes': pendentes_no_mes,
+                    'total_contratos': total_contratos
+                }
+            })
+            
         messages.success(request, "Prestação de Contas excluída com sucesso.")
         return redirect('dashboard_prestacao')
         
@@ -332,6 +393,7 @@ def alterar_status_prestacao(request, pk, novo_status):
             'status': prestacao.status,
             'status_display': prestacao.get_status_display(),
             'prestacao_id': prestacao.id,
+            'compor_apresentacao': prestacao.compor_apresentacao,
             'is_admin': is_admin(request.user),
             'is_auditor': is_auditor(request.user),
             'stats': {
@@ -345,3 +407,27 @@ def alterar_status_prestacao(request, pk, novo_status):
 
     messages.success(request, f"Status da prestação do contrato {prestacao.contrato.numero} alterado para {prestacao.get_status_display()}.")
     return redirect('dashboard_prestacao')
+
+@login_required
+def toggle_apresentacao_prestacao(request, pk):
+    """Ativa/Desativa o checkbox para compor apresentação."""
+    import json
+    
+    prestacao = get_object_or_404(PrestacaoContas, pk=pk)
+    
+    # Apenas admin ou auditor devem poder fazer isso
+    if not (is_admin(request.user) or is_auditor(request.user)):
+        return JsonResponse({'success': False, 'error': 'Não autorizado'}, status=403)
+        
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            checked = data.get('checked', False)
+                
+            prestacao.compor_apresentacao = checked
+            prestacao.save(update_fields=['compor_apresentacao'])
+            return JsonResponse({'success': True, 'checked': prestacao.compor_apresentacao})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            
+    return JsonResponse({'success': False, 'error': 'Método inválido'}, status=405)

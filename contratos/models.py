@@ -276,6 +276,9 @@ class PrestacaoContas(models.Model):
     status = models.CharField(
         "Status", max_length=15, choices=STATUS_CHOICES, default='entregue'
     )
+    compor_apresentacao = models.BooleanField(
+        "Compor Apresentação", default=False, help_text="Marque se este slide fará parte da apresentação consolidada"
+    )
     data_envio = models.DateTimeField(auto_now_add=True)
     observacao = models.TextField("Observação", blank=True)
 

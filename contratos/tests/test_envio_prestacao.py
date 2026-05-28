@@ -372,11 +372,40 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         self.prestacao.refresh_from_db()
         self.assertEqual(self.prestacao.status, 'correcao')
 
-        # correcao -> entregue
         url = reverse('alterar_status_prestacao', kwargs={'pk': pk, 'novo_status': 'entregue'})
         self._ajax_get(url)
         self.prestacao.refresh_from_db()
         self.assertEqual(self.prestacao.status, 'entregue')
+
+    def test_toggle_apresentacao_prestacao(self):
+        """Testa o toggle da seleção para compor apresentação (Prioritário)."""
+        self.client.login(username="auditor_ajax", password="pass123")
+        pk = self.prestacao.id
+        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        
+        # Garante que status não é 'ok' inicialmente
+        self.assertNotEqual(self.prestacao.status, 'ok')
+        
+        # Agora deve funcionar mesmo sem ser OK
+        response = self.client.post(url, data='{"checked": true}', content_type='application/json')
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertTrue(data['checked'])
+        self.prestacao.refresh_from_db()
+        self.assertTrue(self.prestacao.compor_apresentacao)
+
+    def test_ajax_excluir_prestacao(self):
+        """A exclusão via AJAX deve retornar JSON e o status pendente."""
+        self.client.login(username="admin_ajax", password="pass123")
+        pk = self.prestacao.id
+        url = reverse('excluir_prestacao', kwargs={'pk': pk})
+        
+        response = self._ajax_get(url)
+        data = response.json()
+        
+        self.assertTrue(data['success'])
+        self.assertEqual(data['status'], 'pendente')
+        self.assertFalse(PrestacaoContas.objects.filter(id=pk).exists())
 
 
 class ModelPrestacaoContasTests(BaseTestSetup):
