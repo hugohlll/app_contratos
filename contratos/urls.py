@@ -91,4 +91,5 @@ urlpatterns = [
     path('portal/prestacao/toggle_apresentacao/', prestacao.toggle_apresentacao_prestacao, name='toggle_apresentacao_prestacao'),
     path('portal/prestacao/consolidar/', prestacao.consolidar_apresentacao, name='consolidar_apresentacao'),
     path('portal/prestacao/gestores/reordenar/', prestacao.reordenar_gestores_prio, name='reordenar_gestores_prio'),
+    path('portal/prestacao/calendario/salvar/', prestacao.salvar_calendario_prestacao, name='salvar_calendario_prestacao'),
 ]

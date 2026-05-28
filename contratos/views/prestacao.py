@@ -10,7 +10,7 @@ import json
 from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente
+from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao
 from contratos.forms import PrestacaoContasUploadForm
 from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx, get_filtro_ativos, is_admin, is_auditor
 
@@ -222,6 +222,19 @@ def dashboard_prestacao(request):
         'meses_choices': [(i, meses_nomes[i-1]) for i in range(1, 13)],
         'anos_choices': range(ano_atual - 2, ano_atual + 1),
     }
+    
+    # Busca calendário do ano selecionado
+    calendarios = {c.mes: c for c in CalendarioPrestacao.objects.filter(ano=filtro_ano)}
+    calendario_anual = []
+    for m in range(1, 13):
+        cal = calendarios.get(m)
+        calendario_anual.append({
+            'mes': m,
+            'nome_mes': meses_nomes[m-1],
+            'data_entrega': cal.data_entrega.strftime('%Y-%m-%d') if cal and cal.data_entrega else '',
+            'data_apresentacao': cal.data_apresentacao.strftime('%Y-%m-%d') if cal and cal.data_apresentacao else ''
+        })
+    context['calendario_anual'] = calendario_anual
     
     context.update(stats)
     
@@ -644,3 +657,27 @@ def exportar_historico_prestacao_csv(request):
         
     nome_arquivo = "historico_prestacao_contas_completo"
     return export_csv_or_xlsx(request, nome_arquivo, headers, data)
+
+@login_required
+@require_POST
+def salvar_calendario_prestacao(request):
+    """Salva as datas do calendário anual via AJAX."""
+    if not is_admin(request.user) and not is_auditor(request.user):
+        return JsonResponse({'success': False, 'error': 'Acesso negado.'}, status=403)
+        
+    try:
+        data = json.loads(request.body)
+        ano = int(data.get('ano'))
+        mes = int(data.get('mes'))
+        data_entrega = data.get('data_entrega') or None
+        data_apresentacao = data.get('data_apresentacao') or None
+        
+        cal, _ = CalendarioPrestacao.objects.get_or_create(ano=ano, mes=mes)
+        cal.data_entrega = data_entrega
+        cal.data_apresentacao = data_apresentacao
+        cal.save()
+        
+        return JsonResponse({'success': True, 'message': 'Calendário salvo com sucesso.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+

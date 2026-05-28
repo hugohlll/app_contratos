@@ -296,3 +296,18 @@ class PrestacaoContas(models.Model):
 
     def __str__(self):
         return f"PC {self.contrato.numero} - {self.mes_referencia:02d}/{self.ano_referencia}"
+
+class CalendarioPrestacao(models.Model):
+    ano = models.IntegerField("Ano")
+    mes = models.IntegerField("Mês")
+    data_entrega = models.DateField("Data de Entrega dos Slides", null=True, blank=True)
+    data_apresentacao = models.DateField("Data Prevista da Apresentação", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Calendário de Prestação"
+        verbose_name_plural = "Calendários de Prestação"
+        ordering = ['ano', 'mes']
+        unique_together = ['ano', 'mes']
+
+    def __str__(self):
+        return f"{self.mes:02d}/{self.ano}"

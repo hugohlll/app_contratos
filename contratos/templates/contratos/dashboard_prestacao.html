@@ -77,7 +77,7 @@
         <div class="card shadow-sm h-100">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                 <h6 class="m-0 fw-bold text-secondary">
-                    <i class="bi bi-pie-chart-fill me-2 text-warning"></i>Entregas Prioritárias
+                    <i class="bi bi-pie-chart-fill me-2 text-warning"></i>Slides da Apresentação
                 </h6>
             </div>
             <div class="card-body d-flex flex-column align-items-center justify-content-center">
@@ -92,7 +92,7 @@
         <div class="card shadow-sm h-100">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                 <h6 class="m-0 fw-bold text-secondary">
-                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>Gestores (Prioritários)
+                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>Fiscais (Apresentação)
                 </h6>
             </div>
             <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
@@ -259,6 +259,39 @@
                     {% empty %}
                     <tr>
                         <td colspan="7" class="text-center py-4 text-muted">Nenhum contrato ativo no momento.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- CALENDÁRIO ANUAL DE PRESTAÇÃO -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="m-0 text-dark"><i class="bi bi-calendar3 me-2"></i>Calendário Anual de Prestação de Contas ({{ filtro_ano }})</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 20%;">Mês</th>
+                        <th style="width: 40%;">Data de Entrega dos Slides</th>
+                        <th style="width: 40%;">Data Prevista para Apresentação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cal in calendario_anual %}
+                    <tr>
+                        <td class="fw-bold">{{ cal.nome_mes }}</td>
+                        <td>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_entrega" value="{{ cal.data_entrega }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                        </td>
+                        <td>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao" value="{{ cal.data_apresentacao }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -650,6 +683,47 @@
                 checkbox.checked = !isChecked;
                 checkbox.disabled = false;
                 alert('Erro de rede ao tentar alterar a seleção do slide.');
+            });
+        });
+        
+        // Intercepta mudanças no calendário
+        document.addEventListener("change", function(event) {
+            if (!event.target.classList.contains('cal-input')) return;
+            
+            const input = event.target;
+            const mes = input.getAttribute('data-mes');
+            const ano = '{{ filtro_ano }}';
+            
+            const row = input.closest('tr');
+            const data_entrega = row.querySelector('[data-campo="data_entrega"]').value;
+            const data_apresentacao = row.querySelector('[data-campo="data_apresentacao"]').value;
+            
+            fetch("{% url 'salvar_calendario_prestacao' %}", {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ 
+                    ano: ano,
+                    mes: mes,
+                    data_entrega: data_entrega,
+                    data_apresentacao: data_apresentacao
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Erro ao salvar calendário: ' + (data.error || 'Erro desconhecido'));
+                } else {
+                    input.style.backgroundColor = '#d1e7dd';
+                    setTimeout(() => { input.style.backgroundColor = ''; }, 1000);
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Erro de rede ao salvar calendário.');
             });
         });
     });
