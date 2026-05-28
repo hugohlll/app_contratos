@@ -23,7 +23,7 @@
         <form action="{% url 'exportar_prestacao_csv' %}" method="get" class="d-inline-flex m-0 align-items-center">
             <input type="hidden" name="mes" value="{{ filtro_mes }}">
             <input type="hidden" name="ano" value="{{ filtro_ano }}">
-            <select name="formato" class="form-select form-select-sm border-secondary text-secondary me-2" style="width: auto; height: 31px; border-radius: 50rem;">
+            <select name="formato" class="form-select form-select-sm border-secondary text-secondary no-tomselect me-2" style="width: 75px; height: 31px; border-radius: 50rem;">
                 <option value="csv">CSV</option>
                 <option value="xlsx" selected>XLS</option>
             </select>
@@ -33,7 +33,7 @@
         </form>
         
         <form action="{% url 'exportar_historico_prestacao_csv' %}" method="get" class="d-inline-flex m-0 align-items-center ms-2">
-            <select name="formato" class="form-select form-select-sm border-secondary text-secondary me-2" style="width: auto; height: 31px; border-radius: 50rem;">
+            <select name="formato" class="form-select form-select-sm border-secondary text-secondary no-tomselect me-2" style="width: 75px; height: 31px; border-radius: 50rem;">
                 <option value="csv">CSV</option>
                 <option value="xlsx" selected>XLS</option>
             </select>

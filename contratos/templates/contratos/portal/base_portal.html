@@ -165,7 +165,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll('select').forEach((el) => {
+            document.querySelectorAll('select:not(.no-tomselect)').forEach((el) => {
                 let settings = {
                     create: false,
                     plugins: ['clear_button'],
