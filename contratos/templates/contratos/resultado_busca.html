@@ -132,7 +132,7 @@
                                 </a>
                                 <small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>até {{                  contrato.vigencia_fim|date:"d/m/Y" }}</small>
                                 <div class="mt-2">
-                                    <div class="fw-semibold" title="{% if contrato.empresa.nome_fantasia %}{{ contrato.empresa.razao_social }}{% endif %}">{{ contrato.empresa.nome_exibicao }}</div>
+                                    <div class="fw-semibold">{{ contrato.empresa.razao_social }}{% if contrato.empresa.nome_fantasia %} ({{ contrato.empresa.nome_fantasia }}){% endif %}</div>
                                     <small class="text-muted">{{ contrato.empresa.cnpj }}</small>
                                 </div>
                             </div>

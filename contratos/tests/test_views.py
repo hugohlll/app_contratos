@@ -100,7 +100,7 @@ class PublicViewsTest(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "555/2026")
-        self.assertContains(response, "Fantasia Legal")
+        self.assertContains(response, "Empresa Fantasia LTDA (Fantasia Legal)")
 
 from django.contrib.auth.models import User, Group
 
