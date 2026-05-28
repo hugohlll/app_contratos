@@ -16,6 +16,8 @@ Cobre:
 - Permissões de acesso à alteração de status via AJAX
 - Toggle de apresentação (prioritário): permissões, método, stats
 - Dashboard: contexto com estatísticas de prioritários
+- Tabela de gestores prioritários: estrutura, conteúdo e ordenação (antiguidade + alfabética)
+- Consolidação de PDF: download, filtros (somente OK+prioritário), permissões
 """
 import os
 import json
@@ -534,6 +536,106 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         self.assertIn('prio_correcao', context)
         self.assertIn('prio_pendentes', context)
         self.assertIn('total_contratos', context)
+        self.assertIn('gestores_prio', context)
+
+    # --- Testes da Tabela de Gestores Prioritários ---
+
+    def test_toggle_retorna_gestores_prio_com_estrutura_correta(self):
+        """O toggle deve retornar gestores_prio como lista de dicts com gestor, contrato, status."""
+        self.client.login(username="auditor_ajax", password="pass123")
+        pk = self.prestacao.id
+        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': pk})
+        
+        response = self.client.post(
+            url, data=json.dumps({'checked': True, 'mes': 5, 'ano': 2026}),
+            content_type='application/json'
+        )
+        data = response.json()
+        
+        self.assertTrue(data['success'])
+        self.assertIn('gestores_prio', data['stats'])
+        gestores = data['stats']['gestores_prio']
+        self.assertIsInstance(gestores, list)
+        self.assertEqual(len(gestores), 1)
+        
+        gestor = gestores[0]
+        self.assertIn('gestor', gestor)
+        self.assertIn('contrato', gestor)
+        self.assertIn('status', gestor)
+        self.assertEqual(gestor['contrato'], self.contrato.numero)
+        self.assertEqual(gestor['status'], 'entregue')
+
+    def test_gestores_prio_ordenacao_antiguidade_e_alfabetica(self):
+        """Gestores prioritários devem vir ordenados por antiguidade do posto e depois alfabeticamente."""
+        self.client.login(username="auditor_ajax", password="pass123")
+        
+        # Criar postos com diferentes senioridades
+        posto_sgt = PostoGraduacao.objects.create(sigla="3S", descricao="Terceiro-Sargento", senioridade=7)
+        posto_cb = self.prestacao.agente.posto  # CB, senioridade=8
+        
+        # Criar agentes: dois CBs e um 3S
+        agente_alpha = Agente.objects.create(
+            nome_completo="Alpha Silva", nome_de_guerra="Alpha",
+            posto=posto_cb, saram="1111111"
+        )
+        agente_bravo = Agente.objects.create(
+            nome_completo="Bravo Santos", nome_de_guerra="Bravo",
+            posto=posto_sgt, saram="2222222"
+        )
+        
+        # Criar contratos adicionais
+        contrato2 = Contrato.objects.create(
+            numero="21/2026", objeto="Serviço 2",
+            empresa=self.empresa,
+            vigencia_inicio=date(2026, 1, 1),
+            vigencia_fim=date(2026, 12, 31),
+            valor_total=30000.00
+        )
+        contrato3 = Contrato.objects.create(
+            numero="22/2026", objeto="Serviço 3",
+            empresa=self.empresa,
+            vigencia_inicio=date(2026, 1, 1),
+            vigencia_fim=date(2026, 12, 31),
+            valor_total=20000.00
+        )
+        
+        # Criar prestações prioritárias
+        p2 = PrestacaoContas.objects.create(
+            contrato=contrato2, agente=agente_alpha,
+            mes_referencia=5, ano_referencia=2026,
+            arquivo=self._make_pdf("p2.pdf"),
+            compor_apresentacao=True
+        )
+        p3 = PrestacaoContas.objects.create(
+            contrato=contrato3, agente=agente_bravo,
+            mes_referencia=5, ano_referencia=2026,
+            arquivo=self._make_pdf("p3.pdf"),
+            compor_apresentacao=True
+        )
+        # Marcar a prestação original como prioritária também (CB Pereira)
+        self.prestacao.compor_apresentacao = True
+        self.prestacao.save(update_fields=['compor_apresentacao'])
+        
+        # Buscar stats via toggle (qualquer endpoint que retorne stats serve)
+        url = reverse('toggle_apresentacao_prestacao', kwargs={'pk': self.prestacao.id})
+        response = self.client.post(
+            url, data=json.dumps({'checked': True, 'mes': 5, 'ano': 2026}),
+            content_type='application/json'
+        )
+        data = response.json()
+        gestores = data['stats']['gestores_prio']
+        
+        # Ordem esperada: 3S Bravo (senioridade 7), CB Alpha (sen 8), CB Pereira (sen 8)
+        # 3S vem primeiro (menor senioridade = mais antigo)
+        # entre os CBs, Alpha vem antes de Pereira (alfabético)
+        self.assertEqual(len(gestores), 3)
+        self.assertEqual(gestores[0]['gestor'], '3S Bravo')
+        self.assertEqual(gestores[1]['gestor'], 'CB Alpha')
+        self.assertEqual(gestores[2]['gestor'], 'CB Pereira')
+        
+        # Cleanup
+        self._cleanup(p2)
+        self._cleanup(p3)
 
 
 class ModelPrestacaoContasTests(BaseTestSetup):
@@ -604,3 +706,89 @@ class ModelPrestacaoContasTests(BaseTestSetup):
         self.assertEqual(todos[1].ano_referencia, 2025)
         self._cleanup(p1)
         self._cleanup(p2)
+
+
+class ConsolidarApresentacaoTests(BaseTestSetup):
+    """Testes para a consolidação de slides prioritários em PDF único."""
+
+    def setUp(self):
+        super().setUp()
+        self.grupo_auditores, _ = Group.objects.get_or_create(name='Auditores')
+        self.user_auditor = User.objects.create_user(username="auditor_consolida", password="pass123")
+        self.user_auditor.groups.add(self.grupo_auditores)
+        self.user_admin = User.objects.create_superuser(username="admin_consolida", email="ac@t.com", password="pass123")
+        self.user_normal = User.objects.create_user(username="normal_consolida", password="pass123")
+
+    def _make_real_pdf(self, name="real.pdf"):
+        """Gera um PDF válido mínimo que pode ser lido pelo pypdf."""
+        import io
+        from pypdf import PdfWriter
+        writer = PdfWriter()
+        writer.add_blank_page(width=612, height=792)
+        buffer = io.BytesIO()
+        writer.write(buffer)
+        buffer.seek(0)
+        return SimpleUploadedFile(name, buffer.read(), content_type="application/pdf")
+
+    def tearDown(self):
+        for p in PrestacaoContas.objects.all():
+            self._cleanup(p)
+
+    def test_consolidar_download_pdf_valido(self):
+        """Auditor consolida slides prioritários em conformidade e baixa PDF."""
+        self.client.login(username="auditor_consolida", password="pass123")
+        prestacao = PrestacaoContas.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=5, ano_referencia=2026,
+            arquivo=self._make_real_pdf("slide1.pdf"),
+            status='ok', compor_apresentacao=True
+        )
+        url = reverse('consolidar_apresentacao')
+        response = self.client.get(url, {'mes': 5, 'ano': 2026})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('attachment', response['Content-Disposition'])
+        self.assertIn('Apresentacao_Consolidada_Mai_2026.pdf', response['Content-Disposition'])
+        # Verifica que o conteúdo é um PDF válido
+        self.assertTrue(response.content.startswith(b'%PDF'))
+
+    def test_consolidar_sem_slides_prioritarios_redireciona(self):
+        """Sem slides prioritários em conformidade, deve redirecionar com warning."""
+        self.client.login(username="auditor_consolida", password="pass123")
+        # Cria prestação sem ser prioritária
+        PrestacaoContas.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=5, ano_referencia=2026,
+            arquivo=self._make_real_pdf("slide.pdf"),
+            status='ok', compor_apresentacao=False
+        )
+        url = reverse('consolidar_apresentacao')
+        response = self.client.get(url, {'mes': 5, 'ano': 2026})
+        self.assertEqual(response.status_code, 302)
+
+    def test_consolidar_slides_prioritarios_nao_ok_redireciona(self):
+        """Slides prioritários que não estão em conformidade não devem ser consolidados."""
+        self.client.login(username="auditor_consolida", password="pass123")
+        PrestacaoContas.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=5, ano_referencia=2026,
+            arquivo=self._make_real_pdf("slide.pdf"),
+            status='entregue', compor_apresentacao=True
+        )
+        url = reverse('consolidar_apresentacao')
+        response = self.client.get(url, {'mes': 5, 'ano': 2026})
+        self.assertEqual(response.status_code, 302)
+
+    def test_consolidar_usuario_normal_redireciona(self):
+        """Usuário sem permissão é redirecionado (auditor_required usa redirect, não 403)."""
+        self.client.login(username="normal_consolida", password="pass123")
+        url = reverse('consolidar_apresentacao')
+        response = self.client.get(url, {'mes': 5, 'ano': 2026})
+        self.assertEqual(response.status_code, 302)
+
+    def test_consolidar_sem_login_redireciona(self):
+        """Requisição sem login deve redirecionar para a pesquisa pública."""
+        url = reverse('consolidar_apresentacao')
+        response = self.client.get(url, {'mes': 5, 'ano': 2026})
+        self.assertEqual(response.status_code, 302)

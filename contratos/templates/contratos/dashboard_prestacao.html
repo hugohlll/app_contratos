@@ -46,8 +46,8 @@
 {% endif %}
 
 <!-- GRÁFICOS (Mês Filtrado) -->
-<div class="row mb-4 justify-content-center">
-    <div class="col-md-6 mb-3 mb-md-0">
+<div class="row mb-4 align-items-stretch">
+    <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
         <div class="card shadow-sm h-100">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                 <h6 class="m-0 fw-bold text-secondary">
@@ -63,11 +63,11 @@
         </div>
     </div>
     
-    <div class="col-md-6">
+    <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
         <div class="card shadow-sm h-100">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                 <h6 class="m-0 fw-bold text-secondary">
-                    <i class="bi bi-bar-chart-fill me-2 text-warning"></i>Entregas Prioritárias
+                    <i class="bi bi-pie-chart-fill me-2 text-warning"></i>Entregas Prioritárias
                 </h6>
             </div>
             <div class="card-body d-flex flex-column align-items-center justify-content-center">
@@ -75,6 +75,57 @@
                     <canvas id="prioritariosBarChart"></canvas>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-12">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h6 class="m-0 fw-bold text-secondary">
+                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>Gestores (Prioritários)
+                </h6>
+            </div>
+            <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
+                <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem;">
+                    <thead class="table-light position-sticky top-0" style="z-index: 1;">
+                        <tr>
+                            <th class="ps-3">Gestor</th>
+                            <th>Contrato</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaGestoresPrioritarios">
+                        {% for gestor in gestores_prio %}
+                        <tr>
+                            <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
+                            <td>{{ gestor.contrato }}</td>
+                            <td class="text-center">
+                                {% if gestor.status == 'ok' %}
+                                    <span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>
+                                {% elif gestor.status == 'entregue' %}
+                                    <span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>
+                                {% elif gestor.status == 'correcao' %}
+                                    <span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">Nenhuma entrega prioritária.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if is_auditor %}
+            <div class="card-footer bg-white text-center py-2">
+                <a href="{% url 'consolidar_apresentacao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano }}" 
+                   class="btn btn-sm btn-outline-primary w-100" 
+                   title="Consolidar e baixar todos os slides prioritários em conformidade">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i>Consolidar PDF
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -290,6 +341,37 @@
                 }
             }
         });
+        
+        function atualizarTabelaPrioritarios(gestores) {
+            const tbody = document.getElementById('tabelaGestoresPrioritarios');
+            if (!tbody) return;
+            
+            if (!gestores || gestores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Nenhuma entrega prioritária.</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            gestores.forEach(g => {
+                let statusBadge = '';
+                if (g.status === 'ok') {
+                    statusBadge = '<span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>';
+                } else if (g.status === 'entregue') {
+                    statusBadge = '<span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>';
+                } else if (g.status === 'correcao') {
+                    statusBadge = '<span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>';
+                }
+                
+                html += `
+                    <tr>
+                        <td class="ps-3"><strong>${g.gestor}</strong></td>
+                        <td>${g.contrato}</td>
+                        <td class="text-center">${statusBadge}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
 
         // URLs base para o Javascript (evita problemas com subdiretórios no servidor)
         const URL_DOWNLOAD_BASE = "{% url 'download_prestacao' 999999 %}";
@@ -467,6 +549,9 @@
                                 data.stats.prio_pendentes
                             ];
                             window.myBarChart.update();
+                            if (data.stats.gestores_prio) {
+                                atualizarTabelaPrioritarios(data.stats.gestores_prio);
+                            }
                         }
                     } else {
                         alert('Erro ao alterar status: ' + (data.error || 'Erro desconhecido'));
@@ -526,6 +611,9 @@
                             data.stats.prio_pendentes
                         ];
                         window.myBarChart.update();
+                        if (data.stats.gestores_prio) {
+                            atualizarTabelaPrioritarios(data.stats.gestores_prio);
+                        }
                     }
                 }
                 checkbox.disabled = false;

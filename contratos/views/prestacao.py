@@ -91,6 +91,21 @@ def _get_dashboard_stats(ano, mes):
     prio_entregues = prestacoes_filtradas.filter(status='entregue', compor_apresentacao=True).count()
     prio_correcao = prestacoes_filtradas.filter(status='correcao', compor_apresentacao=True).count()
     
+    # Lista ordenada de gestores prioritários
+    lista_gestores_prio = prestacoes_filtradas.filter(
+        compor_apresentacao=True
+    ).select_related('agente', 'agente__posto', 'contrato').order_by(
+        'agente__posto__senioridade', 'agente__nome_de_guerra'
+    )
+    
+    gestores_prio = []
+    for g in lista_gestores_prio:
+        gestores_prio.append({
+            'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
+            'contrato': g.contrato.numero,
+            'status': g.status
+        })
+    
     return {
         'total_contratos': total_contratos,
         'ok_no_mes': ok,
@@ -100,7 +115,8 @@ def _get_dashboard_stats(ano, mes):
         'prio_ok': prio_ok,
         'prio_entregues': prio_entregues,
         'prio_correcao': prio_correcao,
-        'prio_pendentes': 0
+        'prio_pendentes': 0,
+        'gestores_prio': gestores_prio
     }
 
 
@@ -436,3 +452,82 @@ def toggle_apresentacao_prestacao(request, pk):
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
             
     return JsonResponse({'success': False, 'error': 'Método inválido'}, status=405)
+
+
+@auditor_required
+def consolidar_apresentacao(request):
+    """Consolida todos os slides prioritários em conformidade em um único PDF para download."""
+    import io
+    from pypdf import PdfWriter, PdfReader
+
+    hoje = date.today()
+
+    try:
+        filtro_mes = int(request.GET.get('mes', hoje.month))
+    except (ValueError, TypeError):
+        filtro_mes = hoje.month
+
+    try:
+        raw_ano = request.GET.get('ano', str(hoje.year)).replace('.', '')
+        filtro_ano = int(raw_ano)
+    except (ValueError, TypeError):
+        filtro_ano = hoje.year
+
+    contratos_vigentes = Contrato.objects.filter(
+        vigencia_inicio__lte=hoje,
+        vigencia_fim__gte=hoje
+    )
+
+    prestacoes = PrestacaoContas.objects.filter(
+        mes_referencia=filtro_mes,
+        ano_referencia=filtro_ano,
+        contrato__in=contratos_vigentes,
+        compor_apresentacao=True,
+        status='ok'
+    ).select_related('agente', 'agente__posto', 'contrato').order_by(
+        'agente__posto__senioridade', 'agente__nome_de_guerra'
+    )
+
+    if not prestacoes.exists():
+        messages.warning(request, "Nenhum slide prioritário em conformidade para consolidar.")
+        return redirect('dashboard_prestacao')
+
+    writer = PdfWriter()
+    erros = []
+
+    for p in prestacoes:
+        if not p.arquivo:
+            erros.append(f"Contrato {p.contrato.numero}: registro sem arquivo.")
+            continue
+
+        caminho = p.arquivo.path
+        if not os.path.isfile(caminho):
+            erros.append(f"Contrato {p.contrato.numero}: arquivo não encontrado no servidor.")
+            continue
+
+        try:
+            reader = PdfReader(caminho)
+            for page in reader.pages:
+                writer.add_page(page)
+        except Exception as e:
+            erros.append(f"Contrato {p.contrato.numero}: erro ao ler PDF ({e}).")
+
+    if erros:
+        for erro in erros:
+            messages.warning(request, erro)
+
+    if len(writer.pages) == 0:
+        messages.error(request, "Nenhuma página válida encontrada para consolidar.")
+        return redirect('dashboard_prestacao')
+
+    buffer = io.BytesIO()
+    writer.write(buffer)
+    buffer.seek(0)
+
+    meses_nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+    nome_mes = meses_nomes[filtro_mes - 1] if 1 <= filtro_mes <= 12 else str(filtro_mes)
+    nome_arquivo = f"Apresentacao_Consolidada_{nome_mes}_{filtro_ano}.pdf"
+
+    response = HttpResponse(buffer.read(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
+    return response

@@ -88,4 +88,5 @@ urlpatterns = [
     path('portal/prestacao/exportar/', prestacao.exportar_prestacao_csv, name='exportar_prestacao_csv'),
     path('portal/prestacao/status/<int:pk>/<str:novo_status>/', prestacao.alterar_status_prestacao, name='alterar_status_prestacao'),
     path('portal/prestacao/toggle_apresentacao/<int:pk>/', prestacao.toggle_apresentacao_prestacao, name='toggle_apresentacao_prestacao'),
+    path('portal/prestacao/consolidar/', prestacao.consolidar_apresentacao, name='consolidar_apresentacao'),
 ]
