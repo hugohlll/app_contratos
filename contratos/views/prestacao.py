@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.db.models import Count, Q, Prefetch
 from django.http import HttpResponse, Http404, JsonResponse
 from django.conf import settings
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente
 from contratos.forms import PrestacaoContasUploadForm
@@ -23,24 +24,31 @@ def upload_prestacao(request, contrato_id):
             mes = form.cleaned_data['mes_referencia']
             ano = form.cleaned_data['ano_referencia']
             
-            # Se já existir uma entrega, nós a excluímos para substituir
-            # (ou podemos atualizar a existente. Optamos por apagar o arquivo velho e substituir)
+            # Se já existir uma entrega (ex: uma "pendente" apenas para marcar prioridade), 
+            # nós a atualizamos para evitar perder o campo `compor_apresentacao`.
             existente = PrestacaoContas.objects.filter(
                 contrato=contrato, mes_referencia=mes, ano_referencia=ano
             ).first()
             
             if existente:
-                if existente.arquivo:
-                    # Remove o arquivo físico velho
-                    caminho = existente.arquivo.path
-                    if os.path.isfile(caminho):
-                        os.remove(caminho)
-                existente.delete()
-            
-            # Cria a nova
-            prestacao = form.save(commit=False)
-            prestacao.contrato = contrato
-            prestacao.save()
+                # Remove o arquivo físico velho se existir
+                if existente.arquivo and os.path.isfile(existente.arquivo.path):
+                    os.remove(existente.arquivo.path)
+                
+                existente.arquivo = form.cleaned_data.get('arquivo')
+                existente.agente = form.cleaned_data.get('agente')
+                existente.observacao = form.cleaned_data.get('observacao', '')
+                existente.status = 'entregue'
+                # Atualiza a data de envio
+                from django.utils import timezone
+                existente.data_envio = timezone.now()
+                existente.save()
+            else:
+                # Cria a nova
+                prestacao = form.save(commit=False)
+                prestacao.contrato = contrato
+                prestacao.status = 'entregue'
+                prestacao.save()
             
             if is_ajax:
                 return JsonResponse({'success': True, 'message': 'Prestação de contas recebida com sucesso!'})
@@ -85,11 +93,13 @@ def _get_dashboard_stats(ano, mes):
     ok = prestacoes_filtradas.filter(status='ok').count()
     entregues = prestacoes_filtradas.filter(status='entregue').count()
     correcao = prestacoes_filtradas.filter(status='correcao').count()
-    pendentes = total_contratos - prestacoes_filtradas.count()
+    # Pendentes são os contratos sem nenhuma entrega OU com entrega em status pendente
+    pendentes = total_contratos - (ok + entregues + correcao)
     
     prio_ok = prestacoes_filtradas.filter(status='ok', compor_apresentacao=True).count()
     prio_entregues = prestacoes_filtradas.filter(status='entregue', compor_apresentacao=True).count()
     prio_correcao = prestacoes_filtradas.filter(status='correcao', compor_apresentacao=True).count()
+    prio_pendentes = prestacoes_filtradas.filter(status='pendente', compor_apresentacao=True).count()
     
     # Lista ordenada de gestores prioritários
     lista_gestores_prio = prestacoes_filtradas.filter(
@@ -115,12 +125,13 @@ def _get_dashboard_stats(ano, mes):
         'prio_ok': prio_ok,
         'prio_entregues': prio_entregues,
         'prio_correcao': prio_correcao,
-        'prio_pendentes': 0,
+        'prio_pendentes': prio_pendentes,
         'gestores_prio': gestores_prio
     }
 
 
 @login_required
+@ensure_csrf_cookie
 def dashboard_prestacao(request):
     hoje = date.today()
     mes_atual = hoje.month
@@ -414,11 +425,9 @@ def alterar_status_prestacao(request, pk, novo_status):
     return redirect('dashboard_prestacao')
 
 @login_required
-def toggle_apresentacao_prestacao(request, pk):
-    """Ativa/Desativa o checkbox para compor apresentação."""
+def toggle_apresentacao_prestacao(request):
+    """Ativa/Desativa o checkbox para compor apresentação via POST com JSON."""
     import json
-    
-    prestacao = get_object_or_404(PrestacaoContas, pk=pk)
     
     # Apenas admin ou auditor devem poder fazer isso
     if not (is_admin(request.user) or is_auditor(request.user)):
@@ -428,26 +437,46 @@ def toggle_apresentacao_prestacao(request, pk):
         try:
             data = json.loads(request.body)
             checked = data.get('checked', False)
+            contrato_id = data.get('contrato_id')
             mes = data.get('mes')
             ano = data.get('ano')
             
-            try:
-                mes = int(mes) if mes else prestacao.mes_referencia
-                ano = int(ano) if ano else prestacao.ano_referencia
-            except ValueError:
-                mes = prestacao.mes_referencia
-                ano = prestacao.ano_referencia
+            if not contrato_id or not mes or not ano:
+                return JsonResponse({'success': False, 'error': 'Parâmetros incompletos.'}, status=400)
                 
-            prestacao.compor_apresentacao = checked
-            prestacao.save(update_fields=['compor_apresentacao'])
+            try:
+                mes = int(mes)
+                ano = int(ano)
+                contrato_id = int(contrato_id)
+            except ValueError:
+                return JsonResponse({'success': False, 'error': 'Parâmetros inválidos.'}, status=400)
+                
+            contrato = get_object_or_404(Contrato, pk=contrato_id)
+            
+            prestacao, created = PrestacaoContas.objects.get_or_create(
+                contrato=contrato,
+                mes_referencia=mes,
+                ano_referencia=ano,
+                defaults={
+                    'status': 'pendente',
+                    'compor_apresentacao': checked
+                }
+            )
+            
+            if not created:
+                prestacao.compor_apresentacao = checked
+                prestacao.save(update_fields=['compor_apresentacao'])
             
             stats = _get_dashboard_stats(ano, mes)
             
             return JsonResponse({
                 'success': True, 
                 'checked': prestacao.compor_apresentacao,
-                'stats': stats
+                'stats': stats,
+                'prestacao_id': prestacao.id
             })
+        except Http404:
+            return JsonResponse({'success': False, 'error': 'Contrato não encontrado.'}, status=404)
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
             

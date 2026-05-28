@@ -178,7 +178,7 @@
                                     {% endif %}
                                     
                                     <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-id="{{ entrega.prestacao.id }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
                                         <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
                                     </div>
                                 </div>
@@ -202,7 +202,7 @@
                                     {% endif %}
                                     
                                     <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-id="{{ entrega.prestacao.id }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
                                         <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
                                     </div>
                                 </div>
@@ -226,14 +226,20 @@
                                     {% endif %}
                                     
                                     <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-id="{{ entrega.prestacao.id }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
                                         <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
                                     </div>
                                 </div>
                             {% else %}
-                                <div class="text-muted opacity-50 py-2">
-                                    <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
-                                    <span style="font-size: 0.75rem;">Pendente</span>
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="text-muted opacity-50 py-2">
+                                        <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
+                                        <span style="font-size: 0.75rem;">Pendente</span>
+                                    </div>
+                                    <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                        <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                    </div>
                                 </div>
                             {% endif %}
                         </td>
@@ -379,17 +385,17 @@
         const URL_EXCLUIR_BASE = "{% url 'excluir_prestacao' 999999 %}";
 
         // Função para gerar o HTML da célula baseado no novo status
-        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor, comporApresentacao) {
+        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor, comporApresentacao, contratoId, mes, ano) {
+            let html = '<div class="d-flex flex-column align-items-center">';
+            
             if (status === 'pendente') {
-                return `
+                html += `
                     <div class="text-muted opacity-50 py-2 text-center">
                         <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
                         <span style="font-size: 0.75rem;">Pendente</span>
                     </div>
                 `;
-            }
-            
-            let html = '<div class="d-flex flex-column align-items-center">';
+            } else {
             
             const urlDownload = URL_DOWNLOAD_BASE.replace('999999', prestacaoId);
             const urlOk = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'ok');
@@ -469,6 +475,7 @@
                     html += '</div>';
                 }
             }
+            }
             
             // Adiciona o checkbox de prioritário
             let checkboxState = comporApresentacao ? 'checked' : '';
@@ -476,7 +483,7 @@
             
             html += `
                 <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-id="${prestacaoId}" ${checkboxState} title="${tooltipText}">
+                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="${contratoId}" data-mes="${mes}" data-ano="${ano}" ${checkboxState} title="${tooltipText}">
                     <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="${tooltipText}">Prioritário</label>
                 </div>
             `;
@@ -528,8 +535,14 @@
                 if (td) {
                     td.style.opacity = '1';
                     if (data.success) {
+                        // Descobrimos o contrato, mes e ano pelos data-attributes do checkbox, para reconstruir a célula
+                        const checkboxDentro = td.querySelector('.checkbox-apresentacao');
+                        const cId = checkboxDentro ? checkboxDentro.getAttribute('data-contrato-id') : null;
+                        const m = checkboxDentro ? checkboxDentro.getAttribute('data-mes') : null;
+                        const a = checkboxDentro ? checkboxDentro.getAttribute('data-ano') : null;
+                        
                         // Atualiza o conteúdo da célula
-                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao);
+                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a);
                         
                         // Atualiza os gráficos se os dados de estatística estiverem disponíveis
                         if (window.myChart && data.stats) {
@@ -568,21 +581,23 @@
         });
         
         // Intercepta os cliques nos checkboxes de apresentação
-        const TOGGLE_URL_BASE = "{% url 'toggle_apresentacao_prestacao' 999999 %}";
+        const TOGGLE_URL_BASE = "{% url 'toggle_apresentacao_prestacao' %}";
         
         document.addEventListener("change", function(event) {
             if (!event.target.classList.contains('checkbox-apresentacao')) return;
             
             const checkbox = event.target;
-            const prestacaoId = checkbox.getAttribute('data-id');
-            if (!prestacaoId) return;
+            const contratoId = checkbox.getAttribute('data-contrato-id');
+            const mes = checkbox.getAttribute('data-mes');
+            const ano = checkbox.getAttribute('data-ano');
             
-            const url = TOGGLE_URL_BASE.replace('999999', prestacaoId);
+            if (!contratoId || !mes || !ano) return;
+            
             const isChecked = checkbox.checked;
             
             checkbox.disabled = true; // Desabilita enquanto carrega
             
-            fetch(url, {
+            fetch(TOGGLE_URL_BASE, {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
@@ -591,8 +606,9 @@
                 },
                 body: JSON.stringify({ 
                     checked: isChecked,
-                    mes: '{{ filtro_mes }}',
-                    ano: '{{ filtro_ano }}'
+                    contrato_id: contratoId,
+                    mes: mes,
+                    ano: ano
                 })
             })
             .then(response => response.json())
