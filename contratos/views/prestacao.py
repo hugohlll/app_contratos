@@ -27,29 +27,28 @@ def upload_prestacao(request, contrato_id):
             ano = form.cleaned_data['ano_referencia']
             
             # Se já existir uma entrega (ex: uma "pendente" apenas para marcar prioridade), 
-            # nós a atualizamos para evitar perder o campo `compor_apresentacao`.
+            # nós a atualizamos se for pendente. Caso contrário, criamos uma nova entrega 
+            # para manter o histórico completo de envios.
             existente = PrestacaoContas.objects.filter(
                 contrato=contrato, mes_referencia=mes, ano_referencia=ano
-            ).first()
+            ).order_by('-data_envio').first()
             
-            if existente:
-                # Remove o arquivo físico velho se existir
-                if existente.arquivo and os.path.isfile(existente.arquivo.path):
-                    os.remove(existente.arquivo.path)
-                
+            if existente and existente.status == 'pendente':
+                # Atualiza o placeholder existente
                 existente.arquivo = form.cleaned_data.get('arquivo')
                 existente.agente = form.cleaned_data.get('agente')
                 existente.observacao = form.cleaned_data.get('observacao', '')
                 existente.status = 'entregue'
-                # Atualiza a data de envio
                 from django.utils import timezone
                 existente.data_envio = timezone.now()
                 existente.save()
             else:
-                # Cria a nova
+                # Cria uma nova entrega mantendo o histórico de arquivos
                 prestacao = form.save(commit=False)
                 prestacao.contrato = contrato
                 prestacao.status = 'entregue'
+                if existente:
+                    prestacao.compor_apresentacao = existente.compor_apresentacao
                 prestacao.save()
             
             if is_ajax:
@@ -86,11 +85,14 @@ def _get_dashboard_stats(ano, mes):
     )
     total_contratos = contratos_vigentes.count()
     
-    prestacoes_filtradas = PrestacaoContas.objects.filter(
+    from django.db.models import Max
+    latest_ids = PrestacaoContas.objects.filter(
         mes_referencia=mes,
         ano_referencia=ano,
         contrato__in=contratos_vigentes
-    )
+    ).values('contrato_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
+    
+    prestacoes_filtradas = PrestacaoContas.objects.filter(id__in=latest_ids)
     
     ok = prestacoes_filtradas.filter(status='ok').count()
     entregues = prestacoes_filtradas.filter(status='entregue').count()
@@ -181,7 +183,7 @@ def dashboard_prestacao(request):
     todas_prestacoes = PrestacaoContas.objects.filter(
         ano_referencia__gte=ultimos_3_meses[0][0],
         contrato__in=contratos_vigentes
-    )
+    ).order_by('id')
     
     for p in todas_prestacoes:
         if p.contrato_id not in prestacoes_map:
@@ -321,11 +323,17 @@ def exportar_prestacao_csv(request):
         vigencia_fim__gte=hoje
     ).order_by('numero').select_related('empresa')
 
-    # Prestações no mês/ano filtrado para contratos vigentes
-    prestacoes = PrestacaoContas.objects.filter(
+    from django.db.models import Max
+
+    # Obter IDs das prestações mais recentes por contrato (pode haver múltiplos envios por período)
+    latest_ids = PrestacaoContas.objects.filter(
         mes_referencia=filtro_mes,
         ano_referencia=filtro_ano,
         contrato__in=contratos_vigentes
+    ).values('contrato_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
+
+    prestacoes = PrestacaoContas.objects.filter(
+        id__in=latest_ids
     ).select_related('contrato', 'agente__posto')
 
     prestacoes_map = {p.contrato_id: p for p in prestacoes}
@@ -587,3 +595,52 @@ def reordenar_gestores_prio(request):
         return JsonResponse({'status': 'success', 'message': 'Ordem atualizada com sucesso.'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@login_required
+def exportar_historico_prestacao_csv(request):
+    """
+    Exporta o histórico completo de prestações de contas (todos os envios de todos os contratos).
+    Restrito a usuários logados.
+    """
+    prestacoes = PrestacaoContas.objects.exclude(status='pendente').select_related(
+        'contrato', 'contrato__empresa', 'agente', 'agente__posto'
+    ).order_by('-data_envio')
+    
+    headers = [
+        'Contrato',
+        'PAG',
+        'Tipo',
+        'Objeto',
+        'Empresa',
+        'CNPJ',
+        'Mês de Referência',
+        'Ano de Referência',
+        'Fiscal Responsável',
+        'Data/Hora de Envio',
+        'Status (Situação)',
+        'Observação'
+    ]
+    
+    data = []
+    for p in prestacoes:
+        responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
+        data_envio = p.data_envio.strftime("%d/%m/%Y %H:%M")
+        
+        data.append([
+            p.contrato.numero,
+            p.contrato.pag or '-',
+            p.contrato.get_tipo_display(),
+            p.contrato.objeto,
+            p.contrato.empresa.nome_exibicao,
+            p.contrato.empresa.cnpj,
+            f"{p.mes_referencia:02d}",
+            str(p.ano_referencia),
+            responsavel,
+            data_envio,
+            p.get_status_display(),
+            p.observacao or '-'
+        ])
+        
+    nome_arquivo = "historico_prestacao_contas_completo"
+    return export_csv_or_xlsx(request, nome_arquivo, headers, data)

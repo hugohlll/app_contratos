@@ -165,8 +165,8 @@ class ValidacaoArquivoTests(BaseTestSetup):
 class SubstituicaoEntregaTests(BaseTestSetup):
     """Testes de substituição de entrega no mesmo mês/ano."""
 
-    def test_reenvio_substitui_registro_anterior(self):
-        """Reenviar para o mesmo contrato/mês/ano substitui o registro existente."""
+    def test_reenvio_cria_novo_registro_e_mantem_anterior(self):
+        """Reenviar para o mesmo contrato/mês/ano cria um novo registro mantendo o anterior no histórico."""
         # Primeiro envio
         self.client.post(self.url_upload, {
             'agente': self.agente.id,
@@ -181,10 +181,11 @@ class SubstituicaoEntregaTests(BaseTestSetup):
             'mes_referencia': 6, 'ano_referencia': 2026,
             'arquivo': self._make_pdf("v2.pdf"), 'observacao': 'Versão 2'
         })
-        self.assertEqual(PrestacaoContas.objects.count(), 1)
-        p = PrestacaoContas.objects.first()
-        self.assertEqual(p.observacao, 'Versão 2')
-        self._cleanup(p)
+        self.assertEqual(PrestacaoContas.objects.count(), 2)
+        p_latest = PrestacaoContas.objects.order_by('-data_envio').first()
+        self.assertEqual(p_latest.observacao, 'Versão 2')
+        for p in PrestacaoContas.objects.all():
+            self._cleanup(p)
 
     def test_envio_meses_diferentes_nao_substitui(self):
         """Envios em meses diferentes criam registros separados."""
@@ -886,23 +887,21 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
 class ModelPrestacaoContasTests(BaseTestSetup):
     """Testes do modelo PrestacaoContas."""
 
-    def test_unique_together_contrato_mes_ano(self):
-        """Não pode haver duas prestações do mesmo contrato/mês/ano."""
-        from django.db import IntegrityError, transaction
-        PrestacaoContas.objects.create(
+    def test_multiples_prestacoes_contrato_mes_ano(self):
+        """Pode haver múltiplas prestações do mesmo contrato/mês/ano para manter histórico."""
+        p1 = PrestacaoContas.objects.create(
             contrato=self.contrato, agente=self.agente,
             mes_referencia=9, ano_referencia=2026,
             arquivo=self._make_pdf("a.pdf")
         )
-        with self.assertRaises(IntegrityError):
-            with transaction.atomic():
-                PrestacaoContas.objects.create(
-                    contrato=self.contrato, agente=self.agente,
-                    mes_referencia=9, ano_referencia=2026,
-                    arquivo=self._make_pdf("b.pdf")
-                )
-        for p in PrestacaoContas.objects.all():
-            self._cleanup(p)
+        p2 = PrestacaoContas.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=9, ano_referencia=2026,
+            arquivo=self._make_pdf("b.pdf")
+        )
+        self.assertEqual(PrestacaoContas.objects.filter(contrato=self.contrato, mes_referencia=9, ano_referencia=2026).count(), 2)
+        self._cleanup(p1)
+        self._cleanup(p2)
 
     def test_status_default_entregue(self):
         """Status padrão ao criar deve ser 'entregue'."""

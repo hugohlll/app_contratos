@@ -290,7 +290,6 @@ class PrestacaoContas(models.Model):
     observacao = models.TextField("Observação", blank=True)
 
     class Meta:
-        unique_together = ('contrato', 'ano_referencia', 'mes_referencia')
         verbose_name = "Prestação de Contas"
         verbose_name_plural = "Prestações de Contas"
         ordering = ['-ano_referencia', '-mes_referencia']

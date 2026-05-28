@@ -87,10 +87,10 @@ class PrestacaoContasTests(TestCase):
             os.remove(prestacao.arquivo.path)
 
     def test_upload_substituicao_mesmo_mes(self):
-        """O reenvio para o mesmo contrato, ano e mês deve substituir o anterior"""
+        """O reenvio para o mesmo contrato, ano e mês cria um novo registro e mantém o anterior"""
         # Upload 1
         pdf_file1 = SimpleUploadedFile("arq1.pdf", b"conteudo1", content_type="application/pdf")
-        PrestacaoContas.objects.create(
+        p1 = PrestacaoContas.objects.create(
             contrato=self.contrato,
             agente=self.agente,
             mes_referencia=6,
@@ -113,10 +113,15 @@ class PrestacaoContasTests(TestCase):
         
         self.client.post(url, data)
         
-        # Deve continuar tendo apenas 1 registro no banco
-        self.assertEqual(PrestacaoContas.objects.count(), 1)
-        prestacao = PrestacaoContas.objects.first()
+        # Deve agora ter 2 registros no banco
+        self.assertEqual(PrestacaoContas.objects.count(), 2)
+        prestacao = PrestacaoContas.objects.order_by('-data_envio').first()
         self.assertEqual(prestacao.observacao, 'Nova versao')
+        
+        # Limpeza
+        for p in PrestacaoContas.objects.all():
+            if p.arquivo and os.path.isfile(p.arquivo.path):
+                os.remove(p.arquivo.path)
 
     def test_dashboard_requer_login(self):
         """Dashboard gerencial deve estar protegido"""
@@ -211,6 +216,86 @@ class PrestacaoContasTests(TestCase):
         # Limpar arquivo gerado no teste
         if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
             os.remove(prestacao.arquivo.path)
+
+    def test_exportar_prestacao_csv_com_multiplos_envios_exibe_ultimo(self):
+        """Exportação mensal deve exibir apenas o último envio quando há múltiplos para o mesmo período."""
+        url_upload = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+
+        # Primeiro envio
+        self.client.post(url_upload, {
+            'agente': self.agente.id,
+            'mes_referencia': 5,
+            'ano_referencia': 2026,
+            'arquivo': SimpleUploadedFile("v1.pdf", b"%PDF-1.4 v1", content_type="application/pdf"),
+            'observacao': 'Versão 1'
+        })
+
+        # Segundo envio — este deve ser o exibido na exportação
+        self.client.post(url_upload, {
+            'agente': self.agente.id,
+            'mes_referencia': 5,
+            'ano_referencia': 2026,
+            'arquivo': SimpleUploadedFile("v2.pdf", b"%PDF-1.4 v2", content_type="application/pdf"),
+            'observacao': 'Versão 2'
+        })
+
+        self.assertEqual(PrestacaoContas.objects.count(), 2)
+
+        self.client.login(username="admin", password="password123")
+        url = reverse('exportar_prestacao_csv')
+        response = self.client.get(url, {'mes': 5, 'ano': 2026, 'formato': 'csv'})
+        self.assertEqual(response.status_code, 200)
+
+        content = response.content.decode('utf-8-sig')
+        lines = [l for l in content.split('\r\n') if l]
+
+        # Contar quantas linhas de dados pertencem ao contrato 10/2026 (excluindo o cabeçalho)
+        linhas_contrato = [l for l in lines[1:] if l.startswith('10/2026')]
+        # Deve haver apenas 1 linha — o envio mais recente
+        self.assertEqual(len(linhas_contrato), 1)
+
+        # Limpeza
+        for p in PrestacaoContas.objects.all():
+            if p.arquivo and os.path.isfile(p.arquivo.path):
+                os.remove(p.arquivo.path)
+
+    def test_detalhe_publico_exibe_uma_linha_por_periodo_com_multiplos_envios(self):
+        """Página pública de detalhes deve exibir apenas 1 linha por período mesmo com múltiplos envios."""
+        url_upload = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        url_detalhe = reverse('detalhe_contrato', kwargs={'contrato_id': self.contrato.id})
+
+        # Dois envios para o mesmo mês/ano
+        for i in range(1, 3):
+            self.client.post(url_upload, {
+                'agente': self.agente.id,
+                'mes_referencia': 5,
+                'ano_referencia': 2026,
+                'arquivo': SimpleUploadedFile(f"v{i}.pdf", b"%PDF-1.4", content_type="application/pdf"),
+                'observacao': f'Versão {i}'
+            })
+
+        self.assertEqual(PrestacaoContas.objects.count(), 2)
+
+        response = self.client.get(url_detalhe)
+        self.assertEqual(response.status_code, 200)
+
+        # O contexto 'prestacoes_recentes' deve retornar apenas 1 entrada para o período 05/2026
+        prestacoes_recentes = response.context['prestacoes_recentes']
+        periodos = [(p.mes_referencia, p.ano_referencia) for p in prestacoes_recentes]
+        # Não pode haver entradas duplicadas no mesmo período
+        self.assertEqual(len(periodos), len(set(periodos)))
+
+        # Limpeza
+        for p in PrestacaoContas.objects.all():
+            if p.arquivo and os.path.isfile(p.arquivo.path):
+                os.remove(p.arquivo.path)
+
+    def test_exportar_historico_requer_login(self):
+        """A exportação do histórico completo deve redirecionar usuários não autenticados para o login."""
+        url = reverse('exportar_historico_prestacao_csv')
+        response = self.client.get(url, {'formato': 'csv'})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response.url)
 
     def test_alterar_status_workflow(self):
         """Testa as transições de status da prestação de contas e permissões de acesso"""
@@ -471,5 +556,34 @@ class PrestacaoContasTests(TestCase):
         for prest in [prest1, prest2]:
             if prest.arquivo and os.path.isfile(prest.arquivo.path):
                 os.remove(prest.arquivo.path)
+
+    def test_exportar_historico_completo(self):
+        """Testa exportação do histórico completo de prestações de contas"""
+        pdf_file = SimpleUploadedFile("arq_historico.pdf", b"pdf_data_hist", content_type="application/pdf")
+        prest1 = PrestacaoContas.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            arquivo=pdf_file,
+            status='entregue'
+        )
+        
+        self.client.login(username="admin", password="password123")
+        url = reverse('exportar_historico_prestacao_csv')
+        
+        response = self.client.get(url, {'formato': 'csv'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+        
+        content = response.content.decode('utf-8-sig')
+        lines = content.split('\r\n')
+        self.assertIn('Contrato', lines[0])
+        self.assertIn('Mês de Referência', lines[0])
+        self.assertIn('Ano de Referência', lines[0])
+        
+        # Limpar arquivo gerado no teste
+        if prest1.arquivo and os.path.isfile(prest1.arquivo.path):
+            os.remove(prest1.arquivo.path)
 
 
