@@ -12,9 +12,12 @@ class EstiloFormMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
             if isinstance(field.widget, forms.CheckboxInput):
                 field.widget.attrs['class'] = 'form-check-input'
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs['class'] = 'form-select'
+            else:
+                field.widget.attrs['class'] = 'form-control'
 
 class EmpresaForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
@@ -265,3 +268,24 @@ class PrestacaoContasUploadForm(EstiloFormMixin, forms.ModelForm):
         if f.size > 10 * 1024 * 1024:
             raise forms.ValidationError("O arquivo não pode exceder 10 MB.")
         return f
+
+
+from .models import Setor, CargoRegimental
+
+class SetorForm(EstiloFormMixin, forms.ModelForm):
+    class Meta:
+        model = Setor
+        fields = ['nome', 'sigla']
+
+class CargoRegimentalForm(EstiloFormMixin, forms.ModelForm):
+    class Meta:
+        model = CargoRegimental
+        fields = ['setor', 'agente', 'cargo', 'boletim_numero', 'boletim_data', 'ativo', 'observacao']
+        widgets = {
+            'boletim_data': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['agente'].label_from_instance = lambda obj: f"{obj.posto.sigla} {obj.nome_de_guerra} | {obj.nome_completo}"
+

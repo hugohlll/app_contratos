@@ -108,6 +108,11 @@
                 </a>
             </li>
             <li>
+                <a href="{% url 'cargos_regimentais' %}" class="{% if 'cargos' in request.path %}active{% endif %}">
+                    🏛️ Cargos Regimentais
+                </a>
+            </li>
+            <li>
                 <a href="{% url 'sair_do_sistema' %}">
                     🚪 Sair
                 </a>
@@ -150,6 +155,7 @@
         </div>
 
         <!-- Messages -->
+        {% block global_messages %}
         {% if messages %}
         {% for message in messages %}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -158,6 +164,7 @@
         </div>
         {% endfor %}
         {% endif %}
+        {% endblock %}
 
         {% block content %}{% endblock %}
     </div>
@@ -168,7 +175,7 @@
             document.querySelectorAll('select:not(.no-tomselect)').forEach((el) => {
                 let settings = {
                     create: false,
-                    plugins: ['clear_button'],
+                    plugins: ['clear_button', 'dropdown_input'],
                 };
 
                 if (el.classList.contains('no-sort')) {

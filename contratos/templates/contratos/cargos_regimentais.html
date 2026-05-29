@@ -1,0 +1,255 @@
+{% extends "contratos/portal/base_portal.html" %}
+{% block global_messages %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-building me-2 text-primary"></i>Cargos Regimentais</h1>
+</div>
+
+{% if messages %}
+<div class="messages mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if pode_editar %}
+<!-- SEÇÃO DE FORMULÁRIO E SETORES -->
+<div class="row mb-4">
+    <!-- COLUNA DO FORMULÁRIO DE CADASTRO -->
+    <div class="col-lg-8 mb-3 mb-lg-0">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white">
+                <h5 class="m-0 text-dark"><i class="bi bi-person-plus me-2"></i>Cadastrar Novo Cargo</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.setor.id_for_label }}" class="form-label fw-bold">Setor</label>
+                            {{ form.setor }}
+                            {% if form.setor.errors %}<div class="text-danger small mt-1">{{ form.setor.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.agente.id_for_label }}" class="form-label fw-bold">Gestor</label>
+                            {{ form.agente }}
+                            {% if form.agente.errors %}<div class="text-danger small mt-1">{{ form.agente.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.cargo.id_for_label }}" class="form-label fw-bold">Cargo/Função</label>
+                            {{ form.cargo }}
+                            {% if form.cargo.errors %}<div class="text-danger small mt-1">{{ form.cargo.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label for="{{ form.boletim_numero.id_for_label }}" class="form-label fw-bold">Nº do Boletim</label>
+                            {{ form.boletim_numero }}
+                        </div>
+                        <div class="col-md-3">
+                            <label for="{{ form.boletim_data.id_for_label }}" class="form-label fw-bold">Data do Boletim</label>
+                            {{ form.boletim_data }}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.observacao.id_for_label }}" class="form-label fw-bold">Observação</label>
+                            {{ form.observacao }}
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                {{ form.ativo }}
+                                <label class="form-check-label" for="{{ form.ativo.id_for_label }}">Ativo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i> Cadastrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- COLUNA DE LISTAGEM DE SETORES -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="m-0 text-dark"><i class="bi bi-building me-2"></i>Setores</h5>
+                <a href="{% url 'novo_setor' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0" style="font-size: 0.8rem;">
+                    <i class="bi bi-plus"></i> Novo
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Setor</th>
+                                {% if is_admin %}
+                                <th class="text-center" style="width: 60px;">Ação</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-setores">
+                            {% for setor in setores %}
+                            <tr data-id="{{ setor.id }}">
+                                <td>
+                                    {% if is_admin %}
+                                    <i class="bi bi-grip-vertical text-muted me-1 cursor-grab" style="cursor: grab;" title="Arraste para reordenar"></i>
+                                    {% endif %}
+                                    <strong>{{ setor.sigla|default:"" }}</strong>
+                                    {% if setor.sigla %}-{% endif %}
+                                    <span class="text-muted">{{ setor.nome }}</span>
+                                </td>
+                                {% if is_admin %}
+                                <td class="text-center">
+                                    <form method="post" action="{% url 'excluir_setor' setor.id %}" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir o setor \'{{ setor.nome }}\'?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1 border-0" title="Excluir Setor">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="{% if is_admin %}2{% else %}1{% endif %}" class="text-center text-muted py-3">Nenhum setor cadastrado.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- TABELA CONSOLIDADA -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="m-0 text-dark"><i class="bi bi-table me-2"></i>Quadro de Cargos Regimentais</h5>
+        <span class="badge bg-primary rounded-pill px-3 py-2">{{ cargos|length }} registro{{ cargos|length|pluralize }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                <thead class="table-light">
+                    <tr>
+                        <th style="min-width: 150px;">Setor</th>
+                        <th style="min-width: 180px;">Gestor</th>
+                        <th style="min-width: 150px;">Cargo/Função</th>
+                        <th class="text-center" style="min-width: 100px;">Nº Boletim</th>
+                        <th class="text-center" style="min-width: 110px;">Data Boletim</th>
+                        <th class="text-center" style="min-width: 70px;">Status</th>
+                        {% if pode_editar %}
+                        <th class="text-center" style="min-width: 90px;">Ações</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cargo in cargos %}
+                    <tr class="{% if not cargo.ativo %}table-secondary{% endif %}">
+                        <td>
+                            <strong>{% if cargo.setor.sigla %}{{ cargo.setor.sigla }}{% endif %}</strong>
+                            {% if cargo.setor.sigla %}<br>{% endif %}
+                            <span class="text-muted small">{{ cargo.setor.nome }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ cargo.agente.posto.sigla }} {{ cargo.agente.nome_de_guerra }}</strong>
+                            <br><span class="text-muted small">{{ cargo.agente.nome_completo }}</span>
+                        </td>
+                        <td>{{ cargo.cargo }}</td>
+                        <td class="text-center">{{ cargo.boletim_numero|default:"-" }}</td>
+                        <td class="text-center">
+                            {% if cargo.boletim_data %}
+                                {{ cargo.boletim_data|date:"d/m/Y" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if cargo.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        {% if pode_editar %}
+                        <td class="text-center">
+                            <a href="{% url 'editar_cargo_regimental' cargo.id %}" class="btn btn-sm btn-outline-primary py-0 px-1" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if is_admin %}
+                            <form method="post" action="{% url 'excluir_cargo_regimental' cargo.id %}" class="d-inline" onsubmit="return confirm('Deseja excluir este cargo regimental?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">Nenhum cargo regimental cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if is_admin %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const tbodySetores = document.getElementById('tbody-setores');
+    if (tbodySetores) {
+        Sortable.create(tbodySetores, {
+            animation: 150,
+            handle: '.cursor-grab',
+            ghostClass: 'bg-light',
+            onEnd: function (evt) {
+                const itemEl = evt.item;
+                const newIndex = evt.newIndex;
+                const oldIndex = evt.oldIndex;
+                
+                if (newIndex !== oldIndex) {
+                    // Prepara array com nova ordem de IDs
+                    const ids = Array.from(tbodySetores.children).map(tr => tr.getAttribute('data-id')).filter(id => id);
+                    
+                    fetch("{% url 'reordenar_setores' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({ setor_ids: ids })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status !== 'success') {
+                            alert('Erro ao reordenar setores: ' + (data.message || 'Erro desconhecido'));
+                            location.reload();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na requisição:', error);
+                        alert('Erro ao comunicar com o servidor.');
+                        location.reload();
+                    });
+                }
+            }
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

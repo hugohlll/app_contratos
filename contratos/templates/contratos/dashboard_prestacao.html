@@ -1,4 +1,5 @@
 {% extends "contratos/portal/base_portal.html" %}
+{% block global_messages %}{% endblock %}
 {% load humanize %}
 
 {% block content %}
@@ -7,6 +8,7 @@
     
     <div class="btn-toolbar mb-2 mb-md-0 align-items-center">
         <form method="get" class="d-flex me-3">
+            <input type="hidden" name="tab" id="hiddenTabInput" value="">
             <select name="mes" class="form-select form-select-sm no-tomselect me-2" style="width: 110px; height: 31px;">
                 {% for m_val, m_nome in meses_choices %}
                 <option value="{{ m_val }}" {% if m_val == filtro_mes %}selected{% endif %}>{{ m_nome }}</option>
@@ -54,6 +56,29 @@
     {% endfor %}
 </div>
 {% endif %}
+
+<!-- ABAS DE NAVEGAÇÃO -->
+<ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="fiscais-tab" data-bs-toggle="tab" data-bs-target="#fiscais-pane" type="button" role="tab" aria-controls="fiscais-pane" aria-selected="true">
+            <i class="bi bi-person-badge me-1"></i>Fiscais
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="gestores-tab" data-bs-toggle="tab" data-bs-target="#gestores-pane" type="button" role="tab" aria-controls="gestores-pane" aria-selected="false">
+            <i class="bi bi-people me-1"></i>Gestores
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="calendario-tab" data-bs-toggle="tab" data-bs-target="#calendario-pane" type="button" role="tab" aria-controls="calendario-pane" aria-selected="false">
+            <i class="bi bi-calendar3 me-1"></i>Calendário
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="dashboardTabContent">
+<!-- ABA 1: FISCAIS -->
+<div class="tab-pane fade show active" id="fiscais-pane" role="tabpanel" aria-labelledby="fiscais-tab">
 
 <!-- GRÁFICOS (Mês Filtrado) -->
 <div class="row mb-4 align-items-stretch">
@@ -267,6 +292,25 @@
     </div>
 </div>
 
+</div><!-- /tab-pane fiscais -->
+
+<!-- ABA 2: GESTORES -->
+<div class="tab-pane fade" id="gestores-pane" role="tabpanel" aria-labelledby="gestores-tab">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <h5 class="m-0 text-dark"><i class="bi bi-people me-2"></i>Gestores dos Setores</h5>
+        </div>
+        <div class="card-body text-center py-5">
+            <i class="bi bi-cone-striped text-warning" style="font-size: 3rem;"></i>
+            <h5 class="text-muted mt-3">Em breve</h5>
+            <p class="text-muted">As funcionalidades de prestação de contas dos Gestores dos Setores serão implementadas em versões futuras.</p>
+        </div>
+    </div>
+</div><!-- /tab-pane gestores -->
+
+<!-- ABA 3: CALENDÁRIO -->
+<div class="tab-pane fade" id="calendario-pane" role="tabpanel" aria-labelledby="calendario-tab">
+
 <!-- CALENDÁRIO ANUAL DE PRESTAÇÃO -->
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -299,6 +343,10 @@
         </div>
     </div>
 </div>
+
+</div><!-- /tab-pane calendario -->
+
+</div><!-- /tab-content -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -771,6 +819,42 @@
                 }
             });
         }
+    });
+</script>
+<script>
+    // Corrige renderização dos gráficos ao trocar de aba (Chart.js em tabs ocultas)
+    document.addEventListener("DOMContentLoaded", function() {
+        const fiscaisTab = document.getElementById('fiscais-tab');
+        if (fiscaisTab) {
+            fiscaisTab.addEventListener('shown.bs.tab', function() {
+                if (window.myChart) window.myChart.resize();
+                if (window.myBarChart) window.myBarChart.resize();
+            });
+        }
+    });
+</script>
+<script>
+    // Persistência de aba ativa via URL param
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('tab');
+        
+        if (activeTab) {
+            const tabBtn = document.querySelector(`[data-bs-target="#${activeTab}"]`);
+            if (tabBtn) {
+                const bsTab = new bootstrap.Tab(tabBtn);
+                bsTab.show();
+            }
+        }
+
+        // Atualiza o hidden input ao trocar de aba
+        document.querySelectorAll('#dashboardTabs button[data-bs-toggle="tab"]').forEach(btn => {
+            btn.addEventListener('shown.bs.tab', function(e) {
+                const paneId = e.target.getAttribute('data-bs-target').replace('#', '');
+                const hiddenInput = document.getElementById('hiddenTabInput');
+                if (hiddenInput) hiddenInput.value = paneId;
+            });
+        });
     });
 </script>
 {% endblock %}

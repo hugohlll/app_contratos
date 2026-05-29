@@ -311,3 +311,38 @@ class CalendarioPrestacao(models.Model):
 
     def __str__(self):
         return f"{self.mes:02d}/{self.ano}"
+
+
+class Setor(models.Model):
+    nome = models.CharField("Nome do Setor", max_length=150, unique=True)
+    sigla = models.CharField("Sigla", max_length=20, blank=True, null=True)
+    ordem = models.IntegerField("Ordem de Exibição", default=0)
+
+    def __str__(self):
+        if self.sigla:
+            return f"{self.sigla} - {self.nome}"
+        return self.nome
+
+    class Meta:
+        verbose_name = "Setor"
+        verbose_name_plural = "Setores"
+        ordering = ['ordem', 'nome']
+
+
+class CargoRegimental(models.Model):
+    setor = models.ForeignKey(Setor, on_delete=models.CASCADE, related_name='cargos', verbose_name="Setor")
+    agente = models.ForeignKey(Agente, on_delete=models.PROTECT, verbose_name="Gestor")
+    cargo = models.CharField("Cargo/Função", max_length=100)
+    boletim_numero = models.CharField("Nº do Boletim", max_length=50, blank=True, null=True)
+    boletim_data = models.DateField("Data do Boletim", blank=True, null=True)
+    ativo = models.BooleanField("Ativo?", default=True)
+    observacao = models.CharField("Observação", max_length=200, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.cargo} - {self.agente} ({self.setor})"
+
+    class Meta:
+        verbose_name = "Cargo Regimental"
+        verbose_name_plural = "Cargos Regimentais"
+        ordering = ['setor__ordem', 'setor__nome', 'cargo']
+

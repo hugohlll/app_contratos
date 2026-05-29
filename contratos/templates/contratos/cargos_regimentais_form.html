@@ -1,0 +1,56 @@
+{% extends "contratos/portal/base_portal.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-pencil-square me-2 text-primary"></i>Editar Cargo Regimental</h1>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="{{ form.setor.id_for_label }}" class="form-label fw-bold">Setor</label>
+                    {{ form.setor }}
+                    {% if form.setor.errors %}<div class="text-danger small mt-1">{{ form.setor.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.agente.id_for_label }}" class="form-label fw-bold">Gestor</label>
+                    {{ form.agente }}
+                    {% if form.agente.errors %}<div class="text-danger small mt-1">{{ form.agente.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.cargo.id_for_label }}" class="form-label fw-bold">Cargo/Função</label>
+                    {{ form.cargo }}
+                    {% if form.cargo.errors %}<div class="text-danger small mt-1">{{ form.cargo.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.boletim_numero.id_for_label }}" class="form-label fw-bold">Nº do Boletim</label>
+                    {{ form.boletim_numero }}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.boletim_data.id_for_label }}" class="form-label fw-bold">Data do Boletim</label>
+                    {{ form.boletim_data }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.observacao.id_for_label }}" class="form-label fw-bold">Observação</label>
+                    {{ form.observacao }}
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        {{ form.ativo }}
+                        <label class="form-check-label" for="{{ form.ativo.id_for_label }}">Ativo</label>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i> Salvar Alterações
+                </button>
+                <a href="{% url 'cargos_regimentais' %}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

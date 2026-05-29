@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from contratos.views import public, militar, auditoria, auth, portal, users, prestacao
+from contratos.views import public, militar, auditoria, auth, portal, users, prestacao, cargos
 
 urlpatterns = [
     # --- ÁREA PÚBLICA (Módulo public.py) ---
@@ -92,4 +92,12 @@ urlpatterns = [
     path('portal/prestacao/consolidar/', prestacao.consolidar_apresentacao, name='consolidar_apresentacao'),
     path('portal/prestacao/gestores/reordenar/', prestacao.reordenar_gestores_prio, name='reordenar_gestores_prio'),
     path('portal/prestacao/calendario/salvar/', prestacao.salvar_calendario_prestacao, name='salvar_calendario_prestacao'),
+
+    # --- CARGOS REGIMENTAIS ---
+    path('portal/cargos/', cargos.cargos_regimentais, name='cargos_regimentais'),
+    path('portal/cargos/editar/<int:pk>/', cargos.editar_cargo_regimental, name='editar_cargo_regimental'),
+    path('portal/cargos/excluir/<int:pk>/', cargos.excluir_cargo_regimental, name='excluir_cargo_regimental'),
+    path('portal/cargos/setores/novo/', cargos.novo_setor, name='novo_setor'),
+    path('portal/cargos/setores/excluir/<int:pk>/', cargos.excluir_setor, name='excluir_setor'),
+    path('portal/cargos/setores/reordenar/', cargos.reordenar_setores, name='reordenar_setores'),
 ]
