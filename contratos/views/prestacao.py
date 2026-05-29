@@ -1,6 +1,8 @@
 import os
 from datetime import date, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from urllib.parse import urlencode
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count, Q, Prefetch
@@ -10,7 +12,7 @@ import json
 from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao
+from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao
 from contratos.forms import PrestacaoContasUploadForm
 from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx, get_filtro_ativos, is_admin, is_auditor
 
@@ -415,8 +417,34 @@ def alterar_status_prestacao(request, pk, novo_status):
         messages.error(request, "Status inválido.")
         return redirect('dashboard_prestacao')
 
+    justificativa = ""
+    if request.method == 'POST':
+        if request.content_type == 'application/json':
+            try:
+                body = json.loads(request.body)
+                justificativa = body.get('justificativa', '').strip()
+            except json.JSONDecodeError:
+                pass
+        else:
+            justificativa = request.POST.get('justificativa', '').strip()
+    else:
+        justificativa = request.GET.get('justificativa', '').strip()
+
+    if novo_status == 'correcao' and not justificativa:
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': 'A justificativa de correção é obrigatória.'}, status=400)
+        messages.error(request, "A justificativa de correção é obrigatória.")
+        return redirect('dashboard_prestacao')
+
     prestacao.status = novo_status
     prestacao.save()
+
+    if novo_status == 'correcao':
+        ApontamentoCorrecao.objects.create(
+            prestacao=prestacao,
+            autor=request.user,
+            descricao=justificativa
+        )
 
     if is_ajax:
         # Se for AJAX, não inserimos a mensagem de sucesso para não poluir futuras páginas
@@ -478,19 +506,23 @@ def toggle_apresentacao_prestacao(request):
                 
             contrato = get_object_or_404(Contrato, pk=contrato_id)
             
-            prestacao, created = PrestacaoContas.objects.get_or_create(
+            prestacoes = PrestacaoContas.objects.filter(
                 contrato=contrato,
                 mes_referencia=mes,
-                ano_referencia=ano,
-                defaults={
-                    'status': 'pendente',
-                    'compor_apresentacao': checked
-                }
+                ano_referencia=ano
             )
             
-            if not created:
-                prestacao.compor_apresentacao = checked
-                prestacao.save(update_fields=['compor_apresentacao'])
+            if prestacoes.exists():
+                prestacoes.update(compor_apresentacao=checked)
+                prestacao = prestacoes.order_by('-id').first()
+            else:
+                prestacao = PrestacaoContas.objects.create(
+                    contrato=contrato,
+                    mes_referencia=mes,
+                    ano_referencia=ano,
+                    status='pendente',
+                    compor_apresentacao=checked
+                )
             
             stats = _get_dashboard_stats(ano, mes)
             
@@ -544,7 +576,8 @@ def consolidar_apresentacao(request):
 
     if not prestacoes.exists():
         messages.warning(request, "Nenhum slide prioritário em conformidade para consolidar.")
-        return redirect('dashboard_prestacao')
+        qs = urlencode({'mes': filtro_mes, 'ano': filtro_ano})
+        return redirect(f"{reverse('dashboard_prestacao')}?{qs}")
 
     writer = PdfWriter()
     erros = []
@@ -572,7 +605,8 @@ def consolidar_apresentacao(request):
 
     if len(writer.pages) == 0:
         messages.error(request, "Nenhuma página válida encontrada para consolidar.")
-        return redirect('dashboard_prestacao')
+        qs = urlencode({'mes': filtro_mes, 'ano': filtro_ano})
+        return redirect(f"{reverse('dashboard_prestacao')}?{qs}")
 
     buffer = io.BytesIO()
     writer.write(buffer)

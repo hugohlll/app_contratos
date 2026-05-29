@@ -998,7 +998,7 @@ class ConsolidarApresentacaoTests(BaseTestSetup):
         self.assertTrue(response.content.startswith(b'%PDF'))
 
     def test_consolidar_sem_slides_prioritarios_redireciona(self):
-        """Sem slides prioritários em conformidade, deve redirecionar com warning."""
+        """Sem slides prioritários em conformidade, deve redirecionar preservando filtros de mês/ano."""
         self.client.login(username="auditor_consolida", password="pass123")
         # Cria prestação sem ser prioritária
         PrestacaoContas.objects.create(
@@ -1010,19 +1010,25 @@ class ConsolidarApresentacaoTests(BaseTestSetup):
         url = reverse('consolidar_apresentacao')
         response = self.client.get(url, {'mes': 5, 'ano': 2026})
         self.assertEqual(response.status_code, 302)
+        # Verifica que o redirect preserva os filtros de mês/ano
+        self.assertIn('mes=5', response.url)
+        self.assertIn('ano=2026', response.url)
 
     def test_consolidar_slides_prioritarios_nao_ok_redireciona(self):
         """Slides prioritários que não estão em conformidade não devem ser consolidados."""
         self.client.login(username="auditor_consolida", password="pass123")
         PrestacaoContas.objects.create(
             contrato=self.contrato, agente=self.agente,
-            mes_referencia=5, ano_referencia=2026,
+            mes_referencia=3, ano_referencia=2026,
             arquivo=self._make_real_pdf("slide.pdf"),
             status='entregue', compor_apresentacao=True
         )
         url = reverse('consolidar_apresentacao')
-        response = self.client.get(url, {'mes': 5, 'ano': 2026})
+        response = self.client.get(url, {'mes': 3, 'ano': 2026})
         self.assertEqual(response.status_code, 302)
+        # Verifica que o redirect preserva os filtros de mês/ano
+        self.assertIn('mes=3', response.url)
+        self.assertIn('ano=2026', response.url)
 
     def test_consolidar_usuario_normal_redireciona(self):
         """Usuário sem permissão é redirecionado (auditor_required usa redirect, não 403)."""
