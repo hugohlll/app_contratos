@@ -351,10 +351,17 @@ class PrestacaoContasTests(TestCase):
         self.assertContains(response_dash, "Conformidade")
 
         # Alterar status para 'correcao' como Administrador (deve funcionar)
+        # Agora requer POST com justificativa obrigatória via AJAX
+        import json
         self.client.login(username="superadmin", password="password123")
         url_status_correcao = reverse('alterar_status_prestacao', kwargs={'pk': prestacao.id, 'novo_status': 'correcao'})
-        response = self.client.get(url_status_correcao)
-        self.assertEqual(response.status_code, 302)
+        response = self.client.post(
+            url_status_correcao,
+            data=json.dumps({'justificativa': 'Justificativa do teste de workflow'}),
+            content_type='application/json',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(response.status_code, 200)
         prestacao.refresh_from_db()
         self.assertEqual(prestacao.status, 'correcao') # Alterado para correção
 

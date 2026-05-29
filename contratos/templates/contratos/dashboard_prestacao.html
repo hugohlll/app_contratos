@@ -24,7 +24,7 @@
         
         <form action="{% url 'exportar_prestacao_csv' %}" method="get" class="d-inline-flex m-0 align-items-center">
             <input type="hidden" name="mes" value="{{ filtro_mes }}">
-            <input type="hidden" name="ano" value="{{ filtro_ano }}">
+            <input type="hidden" name="ano" value="{{ filtro_ano|stringformat:"d" }}">
             <select name="formato" class="form-select form-select-sm border-secondary text-secondary no-tomselect me-2" style="width: 75px; height: 31px; border-radius: 50rem;">
                 <option value="csv">CSV</option>
                 <option value="xlsx" selected>XLS</option>
@@ -154,7 +154,7 @@
             </div>
             {% if is_auditor %}
             <div class="card-footer bg-white text-center py-2">
-                <a href="{% url 'consolidar_apresentacao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano }}" 
+                <a href="{% url 'consolidar_apresentacao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" 
                    class="btn btn-sm btn-outline-primary w-100" 
                    title="Consolidar e baixar todos os slides prioritários em conformidade">
                     <i class="bi bi-file-earmark-pdf-fill me-1"></i>Consolidar PDF
@@ -314,7 +314,7 @@
 <!-- CALENDÁRIO ANUAL DE PRESTAÇÃO -->
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="m-0 text-dark"><i class="bi bi-calendar3 me-2"></i>Calendário Anual de Prestação de Contas ({{ filtro_ano }})</h5>
+        <h5 class="m-0 text-dark"><i class="bi bi-calendar3 me-2"></i>Calendário Anual de Prestação de Contas ({{ filtro_ano|stringformat:"d" }})</h5>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -347,6 +347,36 @@
 </div><!-- /tab-pane calendario -->
 
 </div><!-- /tab-content -->
+
+<!-- Modal de Justificativa para Correção -->
+<div class="modal fade" id="modalApontamento" tabindex="-1" aria-labelledby="modalApontamentoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="modalApontamentoLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Solicitar Ajustes / Correção
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-3">Informe abaixo de forma clara e detalhada quais inconsistências foram encontradas no documento para que o fiscal possa corrigi-las.</p>
+                <div class="mb-3">
+                    <label for="justificativa-correcao" class="form-label fw-bold">Descrição das Inconsistências</label>
+                    <textarea class="form-control" id="justificativa-correcao" rows="5" placeholder="Descreva os problemas (ex: Falta assinatura na folha de rosto, cálculo de reajuste incorreto...)"></textarea>
+                    <div id="erro-justificativa" class="text-danger small mt-1 d-none fw-bold">
+                        <i class="bi bi-exclamation-circle me-1"></i>A descrição das inconsistências é obrigatória.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning fw-bold text-dark" id="btn-confirmar-correcao">
+                    <i class="bi bi-send-fill me-1"></i>Enviar Apontamentos
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -584,6 +614,105 @@
             return html;
         }
 
+        let activeCorrecaoRequest = null;
+        const modalApontamentoEl = document.getElementById('modalApontamento');
+        const modalApontamento = modalApontamentoEl ? new bootstrap.Modal(modalApontamentoEl) : null;
+        
+        if (modalApontamentoEl) {
+            document.getElementById('btn-confirmar-correcao').addEventListener('click', function() {
+                const textEl = document.getElementById('justificativa-correcao');
+                const errorEl = document.getElementById('erro-justificativa');
+                const justificativa = textEl.value.trim();
+                
+                if (!justificativa) {
+                    errorEl.classList.remove('d-none');
+                    textEl.classList.add('is-invalid');
+                    return;
+                }
+                
+                errorEl.classList.add('d-none');
+                textEl.classList.remove('is-invalid');
+                
+                if (activeCorrecaoRequest) {
+                    const { url, td } = activeCorrecaoRequest;
+                    modalApontamento.hide();
+                    
+                    if (td) {
+                        td.style.opacity = '0.5';
+                    }
+                    
+                    const urlObj = new URL(url, window.location.origin);
+                    urlObj.searchParams.set('ajax', '1');
+                    urlObj.searchParams.set('mes', '{{ filtro_mes }}');
+                    urlObj.searchParams.set('ano', '{{ filtro_ano|stringformat:"d" }}');
+                    
+                    fetch(urlObj.toString(), {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ justificativa: justificativa })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errData => {
+                                throw new Error(errData.error || 'Erro na requisição');
+                            }).catch(() => {
+                                throw new Error('Erro na requisição');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (td) {
+                            td.style.opacity = '1';
+                            if (data.success) {
+                                const checkboxDentro = td.querySelector('.checkbox-apresentacao');
+                                const cId = checkboxDentro ? checkboxDentro.getAttribute('data-contrato-id') : null;
+                                const m = checkboxDentro ? checkboxDentro.getAttribute('data-mes') : null;
+                                const a = checkboxDentro ? checkboxDentro.getAttribute('data-ano') : null;
+                                
+                                td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a);
+                                
+                                if (window.myChart && data.stats) {
+                                    window.myChart.data.datasets[0].data = [
+                                        data.stats.ok_no_mes,
+                                        data.stats.entregues_no_mes,
+                                        data.stats.correcao_no_mes,
+                                        data.stats.pendentes_no_mes
+                                    ];
+                                    window.myChart.update();
+                                }
+                                if (window.myBarChart && data.stats) {
+                                    window.myBarChart.data.datasets[0].data = [
+                                        data.stats.prio_ok,
+                                        data.stats.prio_entregues,
+                                        data.stats.prio_correcao,
+                                        data.stats.prio_pendentes
+                                    ];
+                                    window.myBarChart.update();
+                                    if (data.stats.gestores_prio) {
+                                        atualizarTabelaPrioritarios(data.stats.gestores_prio);
+                                    }
+                                }
+                            } else {
+                                alert('Erro ao solicitar correção: ' + (data.error || 'Erro desconhecido'));
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        if (td) {
+                            td.style.opacity = '1';
+                        }
+                        console.error(error);
+                        alert(error.message || 'Erro ao tentar solicitar correção.');
+                    });
+                }
+            });
+        }
+
         // Intercepta os cliques nos botões de alteração de status
         document.addEventListener("click", function(event) {
             const btnAlterar = event.target.closest('.btn-alterar-status');
@@ -603,6 +732,16 @@
             const url = btn.getAttribute('href');
             const td = btn.closest('td');
             
+            // Se for alteração para CORREÇÃO, precisamos abrir o modal
+            if (btnAlterar && url.includes('status') && url.includes('correcao')) {
+                activeCorrecaoRequest = { url: url, td: td };
+                document.getElementById('justificativa-correcao').value = '';
+                document.getElementById('erro-justificativa').classList.add('d-none');
+                document.getElementById('justificativa-correcao').classList.remove('is-invalid');
+                modalApontamento.show();
+                return;
+            }
+            
             if (td) {
                 td.style.opacity = '0.5';
             }
@@ -610,7 +749,7 @@
             const urlObj = new URL(url, window.location.origin);
             urlObj.searchParams.set('ajax', '1');
             urlObj.searchParams.set('mes', '{{ filtro_mes }}');
-            urlObj.searchParams.set('ano', '{{ filtro_ano }}');
+            urlObj.searchParams.set('ano', '{{ filtro_ano|stringformat:"d" }}');
             
             fetch(urlObj.toString(), {
                 headers: {
@@ -740,7 +879,7 @@
             
             const input = event.target;
             const mes = input.getAttribute('data-mes');
-            const ano = '{{ filtro_ano }}';
+            const ano = '{{ filtro_ano|stringformat:"d" }}';
             
             const row = input.closest('tr');
             const data_entrega = row.querySelector('[data-campo="data_entrega"]').value;
