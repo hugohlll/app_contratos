@@ -84,6 +84,7 @@ As views estão organizadas em um pacote `views/` para melhor modularização:
 - **`public.py`**: Views da área pública (Pesquisa, Detalhe do Contrato).
 - **`portal.py`**: Views do portal operacional e gerenciamento de contratos.
 - **`auditoria.py`**: Painel de auditoria, gráficos e relatórios gerenciais.
+- **`prestacao.py`**: Módulo completo de Prestação de Contas (upload, dashboard, matriz, consolidação de PDF, apontamentos).
 - **`militar.py`**: Área de consulta individual do militar.
 - **`auth.py`**: Lógica de login e autenticação customizada.
 - **`users.py`**: Gestão de usuários (criar, editar, listar).

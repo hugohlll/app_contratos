@@ -66,6 +66,12 @@ Garantir **transparência**, **controle** e **conformidade** no gerenciamento de
 - Informações sobre designações e prazos
 - Exportação em CSV para análise externa
 
+#### 4. **Painel de Entregas (Prestação de Contas)**
+- Upload público de slides (PDF) para prestação de contas mensal
+- Histórico dos últimos 6 meses de envios com status visual
+- Visualização das inconsistências apontadas pela auditoria (popovers)
+- Reenvio de documentação corrigida
+
 ---
 
 ### 👤 **Área do Militar** (Acesso Livre)
@@ -123,7 +129,16 @@ Dashboard interativo com gráficos e indicadores:
   - Lista de contratos sem equipe de fiscalização ativa
   - Alertas visuais para ação imediata
 
-#### 2. **Relatórios e Exportações**
+#### 2. **Matriz de Prestação de Contas**
+- Tabela dinâmica e visual com o acompanhamento das entregas mensais
+- Botões de ação ágeis: "Aprovar (OK!)", "Solicitar Correção", "Excluir"
+- Delegação de status de aprovação com envio obrigatório de justificativa em caso de correção (registrado em histórico)
+- Histórico de inconsistências registrado e persistido
+- Geração de PDF consolidado de todos os contratos em conformidade e marcados como prioritários
+- Dashboard estatístico específico (Gráfico de Pizza para o mês, Gráfico de Barras para Prioritários)
+- Filtro iterativo de Mês/Ano com exportação em CSV/Excel
+
+#### 3. **Relatórios e Exportações**
 
 - **Auditoria Completa (CSV)**
   - Todos os contratos vigentes
@@ -697,6 +712,13 @@ Contribuições são bem-vindas! Para contribuir:
 ---
 
 ## 📅 Changelog
+
+### **Versão 1.6.0**
+- ✅ **Módulo de Prestação de Contas**: Novo sistema para recebimento e acompanhamento de slides PDF mensais por contrato.
+- ✅ **Matriz de Acompanhamento**: Painel gerencial com tabela interativa dos últimos 3 meses, aprovação de envios e marcação de contratos prioritários.
+- ✅ **Consolidação de Apresentação**: Geração de um único PDF dinâmico (on-the-fly) juntando todos os slides prioritários que estiverem em conformidade no mês filtrado.
+- ✅ **Apontamentos de Correção**: Possibilidade do auditor solicitar ajustes nos slides, exigindo justificativa que fica gravada em histórico para o fiscal consultar no portal público.
+- ✅ **Dashboard Específico**: Gráficos Chart.js interativos integrados diretamente à matriz de prestação para monitorar o status do mês atual.
 
 ### **Versão 1.5.0**
 - ✅ **Segregação de Ambientes**: Separação total de volumes físicos, portas e redes entre desenvolvimento e produção através de namespaces nativos do Compose V2 (`name: siscont_dev` e `name: siscont_prod`).

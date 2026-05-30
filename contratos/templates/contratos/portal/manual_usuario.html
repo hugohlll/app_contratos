@@ -116,6 +116,13 @@
             <li class="nav-item">
                 <a class="nav-link" href="#relatorios">6. Exportação e Relatórios</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#prestacao-contas">7. Prestação de Contas</a>
+                <ul class="nav flex-column border-start border-2 ms-2 mt-1 mb-2">
+                    <li class="nav-item"><a class="nav-link ms-3" href="#matriz-acompanhamento">Matriz de Acompanhamento</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#consolidacao-pdf">Consolidação de PDF</a></li>
+                </ul>
+            </li>
         </ul>
     </nav>
 
@@ -205,6 +212,30 @@
                 <li><strong>Auditoria Completa:</strong> Você pode exportar na extensão <code>.csv</code> ou nativo <code>.xlsx</code> toda a estrutura do banco em uma listagem imensa de histórico.</li>
                 <li><strong>Relatório por Período:</strong> É possível cruzar dados de militares escolhendo datas de "Início" e "Fim". O sistema varrerá as portarias com vigência dentro do período especificado.</li>
             </ul>
+        </section>
+
+        <!-- SEÇÃO 7: PRESTAÇÃO DE CONTAS -->
+        <section id="prestacao-contas">
+            <h2>7. Prestação de Contas Mensal</h2>
+            <p>O Módulo de Prestação de Contas foi introduzido na versão 1.6 para monitorar e consolidar a entrega dos slides de prestação mensal realizados pelas equipes de fiscalização de cada contrato.</p>
+            
+            <h3 id="matriz-acompanhamento">📋 Matriz de Acompanhamento</h3>
+            <p>Os Auditores acessam no portal interno a "Matriz de Acompanhamento". Ela exibe uma tabela dinâmica com as entregas de todos os contratos nos <strong>últimos 3 meses</strong>. Status possíveis:</p>
+            <ul>
+                <li><i class="bi bi-file-earmark-arrow-up text-primary"></i> <strong>Aguardando Análise (Entregue):</strong> O fiscal enviou o PDF, mas o Auditor ainda não analisou.</li>
+                <li><i class="bi bi-check-circle-fill text-success"></i> <strong>Conformidade (OK!):</strong> O PDF foi aprovado e está pronto.</li>
+                <li><i class="bi bi-exclamation-triangle-fill text-warning"></i> <strong>Ajustes Necessários (Correção):</strong> O auditor encontrou inconsistências. O fiscal é notificado no painel público para reenvio e o histórico de apontamentos fica gravado de forma transparente.</li>
+                <li><i class="bi bi-dash-circle text-muted"></i> <strong>Pendente:</strong> Nenhuma entrega foi realizada para o mês em questão.</li>
+            </ul>
+            <p>Na matriz, os auditores também podem marcar um envio como <strong>"Prioritário"</strong> caso ele deva compor a apresentação executiva do Comandante.</p>
+
+            <h3 id="consolidacao-pdf">📑 Consolidação de PDF Automática</h3>
+            <p>Para poupar tempo da equipe de auditoria na preparação da reunião mensal, o botão <strong>"Consolidar PDF"</strong> junta num único e grande arquivo PDF final todos os slides que cumprem dois requisitos simultâneos no mês filtrado:</p>
+            <ol>
+                <li>Estar no status <strong>Conformidade (OK!)</strong>.</li>
+                <li>Estar marcado no checkbox <strong>Prioritário</strong>.</li>
+            </ol>
+            <p>O documento gerado já é baixado ordenado hierarquicamente pelas patentes dos gestores, do mais antigo ao mais moderno, conforme determinação regulamentar.</p>
         </section>
         
         <br><br><br> <!-- Space at bottom for scrolling -->
