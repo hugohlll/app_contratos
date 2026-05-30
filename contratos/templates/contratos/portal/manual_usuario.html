@@ -120,6 +120,7 @@
                 <a class="nav-link" href="#prestacao-contas">7. Prestação de Contas</a>
                 <ul class="nav flex-column border-start border-2 ms-2 mt-1 mb-2">
                     <li class="nav-item"><a class="nav-link ms-3" href="#matriz-acompanhamento">Matriz de Acompanhamento</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#prestacao-setores">Gestores de Setor</a></li>
                     <li class="nav-item"><a class="nav-link ms-3" href="#consolidacao-pdf">Consolidação de PDF</a></li>
                 </ul>
             </li>
@@ -214,20 +215,22 @@
             </ul>
         </section>
 
-        <!-- SEÇÃO 7: PRESTAÇÃO DE CONTAS -->
         <section id="prestacao-contas">
             <h2>7. Prestação de Contas Mensal</h2>
-            <p>O Módulo de Prestação de Contas foi introduzido na versão 1.6 para monitorar e consolidar a entrega dos slides de prestação mensal realizados pelas equipes de fiscalização de cada contrato.</p>
+            <p>O Módulo de Prestação de Contas foi aprimorado na versão 1.6 para monitorar e consolidar as entregas dos relatórios e slides mensais, atuando em duas frentes independentes: <strong>Fiscais de Contrato</strong> e <strong>Chefes de Setores</strong>.</p>
             
             <h3 id="matriz-acompanhamento">📋 Matriz de Acompanhamento</h3>
-            <p>Os Auditores acessam no portal interno a "Matriz de Acompanhamento". Ela exibe uma tabela dinâmica com as entregas de todos os contratos nos <strong>últimos 3 meses</strong>. Status possíveis:</p>
+            <p>Os Auditores acessam no portal interno a "Matriz de Acompanhamento". Ela é dividida em duas abas (Fiscais e Setores), cada qual exibindo uma tabela dinâmica com as entregas de cada responsável nos <strong>últimos 3 meses</strong>. Status possíveis:</p>
             <ul>
-                <li><i class="bi bi-file-earmark-arrow-up text-primary"></i> <strong>Aguardando Análise (Entregue):</strong> O fiscal enviou o PDF, mas o Auditor ainda não analisou.</li>
+                <li><i class="bi bi-file-earmark-arrow-up text-primary"></i> <strong>Aguardando Análise (Entregue):</strong> O fiscal/gestor enviou o PDF, mas o Auditor ainda não analisou.</li>
                 <li><i class="bi bi-check-circle-fill text-success"></i> <strong>Conformidade (OK!):</strong> O PDF foi aprovado e está pronto.</li>
-                <li><i class="bi bi-exclamation-triangle-fill text-warning"></i> <strong>Ajustes Necessários (Correção):</strong> O auditor encontrou inconsistências. O fiscal é notificado no painel público para reenvio e o histórico de apontamentos fica gravado de forma transparente.</li>
+                <li><i class="bi bi-exclamation-triangle-fill text-warning"></i> <strong>Ajustes Necessários (Correção):</strong> O auditor encontrou inconsistências. O usuário é notificado no portal e o histórico de apontamentos fica gravado.</li>
                 <li><i class="bi bi-dash-circle text-muted"></i> <strong>Pendente:</strong> Nenhuma entrega foi realizada para o mês em questão.</li>
             </ul>
-            <p>Na matriz, os auditores também podem marcar um envio como <strong>"Prioritário"</strong> caso ele deva compor a apresentação executiva do Comandante.</p>
+            <p>Na aba dos fiscais de contrato, os auditores também podem marcar um envio como <strong>"Prioritário"</strong> caso ele deva compor a apresentação executiva da reunião.</p>
+
+            <h3 id="prestacao-setores">🏢 Prestações de Setores (Gestores)</h3>
+            <p>Diferente da prestação pública dos contratos (que exige que o usuário esteja ativamente designado numa portaria), as prestações de Chefes de Setores são associadas ao cargo regimental do usuário (ex: Chefe da Seção de TI). A dinâmica de envio, visualização de apontamentos e histórico de aprovação no portal opera da mesma maneira fluída que a dos contratos.</p>
 
             <h3 id="consolidacao-pdf">📑 Consolidação de PDF Automática</h3>
             <p>Para poupar tempo da equipe de auditoria na preparação da reunião mensal, o botão <strong>"Consolidar PDF"</strong> junta num único e grande arquivo PDF final todos os slides que cumprem dois requisitos simultâneos no mês filtrado:</p>
