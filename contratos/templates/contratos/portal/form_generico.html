@@ -12,6 +12,9 @@
             <div class="card-body p-4">
                 <form method="post">
                     {% csrf_token %}
+                    {% if mensagem %}
+                    <p class="fs-5 text-dark mb-4">{{ mensagem }}</p>
+                    {% endif %}
 
                     {% for field in form %}
                     <div class="mb-3">

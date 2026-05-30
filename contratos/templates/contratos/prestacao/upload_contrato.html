@@ -1,0 +1,115 @@
+{% extends 'contratos/prestacao/base_prestacao_publica.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary mb-0"><i class="bi bi-file-earmark-ruled me-2"></i> Prestação de Contas Mensal</h2>
+        <a href="{% url 'portal_prestacao_fiscais' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
+    </div>
+
+    <!-- Mensagens de Alerta -->
+    {% if messages %}
+    <div class="mb-4">
+        {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags }} alert-dismissible fade show">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <!-- Lado Esquerdo: Formulário -->
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Contrato {{ contrato.numero }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-4">{{ contrato.empresa.razao_social }}</p>
+                    <form id="form-upload-prestacao" action="{% url 'upload_prestacao' contrato_id=contrato.id %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Referência (Gerada Automaticamente)</label>
+                            <input type="text" class="form-control bg-light" value="{{ form.mes_referencia.value|stringformat:'02d' }}/{{ form.ano_referencia.value|stringformat:'d' }}" readonly>
+                            {{ form.mes_referencia }}
+                            {{ form.ano_referencia }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fiscal (Apenas Ativos)</label>
+                            {{ form.agente }}
+                            {% if form.agente.errors %}<div class="text-danger small">{{ form.agente.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Arquivo PDF</label>
+                            <input type="file" name="arquivo" class="form-control" accept="application/pdf" required>
+                            <div class="form-text">Apenas formato PDF, máx. 10MB.</div>
+                            {% if form.arquivo.errors %}<div class="text-danger small">{{ form.arquivo.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Observações Adicionais (Opcional)</label>
+                            {{ form.observacao }}
+                            {% if form.observacao.errors %}<div class="text-danger small">{{ form.observacao.errors }}</div>{% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">
+                            <i class="bi bi-cloud-arrow-up"></i> Enviar Prestação de Contas
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lado Direito: Histórico -->
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i> Últimos Envios (6 meses)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for p in historico %}
+                        <div class="list-group-item p-3">
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0 fw-bold">Referência {{ p.mes_referencia|stringformat:"02d" }}/{{ p.ano_referencia|stringformat:"d" }}</h6>
+                                <small class="text-muted">{{ p.data_envio|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge {% if p.status == 'entregue' %}bg-primary{% elif p.status == 'ok' %}bg-success{% elif p.status == 'correcao' %}bg-warning text-dark{% else %}bg-secondary{% endif %} me-2">
+                                    {{ p.get_status_display }}
+                                </span>
+                                <small class="text-muted"><i class="bi bi-person"></i> {{ p.agente.posto.sigla|default:'' }} {{ p.agente.nome_de_guerra|default:'Fiscal' }}</small>
+                            </div>
+                            {% if p.status == 'correcao' and p.apontamentos.exists %}
+                            <div class="alert alert-warning py-2 px-3 mt-2 mb-0 small">
+                                <strong><i class="bi bi-exclamation-triangle-fill"></i> Apontamentos da Auditoria:</strong><br>
+                                {{ p.apontamentos.first.descricao|linebreaksbr }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Nenhum envio recente encontrado para este contrato.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    // Customizar classes dos inputs do form
+    $('#id_agente').addClass('form-select');
+    $('#id_observacao').addClass('form-control');
+</script>
+{% endblock %}

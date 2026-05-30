@@ -289,3 +289,48 @@ class CargoRegimentalForm(EstiloFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['agente'].label_from_instance = lambda obj: f"{obj.posto.sigla} {obj.nome_de_guerra} | {obj.nome_completo}"
 
+
+from .models import PrestacaoContasSetor
+
+class PrestacaoContasSetorUploadForm(EstiloFormMixin, forms.ModelForm):
+    class Meta:
+        model = PrestacaoContasSetor
+        fields = ['agente', 'mes_referencia', 'ano_referencia', 'arquivo', 'observacao']
+        widgets = {
+            'observacao': forms.Textarea(attrs={'rows': 2}),
+            'mes_referencia': forms.HiddenInput(),
+            'ano_referencia': forms.HiddenInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        setor = kwargs.pop('setor', None)
+        super().__init__(*args, **kwargs)
+        
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_prev = ultimo_dia_mes_anterior.month
+        ano_prev = ultimo_dia_mes_anterior.year
+        
+        self.fields['mes_referencia'].initial = mes_prev
+        self.fields['ano_referencia'].initial = ano_prev
+        
+        # Filtra os agentes apenas para aqueles que são chefes no setor selecionado
+        if setor:
+            agentes_ids = CargoRegimental.objects.filter(
+                setor=setor,
+                ativo=True
+            ).values_list('agente_id', flat=True).distinct()
+            self.fields['agente'].queryset = Agente.objects.filter(id__in=agentes_ids).select_related('posto')
+            self.fields['agente'].empty_label = "Selecione o Gestor..."
+
+    def clean_arquivo(self):
+        f = self.cleaned_data.get('arquivo')
+        if not f:
+            raise forms.ValidationError("Este campo é obrigatório. Envie um arquivo PDF.")
+        if not f.name.lower().endswith('.pdf'):
+            raise forms.ValidationError("Apenas arquivos PDF são aceitos.")
+        if f.size > 10 * 1024 * 1024:
+            raise forms.ValidationError("O arquivo não pode exceder 10 MB.")
+        return f
+

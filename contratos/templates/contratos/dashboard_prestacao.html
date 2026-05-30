@@ -16,7 +16,7 @@
             </select>
             <select name="ano" class="form-select form-select-sm no-tomselect me-2" style="width: 85px; height: 31px;">
                 {% for a in anos_choices %}
-                <option value="{{ a }}" {% if a == filtro_ano %}selected{% endif %}>{{ a|stringformat:"d" }}</option>
+                <option value="{{ a|stringformat:'d' }}" {% if a == filtro_ano %}selected{% endif %}>{{ a|stringformat:"d" }}</option>
                 {% endfor %}
             </select>
             <button type="submit" class="btn btn-sm btn-outline-secondary" style="height: 31px; display: inline-flex; align-items: center;"><i class="bi bi-filter me-1"></i> Filtrar</button>
@@ -65,8 +65,8 @@
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="gestores-tab" data-bs-toggle="tab" data-bs-target="#gestores-pane" type="button" role="tab" aria-controls="gestores-pane" aria-selected="false">
-            <i class="bi bi-people me-1"></i>Gestores
+        <button class="nav-link" id="setores-tab" data-bs-toggle="tab" data-bs-target="#setores-pane" type="button" role="tab" aria-controls="setores-pane" aria-selected="false">
+            <i class="bi bi-diagram-3 me-1"></i>Setores
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -294,19 +294,81 @@
 
 </div><!-- /tab-pane fiscais -->
 
-<!-- ABA 2: GESTORES -->
-<div class="tab-pane fade" id="gestores-pane" role="tabpanel" aria-labelledby="gestores-tab">
+<!-- ABA 2: SETORES -->
+<div class="tab-pane fade" id="setores-pane" role="tabpanel" aria-labelledby="setores-tab">
     <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white">
-            <h5 class="m-0 text-dark"><i class="bi bi-people me-2"></i>Gestores dos Setores</h5>
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="m-0 text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento - Setores (Últimos 3 meses)</h5>
         </div>
-        <div class="card-body text-center py-5">
-            <i class="bi bi-cone-striped text-warning" style="font-size: 3rem;"></i>
-            <h5 class="text-muted mt-3">Em breve</h5>
-            <p class="text-muted">As funcionalidades de prestação de contas dos Gestores dos Setores serão implementadas em versões futuras.</p>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-start" style="min-width: 200px;">Setor / Sigla</th>
+                            {% for a, m in ultimos_3_meses_tuplas %}
+                            <th style="min-width: 120px;">{{ m|stringformat:"02d" }}/{{ a|stringformat:"d" }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s_data in matriz_setores %}
+                        <tr>
+                            <td class="text-start">
+                                 <div class="fw-bold text-primary">{{ s_data.setor.sigla }}</div>
+                                 <div class="small text-muted text-truncate" style="max-width: 250px;" title="{{ s_data.setor.nome }}">{{ s_data.setor.nome }}</div>
+                            </td>
+                            {% for entrega in s_data.entregas %}
+                            <td class="p-2">
+                                {% if entrega.status == 'entregue' %}
+                                    <div class="d-flex flex-column align-items-center">
+                                        <a href="{% url 'download_prestacao_setor' entrega.prestacao.id %}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                            <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
+                                            <span style="font-size: 0.75rem;">Entregue</span>
+                                        </a>
+                                        {% if is_auditor %}
+                                        <div class="d-flex gap-1 mt-1">
+                                            <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status-setor" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                                <i class="bi bi-check-lg"></i>
+                                            </a>
+                                            <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status-setor" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                            </a>
+                                            {% if is_admin %}
+                                            <a href="{% url 'excluir_prestacao_setor' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                {% elif entrega.status == 'correcao' %}
+                                    <div class="d-flex flex-column align-items-center">
+                                        <a href="{% url 'download_prestacao_setor' entrega.prestacao.id %}" target="_blank" class="text-warning text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                            <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
+                                            <span style="font-size: 0.75rem;">Corrigir</span>
+                                        </a>
+                                    </div>
+                                {% elif entrega.status == 'ok' %}
+                                    <div class="d-flex flex-column align-items-center">
+                                        <a href="{% url 'download_prestacao_setor' entrega.prestacao.id %}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                            <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                                            <span style="font-size: 0.75rem;">OK</span>
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted"><i class="bi bi-dash fs-4"></i></span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div><!-- /tab-pane gestores -->
+</div><!-- /tab-pane setores -->
 
 <!-- ABA 3: CALENDÁRIO -->
 <div class="tab-pane fade" id="calendario-pane" role="tabpanel" aria-labelledby="calendario-tab">
@@ -995,5 +1057,39 @@
             });
         });
     });
+
+    // Event listener simples para Setores (Recarrega a página ao invés de AJAX na matriz)
+    document.addEventListener("click", function(event) {
+        const btn = event.target.closest('.btn-alterar-status-setor');
+        if (!btn) return;
+        event.preventDefault();
+        const url = btn.getAttribute('href');
+        if (url.includes('correcao')) {
+            const justificativa = prompt('Digite a justificativa para a correção:');
+            if (!justificativa) return;
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+            
+            const justInput = document.createElement('input');
+            justInput.type = 'hidden';
+            justInput.name = 'justificativa';
+            justInput.value = justificativa;
+            form.appendChild(justInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        } else {
+            window.location.href = url;
+        }
+    });
+
 </script>
 {% endblock %}

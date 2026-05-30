@@ -66,11 +66,12 @@ Garantir **transparência**, **controle** e **conformidade** no gerenciamento de
 - Informações sobre designações e prazos
 - Exportação em CSV para análise externa
 
-#### 4. **Painel de Entregas (Prestação de Contas)**
-- Upload público de slides (PDF) para prestação de contas mensal
-- Histórico dos últimos 6 meses de envios com status visual
+#### 4. **Portal de Prestações de Contas**
+- Interface dedicada para envio de prestação de contas (desacoplada da consulta pública de contratos)
+- Upload público de slides (PDF) com separação clara entre Fiscais e Gestores de Setor
+- Histórico dos últimos 6 meses de envios com status visual (isolado por tipo e contrato/setor)
 - Visualização das inconsistências apontadas pela auditoria (popovers)
-- Reenvio de documentação corrigida
+- Reenvio de documentação corrigida e gestão de status transparente
 
 ---
 
@@ -129,13 +130,14 @@ Dashboard interativo com gráficos e indicadores:
   - Lista de contratos sem equipe de fiscalização ativa
   - Alertas visuais para ação imediata
 
-#### 2. **Matriz de Prestação de Contas**
-- Tabela dinâmica e visual com o acompanhamento das entregas mensais
+#### 2. **Matriz de Prestação de Contas (Dashboard)**
+- Acompanhamento simultâneo de prestações de Fiscais de Contrato e de Gestores de Setor em abas separadas
+- Tabela dinâmica e visual com o acompanhamento das entregas mensais (histórico de 3 meses)
 - Botões de ação ágeis: "Aprovar (OK!)", "Solicitar Correção", "Excluir"
-- Delegação de status de aprovação com envio obrigatório de justificativa em caso de correção (registrado em histórico)
-- Histórico de inconsistências registrado e persistido
-- Geração de PDF consolidado de todos os contratos em conformidade e marcados como prioritários
-- Dashboard estatístico específico (Gráfico de Pizza para o mês, Gráfico de Barras para Prioritários)
+- Delegação de status de aprovação com envio obrigatório de justificativa em caso de correção (prompt dinâmico)
+- Histórico de inconsistências registrado e persistido por usuário
+- Geração de PDF consolidado apenas para Fiscais (prioritários)
+- Dashboard estatístico específico (Gráfico de Pizza e de Barras)
 - Filtro iterativo de Mês/Ano com exportação em CSV/Excel
 
 #### 3. **Relatórios e Exportações**
@@ -719,6 +721,8 @@ Contribuições são bem-vindas! Para contribuir:
 - ✅ **Consolidação de Apresentação**: Geração de um único PDF dinâmico (on-the-fly) juntando todos os slides prioritários que estiverem em conformidade no mês filtrado.
 - ✅ **Apontamentos de Correção**: Possibilidade do auditor solicitar ajustes nos slides, exigindo justificativa que fica gravada em histórico para o fiscal consultar no portal público.
 - ✅ **Dashboard Específico**: Gráficos Chart.js interativos integrados diretamente à matriz de prestação para monitorar o status do mês atual.
+- ✅ **Desacoplamento do Portal**: Criação de uma área de "Prestações de Contas" separada da consulta de contratos, focada apenas em recebimento de arquivos.
+- ✅ **Gestores de Setor**: Inclusão de aba separada e formulário próprio para recebimento e gestão das prestações de contas enviadas por Chefes de Setor, com o mesmo nível de acompanhamento mensal.
 
 ### **Versão 1.5.0**
 - ✅ **Segregação de Ambientes**: Separação total de volumes físicos, portas e redes entre desenvolvimento e produção através de namespaces nativos do Compose V2 (`name: siscont_dev` e `name: siscont_prod`).

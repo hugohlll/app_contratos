@@ -1,7 +1,7 @@
 """
-Testes para a seção "Últimos Envios" da tela pública de detalhe do contrato.
+Testes para a seção "Últimos Envios" da tela pública de upload de prestação de contas.
 
-Valida que a view detalhe_contrato retorna no máximo 6 prestações recentes,
+Valida que a view upload_prestacao retorna no máximo 6 prestações recentes,
 ordenadas do mais recente para o mais antigo, excluindo status 'pendente',
 e exibindo apenas o envio mais recente quando há múltiplos para o mesmo período.
 """
@@ -13,7 +13,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from contratos.models import (
     Contrato, Empresa, PrestacaoContas, Agente,
-    PostoGraduacao, Comissao
+    PostoGraduacao, Comissao, Funcao, Integrante
 )
 
 
@@ -42,8 +42,14 @@ class HistoricoUltimosEnviosTests(TestCase):
             contrato=self.contrato, tipo='FISCALIZACAO',
             ativa=True, data_inicio=date(2026, 1, 1)
         )
-        self.url_detalhe = reverse(
-            'detalhe_contrato', kwargs={'contrato_id': self.contrato.id}
+        funcao = Funcao.objects.create(titulo="Fiscal Técnico", ordem=1)
+        Integrante.objects.create(
+            comissao=self.comissao, agente=self.agente, funcao=funcao,
+            data_inicio=date(2026, 1, 1),
+            portaria_numero="100", portaria_data=date(2026, 1, 1)
+        )
+        self.url_upload = reverse(
+            'upload_prestacao', kwargs={'contrato_id': self.contrato.id}
         )
         self.client = Client()
 
@@ -78,10 +84,10 @@ class HistoricoUltimosEnviosTests(TestCase):
         for mes in range(1, 9):
             self._criar_prestacao(mes, 2026)
 
-        response = self.client.get(self.url_detalhe)
+        response = self.client.get(self.url_upload)
         self.assertEqual(response.status_code, 200)
 
-        prestacoes = response.context['prestacoes_recentes']
+        prestacoes = response.context['historico']
         self.assertEqual(len(prestacoes), 6)
 
     # ---------------------------------------------------------------
@@ -93,8 +99,8 @@ class HistoricoUltimosEnviosTests(TestCase):
         self._criar_prestacao(3, 2026)
         self._criar_prestacao(5, 2026)
 
-        response = self.client.get(self.url_detalhe)
-        prestacoes = list(response.context['prestacoes_recentes'])
+        response = self.client.get(self.url_upload)
+        prestacoes = list(response.context['historico'])
 
         periodos = [(p.mes_referencia, p.ano_referencia) for p in prestacoes]
         self.assertEqual(periodos, [(5, 2026), (3, 2026), (1, 2026)])
@@ -109,8 +115,8 @@ class HistoricoUltimosEnviosTests(TestCase):
         self._criar_prestacao(1, 2026)
         self._criar_prestacao(2, 2026)
 
-        response = self.client.get(self.url_detalhe)
-        prestacoes = list(response.context['prestacoes_recentes'])
+        response = self.client.get(self.url_upload)
+        prestacoes = list(response.context['historico'])
 
         periodos = [(p.mes_referencia, p.ano_referencia) for p in prestacoes]
         self.assertEqual(periodos, [
@@ -126,8 +132,8 @@ class HistoricoUltimosEnviosTests(TestCase):
         self._criar_prestacao(2, 2026, status='pendente')
         self._criar_prestacao(3, 2026, status='ok')
 
-        response = self.client.get(self.url_detalhe)
-        prestacoes = list(response.context['prestacoes_recentes'])
+        response = self.client.get(self.url_upload)
+        prestacoes = list(response.context['historico'])
 
         meses = [p.mes_referencia for p in prestacoes]
         self.assertIn(1, meses)
@@ -143,8 +149,8 @@ class HistoricoUltimosEnviosTests(TestCase):
         p1 = self._criar_prestacao(5, 2026)
         p2 = self._criar_prestacao(5, 2026)  # reenvio — id maior
 
-        response = self.client.get(self.url_detalhe)
-        prestacoes = list(response.context['prestacoes_recentes'])
+        response = self.client.get(self.url_upload)
+        prestacoes = list(response.context['historico'])
 
         self.assertEqual(len(prestacoes), 1)
         self.assertEqual(prestacoes[0].id, p2.id)
@@ -158,8 +164,8 @@ class HistoricoUltimosEnviosTests(TestCase):
         for mes in range(1, 9):
             self._criar_prestacao(mes, 2026)
 
-        response = self.client.get(self.url_detalhe)
-        prestacoes = list(response.context['prestacoes_recentes'])
+        response = self.client.get(self.url_upload)
+        prestacoes = list(response.context['historico'])
 
         meses = [p.mes_referencia for p in prestacoes]
         # Deve conter ago(8) a mar(3), excluindo jan(1) e fev(2)
@@ -172,12 +178,12 @@ class HistoricoUltimosEnviosTests(TestCase):
     # ---------------------------------------------------------------
     def test_nenhum_envio_retorna_lista_vazia(self):
         """Sem prestações cadastradas, o contexto deve conter lista vazia e exibir mensagem adequada."""
-        response = self.client.get(self.url_detalhe)
+        response = self.client.get(self.url_upload)
         self.assertEqual(response.status_code, 200)
 
-        prestacoes = response.context['prestacoes_recentes']
+        prestacoes = response.context['historico']
         self.assertEqual(len(prestacoes), 0)
-        self.assertContains(response, "Nenhum envio registrado")
+        self.assertContains(response, "Nenhum envio recente encontrado")
 
     # ---------------------------------------------------------------
     # 8. Todos os status válidos aparecem
@@ -188,8 +194,8 @@ class HistoricoUltimosEnviosTests(TestCase):
         self._criar_prestacao(2, 2026, status='correcao')
         self._criar_prestacao(3, 2026, status='ok')
 
-        response = self.client.get(self.url_detalhe)
-        prestacoes = list(response.context['prestacoes_recentes'])
+        response = self.client.get(self.url_upload)
+        prestacoes = list(response.context['historico'])
 
         status_list = [p.status for p in prestacoes]
         self.assertIn('entregue', status_list)
@@ -205,7 +211,7 @@ class HistoricoUltimosEnviosTests(TestCase):
         self._criar_prestacao(3, 2026)
         self._criar_prestacao(11, 2025)
 
-        response = self.client.get(self.url_detalhe)
+        response = self.client.get(self.url_upload)
         self.assertContains(response, "03/2026")
         self.assertContains(response, "11/2025")
         # Não deve conter formato com ponto de milhar (ex: 2.026)
@@ -240,8 +246,8 @@ class HistoricoUltimosEnviosTests(TestCase):
             arquivo=pdf, status='entregue'
         )
 
-        response = self.client.get(self.url_detalhe)
-        prestacoes = list(response.context['prestacoes_recentes'])
+        response = self.client.get(self.url_upload)
+        prestacoes = list(response.context['historico'])
 
         self.assertEqual(len(prestacoes), 1)
         self.assertEqual(prestacoes[0].contrato, self.contrato)

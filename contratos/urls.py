@@ -77,9 +77,12 @@ urlpatterns = [
     path('portal/usuarios/excluir/<int:pk>/', users.excluir_usuario, name='excluir_usuario'),
     path('portal/alterar-senha/', users.alterar_senha, name='alterar_senha'),
 
-    # --- PRESTAÇÃO DE CONTAS ---
-    # Upload público (sem login)
-    path('contrato/<int:contrato_id>/prestacao/enviar/', prestacao.upload_prestacao, name='upload_prestacao'),
+    # --- PORTAL PÚBLICO DE PRESTAÇÃO DE CONTAS ---
+    path('prestacoes/', prestacao.portal_prestacao_index, name='portal_prestacao_index'),
+    path('prestacoes/fiscais/', prestacao.portal_prestacao_fiscais, name='portal_prestacao_fiscais'),
+    path('prestacoes/gestores/', prestacao.portal_prestacao_gestores, name='portal_prestacao_gestores'),
+    path('prestacoes/fiscais/<int:contrato_id>/', prestacao.upload_prestacao, name='upload_prestacao'),
+    path('prestacoes/gestores/<int:setor_id>/', prestacao.upload_prestacao_setor, name='upload_prestacao_setor'),
 
     # Dashboard e controles restritos
     path('portal/prestacao/', prestacao.dashboard_prestacao, name='dashboard_prestacao'),
@@ -92,6 +95,11 @@ urlpatterns = [
     path('portal/prestacao/consolidar/', prestacao.consolidar_apresentacao, name='consolidar_apresentacao'),
     path('portal/prestacao/gestores/reordenar/', prestacao.reordenar_gestores_prio, name='reordenar_gestores_prio'),
     path('portal/prestacao/calendario/salvar/', prestacao.salvar_calendario_prestacao, name='salvar_calendario_prestacao'),
+
+    # Rotas adicionais para Setores (Dashboard)
+    path('portal/prestacao/setor/download/<int:pk>/', prestacao.download_prestacao_setor, name='download_prestacao_setor'),
+    path('portal/prestacao/setor/excluir/<int:pk>/', prestacao.excluir_prestacao_setor, name='excluir_prestacao_setor'),
+    path('portal/prestacao/setor/status/<int:pk>/<str:novo_status>/', prestacao.alterar_status_prestacao_setor, name='alterar_status_prestacao_setor'),
 
     # --- CARGOS REGIMENTAIS ---
     path('portal/cargos/', cargos.cargos_regimentais, name='cargos_regimentais'),

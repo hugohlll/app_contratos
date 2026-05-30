@@ -1,0 +1,45 @@
+{% extends 'contratos/prestacao/base_prestacao_publica.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hero-section text-center">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-center mb-4">
+            <img src="{% static 'contratos/img/gap_logo.png' %}" alt="Brasão do GAP-BR" style="max-height: 8vh; width: auto;" class="me-3">
+            <h2 class="fw-bold text-primary mb-0 fs-3">Portal de Prestação de Contas</h2>
+        </div>
+
+        <div class="row justify-content-center g-4 mt-2">
+            <div class="col-md-5">
+                <div class="card h-100 border-0 shadow-lg rounded-4 hover-lift">
+                    <div class="card-body p-5 d-flex flex-column align-items-center">
+                        <i class="bi bi-file-earmark-ruled fs-1 text-primary mb-3"></i>
+                        <h4 class="fw-bold mb-3">Fiscais de Contrato</h4>
+                        <p class="text-muted mb-4">Acesse aqui para enviar a apresentação mensal referente aos contratos sob sua responsabilidade.</p>
+                        <a href="{% url 'portal_prestacao_fiscais' %}" class="btn btn-primary btn-lg mt-auto w-100 fw-bold">Acessar Entregas</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-5">
+                <div class="card h-100 border-0 shadow-lg rounded-4 hover-lift">
+                    <div class="card-body p-5 d-flex flex-column align-items-center">
+                        <i class="bi bi-diagram-3 fs-1 text-success mb-3"></i>
+                        <h4 class="fw-bold mb-3">Chefes de Setor</h4>
+                        <p class="text-muted mb-4">Acesse aqui para enviar a apresentação mensal gerencial referente às atividades do seu setor.</p>
+                        <a href="{% url 'portal_prestacao_gestores' %}" class="btn btn-success btn-lg mt-auto w-100 fw-bold">Acessar Entregas</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-5">
+            <a href="{% url 'pesquisa' %}" class="text-decoration-none text-muted"><i class="bi bi-arrow-left"></i> Voltar à Pesquisa Pública</a>
+        </div>
+    </div>
+</div>
+<style>
+.hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.hover-lift:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+</style>
+{% endblock %}

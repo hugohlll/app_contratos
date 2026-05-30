@@ -12,12 +12,104 @@ import json
 from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao
-from contratos.forms import PrestacaoContasUploadForm
+from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao, Setor, PrestacaoContasSetor, ApontamentoCorrecaoSetor
+from contratos.forms import PrestacaoContasUploadForm, PrestacaoContasSetorUploadForm
 from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx, get_filtro_ativos, is_admin, is_auditor
 
+def portal_prestacao_index(request):
+    """Landing page do Portal Público de Prestações."""
+    return render(request, 'contratos/prestacao/index.html')
+
+def portal_prestacao_fiscais(request):
+    """Página de seleção de Contratos para Fiscais."""
+    # Obter apenas contratos ativos
+    hoje = date.today()
+    contratos = Contrato.objects.filter(
+        vigencia_inicio__lte=hoje,
+        vigencia_fim__gte=hoje
+    ).order_by('numero')
+    return render(request, 'contratos/prestacao/fiscais.html', {'contratos': contratos})
+
+def portal_prestacao_gestores(request):
+    """Página de seleção de Setores para Gestores."""
+    setores = Setor.objects.all()
+    return render(request, 'contratos/prestacao/gestores.html', {'setores': setores})
+
+def upload_prestacao_setor(request, setor_id):
+    """View pública para envio do PDF de prestação de contas por setor."""
+    setor = get_object_or_404(Setor, pk=setor_id)
+    
+    if request.method == 'POST':
+        form = PrestacaoContasSetorUploadForm(request.POST, request.FILES, setor=setor)
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
+        
+        if form.is_valid():
+            mes = form.cleaned_data['mes_referencia']
+            ano = form.cleaned_data['ano_referencia']
+            
+            existente = PrestacaoContasSetor.objects.filter(
+                setor=setor, mes_referencia=mes, ano_referencia=ano
+            ).order_by('-data_envio').first()
+            
+            if existente and existente.status == 'pendente':
+                existente.arquivo = form.cleaned_data.get('arquivo')
+                existente.agente = form.cleaned_data.get('agente')
+                existente.observacao = form.cleaned_data.get('observacao', '')
+                existente.status = 'entregue'
+                from django.utils import timezone
+                existente.data_envio = timezone.now()
+                existente.save()
+            else:
+                prestacao = form.save(commit=False)
+                prestacao.setor = setor
+                prestacao.status = 'entregue'
+                if existente:
+                    prestacao.compor_apresentacao = existente.compor_apresentacao
+                prestacao.save()
+            
+            if is_ajax:
+                return JsonResponse({'success': True, 'message': 'Prestação de contas recebida com sucesso!'})
+            
+            return redirect(f"/prestacoes/gestores/{setor.id}/?enviado=1")
+        else:
+            if is_ajax:
+                errors = {}
+                for field, error_list in form.errors.items():
+                    errors[field] = [str(e) for e in error_list]
+                if form.non_field_errors():
+                    errors['__all__'] = [str(e) for e in form.non_field_errors()]
+                return JsonResponse({'success': False, 'errors': errors}, status=400)
+                
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field.capitalize()}: {error}")
+            return redirect('upload_prestacao_setor', setor_id=setor.id)
+    else:
+        form = PrestacaoContasSetorUploadForm(setor=setor)
+        historico = PrestacaoContasSetor.objects.filter(
+            setor=setor
+        ).exclude(status='pendente').order_by('-ano_referencia', '-mes_referencia', '-data_envio')
+        
+        historico_filtrado = []
+        vistos = set()
+        for p in historico:
+            chave = (p.mes_referencia, p.ano_referencia)
+            if chave not in vistos:
+                historico_filtrado.append(p)
+                vistos.add(chave)
+                if len(historico_filtrado) >= 6:
+                    break
+                    
+        context = {
+            'setor': setor,
+            'form': form,
+            'historico': historico_filtrado
+        }
+        return render(request, 'contratos/prestacao/upload_setor.html', context)
+
+
 def upload_prestacao(request, contrato_id):
-    """View pública para envio do PDF de prestação de contas."""
+    """View pública para envio do PDF de prestação de contas de contratos."""
     contrato = get_object_or_404(Contrato, pk=contrato_id)
     
     if request.method == 'POST':
@@ -28,15 +120,11 @@ def upload_prestacao(request, contrato_id):
             mes = form.cleaned_data['mes_referencia']
             ano = form.cleaned_data['ano_referencia']
             
-            # Se já existir uma entrega (ex: uma "pendente" apenas para marcar prioridade), 
-            # nós a atualizamos se for pendente. Caso contrário, criamos uma nova entrega 
-            # para manter o histórico completo de envios.
             existente = PrestacaoContas.objects.filter(
                 contrato=contrato, mes_referencia=mes, ano_referencia=ano
             ).order_by('-data_envio').first()
             
             if existente and existente.status == 'pendente':
-                # Atualiza o placeholder existente
                 existente.arquivo = form.cleaned_data.get('arquivo')
                 existente.agente = form.cleaned_data.get('agente')
                 existente.observacao = form.cleaned_data.get('observacao', '')
@@ -45,7 +133,6 @@ def upload_prestacao(request, contrato_id):
                 existente.data_envio = timezone.now()
                 existente.save()
             else:
-                # Cria uma nova entrega mantendo o histórico de arquivos
                 prestacao = form.save(commit=False)
                 prestacao.contrato = contrato
                 prestacao.status = 'entregue'
@@ -56,8 +143,7 @@ def upload_prestacao(request, contrato_id):
             if is_ajax:
                 return JsonResponse({'success': True, 'message': 'Prestação de contas recebida com sucesso!'})
             
-            # Redireciona com query param de sucesso
-            return redirect(f"/contrato/{contrato.id}/?enviado=1")
+            return redirect(f"/prestacoes/fiscais/{contrato.id}/?enviado=1")
         else:
             if is_ajax:
                 errors = {}
@@ -67,13 +153,32 @@ def upload_prestacao(request, contrato_id):
                     errors['__all__'] = [str(e) for e in form.non_field_errors()]
                 return JsonResponse({'success': False, 'errors': errors}, status=400)
                 
-            # Form inválido: Adiciona mensagens de erro e redireciona de volta
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field.capitalize()}: {error}")
-            return redirect('detalhe_contrato', contrato_id=contrato.id)
+            return redirect('upload_prestacao', contrato_id=contrato.id)
     else:
-        return redirect('detalhe_contrato', contrato_id=contrato.id)
+        form = PrestacaoContasUploadForm(contrato=contrato)
+        historico = PrestacaoContas.objects.filter(
+            contrato=contrato
+        ).exclude(status='pendente').order_by('-ano_referencia', '-mes_referencia', '-data_envio')
+        
+        historico_filtrado = []
+        vistos = set()
+        for p in historico:
+            chave = (p.mes_referencia, p.ano_referencia)
+            if chave not in vistos:
+                historico_filtrado.append(p)
+                vistos.add(chave)
+                if len(historico_filtrado) >= 6:
+                    break
+                    
+        context = {
+            'contrato': contrato,
+            'form': form,
+            'historico': historico_filtrado
+        }
+        return render(request, 'contratos/prestacao/upload_contrato.html', context)
 
 
 def _get_dashboard_stats(ano, mes):
@@ -210,6 +315,35 @@ def dashboard_prestacao(request):
             'entregas': entregas
         })
 
+    # Busca todas as prestações dos setores dos últimos 3 meses
+    setores = Setor.objects.all().order_by('nome')
+    todas_prestacoes_setores = PrestacaoContasSetor.objects.filter(
+        ano_referencia__gte=ultimos_3_meses[0][0]
+    ).order_by('id')
+    
+    prestacoes_setor_map = {}
+    for p in todas_prestacoes_setores:
+        if p.setor_id not in prestacoes_setor_map:
+            prestacoes_setor_map[p.setor_id] = {}
+        prestacoes_setor_map[p.setor_id][(p.ano_referencia, p.mes_referencia)] = p
+        
+    matriz_setores = []
+    for s in setores:
+        entregas = []
+        for ano, mes in ultimos_3_meses:
+            prestacao = prestacoes_setor_map.get(s.id, {}).get((ano, mes))
+            entregas.append({
+                'ano': ano,
+                'mes': mes,
+                'prestacao': prestacao,
+                'status': prestacao.status if prestacao else 'pendente'
+            })
+            
+        matriz_setores.append({
+            'setor': s,
+            'entregas': entregas
+        })
+
     meses_nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
     
     context = {
@@ -217,6 +351,7 @@ def dashboard_prestacao(request):
         'is_auditor': is_auditor(request.user),
         
         'matriz_contratos': matriz_contratos,
+        'matriz_setores': matriz_setores,
         'ultimos_3_meses_tuplas': ultimos_3_meses,
         
         'filtro_mes': filtro_mes,
@@ -715,3 +850,65 @@ def salvar_calendario_prestacao(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
+@login_required
+def download_prestacao_setor(request, pk):
+    """Download seguro do PDF de prestação do setor."""
+    prestacao = get_object_or_404(PrestacaoContasSetor, pk=pk)
+    if not prestacao.arquivo: raise Http404("Arquivo não encontrado no registro.")
+    caminho = prestacao.arquivo.path
+    if not os.path.exists(caminho): raise Http404("Arquivo físico não encontrado no servidor.")
+    with open(caminho, 'rb') as pdf:
+        response = HttpResponse(pdf.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="{os.path.basename(caminho)}"'
+        return response
+
+@admin_required
+def excluir_prestacao_setor(request, pk):
+    """Excluir entrega de setor (Apenas Admin)."""
+    prestacao = get_object_or_404(PrestacaoContasSetor, pk=pk)
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
+    if request.method == 'POST' or is_ajax:
+        if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
+            os.remove(prestacao.arquivo.path)
+        prestacao.delete()
+        if is_ajax: return JsonResponse({'success': True})
+        messages.success(request, "Prestação de Contas excluída com sucesso.")
+        return redirect('dashboard_prestacao')
+    return render(request, 'contratos/portal/form_generico.html', {
+        'titulo': 'Confirmar Exclusão',
+        'mensagem': f"Deseja excluir a prestação do setor {prestacao.setor.nome} ref. {prestacao.mes_referencia:02d}/{prestacao.ano_referencia}?"
+    })
+
+@login_required
+def alterar_status_prestacao_setor(request, pk, novo_status):
+    """Altera o status de uma prestação de contas de setor."""
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
+    if not is_auditor(request.user):
+        if is_ajax: return JsonResponse({'success': False, 'error': 'Acesso não autorizado.'}, status=403)
+        messages.error(request, "Acesso não autorizado.")
+        return redirect('dashboard_prestacao')
+    prestacao = get_object_or_404(PrestacaoContasSetor, pk=pk)
+    if novo_status not in ['entregue', 'correcao', 'ok']:
+        if is_ajax: return JsonResponse({'success': False, 'error': 'Status inválido.'}, status=400)
+        messages.error(request, "Status inválido.")
+        return redirect('dashboard_prestacao')
+    justificativa = ""
+    if request.method == 'POST':
+        if request.content_type == 'application/json':
+            try: justificativa = json.loads(request.body).get('justificativa', '').strip()
+            except json.JSONDecodeError: pass
+        else: justificativa = request.POST.get('justificativa', '').strip()
+    if novo_status == 'correcao' and not justificativa:
+        if is_ajax: return JsonResponse({'success': False, 'error': 'A justificativa é obrigatória.'}, status=400)
+        messages.error(request, "A justificativa é obrigatória.")
+        return redirect('dashboard_prestacao')
+    prestacao.status = novo_status
+    prestacao.save()
+    if novo_status == 'correcao':
+        ApontamentoCorrecaoSetor.objects.create(
+            prestacao=prestacao, autor=request.user, descricao=justificativa
+        )
+    if is_ajax:
+        return JsonResponse({'success': True, 'status': novo_status, 'status_display': prestacao.get_status_display()})
+    messages.success(request, f"Status atualizado para {prestacao.get_status_display()}.")
+    return redirect('dashboard_prestacao')

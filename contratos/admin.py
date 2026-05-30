@@ -75,7 +75,7 @@ class ContratoAdmin(admin.ModelAdmin):
     search_fields = ('numero', 'pag', 'empresa__razao_social')
     autocomplete_fields = ['empresa']
 
-from .models import PrestacaoContas
+from .models import PrestacaoContas, Setor, CargoRegimental, PrestacaoContasSetor, ApontamentoCorrecaoSetor
 
 @admin.register(PrestacaoContas)
 class PrestacaoContasAdmin(admin.ModelAdmin):
@@ -83,3 +83,28 @@ class PrestacaoContasAdmin(admin.ModelAdmin):
     list_filter = ('ano_referencia', 'mes_referencia')
     search_fields = ('contrato__numero', 'agente__nome_de_guerra')
     readonly_fields = ('data_envio',)
+
+@admin.register(Setor)
+class SetorAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'sigla', 'ordem')
+    search_fields = ('nome', 'sigla')
+    ordering = ('ordem', 'nome')
+
+@admin.register(CargoRegimental)
+class CargoRegimentalAdmin(admin.ModelAdmin):
+    list_display = ('cargo', 'setor', 'agente', 'ativo')
+    list_filter = ('setor', 'ativo')
+    search_fields = ('cargo', 'agente__nome_de_guerra')
+    autocomplete_fields = ['setor', 'agente']
+
+@admin.register(PrestacaoContasSetor)
+class PrestacaoContasSetorAdmin(admin.ModelAdmin):
+    list_display = ('setor', 'mes_referencia', 'ano_referencia', 'data_envio', 'agente')
+    list_filter = ('ano_referencia', 'mes_referencia', 'status')
+    search_fields = ('setor__nome', 'setor__sigla', 'agente__nome_de_guerra')
+    readonly_fields = ('data_envio',)
+
+@admin.register(ApontamentoCorrecaoSetor)
+class ApontamentoCorrecaoSetorAdmin(admin.ModelAdmin):
+    list_display = ('prestacao', 'autor', 'data_registro')
+    search_fields = ('prestacao__setor__nome', 'autor__username')

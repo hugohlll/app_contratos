@@ -297,6 +297,24 @@ class PrestacaoContas(models.Model):
     def __str__(self):
         return f"PC {self.contrato.numero} - {self.mes_referencia:02d}/{self.ano_referencia}"
 
+class ApontamentoCorrecao(models.Model):
+    prestacao = models.ForeignKey(
+        PrestacaoContas, on_delete=models.CASCADE, related_name='apontamentos'
+    )
+    autor = models.ForeignKey(
+        'auth.User', on_delete=models.SET_NULL, null=True, verbose_name="Registrado por"
+    )
+    descricao = models.TextField("Descrição das Inconsistências")
+    data_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Apontamento de Correção"
+        verbose_name_plural = "Apontamentos de Correção"
+        ordering = ['-data_registro']
+
+    def __str__(self):
+        return f"Apontamento #{self.id} - {self.prestacao}"
+
 class CalendarioPrestacao(models.Model):
     ano = models.IntegerField("Ano")
     mes = models.IntegerField("Mês")
@@ -345,4 +363,74 @@ class CargoRegimental(models.Model):
         verbose_name = "Cargo Regimental"
         verbose_name_plural = "Cargos Regimentais"
         ordering = ['setor__ordem', 'setor__nome', 'cargo']
+
+
+def upload_prestacao_setor_path(instance, filename):
+    """
+    Gera caminho: prestacoes_setor/{posto}_{nome_guerra}_{setor}_{mes_referencia}.pdf
+    """
+    posto = slugify(instance.agente.posto.sigla) if instance.agente and instance.agente.posto else "sem-posto"
+    nome_guerra = slugify(instance.agente.nome_de_guerra) if instance.agente else "sem-nome"
+    setor = slugify(instance.setor.nome)[:30] # Limitado a 30 chars
+    
+    nome = f"{posto}_{nome_guerra}_{setor}_{instance.mes_referencia:02d}-{instance.ano_referencia}.pdf"
+    
+    # Limpa caracteres múltiplos indesejados
+    nome = re.sub(r'_+', '_', nome)
+    return f"prestacoes_setor/{nome}"
+
+
+class PrestacaoContasSetor(models.Model):
+    setor = models.ForeignKey(
+        Setor, on_delete=models.CASCADE, related_name='prestacoes_setor'
+    )
+    agente = models.ForeignKey(
+        'Agente', on_delete=models.SET_NULL, null=True, verbose_name="Gestor do Setor"
+    )
+    ano_referencia = models.IntegerField("Ano de Referência")
+    mes_referencia = models.IntegerField("Mês de Referência")  # 1–12
+    arquivo = models.FileField(
+        "Arquivo PDF", upload_to=upload_prestacao_setor_path, null=True, blank=True
+    )
+    STATUS_CHOICES = [
+        ('pendente', 'Pendente'),
+        ('entregue', 'Entregue'),
+        ('correcao', 'Aguardando Correção'),
+        ('ok', 'Conformidade (OK!)'),
+    ]
+    status = models.CharField(
+        "Status", max_length=15, choices=STATUS_CHOICES, default='entregue'
+    )
+    compor_apresentacao = models.BooleanField(
+        "Compor Apresentação", default=False, help_text="Marque se este slide fará parte da apresentação consolidada"
+    )
+    data_envio = models.DateTimeField(auto_now_add=True)
+    observacao = models.TextField("Observação", blank=True)
+
+    class Meta:
+        verbose_name = "Prestação de Contas (Setor)"
+        verbose_name_plural = "Prestações de Contas (Setores)"
+        ordering = ['-ano_referencia', '-mes_referencia']
+
+    def __str__(self):
+        return f"PC {self.setor.sigla or self.setor.nome} - {self.mes_referencia:02d}/{self.ano_referencia}"
+
+
+class ApontamentoCorrecaoSetor(models.Model):
+    prestacao = models.ForeignKey(
+        PrestacaoContasSetor, on_delete=models.CASCADE, related_name='apontamentos'
+    )
+    autor = models.ForeignKey(
+        'auth.User', on_delete=models.SET_NULL, null=True, verbose_name="Registrado por"
+    )
+    descricao = models.TextField("Descrição das Inconsistências")
+    data_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Apontamento de Correção (Setor)"
+        verbose_name_plural = "Apontamentos de Correção (Setores)"
+        ordering = ['-data_registro']
+
+    def __str__(self):
+        return f"Apontamento #{self.id} - {self.prestacao}"
 

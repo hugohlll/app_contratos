@@ -4,7 +4,7 @@ from datetime import date
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q, Prefetch, Case, When, Value, IntegerField, Max
-from contratos.models import Contrato, Comissao, Integrante, PrestacaoContas
+from contratos.models import Contrato, Comissao, Integrante, PrestacaoContas, ApontamentoCorrecao
 from contratos.utils import get_filtro_ativos, export_csv_or_xlsx
 from contratos.forms import PrestacaoContasUploadForm
 
@@ -59,23 +59,10 @@ def detalhe_contrato(request, contrato_id):
     comissoes_fiscalizacao = [c for c in comissoes_ativas if c.tipo == 'FISCALIZACAO']
     comissoes_recebimento = [c for c in comissoes_ativas if c.tipo == 'RECEBIMENTO']
 
-    # --- PRESTAÇÃO DE CONTAS ---
-    latest_ids = PrestacaoContas.objects.filter(
-        contrato=contrato
-    ).values('ano_referencia', 'mes_referencia').annotate(max_id=Max('id')).values_list('max_id', flat=True)
-    prestacoes_recentes = PrestacaoContas.objects.filter(
-        id__in=latest_ids
-    ).order_by('-ano_referencia', '-mes_referencia')[:6]
-    form_prestacao = PrestacaoContasUploadForm(contrato=contrato)
-    sucesso_envio = request.GET.get('enviado') == '1'
-
     return render(request, 'contratos/detalhe.html', {
         'contrato': contrato,
         'comissoes_fiscalizacao': comissoes_fiscalizacao,
         'comissoes_recebimento': comissoes_recebimento,
-        'prestacoes_recentes': prestacoes_recentes,
-        'form_prestacao': form_prestacao,
-        'sucesso_envio': sucesso_envio
     })
 
 
