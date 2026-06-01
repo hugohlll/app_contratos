@@ -12,3 +12,12 @@ class ErrorHandlingTests(TestCase):
         self.assertTemplateUsed(response, '404.html')
         self.assertContains(response, 'Página não encontrada', status_code=404)
         self.assertContains(response, '404', status_code=404)
+
+    def test_pagina_teste_404(self):
+        """Acesso à rota de teste /test404/ deve renderizar a página 404 personalizada diretamente"""
+        url = reverse('test_404')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, '404.html')
+        self.assertContains(response, 'Página não encontrada', status_code=404)
+

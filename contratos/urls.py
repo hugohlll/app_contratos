@@ -108,4 +108,5 @@ urlpatterns = [
     path('portal/cargos/setores/novo/', cargos.novo_setor, name='novo_setor'),
     path('portal/cargos/setores/excluir/<int:pk>/', cargos.excluir_setor, name='excluir_setor'),
     path('portal/cargos/setores/reordenar/', cargos.reordenar_setores, name='reordenar_setores'),
+    path('test404/', public.handler404, name='test_404'),
 ]
