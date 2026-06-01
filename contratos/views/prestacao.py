@@ -18,7 +18,21 @@ from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx
 
 def portal_prestacao_index(request):
     """Landing page do Portal Público de Prestações."""
-    return render(request, 'contratos/prestacao/index.html')
+    hoje = date.today()
+    if hoje.month == 1:
+        mes_ref = 12
+        ano_ref = hoje.year - 1
+    else:
+        mes_ref = hoje.month - 1
+        ano_ref = hoje.year
+        
+    calendario = CalendarioPrestacao.objects.filter(mes=mes_ref, ano=ano_ref).first()
+    context = {
+        'calendario': calendario,
+        'mes_ref': f"{mes_ref:02d}",
+        'ano_ref': str(ano_ref)
+    }
+    return render(request, 'contratos/prestacao/index.html', context)
 
 def portal_prestacao_fiscais(request):
     """Página de seleção de Contratos para Fiscais."""

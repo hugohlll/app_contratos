@@ -9,6 +9,56 @@
             <h2 class="fw-bold text-primary mb-0 fs-3">Portal de Prestação de Contas</h2>
         </div>
 
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-10">
+                <div class="card border-0 shadow-sm rounded-4 bg-white">
+                    <div class="card-body p-4 text-center">
+                        <h5 class="fw-bold mb-4 text-secondary">
+                            <i class="bi bi-calendar-event me-2"></i>Calendário de Entregas (Referência: {{ mes_ref }}/{{ ano_ref }})
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-center">
+                                    <div class="text-muted small fw-bold mb-2">PRAZO DE ENTREGA DOS SLIDES</div>
+                                    <div class="fs-5 fw-bold text-dark mt-auto">
+                                        {% if calendario and calendario.data_entrega %}
+                                            <i class="bi bi-cloud-arrow-up text-primary me-2"></i>{{ calendario.data_entrega|date:"d/m/Y" }}
+                                        {% else %}
+                                            <span class="badge bg-secondary">A definir</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-center">
+                                    <div class="text-muted small fw-bold mb-2">APRESENTAÇÃO DOS FISCAIS</div>
+                                    <div class="fs-5 fw-bold text-dark mt-auto">
+                                        {% if calendario and calendario.data_apresentacao_fiscais %}
+                                            <i class="bi bi-person-video3 text-primary me-2"></i>{{ calendario.data_apresentacao_fiscais|date:"d/m/Y" }}
+                                        {% else %}
+                                            <span class="badge bg-secondary">A definir</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-center">
+                                    <div class="text-muted small fw-bold mb-2">APRESENTAÇÃO DOS GESTORES</div>
+                                    <div class="fs-5 fw-bold text-dark mt-auto">
+                                        {% if calendario and calendario.data_apresentacao_gestores %}
+                                            <i class="bi bi-people-fill text-success me-2"></i>{{ calendario.data_apresentacao_gestores|date:"d/m/Y" }}
+                                        {% else %}
+                                            <span class="badge bg-secondary">A definir</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row justify-content-center g-4 mt-2">
             <div class="col-md-5">
                 <div class="card h-100 border-0 shadow-lg rounded-4 hover-lift">

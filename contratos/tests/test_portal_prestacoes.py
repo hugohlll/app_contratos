@@ -22,7 +22,8 @@ from django.contrib.auth.models import User, Group
 from contratos.models import (
     Contrato, Empresa, PrestacaoContas, PrestacaoContasSetor,
     Agente, PostoGraduacao, Comissao, Integrante, Funcao,
-    Setor, CargoRegimental, ApontamentoCorrecaoSetor, ApontamentoCorrecao
+    Setor, CargoRegimental, ApontamentoCorrecaoSetor, ApontamentoCorrecao,
+    CalendarioPrestacao
 )
 
 
@@ -131,6 +132,40 @@ class PortalLandingPageTests(BaseSetorTestSetup):
         response = self.client.get(reverse('portal_prestacao_fiscais'))
         numeros = [c.numero for c in response.context['contratos']]
         self.assertNotIn("99/2025", numeros)
+
+    def test_landing_page_exibe_calendario_mes_anterior(self):
+        """A landing page deve mostrar o calendário do mês anterior ao atual."""
+        from datetime import date
+        hoje = date.today()
+        if hoje.month == 1:
+            mes = 12
+            ano = hoje.year - 1
+        else:
+            mes = hoje.month - 1
+            ano = hoje.year
+            
+        # Cria o calendário esperado
+        cal = CalendarioPrestacao.objects.create(
+            mes=mes, ano=ano,
+            data_entrega=date(ano, mes, 5),
+            data_apresentacao_fiscais=date(ano, mes, 10),
+            data_apresentacao_gestores=date(ano, mes, 15)
+        )
+        
+        response = self.client.get(reverse('portal_prestacao_index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('calendario', response.context)
+        self.assertEqual(response.context['calendario'], cal)
+        # Check date string formatting is present in the rendered HTML (e.g., 05/...)
+        self.assertContains(response, cal.data_entrega.strftime('%d/%m/%Y'))
+
+    def test_landing_page_calendario_nao_cadastrado_mostra_a_definir(self):
+        """Se o calendário do mês anterior não existir, deve exibir 'A definir'."""
+        CalendarioPrestacao.objects.all().delete()
+        response = self.client.get(reverse('portal_prestacao_index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context['calendario'])
+        self.assertContains(response, "A definir", count=3)
 
 
 # ===================================================================
@@ -282,6 +317,11 @@ class AnoInteiroTests(BaseSetorTestSetup):
         response = self.client.get(reverse('dashboard_prestacao'))
         content = response.content.decode()
         self.assertNotIn("2.026", content)
+
+    def test_ano_inteiro_na_landing_page(self):
+        """A landing page deve mostrar o ano sem ponto (ex: 2026 e não 2.026)."""
+        response = self.client.get(reverse('portal_prestacao_index'))
+        self.assertNotContains(response, "2.026")
 
     def test_ano_inteiro_no_detalhe_contrato(self):
         """O detalhe público do contrato não deve ter ponto no ano."""
