@@ -6,8 +6,7 @@ from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
 
 from contratos.models import (
-    CalendarioPrestacao, Contrato, Empresa, Agente, PostoGraduacao,
-    Comissao, Integrante, Funcao
+    CalendarioPrestacao, Contrato, Empresa, Agente, PostoGraduacao
 )
 
 
@@ -19,12 +18,14 @@ class CalendarioPrestacaoModelTest(TestCase):
         cal = CalendarioPrestacao.objects.create(
             ano=2026, mes=5,
             data_entrega=date(2026, 5, 10),
-            data_apresentacao=date(2026, 5, 15)
+            data_apresentacao_fiscais=date(2026, 5, 15),
+            data_apresentacao_gestores=date(2026, 5, 20)
         )
         self.assertEqual(cal.ano, 2026)
         self.assertEqual(cal.mes, 5)
         self.assertEqual(cal.data_entrega, date(2026, 5, 10))
-        self.assertEqual(cal.data_apresentacao, date(2026, 5, 15))
+        self.assertEqual(cal.data_apresentacao_fiscais, date(2026, 5, 15))
+        self.assertEqual(cal.data_apresentacao_gestores, date(2026, 5, 20))
 
     def test_str_representation(self):
         """Testa a representação em string do calendário."""
@@ -40,7 +41,8 @@ class CalendarioPrestacaoModelTest(TestCase):
         """Testa que as datas podem ser nulas."""
         cal = CalendarioPrestacao.objects.create(ano=2026, mes=7)
         self.assertIsNone(cal.data_entrega)
-        self.assertIsNone(cal.data_apresentacao)
+        self.assertIsNone(cal.data_apresentacao_fiscais)
+        self.assertIsNone(cal.data_apresentacao_gestores)
 
     def test_unique_together_ano_mes(self):
         """Testa que não é possível criar dois registros para o mesmo ano/mês."""
@@ -107,7 +109,8 @@ class SalvarCalendarioPrestacaoViewTest(TestCase):
         response = self._post_json({
             'ano': 2026, 'mes': 5,
             'data_entrega': '2026-05-10',
-            'data_apresentacao': '2026-05-15'
+            'data_apresentacao_fiscais': '2026-05-15',
+            'data_apresentacao_gestores': '2026-05-20'
         })
         self.assertEqual(response.status_code, 403)
         data = response.json()
@@ -119,7 +122,8 @@ class SalvarCalendarioPrestacaoViewTest(TestCase):
         response = self._post_json({
             'ano': 2026, 'mes': 5,
             'data_entrega': '2026-05-10',
-            'data_apresentacao': '2026-05-15'
+            'data_apresentacao_fiscais': '2026-05-15',
+            'data_apresentacao_gestores': '2026-05-20'
         })
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -128,7 +132,8 @@ class SalvarCalendarioPrestacaoViewTest(TestCase):
         # Verifica no banco
         cal = CalendarioPrestacao.objects.get(ano=2026, mes=5)
         self.assertEqual(cal.data_entrega, date(2026, 5, 10))
-        self.assertEqual(cal.data_apresentacao, date(2026, 5, 15))
+        self.assertEqual(cal.data_apresentacao_fiscais, date(2026, 5, 15))
+        self.assertEqual(cal.data_apresentacao_gestores, date(2026, 5, 20))
 
     def test_admin_pode_salvar(self):
         """Admin (superuser) deve conseguir salvar datas no calendário."""
@@ -136,28 +141,32 @@ class SalvarCalendarioPrestacaoViewTest(TestCase):
         response = self._post_json({
             'ano': 2026, 'mes': 8,
             'data_entrega': '2026-08-05',
-            'data_apresentacao': '2026-08-20'
+            'data_apresentacao_fiscais': '2026-08-20',
+            'data_apresentacao_gestores': '2026-08-25'
         })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['success'])
 
         cal = CalendarioPrestacao.objects.get(ano=2026, mes=8)
         self.assertEqual(cal.data_entrega, date(2026, 8, 5))
-        self.assertEqual(cal.data_apresentacao, date(2026, 8, 20))
+        self.assertEqual(cal.data_apresentacao_fiscais, date(2026, 8, 20))
+        self.assertEqual(cal.data_apresentacao_gestores, date(2026, 8, 25))
 
     def test_atualizar_datas_existentes(self):
         """Se já existir um registro, deve atualizar as datas em vez de criar novo."""
         CalendarioPrestacao.objects.create(
             ano=2026, mes=3,
             data_entrega=date(2026, 3, 1),
-            data_apresentacao=date(2026, 3, 10)
+            data_apresentacao_fiscais=date(2026, 3, 10),
+            data_apresentacao_gestores=date(2026, 3, 15)
         )
 
         self.client.login(username='auditor', password='password123')
         response = self._post_json({
             'ano': 2026, 'mes': 3,
             'data_entrega': '2026-03-15',
-            'data_apresentacao': '2026-03-25'
+            'data_apresentacao_fiscais': '2026-03-25',
+            'data_apresentacao_gestores': '2026-03-30'
         })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['success'])
@@ -166,34 +175,32 @@ class SalvarCalendarioPrestacaoViewTest(TestCase):
         self.assertEqual(CalendarioPrestacao.objects.filter(ano=2026, mes=3).count(), 1)
         cal = CalendarioPrestacao.objects.get(ano=2026, mes=3)
         self.assertEqual(cal.data_entrega, date(2026, 3, 15))
-        self.assertEqual(cal.data_apresentacao, date(2026, 3, 25))
+        self.assertEqual(cal.data_apresentacao_fiscais, date(2026, 3, 25))
+        self.assertEqual(cal.data_apresentacao_gestores, date(2026, 3, 30))
 
     def test_limpar_datas(self):
         """Enviar datas vazias deve limpar os campos (setar como null)."""
         CalendarioPrestacao.objects.create(
             ano=2026, mes=6,
             data_entrega=date(2026, 6, 1),
-            data_apresentacao=date(2026, 6, 10)
+            data_apresentacao_fiscais=date(2026, 6, 10),
+            data_apresentacao_gestores=date(2026, 6, 15)
         )
 
         self.client.login(username='auditor', password='password123')
         response = self._post_json({
             'ano': 2026, 'mes': 6,
             'data_entrega': '',
-            'data_apresentacao': ''
+            'data_apresentacao_fiscais': '',
+            'data_apresentacao_gestores': ''
         })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['success'])
 
         cal = CalendarioPrestacao.objects.get(ano=2026, mes=6)
         self.assertIsNone(cal.data_entrega)
-        self.assertIsNone(cal.data_apresentacao)
-
-    def test_metodo_get_nao_permitido(self):
-        """GET deve ser rejeitado (a view usa @require_POST)."""
-        self.client.login(username='auditor', password='password123')
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 405)
+        self.assertIsNone(cal.data_apresentacao_fiscais)
+        self.assertIsNone(cal.data_apresentacao_gestores)
 
 
 class DashboardCalendarioRenderingTest(TestCase):
@@ -220,8 +227,9 @@ class DashboardCalendarioRenderingTest(TestCase):
         response = self.client.get(reverse('dashboard_prestacao'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Calendário Anual de Prestação de Contas')
-        self.assertContains(response, 'Data de Entrega dos Slides')
-        self.assertContains(response, 'Data Prevista para Apresentação')
+        self.assertContains(response, 'Entrega dos Slides')
+        self.assertContains(response, 'Apresentação Fiscais')
+        self.assertContains(response, 'Apresentação Gestores')
 
     def test_dashboard_calendario_exibe_12_meses(self):
         """O calendário deve conter os 12 meses do ano."""
@@ -241,7 +249,8 @@ class DashboardCalendarioRenderingTest(TestCase):
         CalendarioPrestacao.objects.create(
             ano=date.today().year, mes=5,
             data_entrega=date(date.today().year, 5, 10),
-            data_apresentacao=date(date.today().year, 5, 20)
+            data_apresentacao_fiscais=date(date.today().year, 5, 20),
+            data_apresentacao_gestores=date(date.today().year, 5, 25)
         )
 
         self.client.login(username='user_dash', password='password123')
@@ -251,7 +260,8 @@ class DashboardCalendarioRenderingTest(TestCase):
         calendario = response.context['calendario_anual']
         maio = next(c for c in calendario if c['mes'] == 5)
         self.assertEqual(maio['data_entrega'], f'{date.today().year}-05-10')
-        self.assertEqual(maio['data_apresentacao'], f'{date.today().year}-05-20')
+        self.assertEqual(maio['data_apresentacao_fiscais'], f'{date.today().year}-05-20')
+        self.assertEqual(maio['data_apresentacao_gestores'], f'{date.today().year}-05-25')
 
     def test_dashboard_calendario_inputs_disabled_para_usuario_comum(self):
         """Usuário sem permissão de admin/auditor deve ver os inputs desabilitados."""

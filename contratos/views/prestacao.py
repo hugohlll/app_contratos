@@ -369,7 +369,8 @@ def dashboard_prestacao(request):
             'mes': m,
             'nome_mes': meses_nomes[m-1],
             'data_entrega': cal.data_entrega.strftime('%Y-%m-%d') if cal and cal.data_entrega else '',
-            'data_apresentacao': cal.data_apresentacao.strftime('%Y-%m-%d') if cal and cal.data_apresentacao else ''
+            'data_apresentacao_fiscais': cal.data_apresentacao_fiscais.strftime('%Y-%m-%d') if cal and cal.data_apresentacao_fiscais else '',
+            'data_apresentacao_gestores': cal.data_apresentacao_gestores.strftime('%Y-%m-%d') if cal and cal.data_apresentacao_gestores else ''
         })
     context['calendario_anual'] = calendario_anual
     
@@ -840,11 +841,13 @@ def salvar_calendario_prestacao(request):
         ano = int(data.get('ano'))
         mes = int(data.get('mes'))
         data_entrega = data.get('data_entrega') or None
-        data_apresentacao = data.get('data_apresentacao') or None
+        data_apresentacao_fiscais = data.get('data_apresentacao_fiscais') or None
+        data_apresentacao_gestores = data.get('data_apresentacao_gestores') or None
         
         cal, _ = CalendarioPrestacao.objects.get_or_create(ano=ano, mes=mes)
         cal.data_entrega = data_entrega
-        cal.data_apresentacao = data_apresentacao
+        cal.data_apresentacao_fiscais = data_apresentacao_fiscais
+        cal.data_apresentacao_gestores = data_apresentacao_gestores
         cal.save()
         
         return JsonResponse({'success': True, 'message': 'Calendário salvo com sucesso.'})

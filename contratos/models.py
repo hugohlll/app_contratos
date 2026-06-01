@@ -319,7 +319,8 @@ class CalendarioPrestacao(models.Model):
     ano = models.IntegerField("Ano")
     mes = models.IntegerField("Mês")
     data_entrega = models.DateField("Data de Entrega dos Slides", null=True, blank=True)
-    data_apresentacao = models.DateField("Data Prevista da Apresentação", null=True, blank=True)
+    data_apresentacao_fiscais = models.DateField("Data de Apresentação - Fiscais", null=True, blank=True)
+    data_apresentacao_gestores = models.DateField("Data de Apresentação - Gestores", null=True, blank=True)
 
     class Meta:
         verbose_name = "Calendário de Prestação"

@@ -425,9 +425,10 @@
             <table class="table table-bordered table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 20%;">Mês de Referência</th>
-                        <th style="width: 40%;">Data de Entrega dos Slides</th>
-                        <th style="width: 40%;">Data Prevista para Apresentação</th>
+                        <th style="width: 25%;">Mês de Referência</th>
+                        <th style="width: 25%;">Entrega dos Slides</th>
+                        <th style="width: 25%;">Apresentação Fiscais</th>
+                        <th style="width: 25%;">Apresentação Gestores</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -438,7 +439,10 @@
                             <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_entrega" value="{{ cal.data_entrega }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
                         </td>
                         <td>
-                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao" value="{{ cal.data_apresentacao }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao_fiscais" value="{{ cal.data_apresentacao_fiscais }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                        </td>
+                        <td>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao_gestores" value="{{ cal.data_apresentacao_gestores }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
                         </td>
                     </tr>
                     {% endfor %}
@@ -1002,7 +1006,8 @@
             
             const row = input.closest('tr');
             const data_entrega = row.querySelector('[data-campo="data_entrega"]').value;
-            const data_apresentacao = row.querySelector('[data-campo="data_apresentacao"]').value;
+            const data_apresentacao_fiscais = row.querySelector('[data-campo="data_apresentacao_fiscais"]').value;
+            const data_apresentacao_gestores = row.querySelector('[data-campo="data_apresentacao_gestores"]').value;
             
             fetch("{% url 'salvar_calendario_prestacao' %}", {
                 method: 'POST',
@@ -1015,7 +1020,8 @@
                     ano: ano,
                     mes: mes,
                     data_entrega: data_entrega,
-                    data_apresentacao: data_apresentacao
+                    data_apresentacao_fiscais: data_apresentacao_fiscais,
+                    data_apresentacao_gestores: data_apresentacao_gestores
                 })
             })
             .then(response => response.json())
