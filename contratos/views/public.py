@@ -129,3 +129,7 @@ def exportar_transparencia_csv(request):
                              "SEM COMISSÃO"] + ["-"] * 9)
 
     return export_csv_or_xlsx(request, 'contratos_gap_br', headers, data)
+
+
+def handler404(request, exception=None):
+    return render(request, '404.html', status=404)
