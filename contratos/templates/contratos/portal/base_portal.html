@@ -112,6 +112,13 @@
                     🏛️ Cargos Regimentais
                 </a>
             </li>
+            {% if request.user.is_superuser %}
+            <li>
+                <a href="{% url 'configuracoes_sistema' %}" class="{% if 'configuracoes' in request.path %}active{% endif %}">
+                    ⚙️ Configurações
+                </a>
+            </li>
+            {% endif %}
             <li>
                 <a href="{% url 'sair_do_sistema' %}">
                     🚪 Sair

@@ -5,8 +5,8 @@ from django.contrib import messages
 from django.contrib import messages
 from django.urls import reverse
 from django.db.models import Prefetch, Case, When, Value, IntegerField
-from ..models import Empresa, Contrato, Agente, Integrante, Comissao, Funcao
-from ..forms import EmpresaForm, ContratoForm, AgenteForm, IntegranteForm, ComissaoForm
+from ..models import Empresa, Contrato, Agente, Integrante, Comissao, Funcao, ConfiguracaoSistema
+from ..forms import EmpresaForm, ContratoForm, AgenteForm, IntegranteForm, ComissaoForm, ConfiguracaoSistemaForm
 
 
 def _get_integrantes_ordenados():
@@ -387,3 +387,25 @@ def reordenar_integrantes(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Método inválido'}, status=405)
+
+
+@login_required
+def configuracoes_sistema(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'Acesso negado. Apenas superusuários podem acessar as configurações.')
+        return redirect('painel_controle')
+    
+    config = ConfiguracaoSistema.get_config()
+    if request.method == 'POST':
+        form = ConfiguracaoSistemaForm(request.POST, instance=config)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Configurações salvas com sucesso!')
+            return redirect('configuracoes_sistema')
+    else:
+        form = ConfiguracaoSistemaForm(instance=config)
+    
+    return render(request, 'contratos/portal/configuracoes.html', {
+        'form': form,
+        'titulo': 'Configurações do Sistema'
+    })

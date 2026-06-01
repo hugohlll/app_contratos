@@ -435,3 +435,38 @@ class ApontamentoCorrecaoSetor(models.Model):
     def __str__(self):
         return f"Apontamento #{self.id} - {self.prestacao}"
 
+
+class ConfiguracaoSistema(models.Model):
+    PERIODICIDADE_CHOICES = [
+        ('diario', 'Diário'),
+        ('semanal', 'Semanal'),
+        ('mensal', 'Mensal'),
+    ]
+
+    backup_diretorio = models.CharField(
+        "Diretório de Backup", max_length=255, default='/var/backups/siscont',
+        help_text="Caminho absoluto onde os backups serão salvos."
+    )
+    backup_periodicidade = models.CharField(
+        "Periodicidade do Backup", max_length=15, choices=PERIODICIDADE_CHOICES, default='diario'
+    )
+    data_atualizacao = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Configuração do Sistema"
+        verbose_name_plural = "Configurações do Sistema"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super(ConfiguracaoSistema, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def get_config(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return "Configurações Gerais"

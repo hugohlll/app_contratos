@@ -4,7 +4,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
 from django.utils.safestring import mark_safe
-from .models import Empresa, Contrato, Agente, Integrante, Comissao
+from .models import Empresa, Contrato, Agente, Integrante, Comissao, ConfiguracaoSistema
 from .utils import clean_digits, format_cpf, format_cnpj
 
 class EstiloFormMixin:
@@ -334,3 +334,11 @@ class PrestacaoContasSetorUploadForm(EstiloFormMixin, forms.ModelForm):
             raise forms.ValidationError("O arquivo não pode exceder 10 MB.")
         return f
 
+
+class ConfiguracaoSistemaForm(EstiloFormMixin, forms.ModelForm):
+    class Meta:
+        model = ConfiguracaoSistema
+        fields = ['backup_diretorio', 'backup_periodicidade']
+        widgets = {
+            'backup_diretorio': forms.TextInput(attrs={'placeholder': '/caminho/absoluto/do/backup'}),
+        }
