@@ -1,6 +1,10 @@
+import datetime
+from unittest.mock import patch, MagicMock
+from io import StringIO
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from contratos.models import ConfiguracaoSistema
 
 class ConfiguracaoSistemaTests(TestCase):
@@ -68,3 +72,112 @@ class ConfiguracaoSistemaTests(TestCase):
         # Verifica se as configurações foram salvas
         config = ConfiguracaoSistema.get_config()
         self.assertEqual(config.backup_periodicidade, 'mensal')
+
+
+class SidebarConfiguracaoTests(TestCase):
+    """Testa a visibilidade do link 'Configurações' na sidebar"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='normal', password='pw')
+        self.superuser = User.objects.create_superuser(username='super', password='pw')
+        # Usamos portal_home pois renderiza o base_portal.html com a sidebar
+        self.url = reverse('portal_home')
+
+    def test_link_visivel_para_superusuario(self):
+        """Superusuário deve ver o link 'Configurações' na sidebar"""
+        self.client.login(username='super', password='pw')
+        response = self.client.get(self.url)
+        self.assertContains(response, 'Configurações')
+        self.assertContains(response, reverse('configuracoes_sistema'))
+
+    def test_link_oculto_para_usuario_normal(self):
+        """Usuário comum NÃO deve ver o link 'Configurações' na sidebar"""
+        self.client.login(username='normal', password='pw')
+        response = self.client.get(reverse('listar_empresas'), follow=True)
+        self.assertNotContains(response, reverse('configuracoes_sistema'))
+
+
+class ExecutarBackupPeriodicidadeTests(TestCase):
+    """Testa a lógica de periodicidade do comando executar_backup"""
+
+    def setUp(self):
+        self.config = ConfiguracaoSistema.get_config()
+
+    @patch('contratos.management.commands.executar_backup.subprocess.run')
+    @patch('contratos.management.commands.executar_backup.datetime')
+    def test_diario_executa_em_qualquer_dia(self, mock_datetime, mock_subprocess):
+        """Periodicidade 'diario' deve executar independentemente do dia"""
+        self.config.backup_periodicidade = 'diario'
+        self.config.save()
+
+        # Simula uma quarta-feira qualquer
+        mock_datetime.date.today.return_value = datetime.date(2026, 6, 3)  # quarta
+        mock_datetime.date.side_effect = lambda *args, **kw: datetime.date(*args, **kw)
+
+        out = StringIO()
+        call_command('executar_backup', stdout=out)
+        output = out.getvalue()
+        self.assertIn('Rotina de backup finalizada', output)
+        self.assertNotIn('ignorado', output)
+
+    @patch('contratos.management.commands.executar_backup.subprocess.run')
+    @patch('contratos.management.commands.executar_backup.datetime')
+    def test_semanal_executa_no_domingo(self, mock_datetime, mock_subprocess):
+        """Periodicidade 'semanal' deve executar no domingo"""
+        self.config.backup_periodicidade = 'semanal'
+        self.config.save()
+
+        # 2026-06-07 é um domingo (weekday() == 6)
+        mock_datetime.date.today.return_value = datetime.date(2026, 6, 7)
+        mock_datetime.date.side_effect = lambda *args, **kw: datetime.date(*args, **kw)
+
+        out = StringIO()
+        call_command('executar_backup', stdout=out)
+        output = out.getvalue()
+        self.assertIn('Rotina de backup finalizada', output)
+        self.assertNotIn('ignorado', output)
+
+    @patch('contratos.management.commands.executar_backup.datetime')
+    def test_semanal_ignora_dias_comuns(self, mock_datetime):
+        """Periodicidade 'semanal' NÃO deve executar em dias que não sejam domingo"""
+        self.config.backup_periodicidade = 'semanal'
+        self.config.save()
+
+        # 2026-06-03 é uma terça-feira (weekday() == 1)
+        mock_datetime.date.today.return_value = datetime.date(2026, 6, 3)
+
+        out = StringIO()
+        call_command('executar_backup', stdout=out)
+        output = out.getvalue()
+        self.assertIn('ignorado', output.lower())
+        self.assertIn('não é domingo', output)
+
+    @patch('contratos.management.commands.executar_backup.subprocess.run')
+    @patch('contratos.management.commands.executar_backup.datetime')
+    def test_mensal_executa_no_dia_primeiro(self, mock_datetime, mock_subprocess):
+        """Periodicidade 'mensal' deve executar no dia 1º"""
+        self.config.backup_periodicidade = 'mensal'
+        self.config.save()
+
+        mock_datetime.date.today.return_value = datetime.date(2026, 7, 1)
+        mock_datetime.date.side_effect = lambda *args, **kw: datetime.date(*args, **kw)
+
+        out = StringIO()
+        call_command('executar_backup', stdout=out)
+        output = out.getvalue()
+        self.assertIn('Rotina de backup finalizada', output)
+        self.assertNotIn('ignorado', output)
+
+    @patch('contratos.management.commands.executar_backup.datetime')
+    def test_mensal_ignora_outros_dias(self, mock_datetime):
+        """Periodicidade 'mensal' NÃO deve executar em dias que não sejam o 1º"""
+        self.config.backup_periodicidade = 'mensal'
+        self.config.save()
+
+        mock_datetime.date.today.return_value = datetime.date(2026, 6, 15)
+
+        out = StringIO()
+        call_command('executar_backup', stdout=out)
+        output = out.getvalue()
+        self.assertIn('ignorado', output.lower())
+        self.assertIn('não é dia 1º', output)
