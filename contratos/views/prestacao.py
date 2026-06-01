@@ -603,6 +603,7 @@ def alterar_status_prestacao(request, pk, novo_status):
             'status': prestacao.status,
             'status_display': prestacao.get_status_display(),
             'prestacao_id': prestacao.id,
+            'observacao': prestacao.observacao,
             'compor_apresentacao': prestacao.compor_apresentacao,
             'is_admin': is_admin(request.user),
             'is_auditor': is_auditor(request.user),
@@ -909,6 +910,14 @@ def alterar_status_prestacao_setor(request, pk, novo_status):
             prestacao=prestacao, autor=request.user, descricao=justificativa
         )
     if is_ajax:
-        return JsonResponse({'success': True, 'status': novo_status, 'status_display': prestacao.get_status_display()})
+        return JsonResponse({
+            'success': True,
+            'status': prestacao.status,
+            'status_display': prestacao.get_status_display(),
+            'prestacao_id': prestacao.id,
+            'observacao': prestacao.observacao,
+            'is_admin': is_admin(request.user),
+            'is_auditor': is_auditor(request.user)
+        })
     messages.success(request, f"Status atualizado para {prestacao.get_status_display()}.")
     return redirect('dashboard_prestacao')

@@ -197,6 +197,13 @@
                                         <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
                                         <span style="font-size: 0.75rem;">Entregue</span>
                                     </a>
+                                    {% if entrega.prestacao.observacao %}
+                                    <div class="mt-1">
+                                        <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
+                                            <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
+                                        </span>
+                                    </div>
+                                    {% endif %}
                                     {% if is_auditor %}
                                     <div class="d-flex gap-1 mt-1">
                                         <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
@@ -224,6 +231,13 @@
                                         <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
                                         <span style="font-size: 0.75rem;">Corrigir</span>
                                     </a>
+                                    {% if entrega.prestacao.observacao %}
+                                    <div class="mt-1">
+                                        <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
+                                            <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
+                                        </span>
+                                    </div>
+                                    {% endif %}
                                     {% if is_auditor %}
                                     <div class="d-flex gap-1 mt-1">
                                         <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
@@ -248,6 +262,13 @@
                                         <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
                                         <span style="font-size: 0.75rem;">Conformidade</span>
                                     </a>
+                                    {% if entrega.prestacao.observacao %}
+                                    <div class="mt-1">
+                                        <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
+                                            <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
+                                        </span>
+                                    </div>
+                                    {% endif %}
                                     {% if is_auditor %}
                                     <div class="d-flex gap-1 mt-1">
                                         <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
@@ -326,6 +347,13 @@
                                             <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
                                             <span style="font-size: 0.75rem;">Entregue</span>
                                         </a>
+                                        {% if entrega.prestacao.observacao %}
+                                        <div class="mt-1">
+                                            <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
+                                                <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
+                                            </span>
+                                        </div>
+                                        {% endif %}
                                         {% if is_auditor %}
                                         <div class="d-flex gap-1 mt-1">
                                             <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status-setor" title="Aprovar (OK!)" style="font-size: 0.7rem;">
@@ -348,6 +376,13 @@
                                             <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
                                             <span style="font-size: 0.75rem;">Corrigir</span>
                                         </a>
+                                        {% if entrega.prestacao.observacao %}
+                                        <div class="mt-1">
+                                            <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
+                                                <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
+                                            </span>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 {% elif entrega.status == 'ok' %}
                                     <div class="d-flex flex-column align-items-center">
@@ -355,6 +390,13 @@
                                             <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
                                             <span style="font-size: 0.75rem;">OK</span>
                                         </a>
+                                        {% if entrega.prestacao.observacao %}
+                                        <div class="mt-1">
+                                            <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
+                                                <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
+                                            </span>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 {% else %}
                                     <span class="text-muted"><i class="bi bi-dash fs-4"></i></span>
@@ -569,8 +611,20 @@
         const URL_EXCLUIR_BASE = "{% url 'excluir_prestacao' 999999 %}";
 
         // Função para gerar o HTML da célula baseado no novo status
-        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor, comporApresentacao, contratoId, mes, ano) {
+        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor, comporApresentacao, contratoId, mes, ano, observacao) {
             let html = '<div class="d-flex flex-column align-items-center">';
+            
+            let obsHtml = '';
+            if (observacao) {
+                const truncated = observacao.length > 20 ? observacao.substring(0, 17) + '...' : observacao;
+                obsHtml = `
+                    <div class="mt-1">
+                        <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="${observacao}">
+                            <i class="bi bi-chat-left-text-fill me-1"></i>Obs: ${truncated}
+                        </span>
+                    </div>
+                `;
+            }
             
             if (status === 'pendente') {
                 html += `
@@ -592,6 +646,7 @@
                         <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
                         <span style="font-size: 0.75rem;">Entregue</span>
                     </a>
+                    ${obsHtml}
                 `;
                 if (isAuditor) {
                     html += `
@@ -618,6 +673,7 @@
                         <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
                         <span style="font-size: 0.75rem;">Corrigir</span>
                     </a>
+                    ${obsHtml}
                 `;
                 if (isAuditor) {
                     html += `
@@ -641,6 +697,7 @@
                         <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
                         <span style="font-size: 0.75rem;">Conformidade</span>
                     </a>
+                    ${obsHtml}
                 `;
                 if (isAuditor) {
                     html += `
@@ -736,7 +793,7 @@
                                 const m = checkboxDentro ? checkboxDentro.getAttribute('data-mes') : null;
                                 const a = checkboxDentro ? checkboxDentro.getAttribute('data-ano') : null;
                                 
-                                td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a);
+                                td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao);
                                 
                                 if (window.myChart && data.stats) {
                                     window.myChart.data.datasets[0].data = [
@@ -835,7 +892,7 @@
                         const a = checkboxDentro ? checkboxDentro.getAttribute('data-ano') : null;
                         
                         // Atualiza o conteúdo da célula
-                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a);
+                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao);
                         
                         // Atualiza os gráficos se os dados de estatística estiverem disponíveis
                         if (window.myChart && data.stats) {
