@@ -4,3 +4,6 @@
 
 # Opcional (Recomendado): Verifica e resgata tokens do Gmail periodicamente (roda às 01:00 da manhã)
 0 1 * * * root python /app/scripts/check_gmail_health.py >> /var/log/cron.log 2>&1
+
+# Executa a rotina de backup às 02:00 da manhã
+0 2 * * * root python /app/manage.py executar_backup >> /var/log/cron.log 2>&1
