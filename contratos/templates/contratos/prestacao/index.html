@@ -2,94 +2,87 @@
 {% load static %}
 
 {% block content %}
-<div class="hero-section text-center">
+<div class="hero-section text-center py-2">
     <div class="container">
-        <div class="d-flex align-items-center justify-content-center mb-4">
-            <img src="{% static 'contratos/img/gap_logo.png' %}" alt="Brasão do GAP-BR" style="max-height: 8vh; width: auto;" class="me-3">
-            <h2 class="fw-bold text-primary mb-0 fs-3">Portal de Prestação de Contas</h2>
+        <div class="d-flex align-items-center justify-content-center mb-3">
+            <img src="{% static 'contratos/img/gap_logo.png' %}" alt="Brasão do GAP-BR" style="max-height: 7vh; width: auto;" class="me-3">
+            <h2 class="fw-bold text-primary mb-0 fs-4">Portal de Prestação de Contas</h2>
         </div>
 
-        <div class="row justify-content-center mb-4">
-            <div class="col-md-10">
-                <div class="card border-0 shadow-sm rounded-4 bg-white">
-                    <div class="card-body p-4 text-center">
-                        <h5 class="fw-bold mb-4 text-secondary">
-                            <i class="bi bi-calendar-event me-2"></i>Calendário de Entregas (Referência: {{ mes_ref }}/{{ ano_ref }})
-                        </h5>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-center">
-                                    <div class="text-muted small fw-bold mb-2">PRAZO DE ENTREGA DOS SLIDES</div>
-                                    <div class="fs-5 fw-bold text-dark mt-auto">
-                                        {% if calendario and calendario.data_entrega %}
-                                            <i class="bi bi-cloud-arrow-up text-primary me-2"></i>{{ calendario.data_entrega|date:"d/m/Y" }}
-                                        {% else %}
-                                            <span class="badge bg-secondary">A definir</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-center">
-                                    <div class="text-muted small fw-bold mb-2">APRESENTAÇÃO DOS FISCAIS</div>
-                                    <div class="fs-5 fw-bold text-dark mt-auto">
-                                        {% if calendario and calendario.data_apresentacao_fiscais %}
-                                            <i class="bi bi-person-video3 text-primary me-2"></i>{{ calendario.data_apresentacao_fiscais|date:"d/m/Y" }}
-                                        {% else %}
-                                            <span class="badge bg-secondary">A definir</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-center">
-                                    <div class="text-muted small fw-bold mb-2">APRESENTAÇÃO DOS GESTORES</div>
-                                    <div class="fs-5 fw-bold text-dark mt-auto">
-                                        {% if calendario and calendario.data_apresentacao_gestores %}
-                                            <i class="bi bi-people-fill text-success me-2"></i>{{ calendario.data_apresentacao_gestores|date:"d/m/Y" }}
-                                        {% else %}
-                                            <span class="badge bg-secondary">A definir</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Prazo comum de entrega dos slides -->
+        <div class="row justify-content-center mb-3">
+            <div class="col-md-8">
+                <div class="badge bg-white text-dark border p-3 rounded-pill shadow-sm fs-6 d-inline-block">
+                    <i class="bi bi-calendar-event text-primary me-2"></i>
+                    <strong>Mês de Referência:</strong> {{ mes_ref }}/{{ ano_ref }}
+                    <span class="mx-3 text-muted">|</span>
+                    <i class="bi bi-cloud-arrow-up text-primary me-2"></i>
+                    <strong>Prazo de Entrega dos Slides:</strong> 
+                    {% if calendario and calendario.data_entrega %}
+                        <span class="text-primary fw-bold">{{ calendario.data_entrega|date:"d/m/Y" }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">A definir</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <div class="row justify-content-center g-4 mt-2">
+        <div class="row justify-content-center g-3 mt-1">
             <div class="col-md-5">
-                <div class="card h-100 border-0 shadow-lg rounded-4 hover-lift">
-                    <div class="card-body p-5 d-flex flex-column align-items-center">
-                        <i class="bi bi-file-earmark-ruled fs-1 text-primary mb-3"></i>
-                        <h4 class="fw-bold mb-3">Fiscais de Contrato</h4>
-                        <p class="text-muted mb-4">Acesse aqui para enviar a apresentação mensal referente aos contratos sob sua responsabilidade.</p>
-                        <a href="{% url 'portal_prestacao_fiscais' %}" class="btn btn-primary btn-lg mt-auto w-100 fw-bold">Acessar Entregas</a>
+                <div class="card border-0 shadow rounded-4 hover-lift">
+                    <div class="card-body p-4 d-flex flex-column align-items-center">
+                        <i class="bi bi-file-earmark-ruled fs-2 text-primary mb-2"></i>
+                        <h5 class="fw-bold mb-2">Fiscais de Contrato</h5>
+                        <p class="text-muted small mb-3">Acesse aqui para enviar a apresentação mensal referente aos contratos sob sua responsabilidade.</p>
+                        
+                        <div class="w-100 p-2 bg-light rounded-3 text-center border mb-3">
+                            <small class="text-muted fw-bold d-block" style="font-size: 0.75rem;">APRESENTAÇÃO DOS FISCAIS</small>
+                            <span class="fw-bold text-dark small">
+                                {% if calendario and calendario.data_apresentacao_fiscais %}
+                                    <i class="bi bi-person-video3 text-primary me-1"></i>{{ calendario.data_apresentacao_fiscais|date:"d/m/Y" }}
+                                {% else %}
+                                    <span class="badge bg-secondary">A definir</span>
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <a href="{% url 'portal_prestacao_fiscais' %}" class="btn btn-primary w-100 fw-bold">Acessar Entregas</a>
                     </div>
                 </div>
             </div>
             
             <div class="col-md-5">
-                <div class="card h-100 border-0 shadow-lg rounded-4 hover-lift">
-                    <div class="card-body p-5 d-flex flex-column align-items-center">
-                        <i class="bi bi-diagram-3 fs-1 text-success mb-3"></i>
-                        <h4 class="fw-bold mb-3">Chefes de Setor</h4>
-                        <p class="text-muted mb-4">Acesse aqui para enviar a apresentação mensal gerencial referente às atividades do seu setor.</p>
-                        <a href="{% url 'portal_prestacao_gestores' %}" class="btn btn-success btn-lg mt-auto w-100 fw-bold">Acessar Entregas</a>
+                <div class="card border-0 shadow rounded-4 hover-lift">
+                    <div class="card-body p-4 d-flex flex-column align-items-center">
+                        <i class="bi bi-diagram-3 fs-2 text-success mb-2"></i>
+                        <h5 class="fw-bold mb-2">Chefes de Setor</h5>
+                        <p class="text-muted small mb-3">Acesse aqui para enviar a apresentação mensal gerencial referente às atividades do seu setor.</p>
+                        
+                        <div class="w-100 p-2 bg-light rounded-3 text-center border mb-3">
+                            <small class="text-muted fw-bold d-block" style="font-size: 0.75rem;">APRESENTAÇÃO DOS GESTORES</small>
+                            <span class="fw-bold text-dark small">
+                                {% if calendario and calendario.data_apresentacao_gestores %}
+                                    <i class="bi bi-people-fill text-success me-1"></i>{{ calendario.data_apresentacao_gestores|date:"d/m/Y" }}
+                                {% else %}
+                                    <span class="badge bg-secondary">A definir</span>
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <a href="{% url 'portal_prestacao_gestores' %}" class="btn btn-success w-100 fw-bold">Acessar Entregas</a>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="mt-5">
-            <a href="{% url 'pesquisa' %}" class="text-decoration-none text-muted"><i class="bi bi-arrow-left"></i> Voltar à Pesquisa Pública</a>
+        <div class="mt-4">
+            <a href="{% url 'pesquisa' %}" class="text-decoration-none text-muted small"><i class="bi bi-arrow-left"></i> Voltar à Pesquisa Pública</a>
         </div>
     </div>
 </div>
 <style>
 .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.hover-lift:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+.hover-lift:hover { transform: translateY(-3px); box-shadow: 0 .25rem .5rem rgba(0,0,0,.1)!important; }
+.hero-section { padding: 2vh 0 !important; }
 </style>
 {% endblock %}
