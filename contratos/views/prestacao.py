@@ -228,6 +228,35 @@ def _get_dashboard_stats(ano, mes):
             'contrato': g.contrato.numero,
             'status': g.status
         })
+        
+    # Estatísticas de Setores
+    total_setores = Setor.objects.count()
+    latest_setor_ids = PrestacaoContasSetor.objects.filter(
+        mes_referencia=mes,
+        ano_referencia=ano
+    ).values('setor_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
+    
+    prestacoes_setor_filtradas = PrestacaoContasSetor.objects.filter(id__in=latest_setor_ids)
+    
+    ok_setores = prestacoes_setor_filtradas.filter(status='ok').count()
+    entregues_setores = prestacoes_setor_filtradas.filter(status='entregue').count()
+    correcao_setores = prestacoes_setor_filtradas.filter(status='correcao').count()
+    pendentes_setores = total_setores - (ok_setores + entregues_setores + correcao_setores)
+    
+    # Lista de gestores de setores (sem filtro de compor_apresentacao, todos os slides são apresentados)
+    lista_gestores_setores = prestacoes_setor_filtradas.select_related('agente', 'agente__posto', 'setor').order_by(
+        'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
+    )
+    
+    gestores_setores = []
+    for g in lista_gestores_setores:
+        gestores_setores.append({
+            'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
+            'agente_id': g.agente.id if g.agente else None,
+            'posto_id': g.agente.posto.id if g.agente and g.agente.posto else None,
+            'setor': g.setor.sigla or g.setor.nome,
+            'status': g.status
+        })
     
     return {
         'total_contratos': total_contratos,
@@ -239,7 +268,15 @@ def _get_dashboard_stats(ano, mes):
         'prio_entregues': prio_entregues,
         'prio_correcao': prio_correcao,
         'prio_pendentes': prio_pendentes,
-        'gestores_prio': gestores_prio
+        'gestores_prio': gestores_prio,
+        
+        # Setores
+        'total_setores': total_setores,
+        'ok_setores_no_mes': ok_setores,
+        'entregues_setores_no_mes': entregues_setores,
+        'correcao_setores_no_mes': correcao_setores,
+        'pendentes_setores_no_mes': pendentes_setores,
+        'gestores_setores': gestores_setores
     }
 
 
@@ -757,6 +794,83 @@ def consolidar_apresentacao(request):
     response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
     return response
 
+
+@auditor_required
+def consolidar_apresentacao_setor(request):
+    """Consolida todos os slides de setores em conformidade em um único PDF para download."""
+    import io
+    import os
+    from urllib.parse import urlencode
+    from pypdf import PdfWriter, PdfReader
+
+    hoje = date.today()
+
+    try:
+        filtro_mes = int(request.GET.get('mes', hoje.month))
+    except (ValueError, TypeError):
+        filtro_mes = hoje.month
+
+    try:
+        raw_ano = request.GET.get('ano', str(hoje.year)).replace('.', '')
+        filtro_ano = int(raw_ano)
+    except (ValueError, TypeError):
+        filtro_ano = hoje.year
+
+    prestacoes = PrestacaoContasSetor.objects.filter(
+        mes_referencia=filtro_mes,
+        ano_referencia=filtro_ano,
+        status='ok'
+    ).select_related('agente', 'agente__posto', 'setor').order_by(
+        'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
+    )
+
+    if not prestacoes.exists():
+        messages.warning(request, "Nenhum slide em conformidade para consolidar.")
+        qs = urlencode({'mes': filtro_mes, 'ano': filtro_ano})
+        return redirect(f"{reverse('dashboard_prestacao')}?{qs}&tab=setores")
+
+    writer = PdfWriter()
+    erros = []
+
+    for p in prestacoes:
+        if not p.arquivo:
+            erros.append(f"Setor {p.setor.sigla or p.setor.nome}: registro sem arquivo.")
+            continue
+
+        caminho = p.arquivo.path
+        if not os.path.isfile(caminho):
+            erros.append(f"Setor {p.setor.sigla or p.setor.nome}: arquivo não encontrado no servidor.")
+            continue
+
+        try:
+            reader = PdfReader(caminho)
+            for page in reader.pages:
+                writer.add_page(page)
+        except Exception as e:
+            erros.append(f"Setor {p.setor.sigla or p.setor.nome}: erro ao ler PDF ({e}).")
+
+    if erros:
+        for erro in erros:
+            messages.warning(request, erro)
+
+    if len(writer.pages) == 0:
+        messages.error(request, "Nenhuma página válida encontrada para consolidar.")
+        qs = urlencode({'mes': filtro_mes, 'ano': filtro_ano})
+        return redirect(f"{reverse('dashboard_prestacao')}?{qs}&tab=setores")
+
+    buffer = io.BytesIO()
+    writer.write(buffer)
+    buffer.seek(0)
+
+    meses_nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+    nome_mes = meses_nomes[filtro_mes - 1] if 1 <= filtro_mes <= 12 else str(filtro_mes)
+    nome_arquivo = f"Apresentacao_Consolidada_Setores_{nome_mes}_{filtro_ano}.pdf"
+
+    response = HttpResponse(buffer.read(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
+    return response
+
+
 @login_required
 @require_POST
 def reordenar_gestores_prio(request):
@@ -877,7 +991,13 @@ def excluir_prestacao_setor(request, pk):
         prestacao.delete()
         if is_ajax: return JsonResponse({'success': True})
         messages.success(request, "Prestação de Contas excluída com sucesso.")
-        return redirect('dashboard_prestacao')
+        from urllib.parse import urlencode
+        mes = request.GET.get('mes', '')
+        ano = request.GET.get('ano', '')
+        qs_params = {'tab': 'setores'}
+        if mes: qs_params['mes'] = mes
+        if ano: qs_params['ano'] = ano
+        return redirect(f"{reverse('dashboard_prestacao')}?{urlencode(qs_params)}")
     return render(request, 'contratos/portal/form_generico.html', {
         'titulo': 'Confirmar Exclusão',
         'mensagem': f"Deseja excluir a prestação do setor {prestacao.setor.nome} ref. {prestacao.mes_referencia:02d}/{prestacao.ano_referencia}?"
@@ -923,4 +1043,10 @@ def alterar_status_prestacao_setor(request, pk, novo_status):
             'is_auditor': is_auditor(request.user)
         })
     messages.success(request, f"Status atualizado para {prestacao.get_status_display()}.")
-    return redirect('dashboard_prestacao')
+    from urllib.parse import urlencode
+    mes = request.GET.get('mes', '')
+    ano = request.GET.get('ano', '')
+    qs_params = {'tab': 'setores'}
+    if mes: qs_params['mes'] = mes
+    if ano: qs_params['ano'] = ano
+    return redirect(f"{reverse('dashboard_prestacao')}?{urlencode(qs_params)}")

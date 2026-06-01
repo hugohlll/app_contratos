@@ -22,7 +22,7 @@ from django.contrib.auth.models import User, Group
 from contratos.models import (
     Contrato, Empresa, PrestacaoContas, PrestacaoContasSetor,
     Agente, PostoGraduacao, Comissao, Integrante, Funcao,
-    Setor, CargoRegimental, ApontamentoCorrecaoSetor
+    Setor, CargoRegimental, ApontamentoCorrecaoSetor, ApontamentoCorrecao
 )
 
 
@@ -438,3 +438,34 @@ class DesacoplamentoDetalheTests(BaseSetorTestSetup):
         url = reverse('detalhe_contrato', kwargs={'contrato_id': self.contrato.id})
         response = self.client.get(url)
         self.assertNotContains(response, "Prestação de Contas Mensal")
+
+# ===================================================================
+# 9. TEXTOS E NOMENCLATURAS
+# ===================================================================
+class TextoApontamentosTests(BaseSetorTestSetup):
+    """Verifica alterações textuais nos templates de upload."""
+
+    def test_texto_apontamentos_aci_nos_uploads(self):
+        """Os templates de upload devem exibir 'Apontamentos da ACI' ao invés de 'Auditoria'."""
+        # Testando para contrato
+        pdf = self._make_pdf("c.pdf")
+        p_contrato = PrestacaoContas.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=3, ano_referencia=2026,
+            arquivo=pdf, status='correcao'
+        )
+        ApontamentoCorrecao.objects.create(
+            prestacao=p_contrato, autor=self.admin_user, descricao="Erro"
+        )
+        url_contrato = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        response_c = self.client.get(url_contrato)
+        self.assertContains(response_c, "Apontamentos da ACI:")
+
+        # Testando para setor
+        p_setor = self._criar_prestacao_setor(3, 2026, status='correcao')
+        ApontamentoCorrecaoSetor.objects.create(
+            prestacao=p_setor, autor=self.admin_user, descricao="Erro setor"
+        )
+        url_setor = reverse('upload_prestacao_setor', kwargs={'setor_id': self.setor.id})
+        response_s = self.client.get(url_setor)
+        self.assertContains(response_s, "Apontamentos da ACI:")

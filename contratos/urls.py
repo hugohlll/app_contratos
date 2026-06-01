@@ -100,6 +100,7 @@ urlpatterns = [
     path('portal/prestacao/setor/download/<int:pk>/', prestacao.download_prestacao_setor, name='download_prestacao_setor'),
     path('portal/prestacao/setor/excluir/<int:pk>/', prestacao.excluir_prestacao_setor, name='excluir_prestacao_setor'),
     path('portal/prestacao/setor/status/<int:pk>/<str:novo_status>/', prestacao.alterar_status_prestacao_setor, name='alterar_status_prestacao_setor'),
+    path('portal/prestacao/setor/consolidar/', prestacao.consolidar_apresentacao_setor, name='consolidar_apresentacao_setor'),
 
     # --- CARGOS REGIMENTAIS ---
     path('portal/cargos/', cargos.cargos_regimentais, name='cargos_regimentais'),

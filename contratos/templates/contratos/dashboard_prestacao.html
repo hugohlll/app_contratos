@@ -317,6 +317,79 @@
 
 <!-- ABA 2: SETORES -->
 <div class="tab-pane fade" id="setores-pane" role="tabpanel" aria-labelledby="setores-tab">
+
+    <!-- GRÁFICOS SETORES (Mês Filtrado) -->
+    <div class="row mb-4 align-items-stretch">
+        <!-- Gráfico de Pizza de Setores -->
+        <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h6 class="m-0 fw-bold text-secondary">
+                        <i class="bi bi-pie-chart-fill me-2 text-info"></i>Situação das Entregas (Setores)
+                    </h6>
+                    <span class="badge bg-primary rounded-pill px-3 py-2">Total: {{ total_setores }} Setor{{ total_setores|pluralize }}</span>
+                </div>
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
+                        <canvas id="setoresPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Apresentação dos Gestores Setores -->
+        <div class="col-lg-6 col-md-12">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h6 class="m-0 fw-bold text-secondary">
+                        <i class="bi bi-person-lines-fill me-2 text-primary"></i>Gestores (Apresentação)
+                    </h6>
+                </div>
+                <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
+                    <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem;">
+                        <thead class="table-light position-sticky top-0" style="z-index: 1;">
+                            <tr>
+                                <th class="ps-3">Gestor</th>
+                                <th>Setor</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaGestoresSetores">
+                            {% for gestor in gestores_setores %}
+                            <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}">
+                                <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
+                                <td>{{ gestor.setor }}</td>
+                                <td class="text-center">
+                                    {% if gestor.status == 'ok' %}
+                                        <span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>
+                                    {% elif gestor.status == 'entregue' %}
+                                        <span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>
+                                    {% elif gestor.status == 'correcao' %}
+                                        <span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">Nenhuma entrega de setor.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if is_auditor %}
+                <div class="card-footer bg-white text-center py-2">
+                    <a href="{% url 'consolidar_apresentacao_setor' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" 
+                       class="btn btn-sm btn-outline-primary w-100" 
+                       title="Consolidar e baixar todos os slides de setores em conformidade">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>Consolidar PDF
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h5 class="m-0 text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento - Setores (Últimos 3 meses)</h5>
@@ -356,14 +429,14 @@
                                         {% endif %}
                                         {% if is_auditor %}
                                         <div class="d-flex gap-1 mt-1">
-                                            <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status-setor" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                            <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'ok' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status-setor" title="Aprovar (OK!)" style="font-size: 0.7rem;">
                                                 <i class="bi bi-check-lg"></i>
                                             </a>
-                                            <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status-setor" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                            <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'correcao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status-setor" title="Solicitar Correção" style="font-size: 0.7rem;">
                                                 <i class="bi bi-exclamation-triangle"></i>
                                             </a>
                                             {% if is_admin %}
-                                            <a href="{% url 'excluir_prestacao_setor' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                            <a href="{% url 'excluir_prestacao_setor' entrega.prestacao.id %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
                                                 <i class="bi bi-trash"></i>
                                             </a>
                                             {% endif %}
@@ -532,6 +605,65 @@
                 }
             }
         });
+
+        // Gráfico de Pizza de Setores
+        var ctxSetores = document.getElementById('setoresPieChart');
+        if (ctxSetores) {
+            window.mySetoresChart = new Chart(ctxSetores.getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: ['Conformidade (OK!)', 'Aguardando análise', 'Ajustes Necessários', 'Pendente'],
+                    datasets: [{
+                        data: [{{ ok_setores_no_mes }}, {{ entregues_setores_no_mes }}, {{ correcao_setores_no_mes }}, {{ pendentes_setores_no_mes }}],
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#9ca3af'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            align: 'center',
+                            labels: {
+                                font: {
+                                    size: 13
+                                },
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    var label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    var value = context.raw || 0;
+                                    var total = {{ total_setores }};
+                                    var percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    label += value + ' (' + percentage + '%)';
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Ativa a aba Setores se estiver na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam === 'setores') {
+            const tabEl = document.getElementById('setores-tab');
+            if (tabEl) {
+                const tabInstance = bootstrap.Tab.getInstance(tabEl) || new bootstrap.Tab(tabEl);
+                tabInstance.show();
+            }
+        }
+
         var ctxBar = document.getElementById('prioritariosBarChart').getContext('2d');
         window.myBarChart = new Chart(ctxBar, {
             type: 'doughnut',
@@ -737,9 +869,9 @@
             return html;
         }
 
-        let activeCorrecaoRequest = null;
+        window.activeCorrecaoRequest = null;
         const modalApontamentoEl = document.getElementById('modalApontamento');
-        const modalApontamento = modalApontamentoEl ? new bootstrap.Modal(modalApontamentoEl) : null;
+        window.modalApontamento = modalApontamentoEl ? new bootstrap.Modal(modalApontamentoEl) : null;
         
         if (modalApontamentoEl) {
             document.getElementById('btn-confirmar-correcao').addEventListener('click', function() {
@@ -756,9 +888,31 @@
                 errorEl.classList.add('d-none');
                 textEl.classList.remove('is-invalid');
                 
-                if (activeCorrecaoRequest) {
-                    const { url, td } = activeCorrecaoRequest;
-                    modalApontamento.hide();
+                if (window.activeCorrecaoRequest) {
+                    const { url, td, isSetor } = window.activeCorrecaoRequest;
+                    window.modalApontamento.hide();
+                    
+                    if (isSetor) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = url;
+                        
+                        const csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = 'csrfmiddlewaretoken';
+                        csrfInput.value = '{{ csrf_token }}';
+                        form.appendChild(csrfInput);
+                        
+                        const justInput = document.createElement('input');
+                        justInput.type = 'hidden';
+                        justInput.name = 'justificativa';
+                        justInput.value = justificativa;
+                        form.appendChild(justInput);
+                        
+                        document.body.appendChild(form);
+                        form.submit();
+                        return;
+                    }
                     
                     if (td) {
                         td.style.opacity = '0.5';
@@ -857,11 +1011,11 @@
             
             // Se for alteração para CORREÇÃO, precisamos abrir o modal
             if (btnAlterar && url.includes('status') && url.includes('correcao')) {
-                activeCorrecaoRequest = { url: url, td: td };
+                window.activeCorrecaoRequest = { url: url, td: td };
                 document.getElementById('justificativa-correcao').value = '';
                 document.getElementById('erro-justificativa').classList.add('d-none');
                 document.getElementById('justificativa-correcao').classList.remove('is-invalid');
-                modalApontamento.show();
+                window.modalApontamento.show();
                 return;
             }
             
@@ -1126,29 +1280,15 @@
         const btn = event.target.closest('.btn-alterar-status-setor');
         if (!btn) return;
         event.preventDefault();
+        
         const url = btn.getAttribute('href');
+        
         if (url.includes('correcao')) {
-            const justificativa = prompt('Digite a justificativa para a correção:');
-            if (!justificativa) return;
-            
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = url;
-            
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = 'csrfmiddlewaretoken';
-            csrfInput.value = '{{ csrf_token }}';
-            form.appendChild(csrfInput);
-            
-            const justInput = document.createElement('input');
-            justInput.type = 'hidden';
-            justInput.name = 'justificativa';
-            justInput.value = justificativa;
-            form.appendChild(justInput);
-            
-            document.body.appendChild(form);
-            form.submit();
+            window.activeCorrecaoRequest = { url: url, isSetor: true };
+            document.getElementById('justificativa-correcao').value = '';
+            document.getElementById('erro-justificativa').classList.add('d-none');
+            document.getElementById('justificativa-correcao').classList.remove('is-invalid');
+            if (window.modalApontamento) window.modalApontamento.show();
         } else {
             window.location.href = url;
         }
