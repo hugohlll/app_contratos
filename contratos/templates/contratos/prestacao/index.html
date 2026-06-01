@@ -19,7 +19,7 @@
                     <i class="bi bi-cloud-arrow-up text-primary me-2"></i>
                     <strong>Prazo de Entrega dos Slides:</strong> 
                     {% if calendario and calendario.data_entrega %}
-                        <span class="text-primary fw-bold">{{ calendario.data_entrega|date:"d/m/Y" }}</span>
+                        <span class="text-danger fw-bold pulsating-date">{{ calendario.data_entrega|date:"d/m/Y" }}</span>
                     {% else %}
                         <span class="badge bg-secondary">A definir</span>
                     {% endif %}
@@ -84,5 +84,14 @@
 .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 .25rem .5rem rgba(0,0,0,.1)!important; }
 .hero-section { padding: 2vh 0 !important; }
+@keyframes pulse {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+}
+.pulsating-date {
+    animation: pulse 1.8s infinite ease-in-out;
+    display: inline-block;
+}
 </style>
 {% endblock %}
