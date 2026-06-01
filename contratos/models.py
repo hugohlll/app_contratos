@@ -443,12 +443,12 @@ class ConfiguracaoSistema(models.Model):
         ('mensal', 'Mensal'),
     ]
 
-    backup_diretorio = models.CharField(
-        "Diretório de Backup", max_length=255, default='/var/backups/siscont',
-        help_text="Caminho absoluto onde os backups serão salvos."
-    )
     backup_periodicidade = models.CharField(
-        "Periodicidade do Backup", max_length=15, choices=PERIODICIDADE_CHOICES, default='diario'
+        max_length=20,
+        choices=PERIODICIDADE_CHOICES,
+        default='diario',
+        verbose_name="Periodicidade do Backup",
+        help_text="Frequência com que o backup automatizado será executado."
     )
     data_atualizacao = models.DateTimeField(auto_now=True)
 

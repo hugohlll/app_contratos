@@ -20,7 +20,7 @@ class Command(BaseCommand):
             return
 
         periodicidade = config.backup_periodicidade
-        backup_dir_path = config.backup_diretorio
+        backup_dir_path = '/backups'
         
         # Validar periodicidade (se é dia de rodar o backup)
         hoje = datetime.date.today()

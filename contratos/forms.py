@@ -338,7 +338,4 @@ class PrestacaoContasSetorUploadForm(EstiloFormMixin, forms.ModelForm):
 class ConfiguracaoSistemaForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = ConfiguracaoSistema
-        fields = ['backup_diretorio', 'backup_periodicidade']
-        widgets = {
-            'backup_diretorio': forms.TextInput(attrs={'placeholder': '/caminho/absoluto/do/backup'}),
-        }
+        fields = ('backup_periodicidade',)

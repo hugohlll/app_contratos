@@ -19,7 +19,6 @@ class ConfiguracaoSistemaTests(TestCase):
         
         # Tenta salvar outra instância instanciando e chamando save()
         config2 = ConfiguracaoSistema(
-            backup_diretorio='/outro/dir',
             backup_periodicidade='semanal'
         )
         config2.save()
@@ -29,7 +28,7 @@ class ConfiguracaoSistemaTests(TestCase):
         
         # get_config() deve retornar a mesma instância com as novas configurações
         config_atual = ConfiguracaoSistema.get_config()
-        self.assertEqual(config_atual.backup_diretorio, '/outro/dir')
+        self.assertEqual(config_atual.backup_periodicidade, 'semanal')
 
     def test_acesso_negado_usuario_nao_autenticado(self):
         """Usuários anônimos devem ser redirecionados para o login"""
@@ -59,7 +58,6 @@ class ConfiguracaoSistemaTests(TestCase):
         """Testa o envio do formulário de configuração"""
         self.client.login(username='super', password='pw')
         data = {
-            'backup_diretorio': '/mnt/backup_novo',
             'backup_periodicidade': 'mensal'
         }
         response = self.client.post(self.url, data)
@@ -69,5 +67,4 @@ class ConfiguracaoSistemaTests(TestCase):
         
         # Verifica se as configurações foram salvas
         config = ConfiguracaoSistema.get_config()
-        self.assertEqual(config.backup_diretorio, '/mnt/backup_novo')
         self.assertEqual(config.backup_periodicidade, 'mensal')
