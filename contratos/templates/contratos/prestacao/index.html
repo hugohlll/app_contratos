@@ -36,14 +36,14 @@
                         <p class="text-muted small mb-3">Acesse aqui para enviar a apresentação mensal referente aos contratos sob sua responsabilidade.</p>
                         
                         <div class="w-100 p-2 bg-light rounded-3 text-center border mb-3">
-                            <small class="text-muted fw-bold d-block" style="font-size: 0.75rem;">APRESENTAÇÃO DOS FISCAIS</small>
-                            <span class="fw-bold text-dark small">
+                            <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.75rem;">APRESENTAÇÃO DOS FISCAIS</small>
+                            <div class="fs-5 fw-bold text-primary">
                                 {% if calendario and calendario.data_apresentacao_fiscais %}
-                                    <i class="bi bi-person-video3 text-primary me-1"></i>{{ calendario.data_apresentacao_fiscais|date:"d/m/Y" }}
+                                    <i class="bi bi-person-video3 me-1"></i>{{ calendario.data_apresentacao_fiscais|date:"d/m/Y" }}
                                 {% else %}
-                                    <span class="badge bg-secondary">A definir</span>
+                                    <span class="badge bg-secondary fs-6">A definir</span>
                                 {% endif %}
-                            </span>
+                            </div>
                         </div>
 
                         <a href="{% url 'portal_prestacao_fiscais' %}" class="btn btn-primary w-100 fw-bold">Acessar Entregas</a>
@@ -59,14 +59,14 @@
                         <p class="text-muted small mb-3">Acesse aqui para enviar a apresentação mensal gerencial referente às atividades do seu setor.</p>
                         
                         <div class="w-100 p-2 bg-light rounded-3 text-center border mb-3">
-                            <small class="text-muted fw-bold d-block" style="font-size: 0.75rem;">APRESENTAÇÃO DOS GESTORES</small>
-                            <span class="fw-bold text-dark small">
+                            <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.75rem;">APRESENTAÇÃO DOS GESTORES</small>
+                            <div class="fs-5 fw-bold text-success">
                                 {% if calendario and calendario.data_apresentacao_gestores %}
-                                    <i class="bi bi-people-fill text-success me-1"></i>{{ calendario.data_apresentacao_gestores|date:"d/m/Y" }}
+                                    <i class="bi bi-people-fill me-1"></i>{{ calendario.data_apresentacao_gestores|date:"d/m/Y" }}
                                 {% else %}
-                                    <span class="badge bg-secondary">A definir</span>
+                                    <span class="badge bg-secondary fs-6">A definir</span>
                                 {% endif %}
-                            </span>
+                            </div>
                         </div>
 
                         <a href="{% url 'portal_prestacao_gestores' %}" class="btn btn-success w-100 fw-bold">Acessar Entregas</a>
