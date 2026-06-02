@@ -122,6 +122,16 @@
                     <li class="nav-item"><a class="nav-link ms-3" href="#matriz-acompanhamento">Matriz de Acompanhamento</a></li>
                     <li class="nav-item"><a class="nav-link ms-3" href="#prestacao-setores">Gestores de Setor</a></li>
                     <li class="nav-item"><a class="nav-link ms-3" href="#consolidacao-pdf">Consolidação de PDF</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#calendario-entregas">Calendário de Entregas</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#cargos-regimentais">8. Cargos Regimentais</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#configuracoes-sistema">9. Configurações do Sistema</a>
+                <ul class="nav flex-column border-start border-2 ms-2 mt-1 mb-2">
+                    <li class="nav-item"><a class="nav-link ms-3" href="#backup-automatico">Backup Automático</a></li>
                 </ul>
             </li>
         </ul>
@@ -189,6 +199,7 @@
                 <ol class="mb-0 mt-2">
                     <li><strong>Ativação Automática:</strong> Se você cadastrar uma Comissão com data de início <em>futura</em>, ela não pode ser marcada como ativa hoje (o sistema bloqueia). Deixe-a inativa. <strong>No dia exato em que a vigência dela começar</strong>, o sistema a marcará como "Ativa" automaticamente à meia-noite.</li>
                     <li><strong>Desativação Automática:</strong> Se a "Data Fim" de uma comissão foi atingida ontem, logo que o dia virar à meia-noite, o sistema localizará a comissão e vai <strong>desativá-la sozinha</strong>, impedindo que ela suje o radar de designações ativas.</li>
+                    <li><strong>Backup Automático (02h00):</strong> O sistema gera automaticamente uma cópia do banco de dados e dos arquivos de mídia, respeitando a periodicidade configurada no painel de Configurações (ver <a href="#backup-automatico">Seção 9</a>).</li>
                 </ol>
             </div>
             <p><em>Portanto, basta cadastrar as portarias com Início e Fim corretos e o sistema cuidará de quem entra e quem sai da base de cálculos diários sozinho!</em></p>
@@ -239,6 +250,49 @@
                 <li>Estar marcado no checkbox <strong>Prioritário</strong>.</li>
             </ol>
             <p>O documento gerado já é baixado ordenado hierarquicamente pelas patentes dos gestores, do mais antigo ao mais moderno, conforme determinação regulamentar.</p>
+
+            <h3 id="calendario-entregas">📅 Calendário de Entregas</h3>
+            <p>O Dashboard de Prestação de Contas permite ao auditor definir um <strong>Calendário Mensal de Entregas</strong> contendo três datas-chave:</p>
+            <ul>
+                <li><strong>Data de Entrega dos Slides:</strong> Prazo máximo para envio dos PDFs pelos fiscais e gestores de setor.</li>
+                <li><strong>Data de Apresentação dos Fiscais:</strong> Data da reunião onde os fiscais de contrato apresentam seus relatórios.</li>
+                <li><strong>Data de Apresentação dos Gestores:</strong> Data da reunião onde os chefes de setor apresentam seus relatórios.</li>
+            </ul>
+            <p>Essas datas são exibidas na <strong>página inicial do portal logado</strong> para que todos os militares tenham visibilidade dos prazos vigentes. A data de entrega dos slides possui um efeito visual de destaque (pulso em vermelho) para chamar atenção.</p>
+        </section>
+
+        <!-- SEÇÃO 8: CARGOS REGIMENTAIS -->
+        <section id="cargos-regimentais">
+            <h2>8. Cargos Regimentais</h2>
+            <p>O módulo de <strong>Cargos Regimentais</strong> permite ao administrador cadastrar e organizar a estrutura de setores e os respectivos cargos de chefia da organização militar.</p>
+            <ul>
+                <li><strong>Setores:</strong> Representam as seções/divisões da OM (ex: Seção de TI, Seção de Suprimento). Os setores podem ser reordenados manualmente por arraste.</li>
+                <li><strong>Cargos:</strong> Cada setor pode ter um ou mais cargos vinculados. Esses cargos são usados para associar os gestores às prestações de contas de setor.</li>
+            </ul>
+            <div class="alert alert-info py-2">
+                <i class="bi bi-info-circle-fill me-2"></i> <strong>Dica:</strong> Mantenha os cargos regimentais sempre atualizados, pois eles determinam quais militares terão acesso ao portal de envio de prestação de contas de Gestores de Setor.
+            </div>
+        </section>
+
+        <!-- SEÇÃO 9: CONFIGURAÇÕES DO SISTEMA -->
+        <section id="configuracoes-sistema">
+            <h2>9. Configurações do Sistema</h2>
+            <p>A aba <strong>⚙️ Configurações</strong> está disponível no menu lateral <strong>apenas para Superusuários</strong>. Ela centraliza parâmetros técnicos de infraestrutura do sistema.</p>
+
+            <h3 id="backup-automatico">💾 Backup Automático</h3>
+            <p>O sistema possui uma rotina interna de backup que roda automaticamente dentro do ambiente Docker, dispensando qualquer dependência do sistema operacional do servidor hospedeiro.</p>
+            <div class="alert alert-automation">
+                <h5 class="alert-heading"><i class="bi bi-robot"></i> Funcionamento da Rotina (Todo dia às 02h00):</h5>
+                <ol class="mb-0 mt-2">
+                    <li>O agendador interno verifica a <strong>periodicidade</strong> configurada no painel (Diário, Semanal ou Mensal).</li>
+                    <li>Se for o dia adequado (todos os dias para "Diário", domingos para "Semanal", dia 1º para "Mensal"), o backup é executado.</li>
+                    <li>É gerado um <strong>dump do banco de dados</strong> (formato PostgreSQL) e um <strong>arquivo ZIP</strong> com todos os PDFs enviados na pasta de mídia.</li>
+                    <li>Os arquivos são salvos na pasta <code>/backups</code> do container, que está mapeada para a pasta <code>./backups</code> na raiz do projeto no servidor real.</li>
+                </ol>
+            </div>
+            <div class="concept-box">
+                <strong>Importante:</strong> A periodicidade pode ser alterada a qualquer momento pela interface. O diretório físico de destino dos backups no servidor real é configurado exclusivamente no arquivo <code>docker-compose.prod.yml</code> (volume <code>./backups:/backups</code>).
+            </div>
         </section>
         
         <br><br><br> <!-- Space at bottom for scrolling -->
