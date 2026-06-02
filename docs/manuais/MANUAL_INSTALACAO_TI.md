@@ -241,7 +241,21 @@ O sistema possui uma rotina de backup **totalmente automatizada** que roda inter
 1. Acesse o sistema como superusuário e vá em **⚙️ Configurações**.
 2. Defina a periodicidade (Diário, Semanal ou Mensal).
 3. O sistema fará o dump do PostgreSQL e o ZIP dos arquivos de mídia (`/mediafiles`) no horário agendado (padrão: `02h00`).
-4. Os arquivos serão salvos **automaticamente na pasta física** `/opt/app_contratos/backups` do servidor host, graças ao mapeamento de volume do Docker Compose.
+4. Os arquivos serão salvos **automaticamente na pasta física** mapeada do servidor host (padrão: `/opt/app_contratos/backups`).
+
+> **💡 Como alterar o diretório de destino do backup no Host:**
+> Como o sistema é conteinerizado, a aplicação gravará os backups sempre no diretório interno `/backups`. Para alterar onde esses arquivos vão parar no seu servidor físico, você deve editar a seção `volumes` dos serviços `web` e `cron` no arquivo `docker-compose.prod.yml`:
+> ```yaml
+> services:
+>   web:
+>     volumes:
+>       - /seu/novo/caminho/de/backup:/backups  # Mude aqui
+>   ...
+>   cron:
+>     volumes:
+>       - /seu/novo/caminho/de/backup:/backups  # Mude aqui também
+> ```
+> Após a alteração, reinicie os containers: `docker compose -f docker-compose.prod.yml up -d`
 
 #### Backup Manual (Linha de Comando)
 Caso precise gerar um backup imediatamente ou fora do agendamento, você pode forçar a execução do script Python nativo:
