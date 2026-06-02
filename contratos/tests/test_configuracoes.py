@@ -73,6 +73,18 @@ class ConfiguracaoSistemaTests(TestCase):
         config = ConfiguracaoSistema.get_config()
         self.assertEqual(config.backup_periodicidade, 'mensal')
 
+    @patch('django.core.management.call_command')
+    def test_superusuario_pode_forcar_backup(self, mock_call_command):
+        """Testa a execução forçada do backup via botão"""
+        self.client.login(username='super', password='pw')
+        data = {
+            'force_backup': 'true'
+        }
+        response = self.client.post(self.url, data)
+        
+        self.assertRedirects(response, self.url)
+        mock_call_command.assert_called_once_with('executar_backup', force=True)
+
 
 class SidebarConfiguracaoTests(TestCase):
     """Testa a visibilidade do link 'Configurações' na sidebar"""
@@ -181,3 +193,21 @@ class ExecutarBackupPeriodicidadeTests(TestCase):
         output = out.getvalue()
         self.assertIn('ignorado', output.lower())
         self.assertIn('não é dia 1º', output)
+
+    @patch('contratos.management.commands.executar_backup.subprocess.run')
+    @patch('contratos.management.commands.executar_backup.datetime')
+    def test_force_ignora_periodicidade(self, mock_datetime, mock_subprocess):
+        """A flag --force deve ignorar qualquer checagem de dia"""
+        self.config.backup_periodicidade = 'mensal'
+        self.config.save()
+
+        # Simula um dia que NÃO deveria rodar (15)
+        mock_datetime.date.today.return_value = datetime.date(2026, 6, 15)
+        mock_datetime.date.side_effect = lambda *args, **kw: datetime.date(*args, **kw)
+
+        out = StringIO()
+        # Mas passamos force=True
+        call_command('executar_backup', force=True, stdout=out)
+        output = out.getvalue()
+        self.assertIn('Execução forçada solicitada. Ignorando periodicidade.', output)
+        self.assertIn('Rotina de backup finalizada', output)

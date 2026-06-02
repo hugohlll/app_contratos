@@ -48,6 +48,20 @@
                 <strong>Importante:</strong> As configurações acima são armazenadas no banco de dados para serem consumidas por um script externo (cron) que efetivamente fará a compactação e cópia dos dados no sistema operacional do servidor.
             </div>
         </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mt-4">
+            <div class="card-header bg-white border-bottom pb-0 pt-4 px-4">
+                <h5 class="mb-3 text-success"><i class="bi bi-play-circle me-2"></i>Ação Imediata</h5>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted mb-4">Se desejar, você pode forçar a execução da rotina de backup neste exato momento, ignorando a periodicidade configurada acima.</p>
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="force_backup" value="true">
+                    <button type="submit" class="btn btn-outline-success"><i class="bi bi-cloud-download me-2"></i>Executar Backup Agora</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

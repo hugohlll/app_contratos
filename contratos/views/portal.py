@@ -397,6 +397,15 @@ def configuracoes_sistema(request):
     
     config = ConfiguracaoSistema.get_config()
     if request.method == 'POST':
+        if 'force_backup' in request.POST:
+            from django.core.management import call_command
+            try:
+                call_command('executar_backup', force=True)
+                messages.success(request, 'Rotina de backup executada manualmente com sucesso!')
+            except Exception as e:
+                messages.error(request, f'Erro ao executar rotina de backup: {e}')
+            return redirect('configuracoes_sistema')
+
         form = ConfiguracaoSistemaForm(request.POST, instance=config)
         if form.is_valid():
             form.save()

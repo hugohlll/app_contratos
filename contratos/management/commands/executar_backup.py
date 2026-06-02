@@ -10,6 +10,13 @@ from contratos.models import ConfiguracaoSistema
 class Command(BaseCommand):
     help = 'Executa rotina de backup baseada nas configurações no banco de dados'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--force',
+            action='store_true',
+            help='Ignora a periodicidade e força a execução do backup agora',
+        )
+
     def handle(self, *args, **options):
         self.stdout.write("Iniciando rotina de backup...")
         
@@ -24,17 +31,21 @@ class Command(BaseCommand):
         
         # Validar periodicidade (se é dia de rodar o backup)
         hoje = datetime.date.today()
+        force = options.get('force', False)
         
-        # Se for 'diario', sempre roda.
-        if periodicidade == 'semanal':
-            # domingo = 6 (monday=0)
-            if hoje.weekday() != 6:
-                self.stdout.write(self.style.NOTICE("Backup ignorado: configurado para 'semanal' e hoje não é domingo."))
-                return
-        elif periodicidade == 'mensal':
-            if hoje.day != 1:
-                self.stdout.write(self.style.NOTICE("Backup ignorado: configurado para 'mensal' e hoje não é dia 1º."))
-                return
+        if not force:
+            # Se for 'diario', sempre roda.
+            if periodicidade == 'semanal':
+                # domingo = 6 (monday=0)
+                if hoje.weekday() != 6:
+                    self.stdout.write(self.style.NOTICE("Backup ignorado: configurado para 'semanal' e hoje não é domingo."))
+                    return
+            elif periodicidade == 'mensal':
+                if hoje.day != 1:
+                    self.stdout.write(self.style.NOTICE("Backup ignorado: configurado para 'mensal' e hoje não é dia 1º."))
+                    return
+        else:
+            self.stdout.write(self.style.NOTICE("Execução forçada solicitada. Ignorando periodicidade."))
 
         # Verifica se o diretório de destino existe, tenta criar se não.
         backup_dir = Path(backup_dir_path)
