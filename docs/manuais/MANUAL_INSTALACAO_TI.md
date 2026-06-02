@@ -233,22 +233,48 @@ docker cp caminho/local/arquivo.png app_contratos-web-1:/app/staticfiles/caminho
 
 ## 4. Backup e Restauração
 
-### 4.1 Criar Backup
+### 4.1 Criação de Backup (Automático e Manual)
+
+O sistema possui uma rotina de backup **totalmente automatizada** que roda internamente via Docker, dispensando o uso do cron do sistema operacional host.
+
+#### Backup Automático (Recomendado)
+1. Acesse o sistema como superusuário e vá em **⚙️ Configurações**.
+2. Defina a periodicidade (Diário, Semanal ou Mensal).
+3. O sistema fará o dump do PostgreSQL e o ZIP dos arquivos de mídia (`/mediafiles`) no horário agendado (padrão: `02h00`).
+4. Os arquivos serão salvos **automaticamente na pasta física** `/opt/app_contratos/backups` do servidor host, graças ao mapeamento de volume do Docker Compose.
+
+#### Backup Manual (Linha de Comando)
+Caso precise gerar um backup imediatamente ou fora do agendamento, você pode forçar a execução do script Python nativo:
 ```bash
-docker compose -f docker-compose.prod.yml exec db pg_dump -U admin_siscont siscont_db > backup_$(date +%F).sql
+docker compose -f docker-compose.prod.yml exec cron python manage.py executar_backup
 ```
-> **Substitua** `admin_siscont` e `siscont_db` pelos valores configurados no seu `.env.prod`.
+Ou, se preferir extrair apenas o banco (método antigo via `pg_dump` puro):
+```bash
+docker compose -f docker-compose.prod.yml exec db pg_dump -U admin_siscont siscont_db -F c -f /tmp/backup.sql
+docker cp $(docker compose -f docker-compose.prod.yml ps -q db):/tmp/backup.sql ./backups/backup_manual_$(date +%F).sql
+```
+> **Nota:** Certifique-se de usar as credenciais definidas no `.env.prod`.
 
 ### 4.2 Restaurar Backup
+
+**Atenção:** Restaurações apagam/sobresscrevem o banco de dados atual. 
+
+Se você for restaurar um backup gerado pela **rotina automática** (arquivo `.sql` gerado pelo `executar_backup`), utilize o `pg_restore` pois ele foi compactado no formato customizado (`-F c`):
+
 ```bash
 # 1. Copiar o arquivo de backup para dentro do container
-docker cp backup_2026-02-22.sql $(docker compose -f docker-compose.prod.yml ps -q db):/tmp/backup.sql
+docker cp backups/db_backup_20260601.sql $(docker compose -f docker-compose.prod.yml ps -q db):/tmp/backup.sql
 
-# 2. Restaurar o banco (apaga os dados atuais e substitui pelo backup)
+# 2. Restaurar o banco usando pg_restore
+docker compose -f docker-compose.prod.yml exec db bash -c "pg_restore -U admin_siscont -d siscont_db -1 --clean /tmp/backup.sql"
+```
+
+Se for restaurar um backup em formato **texto plano** (SQL puro gerado manualmente com `> backup.sql`):
+```bash
 docker compose -f docker-compose.prod.yml exec db bash -c "psql -U admin_siscont -d siscont_db < /tmp/backup.sql"
 ```
 
-> **Recomenda-se** manter backups diários em local seguro (pendrive, servidor de rede, etc.).
+> **Recomenda-se** manter backups diários em local seguro (pendrive, servidor de rede, etc.). Além do banco de dados, certifique-se de salvar os arquivos ZIP de mídia (`/backups/media_backup_*.zip`) extraindo seu conteúdo para o volume `/opt/app_contratos/mediafiles` se necessário.
 
 ---
 

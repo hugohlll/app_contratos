@@ -139,6 +139,22 @@ Dashboard interativo com gráficos e indicadores:
 - Geração de PDF consolidado apenas para Fiscais (prioritários)
 - Dashboard estatístico específico (Gráfico de Pizza e de Barras)
 - Filtro iterativo de Mês/Ano com exportação em CSV/Excel
+- Calendário de Entregas: datas de entrega de slides, apresentação de fiscais e gestores, exibidas na página inicial
+
+#### 4. **Cargos Regimentais**
+- Cadastro e organização de setores e cargos de chefia da organização militar
+- Reordenação manual dos setores por arraste (drag-and-drop)
+- Vinculação de cargos às prestações de contas de gestores de setor
+
+#### 5. **Configurações do Sistema** (Superusuário)
+- Painel exclusivo para superusuários com parâmetros de infraestrutura
+- Configuração da periodicidade do backup automático (Diário, Semanal, Mensal)
+
+#### 6. **Backup Automático**
+- Rotina interna Docker que executa diariamente às 02h00
+- Gera dump do banco PostgreSQL e ZIP da pasta de mídia
+- Periodicidade configurável via interface web (Diário/Semanal/Mensal)
+- Arquivos salvos na pasta `./backups` do servidor (mapeada via volume Docker)
 
 #### 3. **Relatórios e Exportações**
 
@@ -507,6 +523,7 @@ Para encerrar uma designação antes do prazo:
 app_contratos/
 │
 ├── .github/               # Workflows CI/CD
+├── backups/               # 💾 Backups automáticos (DB dump + media ZIP)
 ├── contratos/             # Aplicação principal
 ├── core/                  # Configurações do projeto Django
 ├── data/                  # 📊 Arquivos de dados (CSVs e dumps SQL)
@@ -634,6 +651,9 @@ DATABASE_URL=postgres://admin_siscont:SenhaF0rte!2026@db:5432/siscont_db
 5. **Comissao**: Comissões de fiscalização/recebimento
 6. **Funcao**: Tipos de função nas comissões
 7. **Integrante**: Histórico de designações
+8. **PrestacaoContas**: Envios de prestação de contas (Fiscais e Setores)
+9. **Setor / CargoRegimental**: Estrutura organizacional da OM
+10. **ConfiguracaoSistema**: Parâmetros globais do sistema (Singleton)
 
 ### **Relacionamentos**
 
@@ -714,6 +734,13 @@ Contribuições são bem-vindas! Para contribuir:
 ---
 
 ## 📅 Changelog
+
+### **Versão 1.7.0**
+- ✅ **Configurações do Sistema**: Novo painel exclusivo para superusuários para gerenciar parâmetros de infraestrutura.
+- ✅ **Backup Automático**: Rotina interna Docker que gera dump do banco PostgreSQL e ZIP da pasta de mídia, com periodicidade configurável (Diário/Semanal/Mensal) via interface web.
+- ✅ **Cargos Regimentais**: Módulo para cadastro e organização de setores e cargos de chefia da OM.
+- ✅ **Calendário de Entregas**: Datas de entrega de slides e apresentações de fiscais/gestores configuráveis e exibidas na página inicial do portal.
+- ✅ **Multiplataforma**: Backup opera inteiramente dentro do Docker, sem dependência do SO do servidor hospedeiro.
 
 ### **Versão 1.6.0**
 - ✅ **Módulo de Prestação de Contas**: Novo sistema para recebimento e acompanhamento de slides PDF mensais por contrato.

@@ -12,6 +12,7 @@ app_contratos/
 │
 ├── core/                  # ⚙️ Configurações Globais do Projeto
 ├── contratos/             # 📦 Aplicação Principal (Lógica de Negócio)
+├── backups/               # 💾 Backups Automáticos (DB dump + media ZIP)
 ├── data/                  # 📊 Arquivos de dados e backups (CSVs, dumps SQL)
 ├── scripts/               # 🛠️ Scripts utilitários e testes avulsos
 ├── docs/                  # 📚 Documentação (Manuais e roteiros)
@@ -78,6 +79,7 @@ Esta é a "app" onde reside toda a lógica de negócio do SISCONT.
 - **`apps.py`**: Metadados da aplicação.
 - **`urls.py`**: Rotas específicas da aplicação `contratos`.
 - **`utils.py`**: Funções utilitárias e auxiliares.
+- **`management/commands/`**: Comandos customizados do Django (ex: `executar_backup.py`, `populate_db.py`).
 
 ### 👁️ Views (Controladores)
 As views estão organizadas em um pacote `views/` para melhor modularização:
@@ -85,14 +87,15 @@ As views estão organizadas em um pacote `views/` para melhor modularização:
 - **`portal.py`**: Views do portal operacional e gerenciamento de contratos.
 - **`auditoria.py`**: Painel de auditoria, gráficos e relatórios gerenciais.
 - **`prestacao.py`**: Módulo completo de Prestação de Contas (upload, dashboard, matriz, consolidação de PDF, apontamentos).
+- **`cargos.py`**: Gestão de Cargos Regimentais e Setores.
 - **`militar.py`**: Área de consulta individual do militar.
 - **`auth.py`**: Lógica de login e autenticação customizada.
 - **`users.py`**: Gestão de usuários (criar, editar, listar).
 
 ### 🎨 Templates (Frontend)
 Localizados em `contratos/templates/contratos/`:
-- **`portal/`**: Templates do portal (dashboard, detalhes, edição).
-    - `detalhe_contrato.html`, `base_portal.html`, etc.
+- **`portal/`**: Templates do portal (dashboard, detalhes, edição, configurações).
+    - `detalhe_contrato.html`, `base_portal.html`, `configuracoes.html`, etc.
 - **`relatorio_periodo.html`**, **`relatorio_transparencia.html`**: Páginas de relatórios.
 - **`home.html`**, **`pesquisa.html`**: Páginas públicas iniciais.
 
@@ -107,6 +110,9 @@ Localizados em `contratos/tests/`:
 - **`test_forms.py`**: Validação de formulários.
 - **`test_portal_rendering.py`**: Testes de renderização do portal administrativo.
 - **`test_view_ordering.py`**: Testes de ordenação de views.
+- **`test_configuracoes.py`**: Testes do painel de Configurações e Backup.
+- **`test_calendario_prestacao.py`**: Testes do calendário de entregas.
+- **`test_setores_dashboard.py`**: Testes do dashboard de setores.
 - **`test_regression_*.py`**: Testes específicos para bugs corrigidos (regressão).
 
 ### 💾 Migrations
