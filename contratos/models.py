@@ -294,6 +294,11 @@ class PrestacaoContas(models.Model):
         verbose_name_plural = "Prestações de Contas"
         ordering = ['-ano_referencia', '-mes_referencia']
 
+    def clean(self):
+        hoje = date.today()
+        if self.ano_referencia > hoje.year or (self.ano_referencia == hoje.year and self.mes_referencia >= hoje.month):
+            raise ValidationError("Não é possível enviar uma prestação de contas para o mês atual ou meses futuros.")
+
     def __str__(self):
         return f"PC {self.contrato.numero} - {self.mes_referencia:02d}/{self.ano_referencia}"
 
@@ -412,6 +417,11 @@ class PrestacaoContasSetor(models.Model):
         verbose_name = "Prestação de Contas (Setor)"
         verbose_name_plural = "Prestações de Contas (Setores)"
         ordering = ['-ano_referencia', '-mes_referencia']
+
+    def clean(self):
+        hoje = date.today()
+        if self.ano_referencia > hoje.year or (self.ano_referencia == hoje.year and self.mes_referencia >= hoje.month):
+            raise ValidationError("Não é possível enviar uma prestação de contas para o mês atual ou meses futuros.")
 
     def __str__(self):
         return f"PC {self.setor.sigla or self.setor.nome} - {self.mes_referencia:02d}/{self.ano_referencia}"

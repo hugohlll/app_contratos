@@ -1,7 +1,12 @@
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group
-from contratos.models import PostoGraduacao, Agente, Empresa, Contrato, Comissao, Integrante, Funcao
+from contratos.models import (
+    PostoGraduacao, Agente, Empresa, Contrato, Comissao, Integrante, Funcao,
+    Setor, CargoRegimental, CalendarioPrestacao, PrestacaoContas, 
+    PrestacaoContasSetor, ApontamentoCorrecao, ApontamentoCorrecaoSetor, ConfiguracaoSistema
+)
+from django.utils import timezone
 from datetime import date, timedelta
 import random
 
@@ -244,6 +249,164 @@ class Command(BaseCommand):
 
                     count_comiss += 1
         
+        # 9. CRIAR SETORES
+        nomes_setores = [
+            ('SecTec', 'Seção de Tecnologia da Informação'),
+            ('SecLog', 'Seção de Logística e Suprimentos'),
+            ('SecFin', 'Seção de Finanças'),
+            ('SecPes', 'Seção de Pessoal'),
+            ('SecOpe', 'Seção de Operações'),
+            ('SecInt', 'Seção de Inteligência'),
+            ('SecSau', 'Seção de Saúde'),
+            ('SecCom', 'Seção de Comunicação Social'),
+            ('SecJur', 'Assessoria Jurídica'),
+            ('SecTrans', 'Seção de Transportes')
+        ]
+        
+        setores_criados = []
+        for i, (sigla, nome) in enumerate(nomes_setores):
+            setor, _ = Setor.objects.get_or_create(nome=nome, defaults={'sigla': sigla, 'ordem': i})
+            setores_criados.append(setor)
+        self.stdout.write(f'{len(setores_criados)} Setores gerados.')
+
+        # 10. CRIAR CARGOS REGIMENTAIS (Gestores dos Setores)
+        agentes = list(Agente.objects.all())
+        count_cargos = 0
+        for setor in setores_criados:
+            gestor = random.choice(agentes)
+            # Evitar repetição de gestores no mesmo setor
+            if not CargoRegimental.objects.filter(setor=setor).exists():
+                CargoRegimental.objects.create(
+                    setor=setor,
+                    agente=gestor,
+                    cargo='Chefe do Setor',
+                    boletim_numero=f"{random.randint(1,52)}/{date.today().year}",
+                    boletim_data=date.today() - timedelta(days=random.randint(30, 365)),
+                    ativo=True
+                )
+                count_cargos += 1
+                
+                # Talvez um adjunto
+                if random.random() > 0.5:
+                    adjunto = random.choice(agentes)
+                    if adjunto != gestor:
+                        CargoRegimental.objects.create(
+                            setor=setor,
+                            agente=adjunto,
+                            cargo='Adjunto',
+                            boletim_numero=f"{random.randint(1,52)}/{date.today().year}",
+                            boletim_data=date.today() - timedelta(days=random.randint(30, 365)),
+                            ativo=True
+                        )
+                        count_cargos += 1
+        self.stdout.write(f'{count_cargos} Cargos Regimentais gerados.')
+
+        # 11. CRIAR CALENDÁRIO DE PRESTAÇÃO
+        ano_atual = date.today().year
+        count_cal = 0
+        for ano in [ano_atual - 1, ano_atual]:
+            for mes in range(1, 13):
+                # Para evitar criar no futuro distante se quiser
+                if ano == ano_atual and mes > date.today().month + 1:
+                    continue
+                
+                if not CalendarioPrestacao.objects.filter(ano=ano, mes=mes).exists():
+                    CalendarioPrestacao.objects.create(
+                        ano=ano,
+                        mes=mes,
+                        data_entrega=date(ano, mes, 10),
+                        data_apresentacao_fiscais=date(ano, mes, 15),
+                        data_apresentacao_gestores=date(ano, mes, 20)
+                    )
+                    count_cal += 1
+        self.stdout.write(f'{count_cal} Calendários gerados.')
+
+        # 12. CRIAR PRESTAÇÕES DE CONTAS (CONTRATOS)
+        status_opcoes = ['pendente', 'entregue', 'correcao', 'ok']
+        count_pc_contrato = 0
+        count_apontamentos_contrato = 0
+        
+        # Pega fiscais ativos
+        fiscais = Integrante.objects.filter(
+            funcao__titulo='Fiscal',
+            data_desligamento__isnull=True,
+            comissao__ativa=True
+        ).select_related('comissao__contrato', 'agente')
+        
+        # Gera prestação para os dois meses anteriores
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        primeiro_dia_mes_anterior = ultimo_dia_mes_anterior.replace(day=1)
+        ultimo_dia_mes_retrasado = primeiro_dia_mes_anterior - timedelta(days=1)
+        
+        meses_teste = [ultimo_dia_mes_retrasado.month, ultimo_dia_mes_anterior.month]
+        anos_teste = [ultimo_dia_mes_retrasado.year, ultimo_dia_mes_anterior.year]
+
+        for i, mes in enumerate(meses_teste):
+            ano = anos_teste[i]
+            for fiscal in fiscais[:30]:  # Limita para não ficar muito lento
+                status = random.choices(status_opcoes, weights=[10, 30, 20, 40])[0]
+                
+                pc, created = PrestacaoContas.objects.get_or_create(
+                    contrato=fiscal.comissao.contrato,
+                    ano_referencia=ano,
+                    mes_referencia=mes,
+                    defaults={
+                        'agente': fiscal.agente,
+                        'status': status,
+                        'compor_apresentacao': random.choice([True, False])
+                    }
+                )
+                if created:
+                    count_pc_contrato += 1
+                    
+                    if status == 'correcao':
+                        ApontamentoCorrecao.objects.create(
+                            prestacao=pc,
+                            autor=user_gestor,
+                            descricao=f'Apontamento gerado automaticamente para o contrato {pc.contrato.numero}. Favor revisar os valores.'
+                        )
+                        count_apontamentos_contrato += 1
+
+        self.stdout.write(f'{count_pc_contrato} Prestações de Contratos geradas ({count_apontamentos_contrato} apontamentos).')
+
+        # 13. CRIAR PRESTAÇÕES DE CONTAS (SETORES)
+        count_pc_setor = 0
+        count_apontamentos_setor = 0
+        chefes = CargoRegimental.objects.filter(cargo='Chefe do Setor', ativo=True)
+        
+        for i, mes in enumerate(meses_teste):
+            ano = anos_teste[i]
+            for chefe in chefes:
+                status = random.choices(status_opcoes, weights=[10, 30, 20, 40])[0]
+                
+                pcs, created = PrestacaoContasSetor.objects.get_or_create(
+                    setor=chefe.setor,
+                    ano_referencia=ano,
+                    mes_referencia=mes,
+                    defaults={
+                        'agente': chefe.agente,
+                        'status': status,
+                        'compor_apresentacao': random.choice([True, False])
+                    }
+                )
+                if created:
+                    count_pc_setor += 1
+                    
+                    if status == 'correcao':
+                        ApontamentoCorrecaoSetor.objects.create(
+                            prestacao=pcs,
+                            autor=user_gestor,
+                            descricao=f'Apontamento gerado automaticamente para o setor {pcs.setor.sigla}.'
+                        )
+                        count_apontamentos_setor += 1
+
+        self.stdout.write(f'{count_pc_setor} Prestações de Setores geradas ({count_apontamentos_setor} apontamentos).')
+
+        # 14. CONFIGURACAO DO SISTEMA
+        ConfiguracaoSistema.get_config()
+
         self.stdout.write(self.style.SUCCESS('Base de testes (REALISTA v2) criada com sucesso!'))
 
         # 9. VERIFICAÇÃO AUTOMÁTICA

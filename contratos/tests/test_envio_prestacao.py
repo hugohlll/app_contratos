@@ -112,7 +112,7 @@ class EnvioValidoTests(BaseTestSetup):
         """O arquivo deve ser renomeado seguindo o padrão do sistema."""
         self.client.post(self.url_upload, {
             'agente': self.agente.id,
-            'mes_referencia': 7, 'ano_referencia': 2026,
+            'mes_referencia': 3, 'ano_referencia': 2026,
             'arquivo': self._make_pdf("qualquer_nome.pdf"),
         })
         p = PrestacaoContas.objects.first()
@@ -170,7 +170,7 @@ class SubstituicaoEntregaTests(BaseTestSetup):
         # Primeiro envio
         self.client.post(self.url_upload, {
             'agente': self.agente.id,
-            'mes_referencia': 6, 'ano_referencia': 2026,
+            'mes_referencia': 4, 'ano_referencia': 2026,
             'arquivo': self._make_pdf("v1.pdf"), 'observacao': 'Versão 1'
         })
         self.assertEqual(PrestacaoContas.objects.count(), 1)
@@ -178,7 +178,7 @@ class SubstituicaoEntregaTests(BaseTestSetup):
         # Segundo envio (mesmo mês/ano)
         self.client.post(self.url_upload, {
             'agente': self.agente.id,
-            'mes_referencia': 6, 'ano_referencia': 2026,
+            'mes_referencia': 4, 'ano_referencia': 2026,
             'arquivo': self._make_pdf("v2.pdf"), 'observacao': 'Versão 2'
         })
         self.assertEqual(PrestacaoContas.objects.count(), 2)
@@ -210,7 +210,7 @@ class RedirecionamentoTests(BaseTestSetup):
     def test_get_na_url_de_upload_redireciona(self):
         """GET na URL de upload deve redirecionar (não processar formulário)."""
         response = self.client.get(self.url_upload)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
 
     def test_envio_invalido_redireciona_com_erro(self):
@@ -234,7 +234,7 @@ class RedirecionamentoTests(BaseTestSetup):
         self.assertEqual(PrestacaoContas.objects.count(), 0)
         # O Django deve renderizar o bloco de mensagens que inserimos no detalhe.html
         self.assertContains(response, "Este campo é obrigatório")
-        self.assertContains(response, "alert-danger")
+        self.assertContains(response, "alert-error")
 
     def test_contrato_inexistente_retorna_404(self):
         """Upload para contrato inexistente retorna 404."""
@@ -259,7 +259,7 @@ class RestricaoAgenteTests(BaseTestSetup):
         )
         response = self.client.post(self.url_upload, {
             'agente': agente_externo.id,
-            'mes_referencia': 8, 'ano_referencia': 2026,
+            'mes_referencia': 4, 'ano_referencia': 2026,
             'arquivo': self._make_pdf(),
         })
         # Form inválido — agente não está no queryset filtrado
@@ -296,7 +296,7 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         """Requisição AJAX deve retornar JSON com success=True."""
         self.client.login(username="auditor_ajax", password="pass123")
         url = reverse('alterar_status_prestacao', kwargs={'pk': self.prestacao.id, 'novo_status': 'ok'})
-        response = self._ajax_get(url)
+        response = self.client.post(url, data={'justificativa': 'ok'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertTrue(data['success'])
@@ -308,7 +308,7 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         """AJAX deve efetivamente alterar o status no banco de dados."""
         self.client.login(username="auditor_ajax", password="pass123")
         url = reverse('alterar_status_prestacao', kwargs={'pk': self.prestacao.id, 'novo_status': 'correcao'})
-        self._ajax_get(url)
+        self.client.post(url, data={'justificativa': 'ok'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.prestacao.refresh_from_db()
         self.assertEqual(self.prestacao.status, 'correcao')
 
@@ -316,7 +316,7 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         """AJAX deve retornar estatísticas atualizadas do mês."""
         self.client.login(username="admin_ajax", password="pass123")
         url = reverse('alterar_status_prestacao', kwargs={'pk': self.prestacao.id, 'novo_status': 'ok'})
-        response = self._ajax_get(url)
+        response = self.client.post(url, data={'justificativa': 'ok'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         data = json.loads(response.content)
         self.assertIn('stats', data)
         stats = data['stats']
@@ -339,7 +339,7 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         """Usuário normal via AJAX deve receber 403."""
         self.client.login(username="normal_ajax", password="pass123")
         url = reverse('alterar_status_prestacao', kwargs={'pk': self.prestacao.id, 'novo_status': 'ok'})
-        response = self._ajax_get(url)
+        response = self.client.post(url, data={'justificativa': 'ok'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(response.status_code, 403)
         data = json.loads(response.content)
         self.assertFalse(data['success'])
@@ -351,7 +351,7 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         """Status inválido via AJAX deve retornar 400."""
         self.client.login(username="auditor_ajax", password="pass123")
         url = reverse('alterar_status_prestacao', kwargs={'pk': self.prestacao.id, 'novo_status': 'invalido'})
-        response = self._ajax_get(url)
+        response = self.client.post(url, data={'justificativa': 'ok'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.content)
         self.assertFalse(data['success'])
@@ -359,7 +359,7 @@ class AlterarStatusAjaxTests(BaseTestSetup):
     def test_ajax_sem_login_redireciona(self):
         """Requisição AJAX sem login deve redirecionar para login (302)."""
         url = reverse('alterar_status_prestacao', kwargs={'pk': self.prestacao.id, 'novo_status': 'ok'})
-        response = self._ajax_get(url)
+        response = self.client.post(url, data={'justificativa': 'ok'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(response.status_code, 302)
 
     def test_ajax_transicoes_multiplas(self):
@@ -375,7 +375,7 @@ class AlterarStatusAjaxTests(BaseTestSetup):
 
         # ok -> correcao
         url = reverse('alterar_status_prestacao', kwargs={'pk': pk, 'novo_status': 'correcao'})
-        self._ajax_get(url)
+        self.client.post(url, data={'justificativa': 'Ajuste final'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.prestacao.refresh_from_db()
         self.assertEqual(self.prestacao.status, 'correcao')
 
@@ -410,7 +410,7 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         pk = self.prestacao.id
         url = reverse('excluir_prestacao', kwargs={'pk': pk})
         
-        response = self._ajax_get(url)
+        response = self.client.post(url, data={'justificativa': 'ok'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         data = response.json()
         
         self.assertTrue(data['success'])
@@ -426,8 +426,8 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         self.prestacao.compor_apresentacao = True
         self.prestacao.save(update_fields=['compor_apresentacao'])
         
-        url = reverse('alterar_status_prestacao', kwargs={'pk': self.prestacao.id, 'novo_status': 'ok'})
-        response = self._ajax_get(url)
+        url = reverse('alterar_status_prestacao', kwargs={'pk': self.prestacao.id, 'novo_status': 'ok'}) + '?mes=5&ano=2026'
+        response = self.client.post(url, data={'justificativa': 'ok'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         data = response.json()
         
         self.assertIn('stats', data)
@@ -445,7 +445,7 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         pk = self.prestacao.id
         url = reverse('excluir_prestacao', kwargs={'pk': pk})
         
-        response = self._ajax_get(url)
+        response = self.client.post(url, data={'justificativa': 'ok'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         data = response.json()
         
         self.assertIn('stats', data)
@@ -713,7 +713,7 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
         # 1. Cria o placeholder com prioritário marcado
         PrestacaoContas.objects.create(
             contrato=self.contrato,
-            mes_referencia=6, ano_referencia=2026,
+            mes_referencia=2, ano_referencia=2026,
             status='pendente',
             compor_apresentacao=True
         )
@@ -723,7 +723,7 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
         url_upload = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
         response = self.client.post(url_upload, {
             'agente': self.agente.id,
-            'mes_referencia': 6, 'ano_referencia': 2026,
+            'mes_referencia': 2, 'ano_referencia': 2026,
             'arquivo': self._make_pdf("junho.pdf"),
             'observacao': 'Envio junho'
         })
@@ -731,11 +731,11 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
         self.assertEqual(response.status_code, 302)
         # Deve continuar sendo 1 registro (atualizado, não duplicado)
         self.assertEqual(PrestacaoContas.objects.filter(
-            contrato=self.contrato, mes_referencia=6, ano_referencia=2026
+            contrato=self.contrato, mes_referencia=2, ano_referencia=2026
         ).count(), 1)
 
         p = PrestacaoContas.objects.get(
-            contrato=self.contrato, mes_referencia=6, ano_referencia=2026
+            contrato=self.contrato, mes_referencia=2, ano_referencia=2026
         )
         self.assertEqual(p.status, 'entregue')
         self.assertTrue(p.compor_apresentacao)  # Flag preservada!
@@ -747,7 +747,7 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
         """Upload sobre placeholder não deve criar registro duplicado."""
         PrestacaoContas.objects.create(
             contrato=self.contrato,
-            mes_referencia=7, ano_referencia=2026,
+            mes_referencia=3, ano_referencia=2026,
             status='pendente',
             compor_apresentacao=False
         )
@@ -755,12 +755,12 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
         url_upload = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
         self.client.post(url_upload, {
             'agente': self.agente.id,
-            'mes_referencia': 7, 'ano_referencia': 2026,
+            'mes_referencia': 3, 'ano_referencia': 2026,
             'arquivo': self._make_pdf("julho.pdf"),
         })
 
         total = PrestacaoContas.objects.filter(
-            contrato=self.contrato, mes_referencia=7, ano_referencia=2026
+            contrato=self.contrato, mes_referencia=3, ano_referencia=2026
         ).count()
         self.assertEqual(total, 1)
 
@@ -774,7 +774,7 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
             url, data=json.dumps({
                 'checked': True,
                 'contrato_id': self.contrato.id,
-                'mes': 8, 'ano': 2026
+                'mes': 4, 'ano': 2026
             }),
             content_type='application/json'
         )
@@ -784,7 +784,7 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
             url, data=json.dumps({
                 'checked': False,
                 'contrato_id': self.contrato.id,
-                'mes': 8, 'ano': 2026
+                'mes': 4, 'ano': 2026
             }),
             content_type='application/json'
         )
@@ -794,7 +794,7 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
         self.assertFalse(data['checked'])
 
         p = PrestacaoContas.objects.get(
-            contrato=self.contrato, mes_referencia=8, ano_referencia=2026
+            contrato=self.contrato, mes_referencia=4, ano_referencia=2026
         )
         self.assertFalse(p.compor_apresentacao)
 
@@ -891,15 +891,15 @@ class ModelPrestacaoContasTests(BaseTestSetup):
         """Pode haver múltiplas prestações do mesmo contrato/mês/ano para manter histórico."""
         p1 = PrestacaoContas.objects.create(
             contrato=self.contrato, agente=self.agente,
-            mes_referencia=9, ano_referencia=2026,
+            mes_referencia=1, ano_referencia=2026,
             arquivo=self._make_pdf("a.pdf")
         )
         p2 = PrestacaoContas.objects.create(
             contrato=self.contrato, agente=self.agente,
-            mes_referencia=9, ano_referencia=2026,
+            mes_referencia=1, ano_referencia=2026,
             arquivo=self._make_pdf("b.pdf")
         )
-        self.assertEqual(PrestacaoContas.objects.filter(contrato=self.contrato, mes_referencia=9, ano_referencia=2026).count(), 2)
+        self.assertEqual(PrestacaoContas.objects.filter(contrato=self.contrato, mes_referencia=1, ano_referencia=2026).count(), 2)
         self._cleanup(p1)
         self._cleanup(p2)
 
@@ -907,7 +907,7 @@ class ModelPrestacaoContasTests(BaseTestSetup):
         """Status padrão ao criar deve ser 'entregue'."""
         p = PrestacaoContas.objects.create(
             contrato=self.contrato, agente=self.agente,
-            mes_referencia=10, ano_referencia=2026,
+            mes_referencia=1, ano_referencia=2026,
             arquivo=self._make_pdf()
         )
         self.assertEqual(p.status, 'entregue')

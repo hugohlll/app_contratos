@@ -93,7 +93,7 @@ class PrestacaoContasTests(TestCase):
         p1 = PrestacaoContas.objects.create(
             contrato=self.contrato,
             agente=self.agente,
-            mes_referencia=6,
+            mes_referencia=3,
             ano_referencia=2026,
             arquivo=pdf_file1
         )
@@ -105,7 +105,7 @@ class PrestacaoContasTests(TestCase):
         
         data = {
             'agente': self.agente.id,
-            'mes_referencia': 6,
+            'mes_referencia': 3,
             'ano_referencia': 2026,
             'arquivo': pdf_file2,
             'observacao': 'Nova versao'
@@ -259,36 +259,7 @@ class PrestacaoContasTests(TestCase):
             if p.arquivo and os.path.isfile(p.arquivo.path):
                 os.remove(p.arquivo.path)
 
-    def test_detalhe_publico_exibe_uma_linha_por_periodo_com_multiplos_envios(self):
-        """Página pública de detalhes deve exibir apenas 1 linha por período mesmo com múltiplos envios."""
-        url_upload = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
-        url_detalhe = reverse('detalhe_contrato', kwargs={'contrato_id': self.contrato.id})
 
-        # Dois envios para o mesmo mês/ano
-        for i in range(1, 3):
-            self.client.post(url_upload, {
-                'agente': self.agente.id,
-                'mes_referencia': 5,
-                'ano_referencia': 2026,
-                'arquivo': SimpleUploadedFile(f"v{i}.pdf", b"%PDF-1.4", content_type="application/pdf"),
-                'observacao': f'Versão {i}'
-            })
-
-        self.assertEqual(PrestacaoContas.objects.count(), 2)
-
-        response = self.client.get(url_detalhe)
-        self.assertEqual(response.status_code, 200)
-
-        # O contexto 'prestacoes_recentes' deve retornar apenas 1 entrada para o período 05/2026
-        prestacoes_recentes = response.context['prestacoes_recentes']
-        periodos = [(p.mes_referencia, p.ano_referencia) for p in prestacoes_recentes]
-        # Não pode haver entradas duplicadas no mesmo período
-        self.assertEqual(len(periodos), len(set(periodos)))
-
-        # Limpeza
-        for p in PrestacaoContas.objects.all():
-            if p.arquivo and os.path.isfile(p.arquivo.path):
-                os.remove(p.arquivo.path)
 
     def test_exportar_historico_requer_login(self):
         """A exportação do histórico completo deve redirecionar usuários não autenticados para o login."""
@@ -464,43 +435,7 @@ class PrestacaoContasTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()['status'], 'error')
 
-    def test_detalhe_publico_status_prestacao(self):
-        """A página pública de detalhamento deve exibir o ícone correto para cada status"""
-        import os
-        from django.core.files.uploadedfile import SimpleUploadedFile
 
-        url = reverse('detalhe_contrato', kwargs={'contrato_id': self.contrato.id})
-
-        pdf_file = SimpleUploadedFile("arq_detalhe.pdf", b"pdf_data", content_type="application/pdf")
-        prestacao = PrestacaoContas.objects.create(
-            contrato=self.contrato,
-            agente=self.agente,
-            mes_referencia=5,
-            ano_referencia=2026,
-            arquivo=pdf_file,
-            status='entregue'
-        )
-
-        # Status 'entregue' → ícone bi-file-earmark-arrow-up
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'bi-file-earmark-arrow-up')
-
-        # Status 'correcao' → ícone bi-exclamation-triangle-fill
-        prestacao.status = 'correcao'
-        prestacao.save()
-        response = self.client.get(url)
-        self.assertContains(response, 'bi-exclamation-triangle-fill')
-
-        # Status 'ok' → ícone bi-check-circle-fill
-        prestacao.status = 'ok'
-        prestacao.save()
-        response = self.client.get(url)
-        self.assertContains(response, 'bi-check-circle-fill')
-
-        # Limpar arquivo gerado no teste
-        if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
-            os.remove(prestacao.arquivo.path)
 
     def test_gestores_prio_ordem_manual(self):
         """No dashboard, dois agentes do mesmo posto devem aparecer na ordem definida por ordem_manual"""

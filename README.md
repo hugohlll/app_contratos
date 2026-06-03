@@ -58,7 +58,7 @@ Garantir **transparência**, **controle** e **conformidade** no gerenciamento de
 - Informações completas do contrato (número, objeto, empresa, vigência, valor)
 - Visualização exclusiva de comissões ativas (Fiscalização e Recebimento)
 - Lista filtrada de integrantes vigentes e ativos com suas funções
-- Histórico completo omitido na visão pública para focar na equipe atual
+- *Nota: As entregas e o status da prestação de contas agora ficam isolados no Portal de Prestações, mantendo a visão pública do contrato mais focada.*
 
 #### 3. **Relatório de Transparência**
 - Lista todos os contratos vigentes
@@ -70,6 +70,7 @@ Garantir **transparência**, **controle** e **conformidade** no gerenciamento de
 - Interface dedicada para envio de prestação de contas (desacoplada da consulta pública de contratos)
 - Upload público de slides (PDF) com separação clara entre Fiscais e Gestores de Setor
 - Histórico dos últimos 6 meses de envios com status visual (isolado por tipo e contrato/setor)
+- Validação estrita de prazos: o sistema só permite envio de relatórios referentes a **meses já encerrados** (mês e ano de referência estritamente anteriores ao atual).
 - Visualização das inconsistências apontadas pela auditoria (popovers)
 - Reenvio de documentação corrigida e gestão de status transparente
 
@@ -734,6 +735,12 @@ Contribuições são bem-vindas! Para contribuir:
 ---
 
 ## 📅 Changelog
+
+### **Versão 1.8.0**
+- ✅ **Regra de Negócio de Prazos**: Validação estrita implementada no banco de dados e formulários, impedindo que prestações de contas sejam enviadas com meses de referência iguais ou superiores ao mês atual. As entregas agora são estritamente sobre "meses vencidos".
+- ✅ **Isolamento de Dados Públicos**: Remoção do histórico de prestação de contas da visão de "Detalhes do Contrato", focando 100% da visualização do ciclo de vida das prestações dentro do Portal de Prestações.
+- ✅ **Resiliência da Suíte de Testes**: Ajuste generalizado dos testes automatizados para respeitarem as novas regras de bloqueio temporal e refletirem a delegação via AJAX (`POST` obrigatório para justificativas).
+- ✅ **Atualização das Cargas (Populate DB)**: A ferramenta inteligente de carga agora gera prestações de contas com base em uma roleta de datas passadas (do mês anterior para trás), prevenindo violações de integridade no ambiente de desenvolvimento.
 
 ### **Versão 1.7.0**
 - ✅ **Configurações do Sistema**: Novo painel exclusivo para superusuários para gerenciar parâmetros de infraestrutura.

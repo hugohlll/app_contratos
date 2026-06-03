@@ -41,6 +41,7 @@ Este comando cria automaticamente:
 - **200 agentes** militares com postos variados
 - **50 empresas** contratadas
 - **~300 comissões** (fiscalização e recebimento)
+- **Prestações de Contas** (geradas dinamicamente com base em meses anteriores, respeitando a regra de negócio do sistema)
 
 Usuários criados:
 

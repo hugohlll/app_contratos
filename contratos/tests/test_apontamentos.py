@@ -145,47 +145,7 @@ class ApontamentoCorrecaoTests(TestCase):
         self.assertEqual(apontamentos[0].descricao, 'Problema no layout')
         self.assertEqual(apontamentos[1].descricao, 'Ainda falta o anexo B')
 
-    def test_tela_publica_exibe_apontamentos_pendentes(self):
-        """Verifica se a view pública detalhe_contrato carrega os apontamentos ativos em seu contexto."""
-        # Cria um apontamento e define status de correção
-        ApontamentoCorrecao.objects.create(
-            prestacao=self.prestacao,
-            autor=self.user_auditor,
-            descricao="Inconsistência teste"
-        )
-        self.prestacao.status = 'correcao'
-        self.prestacao.save()
-        
-        url_detalhe = reverse('detalhe_contrato', kwargs={'contrato_id': self.contrato.id})
-        response = self.client.get(url_detalhe)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('apontamentos_pendentes', response.context)
-        apontamentos = response.context['apontamentos_pendentes']
-        self.assertEqual(len(apontamentos), 1)
-        self.assertEqual(apontamentos[0].descricao, "Inconsistência teste")
-        
-        # Verifica se o texto é renderizado no HTML
-        self.assertContains(response, "Inconsistência teste")
-        self.assertContains(response, "Ref: 05/2026")
 
-    def test_tela_publica_oculta_apontamentos_apos_conformidade(self):
-        """Verifica que após a prestação atingir status 'ok', os apontamentos correspondentes não constam como pendentes."""
-        ApontamentoCorrecao.objects.create(
-            prestacao=self.prestacao,
-            autor=self.user_auditor,
-            descricao="Inconsistência teste"
-        )
-        # Status é OK! (aprovado)
-        self.prestacao.status = 'ok'
-        self.prestacao.save()
-        
-        url_detalhe = reverse('detalhe_contrato', kwargs={'contrato_id': self.contrato.id})
-        response = self.client.get(url_detalhe)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['apontamentos_pendentes']), 0)
-        self.assertNotContains(response, "Inconsistência teste")
 
     def test_correcao_usuario_nao_auditor_retorna_403(self):
         """Usuário sem permissão de auditor deve receber 403 ao tentar solicitar correção via AJAX."""
