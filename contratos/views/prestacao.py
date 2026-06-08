@@ -639,16 +639,22 @@ def alterar_status_prestacao(request, pk, novo_status):
         # Se for AJAX, não inserimos a mensagem de sucesso para não poluir futuras páginas
         # e calculamos as estatísticas atualizadas do mês para o gráfico
         hoje = date.today()
-        try:
-            filtro_mes = int(request.GET.get('mes', hoje.month))
-        except (ValueError, TypeError):
-            filtro_mes = hoje.month
+        from datetime import timedelta
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_padrao = ultimo_dia_mes_anterior.month
+        ano_padrao = ultimo_dia_mes_anterior.year
 
         try:
-            raw_ano = request.GET.get('ano', str(hoje.year)).replace('.', '')
+            filtro_mes = int(request.GET.get('mes', mes_padrao))
+        except (ValueError, TypeError):
+            filtro_mes = mes_padrao
+
+        try:
+            raw_ano = request.GET.get('ano', str(ano_padrao)).replace('.', '')
             filtro_ano = int(raw_ano)
         except (ValueError, TypeError):
-            filtro_ano = hoje.year
+            filtro_ano = ano_padrao
 
         stats = _get_dashboard_stats(filtro_ano, filtro_mes)
 
@@ -714,7 +720,17 @@ def toggle_apresentacao_prestacao(request):
                     compor_apresentacao=checked
                 )
             
-            stats = _get_dashboard_stats(ano, mes)
+            dashboard_mes = data.get('dashboard_mes')
+            dashboard_ano = data.get('dashboard_ano')
+            
+            try:
+                dashboard_mes = int(dashboard_mes) if dashboard_mes else mes
+                dashboard_ano = int(dashboard_ano) if dashboard_ano else ano
+            except (ValueError, TypeError):
+                dashboard_mes = mes
+                dashboard_ano = ano
+                
+            stats = _get_dashboard_stats(dashboard_ano, dashboard_mes)
             
             return JsonResponse({
                 'success': True, 

@@ -462,18 +462,24 @@ class PrestacaoContasTests(TestCase):
             valor_total=2000.00
         )
 
+        from datetime import timedelta
         hoje = date.today()
+        primeiro_dia = hoje.replace(day=1)
+        mes_anterior = primeiro_dia - timedelta(days=1)
+        mes_ref = mes_anterior.month
+        ano_ref = mes_anterior.year
+
         pdf1 = SimpleUploadedFile("arq_prio1.pdf", b"pdf", content_type="application/pdf")
         pdf2 = SimpleUploadedFile("arq_prio2.pdf", b"pdf", content_type="application/pdf")
 
         prest1 = PrestacaoContas.objects.create(
             contrato=self.contrato, agente=self.agente,
-            mes_referencia=hoje.month, ano_referencia=hoje.year,
+            mes_referencia=mes_ref, ano_referencia=ano_ref,
             arquivo=pdf1, compor_apresentacao=True, status='ok'
         )
         prest2 = PrestacaoContas.objects.create(
             contrato=contrato2, agente=agente2,
-            mes_referencia=hoje.month, ano_referencia=hoje.year,
+            mes_referencia=mes_ref, ano_referencia=ano_ref,
             arquivo=pdf2, compor_apresentacao=True, status='ok'
         )
 
