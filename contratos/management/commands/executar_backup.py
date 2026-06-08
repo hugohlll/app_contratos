@@ -51,6 +51,7 @@ class Command(BaseCommand):
         backup_dir = Path(backup_dir_path)
         try:
             backup_dir.mkdir(parents=True, exist_ok=True)
+            os.chmod(backup_dir, 0o777)
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Não foi possível criar/acessar o diretório de backup {backup_dir_path}: {e}"))
             return
@@ -89,6 +90,7 @@ class Command(BaseCommand):
             # No docker-compose, a imagem django costuma ter libpq-dev, mas não pg_dump. 
             # Vamos testar a execução. Se não encontrar pg_dump, vamos logar.
             subprocess.run(dump_command, env=env, check=True, capture_output=True)
+            os.chmod(sql_file_path, 0o666)
             self.stdout.write(self.style.SUCCESS(f"Dump do banco salvo em: {sql_file_path}"))
         except FileNotFoundError:
             self.stdout.write(self.style.ERROR("Comando 'pg_dump' não encontrado. Instale postgresql-client no container."))
@@ -108,6 +110,7 @@ class Command(BaseCommand):
                             file_path = os.path.join(root, file)
                             arcname = os.path.relpath(file_path, media_root)
                             zipf.write(file_path, arcname)
+                os.chmod(zip_file_path, 0o666)
                 self.stdout.write(self.style.SUCCESS(f"Mediafiles salvos em: {zip_file_path}"))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"Erro ao compactar pasta media: {e}"))
