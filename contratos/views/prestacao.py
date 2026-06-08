@@ -298,28 +298,30 @@ def _get_dashboard_stats(ano, mes):
 @ensure_csrf_cookie
 def dashboard_prestacao(request):
     hoje = date.today()
-    mes_atual = hoje.month
-    ano_atual = hoje.year
+    primeiro_dia_mes_atual = hoje.replace(day=1)
+    ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+    mes_padrao = ultimo_dia_mes_anterior.month
+    ano_padrao = ultimo_dia_mes_anterior.year
 
     # Obtém meses e anos dos filtros de forma robusta
     try:
-        filtro_mes = int(request.GET.get('mes', mes_atual))
+        filtro_mes = int(request.GET.get('mes', mes_padrao))
     except (ValueError, TypeError):
-        filtro_mes = mes_atual
+        filtro_mes = mes_padrao
 
     try:
-        raw_ano = request.GET.get('ano', str(ano_atual)).replace('.', '')
+        raw_ano = request.GET.get('ano', str(ano_padrao)).replace('.', '')
         filtro_ano = int(raw_ano)
     except (ValueError, TypeError):
-        filtro_ano = ano_atual
+        filtro_ano = ano_padrao
 
     stats = _get_dashboard_stats(filtro_ano, filtro_mes)
     
-    # Construir tabela-matriz (Últimos 3 meses)
+    # Construir tabela-matriz (Últimos 3 meses excluindo o atual)
     # Lista de tuplas (ano, mes) dos últimos 3 meses
     ultimos_3_meses = []
-    _ano = hoje.year
-    _mes = hoje.month
+    _ano = ano_padrao
+    _mes = mes_padrao
     for _ in range(3):
         ultimos_3_meses.append((_ano, _mes))
         _mes -= 1
@@ -408,7 +410,7 @@ def dashboard_prestacao(request):
         'filtro_mes': filtro_mes,
         'filtro_ano': filtro_ano,
         'meses_choices': [(i, meses_nomes[i-1]) for i in range(1, 13)],
-        'anos_choices': range(ano_atual - 2, ano_atual + 1),
+        'anos_choices': range(hoje.year - 2, hoje.year + 1),
     }
     
     # Busca calendário do ano selecionado

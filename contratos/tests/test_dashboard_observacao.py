@@ -28,6 +28,12 @@ class DashboardObservacaoTests(TestCase):
         )
         
         hoje = date.today()
+        from datetime import timedelta
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_ref = ultimo_dia_mes_anterior.month
+        ano_ref = ultimo_dia_mes_anterior.year
+
         self.contrato = Contrato.objects.create(
             numero="001/2026",
             objeto="Objeto de Teste",
@@ -45,8 +51,8 @@ class DashboardObservacaoTests(TestCase):
         # Create prestacao with observation
         self.prestacao = PrestacaoContas.objects.create(
             contrato=self.contrato,
-            mes_referencia=hoje.month,
-            ano_referencia=hoje.year,
+            mes_referencia=mes_ref,
+            ano_referencia=ano_ref,
             status='entregue',
             observacao='Observacao do Contrato Especial 123',
             agente=self.agente
@@ -54,8 +60,8 @@ class DashboardObservacaoTests(TestCase):
 
         self.prestacao_setor = PrestacaoContasSetor.objects.create(
             setor=self.setor,
-            mes_referencia=hoje.month,
-            ano_referencia=hoje.year,
+            mes_referencia=mes_ref,
+            ano_referencia=ano_ref,
             status='entregue',
             observacao='Observacao do Setor Especial 456',
             agente=self.agente
