@@ -133,13 +133,15 @@ Dashboard interativo com gráficos e indicadores:
 
 #### 2. **Matriz de Prestação de Contas (Dashboard)**
 - Acompanhamento simultâneo de prestações de Fiscais de Contrato e de Gestores de Setor em abas separadas
-- Tabela dinâmica e visual com o acompanhamento das entregas mensais (histórico de 3 meses)
+- Tabela dinâmica e visual com o acompanhamento das entregas mensais (histórico dos 3 meses anteriores ao atual)
+- Exibição padrão do mês anterior ao atual (não o mês corrente)
 - Botões de ação ágeis: "Aprovar (OK!)", "Solicitar Correção", "Excluir"
 - Delegação de status de aprovação com envio obrigatório de justificativa em caso de correção (prompt dinâmico)
 - Histórico de inconsistências registrado e persistido por usuário
 - Geração de PDF consolidado apenas para Fiscais (prioritários)
-- Dashboard estatístico específico (Gráfico de Pizza e de Barras)
-- Filtro iterativo de Mês/Ano com exportação em CSV/Excel
+- Dashboard estatístico específico (Gráfico de Pizza e de Barras) sincronizado com o mês/ano selecionado no filtro
+- Filtro iterativo de Mês/Ano com exportação em CSV/Excel (inclui observações do fiscal e motivos de correção)
+- Horário de envio exibido no fuso horário de Brasília (GMT-3) nos downloads
 - Calendário de Entregas: datas de entrega de slides, apresentação de fiscais e gestores, exibidas na página inicial
 
 #### 4. **Cargos Regimentais**
@@ -348,7 +350,7 @@ Acesse http://localhost:8000/admin e faça login com o superusuário criado.
    - **Posto Atual**: Selecione o posto
    - **SARAM/Matrícula**: Número único de identificação
    - **CPF**: Opcional
-   - **Data do Último Curso de Gestão**: Data do último curso realizado (válido por 365 dias)
+   - **Data do Último Curso de Gestão**: Data do último curso realizado (válido por 5 anos / 1.825 dias)
 
 ### **3. Cadastre os Contratos**
 
@@ -735,6 +737,15 @@ Contribuições são bem-vindas! Para contribuir:
 ---
 
 ## 📅 Changelog
+
+### **Versão 1.9.0**
+- ✅ **Dashboard Padrão — Mês Anterior**: A tela de Prestação de Contas agora exibe por padrão o mês anterior ao atual, e a matriz de acompanhamento apresenta os 3 meses anteriores (não inclui o mês corrente).
+- ✅ **Sincronização de Gráficos**: Os quadros "Slides da Apresentação" e "Fiscais (Apresentação)" agora refletem dinamicamente o mês/ano selecionado no filtro, em vez de sempre exibir dados do mês do registro alterado.
+- ✅ **Fuso Horário nos Downloads**: O horário de envio nos arquivos CSV/XLS de prestação de contas agora é exibido no fuso horário de Brasília (GMT-3), corrigindo a exibição anterior em UTC.
+- ✅ **Colunas Extras nos Downloads**: Os relatórios de exportação (CSV/XLS) de prestação de contas agora incluem as colunas "Observações do Fiscal" e "Motivo da Correção", permitindo auditoria completa sem acesso ao sistema.
+- ✅ **Resiliência do Nginx (DNS Dinâmico)**: Configuração do `resolver` interno do Docker no Nginx para re-resolver o IP do container Django a cada requisição, eliminando erros 502 Bad Gateway após reconstrução de containers.
+- ✅ **Upload Restrito**: Envio de slides no portal público agora é restrito a comissões de fiscalização (exclui comissões de recebimento).
+- ✅ **Formato de Backup Legível**: O dump automático do PostgreSQL foi alterado para formato texto puro (`-F p`), facilitando a leitura e restauração via `psql`.
 
 ### **Versão 1.8.0**
 - ✅ **Regra de Negócio de Prazos**: Validação estrita implementada no banco de dados e formulários, impedindo que prestações de contas sejam enviadas com meses de referência iguais ou superiores ao mês atual. As entregas agora são estritamente sobre "meses vencidos".

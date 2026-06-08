@@ -264,7 +264,7 @@ docker compose -f docker-compose.prod.yml exec cron python manage.py executar_ba
 ```
 Ou, se preferir extrair apenas o banco (método antigo via `pg_dump` puro):
 ```bash
-docker compose -f docker-compose.prod.yml exec db pg_dump -U admin_siscont siscont_db -F c -f /tmp/backup.sql
+docker compose -f docker-compose.prod.yml exec db pg_dump -U admin_siscont siscont_db -F p -f /tmp/backup.sql
 docker cp $(docker compose -f docker-compose.prod.yml ps -q db):/tmp/backup.sql ./backups/backup_manual_$(date +%F).sql
 ```
 > **Nota:** Certifique-se de usar as credenciais definidas no `.env.prod`.
@@ -273,20 +273,17 @@ docker cp $(docker compose -f docker-compose.prod.yml ps -q db):/tmp/backup.sql 
 
 **Atenção:** Restaurações apagam/sobresscrevem o banco de dados atual. 
 
-Se você for restaurar um backup gerado pela **rotina automática** (arquivo `.sql` gerado pelo `executar_backup`), utilize o `pg_restore` pois ele foi compactado no formato customizado (`-F c`):
+Se você for restaurar um backup gerado pela **rotina automática** ou manual (que usa formato texto puro `-F p`), utilize o `psql`:
 
 ```bash
 # 1. Copiar o arquivo de backup para dentro do container
 docker cp backups/db_backup_20260601.sql $(docker compose -f docker-compose.prod.yml ps -q db):/tmp/backup.sql
 
-# 2. Restaurar o banco usando pg_restore
-docker compose -f docker-compose.prod.yml exec db bash -c "pg_restore -U admin_siscont -d siscont_db -1 --clean /tmp/backup.sql"
-```
-
-Se for restaurar um backup em formato **texto plano** (SQL puro gerado manualmente com `> backup.sql`):
-```bash
+# 2. Restaurar o banco usando psql
 docker compose -f docker-compose.prod.yml exec db bash -c "psql -U admin_siscont -d siscont_db < /tmp/backup.sql"
 ```
+
+> **Nota:** Versões antigas do sistema (antes da v1.9.0) utilizavam o formato `-F c`. Se for restaurar um backup muito antigo, troque o comando `psql` acima por: `pg_restore -U admin_siscont -d siscont_db -1 --clean /tmp/backup.sql`
 
 > **Recomenda-se** manter backups diários em local seguro (pendrive, servidor de rede, etc.). Além do banco de dados, certifique-se de salvar os arquivos ZIP de mídia (`/backups/media_backup_*.zip`) extraindo seu conteúdo para o volume `/opt/app_contratos/mediafiles` se necessário.
 
@@ -373,9 +370,10 @@ Causas comuns:
 - `DATABASE_URL` não corresponde às credenciais do Postgres
 
 ### Página retorna erro 502 Bad Gateway
-O Nginx está funcionando mas não consegue se comunicar com o Gunicorn:
+O Nginx está funcionando mas não consegue se comunicar com o Gunicorn (geralmente após uma atualização onde o IP do container web mudou e o Nginx cacheou o IP antigo).
+Para resolver, force a recriação do container do Nginx para que ele leia as novas configurações de DNS:
 ```bash
-docker compose -f docker-compose.prod.yml restart web
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ### Erro `ModuleNotFoundError: No module named 'distutils'`
