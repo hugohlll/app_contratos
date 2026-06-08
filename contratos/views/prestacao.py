@@ -539,7 +539,9 @@ def exportar_prestacao_csv(request):
 
     prestacoes = PrestacaoContas.objects.filter(
         id__in=latest_ids
-    ).select_related('contrato', 'agente__posto')
+    ).select_related('contrato', 'agente__posto').prefetch_related(
+        Prefetch('apontamentos', queryset=ApontamentoCorrecao.objects.order_by('-data_registro'))
+    )
 
     prestacoes_map = {p.contrato_id: p for p in prestacoes}
 
@@ -555,7 +557,9 @@ def exportar_prestacao_csv(request):
         'CNPJ',
         'Situação',
         'Responsável pela Entrega',
-        'Data/Hora do Último Envio'
+        'Data/Hora do Último Envio',
+        'Observações do Fiscal',
+        'Motivo da Correção'
     ]
     data = []
 
@@ -565,10 +569,15 @@ def exportar_prestacao_csv(request):
             situacao = p.get_status_display()
             responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
             data_envio = timezone.localtime(p.data_envio).strftime("%d/%m/%Y %H:%M")
+            observacao = p.observacao or '-'
+            apontamento = p.apontamentos.first()
+            motivo_correcao = apontamento.descricao if apontamento else '-'
         else:
             situacao = 'Pendente'
             responsavel = '-'
             data_envio = '-'
+            observacao = '-'
+            motivo_correcao = '-'
 
         data.append([
             c.numero,
@@ -582,7 +591,9 @@ def exportar_prestacao_csv(request):
             c.empresa.cnpj,
             situacao,
             responsavel,
-            data_envio
+            data_envio,
+            observacao,
+            motivo_correcao
         ])
 
     nome_arquivo = f"prestacao_contas_{filtro_mes:02d}_{filtro_ano}"
@@ -936,6 +947,8 @@ def exportar_historico_prestacao_csv(request):
     """
     prestacoes = PrestacaoContas.objects.exclude(status='pendente').select_related(
         'contrato', 'contrato__empresa', 'agente', 'agente__posto'
+    ).prefetch_related(
+        Prefetch('apontamentos', queryset=ApontamentoCorrecao.objects.order_by('-data_registro'))
     ).order_by('-data_envio')
     
     headers = [
@@ -950,13 +963,16 @@ def exportar_historico_prestacao_csv(request):
         'Fiscal Responsável',
         'Data/Hora de Envio',
         'Status (Situação)',
-        'Observação'
+        'Observações do Fiscal',
+        'Motivo da Correção'
     ]
     
     data = []
     for p in prestacoes:
         responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
         data_envio = timezone.localtime(p.data_envio).strftime("%d/%m/%Y %H:%M")
+        apontamento = p.apontamentos.first()
+        motivo_correcao = apontamento.descricao if apontamento else '-'
         
         data.append([
             p.contrato.numero,
@@ -970,7 +986,8 @@ def exportar_historico_prestacao_csv(request):
             responsavel,
             data_envio,
             p.get_status_display(),
-            p.observacao or '-'
+            p.observacao or '-',
+            motivo_correcao
         ])
         
     nome_arquivo = "historico_prestacao_contas_completo"
