@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 import json
 from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils import timezone
 
 from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao, Setor, PrestacaoContasSetor, ApontamentoCorrecaoSetor
 from contratos.forms import PrestacaoContasUploadForm, PrestacaoContasSetorUploadForm
@@ -563,7 +564,7 @@ def exportar_prestacao_csv(request):
         if p:
             situacao = p.get_status_display()
             responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
-            data_envio = p.data_envio.strftime("%d/%m/%Y %H:%M")
+            data_envio = timezone.localtime(p.data_envio).strftime("%d/%m/%Y %H:%M")
         else:
             situacao = 'Pendente'
             responsavel = '-'
@@ -955,7 +956,7 @@ def exportar_historico_prestacao_csv(request):
     data = []
     for p in prestacoes:
         responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
-        data_envio = p.data_envio.strftime("%d/%m/%Y %H:%M")
+        data_envio = timezone.localtime(p.data_envio).strftime("%d/%m/%Y %H:%M")
         
         data.append([
             p.contrato.numero,
