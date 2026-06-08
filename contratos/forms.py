@@ -249,11 +249,12 @@ class PrestacaoContasUploadForm(EstiloFormMixin, forms.ModelForm):
         self.fields['mes_referencia'].initial = mes_prev
         self.fields['ano_referencia'].initial = ano_prev
         
-        # Filtra os agentes apenas para aqueles que compõem alguma comissão ativa deste contrato
+        # Filtra os agentes apenas para aqueles que compõem alguma comissão de fiscalização ativa deste contrato
         if contrato:
             agentes_ids = Integrante.objects.filter(
                 comissao__contrato=contrato,
                 comissao__ativa=True,
+                comissao__tipo='FISCALIZACAO',
                 data_desligamento__isnull=True
             ).values_list('agente_id', flat=True).distinct()
             self.fields['agente'].queryset = Agente.objects.filter(id__in=agentes_ids).select_related('posto')
