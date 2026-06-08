@@ -80,7 +80,7 @@ class Command(BaseCommand):
             '-p', str(db_port),
             '-U', db_user,
             '-d', db_name,
-            '-F', 'c',  # formato customizado do pg_dump (mais eficiente e permite restore fácil)
+            '-F', 'p',  # formato em texto puro (plain text), legível em bloco de notas
             '-f', str(sql_file_path)
         ]
         
