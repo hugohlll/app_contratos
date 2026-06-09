@@ -191,7 +191,7 @@ def painel_controle(request):
     tem_sobrecarga = len(sobrecarga_labels) > 0
 
     contratos_risco = Contrato.objects.filter(vigencia_fim__gte=hoje).annotate(
-        fiscais_ativos=Count('comissoes__integrantes', filter=Q(comissoes__tipo='FISCALIZACAO') & Q(
+        fiscais_ativos=Count('comissoes__integrantes', filter=Q(comissoes__tipo='FISCALIZACAO') & Q(comissoes__ativa=True) & Q(
             comissoes__integrantes__in=Integrante.objects.filter(filtro_ativos)))
     ).filter(fiscais_ativos=0)
 
