@@ -34,7 +34,7 @@
                         
                         <div class="mb-3">
                             <label class="form-label fw-bold">Referência (Gerada Automaticamente)</label>
-                            <input type="text" class="form-control bg-light" value="{{ form.mes_referencia.value|stringformat:'02d' }}/{{ form.ano_referencia.value|stringformat:'d' }}" readonly>
+                            <input type="text" class="form-control bg-light" value="{{ form.mes_referencia.value|add:'0'|stringformat:'02d' }}/{{ form.ano_referencia.value }}" readonly>
                             {{ form.mes_referencia }}
                             {{ form.ano_referencia }}
                         </div>
