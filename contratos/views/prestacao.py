@@ -94,33 +94,29 @@ def upload_prestacao_setor(request, setor_id):
                 if form.non_field_errors():
                     errors['__all__'] = [str(e) for e in form.non_field_errors()]
                 return JsonResponse({'success': False, 'errors': errors}, status=400)
-                
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field.capitalize()}: {error}")
-            return redirect('upload_prestacao_setor', setor_id=setor.id)
     else:
         form = PrestacaoContasSetorUploadForm(setor=setor)
-        historico = PrestacaoContasSetor.objects.filter(
-            setor=setor
-        ).exclude(status='pendente').order_by('-ano_referencia', '-mes_referencia', '-data_envio')
         
-        historico_filtrado = []
-        vistos = set()
-        for p in historico:
-            chave = (p.mes_referencia, p.ano_referencia)
-            if chave not in vistos:
-                historico_filtrado.append(p)
-                vistos.add(chave)
-                if len(historico_filtrado) >= 6:
-                    break
-                    
-        context = {
-            'setor': setor,
-            'form': form,
-            'historico': historico_filtrado
-        }
-        return render(request, 'contratos/prestacao/upload_setor.html', context)
+    historico = PrestacaoContasSetor.objects.filter(
+        setor=setor
+    ).exclude(status='pendente').order_by('-ano_referencia', '-mes_referencia', '-data_envio')
+    
+    historico_filtrado = []
+    vistos = set()
+    for p in historico:
+        chave = (p.mes_referencia, p.ano_referencia)
+        if chave not in vistos:
+            historico_filtrado.append(p)
+            vistos.add(chave)
+            if len(historico_filtrado) >= 6:
+                break
+                
+    context = {
+        'setor': setor,
+        'form': form,
+        'historico': historico_filtrado
+    }
+    return render(request, 'contratos/prestacao/upload_setor.html', context)
 
 
 def upload_prestacao(request, contrato_id):
@@ -167,33 +163,29 @@ def upload_prestacao(request, contrato_id):
                 if form.non_field_errors():
                     errors['__all__'] = [str(e) for e in form.non_field_errors()]
                 return JsonResponse({'success': False, 'errors': errors}, status=400)
-                
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field.capitalize()}: {error}")
-            return redirect('upload_prestacao', contrato_id=contrato.id)
     else:
         form = PrestacaoContasUploadForm(contrato=contrato)
-        historico = PrestacaoContas.objects.filter(
-            contrato=contrato
-        ).exclude(status='pendente').order_by('-ano_referencia', '-mes_referencia', '-data_envio')
         
-        historico_filtrado = []
-        vistos = set()
-        for p in historico:
-            chave = (p.mes_referencia, p.ano_referencia)
-            if chave not in vistos:
-                historico_filtrado.append(p)
-                vistos.add(chave)
-                if len(historico_filtrado) >= 6:
-                    break
-                    
-        context = {
-            'contrato': contrato,
-            'form': form,
-            'historico': historico_filtrado
-        }
-        return render(request, 'contratos/prestacao/upload_contrato.html', context)
+    historico = PrestacaoContas.objects.filter(
+        contrato=contrato
+    ).exclude(status='pendente').order_by('-ano_referencia', '-mes_referencia', '-data_envio')
+    
+    historico_filtrado = []
+    vistos = set()
+    for p in historico:
+        chave = (p.mes_referencia, p.ano_referencia)
+        if chave not in vistos:
+            historico_filtrado.append(p)
+            vistos.add(chave)
+            if len(historico_filtrado) >= 6:
+                break
+                
+    context = {
+        'contrato': contrato,
+        'form': form,
+        'historico': historico_filtrado
+    }
+    return render(request, 'contratos/prestacao/upload_contrato.html', context)
 
 
 def _get_dashboard_stats(ano, mes):

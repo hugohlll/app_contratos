@@ -49,7 +49,11 @@
                             <label class="form-label fw-bold">Arquivo PDF</label>
                             <input type="file" name="arquivo" class="form-control" accept="application/pdf" required>
                             <div class="form-text">Apenas formato PDF, máx. 10MB.</div>
-                            {% if form.arquivo.errors %}<div class="text-danger small">{{ form.arquivo.errors }}</div>{% endif %}
+                            {% if form.arquivo.errors %}
+                            <div class="text-danger mt-2 fw-bold" style="font-size: 0.95rem;">
+                                <i class="bi bi-exclamation-triangle-fill fs-5 align-middle me-1"></i> {{ form.arquivo.errors.0 }}
+                            </div>
+                            {% endif %}
                         </div>
 
                         <div class="mb-4">
