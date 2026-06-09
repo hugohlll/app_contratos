@@ -531,11 +531,12 @@ def exportar_prestacao_csv(request):
     from django.db.models import Max
 
     # Obter IDs das prestações mais recentes por contrato (pode haver múltiplos envios por período)
+    # Exclui registros com status 'pendente' que são registros sem envio efetivo (sem arquivo/agente)
     latest_ids = PrestacaoContas.objects.filter(
         mes_referencia=filtro_mes,
         ano_referencia=filtro_ano,
         contrato__in=contratos_vigentes
-    ).values('contrato_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
+    ).exclude(status='pendente').values('contrato_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
 
     prestacoes = PrestacaoContas.objects.filter(
         id__in=latest_ids
