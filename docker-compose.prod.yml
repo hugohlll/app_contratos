@@ -65,7 +65,7 @@ services:
       - ./secrets/credentials.json:/app/credentials.json:ro
       - ./secrets/token.json:/app/token.json
       - ./backups:/backups
-    entrypoint: sh -c "chmod 0644 /etc/cron.d/app_contratos && cron -f"
+    entrypoint: sh -c "printenv >> /etc/environment && chmod 0644 /etc/cron.d/app_contratos && cron -f"
 
 volumes:
   postgres_data:
