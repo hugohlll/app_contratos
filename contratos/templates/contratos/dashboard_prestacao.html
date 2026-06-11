@@ -167,8 +167,12 @@
 
 <!-- MATRIZ DE PRESTAÇÕES -->
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="m-0 text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento (Últimos 3 meses)</h5>
+        <div class="input-group input-group-sm" style="width: 250px;">
+            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="filtroMatrizFiscais" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -391,8 +395,12 @@
     </div>
 
     <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="m-0 text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento - Setores (Últimos 3 meses)</h5>
+            <div class="input-group input-group-sm" style="width: 250px;">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" id="filtroMatrizSetores" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar setor ou sigla...">
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -674,6 +682,36 @@
                 const tabInstance = bootstrap.Tab.getInstance(tabEl) || new bootstrap.Tab(tabEl);
                 tabInstance.show();
             }
+        }
+
+        // Filtro Matriz Fiscais
+        const inputFiltroFiscais = document.getElementById('filtroMatrizFiscais');
+        if (inputFiltroFiscais) {
+            inputFiltroFiscais.addEventListener('keyup', function() {
+                const termo = this.value.toLowerCase();
+                const linhas = document.querySelectorAll('#fiscais-pane .table-responsive tbody tr');
+                
+                linhas.forEach(linha => {
+                    if (linha.cells.length === 1) return; // ignora linha de fallback
+                    const textoLinha = linha.cells[0].textContent.toLowerCase();
+                    linha.style.display = textoLinha.includes(termo) ? '' : 'none';
+                });
+            });
+        }
+
+        // Filtro Matriz Setores
+        const inputFiltroSetores = document.getElementById('filtroMatrizSetores');
+        if (inputFiltroSetores) {
+            inputFiltroSetores.addEventListener('keyup', function() {
+                const termo = this.value.toLowerCase();
+                const linhas = document.querySelectorAll('#setores-pane .table-responsive tbody tr');
+                
+                linhas.forEach(linha => {
+                    if (linha.cells.length === 1) return; // ignora linha de fallback
+                    const textoLinha = linha.cells[0].textContent.toLowerCase();
+                    linha.style.display = textoLinha.includes(termo) ? '' : 'none';
+                });
+            });
         }
 
         var ctxBar = document.getElementById('prioritariosBarChart').getContext('2d');
