@@ -470,6 +470,18 @@
                                             </span>
                                         </div>
                                         {% endif %}
+                                        {% if is_auditor %}
+                                        <div class="d-flex gap-1 mt-1">
+                                            <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'correcao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status-setor" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                            </a>
+                                            {% if is_admin %}
+                                            <a href="{% url 'excluir_prestacao_setor' entrega.prestacao.id %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 {% else %}
                                     <span class="text-muted"><i class="bi bi-dash fs-4"></i></span>
