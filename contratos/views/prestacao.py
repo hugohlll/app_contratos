@@ -1093,3 +1093,136 @@ def alterar_status_prestacao_setor(request, pk, novo_status):
     if mes: qs_params['mes'] = mes
     if ano: qs_params['ano'] = ano
     return redirect(f"{reverse('dashboard_prestacao')}?{urlencode(qs_params)}")
+
+@login_required
+def exportar_prestacao_setor_csv(request):
+    """Exporta as prestações de contas (entregues e pendentes) do mês e ano selecionados para Setores."""
+    hoje = date.today()
+    mes_atual = hoje.month
+    ano_atual = hoje.year
+
+    try:
+        filtro_mes = int(request.GET.get('mes', mes_atual))
+    except (ValueError, TypeError):
+        filtro_mes = mes_atual
+
+    try:
+        raw_ano = request.GET.get('ano', str(ano_atual)).replace('.', '')
+        filtro_ano = int(raw_ano)
+    except (ValueError, TypeError):
+        filtro_ano = ano_atual
+
+    setores = Setor.objects.all().prefetch_related('cargos__agente__posto').order_by('nome')
+
+    from django.db.models import Max
+
+    # Obter IDs das prestações mais recentes por setor
+    latest_ids = PrestacaoContasSetor.objects.filter(
+        mes_referencia=filtro_mes,
+        ano_referencia=filtro_ano,
+        setor__in=setores
+    ).exclude(status='pendente').values('setor_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
+
+    prestacoes = PrestacaoContasSetor.objects.filter(
+        id__in=latest_ids
+    ).select_related('setor', 'agente__posto').prefetch_related(
+        Prefetch('apontamentos', queryset=ApontamentoCorrecaoSetor.objects.order_by('-data_registro'))
+    )
+
+    prestacoes_map = {p.setor_id: p for p in prestacoes}
+
+    headers = [
+        'Setor',
+        'Sigla',
+        'Responsável pelo Setor',
+        'Situação',
+        'Responsável pela Entrega',
+        'Data/Hora do Último Envio',
+        'Observações do Gestor',
+        'Motivo da Correção'
+    ]
+    data = []
+
+    for s in setores:
+        p = prestacoes_map.get(s.id)
+        if p:
+            situacao = p.get_status_display()
+            responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
+            data_envio = timezone.localtime(p.data_envio).strftime("%d/%m/%Y %H:%M")
+            observacao = p.observacao or '-'
+            apontamento = p.apontamentos.first()
+            motivo_correcao = apontamento.descricao if apontamento else '-'
+        else:
+            situacao = 'Pendente'
+            responsavel = '-'
+            data_envio = '-'
+            observacao = '-'
+            motivo_correcao = '-'
+
+        cargos = s.cargos.select_related('agente', 'agente__posto').all()
+        if cargos.exists():
+            gestores = [f"{c.agente.posto.sigla} {c.agente.nome_de_guerra}" for c in cargos if c.agente]
+            responsavel_setor = ", ".join(gestores)
+        else:
+            responsavel_setor = "Não informado"
+
+        data.append([
+            s.nome,
+            s.sigla,
+            responsavel_setor,
+            situacao,
+            responsavel,
+            data_envio,
+            observacao,
+            motivo_correcao
+        ])
+
+    nome_arquivo = f"prestacao_contas_setores_{filtro_mes:02d}_{filtro_ano}"
+    return export_csv_or_xlsx(request, nome_arquivo, headers, data)
+
+
+@login_required
+def exportar_historico_prestacao_setor_csv(request):
+    """
+    Exporta o histórico completo de prestações de contas (todos os envios de todos os setores).
+    Restrito a usuários logados.
+    """
+    prestacoes = PrestacaoContasSetor.objects.exclude(status='pendente').select_related(
+        'setor', 'agente', 'agente__posto'
+    ).prefetch_related(
+        Prefetch('apontamentos', queryset=ApontamentoCorrecaoSetor.objects.order_by('-data_registro'))
+    ).order_by('-data_envio')
+    
+    headers = [
+        'Setor',
+        'Sigla',
+        'Mês de Referência',
+        'Ano de Referência',
+        'Responsável pela Entrega',
+        'Data/Hora de Envio',
+        'Status (Situação)',
+        'Observações do Gestor',
+        'Motivo da Correção'
+    ]
+    
+    data = []
+    for p in prestacoes:
+        responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
+        data_envio = timezone.localtime(p.data_envio).strftime("%d/%m/%Y %H:%M")
+        apontamento = p.apontamentos.first()
+        motivo_correcao = apontamento.descricao if apontamento else '-'
+        
+        data.append([
+            p.setor.nome,
+            p.setor.sigla,
+            f"{p.mes_referencia:02d}",
+            str(p.ano_referencia),
+            responsavel,
+            data_envio,
+            p.get_status_display(),
+            p.observacao or '-',
+            motivo_correcao
+        ])
+        
+    nome_arquivo = "historico_prestacao_contas_setores_completo"
+    return export_csv_or_xlsx(request, nome_arquivo, headers, data)

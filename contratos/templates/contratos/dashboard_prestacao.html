@@ -22,7 +22,7 @@
             <button type="submit" class="btn btn-sm btn-outline-secondary" style="height: 31px; display: inline-flex; align-items: center;"><i class="bi bi-filter me-1"></i> Filtrar</button>
         </form>
         
-        <form action="{% url 'exportar_prestacao_csv' %}" method="get" class="d-inline-flex m-0 align-items-center">
+        <form id="formExportarAtual" action="{% url 'exportar_prestacao_csv' %}" method="get" class="d-inline-flex m-0 align-items-center">
             <input type="hidden" name="mes" value="{{ filtro_mes }}">
             <input type="hidden" name="ano" value="{{ filtro_ano|stringformat:"d" }}">
             <select name="formato" class="form-select form-select-sm border-secondary text-secondary no-tomselect me-2" style="width: 75px; height: 31px; border-radius: 50rem;">
@@ -34,7 +34,7 @@
             </button>
         </form>
         
-        <form action="{% url 'exportar_historico_prestacao_csv' %}" method="get" class="d-inline-flex m-0 align-items-center ms-2">
+        <form id="formExportarHistorico" action="{% url 'exportar_historico_prestacao_csv' %}" method="get" class="d-inline-flex m-0 align-items-center ms-2">
             <select name="formato" class="form-select form-select-sm border-secondary text-secondary no-tomselect me-2" style="width: 75px; height: 31px; border-radius: 50rem;">
                 <option value="csv">CSV</option>
                 <option value="xlsx" selected>XLS</option>
@@ -682,6 +682,34 @@
                 const tabInstance = bootstrap.Tab.getInstance(tabEl) || new bootstrap.Tab(tabEl);
                 tabInstance.show();
             }
+        }
+
+        // Alterna URLs de exportação (Fiscais vs Setores) com base na aba ativa
+        const formExportarAtual = document.getElementById('formExportarAtual');
+        const formExportarHistorico = document.getElementById('formExportarHistorico');
+        
+        const urlFiscaisAtual = "{% url 'exportar_prestacao_csv' %}";
+        const urlSetoresAtual = "{% url 'exportar_prestacao_setor_csv' %}";
+        const urlFiscaisHistorico = "{% url 'exportar_historico_prestacao_csv' %}";
+        const urlSetoresHistorico = "{% url 'exportar_historico_prestacao_setor_csv' %}";
+
+        const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabEls.forEach(tabEl => {
+            tabEl.addEventListener('shown.bs.tab', event => {
+                const isSetores = event.target.id === 'setores-tab';
+                if (formExportarAtual) {
+                    formExportarAtual.action = isSetores ? urlSetoresAtual : urlFiscaisAtual;
+                }
+                if (formExportarHistorico) {
+                    formExportarHistorico.action = isSetores ? urlSetoresHistorico : urlFiscaisHistorico;
+                }
+            });
+        });
+        
+        // Disparar o evento manualmente se a aba Setores já estiver ativa (via query param)
+        if (tabParam === 'setores') {
+            if (formExportarAtual) formExportarAtual.action = urlSetoresAtual;
+            if (formExportarHistorico) formExportarHistorico.action = urlSetoresHistorico;
         }
 
         // Filtro Matriz Fiscais
