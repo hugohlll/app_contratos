@@ -535,3 +535,94 @@ class PrestacaoContasTests(TestCase):
             os.remove(prest1.arquivo.path)
 
 
+    def test_exportar_prestacao_setor_csv(self):
+        """Testa a exportação das prestações de contas de setores filtradas por mês/ano"""
+        from contratos.models import Setor, PrestacaoContasSetor, CargoRegimental
+
+        setor = Setor.objects.create(nome="Setor de Teste Exportação", sigla="STE")
+        CargoRegimental.objects.create(setor=setor, agente=self.agente, cargo="Chefe")
+
+        pdf_file = SimpleUploadedFile("arq_teste_setor.pdf", b"pdf_data", content_type="application/pdf")
+        prestacao = PrestacaoContasSetor.objects.create(
+            setor=setor,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            arquivo=pdf_file,
+            status='entregue'
+        )
+
+        self.client.login(username="admin", password="password123")
+        url = reverse('exportar_prestacao_setor_csv')
+        
+        response = self.client.get(url, {'mes': 5, 'ano': 2026, 'formato': 'csv'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+        
+        content = response.content.decode('utf-8-sig')
+        lines = content.split('\r\n')
+        
+        # Verificar cabeçalhos
+        headers = lines[0].split(';')
+        self.assertIn('Setor', headers)
+        self.assertIn('Responsável pelo Setor', headers)
+        self.assertIn('Responsável pela Entrega', headers)
+        
+        # Verificar dados
+        found = False
+        for line in lines[1:]:
+            if not line:
+                continue
+            cols = line.split(';')
+            if cols[0] == "Setor de Teste Exportação":
+                self.assertEqual(cols[3], "Entregue") # Coluna 3 é Situação
+                self.assertEqual(cols[4], "SGT Silva") # Coluna 4 é Responsável pela Entrega
+                found = True
+        self.assertTrue(found)
+
+        if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
+            os.remove(prestacao.arquivo.path)
+
+    def test_exportar_historico_prestacao_setor_csv(self):
+        """Testa exportação do histórico completo de prestações de contas de setores"""
+        from contratos.models import Setor, PrestacaoContasSetor, CargoRegimental
+
+        setor = Setor.objects.create(nome="Setor de Teste Histórico", sigla="STH")
+        CargoRegimental.objects.create(setor=setor, agente=self.agente, cargo="Chefe")
+
+        pdf_file = SimpleUploadedFile("arq_hist_setor.pdf", b"pdf_data", content_type="application/pdf")
+        prestacao = PrestacaoContasSetor.objects.create(
+            setor=setor,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            arquivo=pdf_file,
+            status='entregue'
+        )
+
+        self.client.login(username="admin", password="password123")
+        url = reverse('exportar_historico_prestacao_setor_csv')
+        
+        response = self.client.get(url, {'formato': 'csv'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+        
+        content = response.content.decode('utf-8-sig')
+        lines = content.split('\r\n')
+        self.assertIn('Setor', lines[0])
+        self.assertIn('Mês de Referência', lines[0])
+        
+        found = False
+        for line in lines[1:]:
+            if not line:
+                continue
+            cols = line.split(';')
+            if cols[0] == "Setor de Teste Histórico":
+                self.assertEqual(cols[6], "Entregue")
+                found = True
+        self.assertTrue(found)
+
+        if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
+            os.remove(prestacao.arquivo.path)
+
+
