@@ -250,8 +250,15 @@ def _get_dashboard_stats(ano, mes):
     correcao_setores = prestacoes_setor_filtradas.filter(status='correcao').count()
     pendentes_setores = total_setores - (ok_setores + entregues_setores + correcao_setores)
     
-    # Lista de gestores de setores (sem filtro de compor_apresentacao, todos os slides são apresentados)
-    lista_gestores_setores = prestacoes_setor_filtradas.select_related('agente', 'agente__posto', 'setor').order_by(
+    prio_ok_setores = prestacoes_setor_filtradas.filter(status='ok', compor_apresentacao=True).count()
+    prio_entregues_setores = prestacoes_setor_filtradas.filter(status='entregue', compor_apresentacao=True).count()
+    prio_correcao_setores = prestacoes_setor_filtradas.filter(status='correcao', compor_apresentacao=True).count()
+    prio_pendentes_setores = prestacoes_setor_filtradas.filter(status='pendente', compor_apresentacao=True).count()
+    
+    # Lista ordenada de gestores de setores prioritários
+    lista_gestores_setores = prestacoes_setor_filtradas.filter(
+        compor_apresentacao=True
+    ).select_related('agente', 'agente__posto', 'setor').order_by(
         'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
     )
     
@@ -283,6 +290,12 @@ def _get_dashboard_stats(ano, mes):
         'entregues_setores_no_mes': entregues_setores,
         'correcao_setores_no_mes': correcao_setores,
         'pendentes_setores_no_mes': pendentes_setores,
+        
+        'prio_ok_setores': prio_ok_setores,
+        'prio_entregues_setores': prio_entregues_setores,
+        'prio_correcao_setores': prio_correcao_setores,
+        'prio_pendentes_setores': prio_pendentes_setores,
+        
         'gestores_setores': gestores_setores
     }
 
@@ -751,6 +764,79 @@ def toggle_apresentacao_prestacao(request):
     return JsonResponse({'success': False, 'error': 'Método inválido'}, status=405)
 
 
+@login_required
+def toggle_apresentacao_prestacao_setor(request):
+    """Ativa/Desativa o checkbox para compor apresentação via POST com JSON para Setores."""
+    import json
+    
+    # Apenas admin ou auditor devem poder fazer isso
+    if not (is_admin(request.user) or is_auditor(request.user)):
+        return JsonResponse({'success': False, 'error': 'Não autorizado'}, status=403)
+        
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            checked = data.get('checked', False)
+            setor_id = data.get('setor_id')
+            mes = data.get('mes')
+            ano = data.get('ano')
+            
+            if not setor_id or not mes or not ano:
+                return JsonResponse({'success': False, 'error': 'Parâmetros incompletos.'}, status=400)
+                
+            try:
+                mes = int(mes)
+                ano = int(ano)
+                setor_id = int(setor_id)
+            except ValueError:
+                return JsonResponse({'success': False, 'error': 'Parâmetros inválidos.'}, status=400)
+                
+            setor = get_object_or_404(Setor, pk=setor_id)
+            
+            prestacoes = PrestacaoContasSetor.objects.filter(
+                setor=setor,
+                mes_referencia=mes,
+                ano_referencia=ano
+            )
+            
+            if prestacoes.exists():
+                prestacoes.update(compor_apresentacao=checked)
+                prestacao = prestacoes.order_by('-id').first()
+            else:
+                prestacao = PrestacaoContasSetor.objects.create(
+                    setor=setor,
+                    mes_referencia=mes,
+                    ano_referencia=ano,
+                    status='pendente',
+                    compor_apresentacao=checked
+                )
+            
+            dashboard_mes = data.get('dashboard_mes')
+            dashboard_ano = data.get('dashboard_ano')
+            
+            try:
+                dashboard_mes = int(dashboard_mes) if dashboard_mes else mes
+                dashboard_ano = int(dashboard_ano) if dashboard_ano else ano
+            except (ValueError, TypeError):
+                dashboard_mes = mes
+                dashboard_ano = ano
+                
+            stats = _get_dashboard_stats(dashboard_ano, dashboard_mes)
+            
+            return JsonResponse({
+                'success': True, 
+                'checked': prestacao.compor_apresentacao,
+                'stats': stats,
+                'prestacao_id': prestacao.id
+            })
+        except Http404:
+            return JsonResponse({'success': False, 'error': 'Setor não encontrado.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            
+    return JsonResponse({'success': False, 'error': 'Método inválido'}, status=405)
+
+
 @auditor_required
 def consolidar_apresentacao(request):
     """Consolida todos os slides prioritários em conformidade em um único PDF para download."""
@@ -856,6 +942,7 @@ def consolidar_apresentacao_setor(request):
     prestacoes = PrestacaoContasSetor.objects.filter(
         mes_referencia=filtro_mes,
         ano_referencia=filtro_ano,
+        compor_apresentacao=True,
         status='ok'
     ).select_related('agente', 'agente__posto', 'setor').order_by(
         'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'

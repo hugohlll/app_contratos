@@ -625,4 +625,95 @@ class PrestacaoContasTests(TestCase):
         if prestacao.arquivo and os.path.isfile(prestacao.arquivo.path):
             os.remove(prestacao.arquivo.path)
 
+    def test_toggle_apresentacao_prestacao_setor(self):
+        """Testa o toggle AJAX da flag compor_apresentacao para setores"""
+        from contratos.models import Setor, PrestacaoContasSetor, CargoRegimental
+        import json
+        from django.contrib.auth.models import Group
+
+        setor = Setor.objects.create(nome="Setor Toggle", sigla="STG")
+        CargoRegimental.objects.create(setor=setor, agente=self.agente, cargo="Chefe")
+
+        # Configurar auditor
+        grupo_auditores, _ = Group.objects.get_or_create(name='Auditores')
+        user_auditor = User.objects.create_user(username='auditor_toggle', password='password123')
+        user_auditor.groups.add(grupo_auditores)
+        self.client.login(username='auditor_toggle', password='password123')
+
+        url = reverse('toggle_apresentacao_prestacao_setor')
+        
+        # Testar com prestação inexistente (deve criar nova como pendente e setar compor_apresentacao=True)
+        payload = json.dumps({
+            'setor_id': setor.id,
+            'mes': 5,
+            'ano': 2026,
+            'checked': True,
+            'dashboard_mes': 5,
+            'dashboard_ano': 2026
+        })
+        
+        response = self.client.post(url, data=payload, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        
+        # Verificar se salvou no banco
+        prest = PrestacaoContasSetor.objects.get(setor=setor, mes_referencia=5, ano_referencia=2026)
+        self.assertTrue(prest.compor_apresentacao)
+
+        # Desmarcar
+        payload_false = json.dumps({
+            'setor_id': setor.id,
+            'mes': 5,
+            'ano': 2026,
+            'checked': False,
+            'dashboard_mes': 5,
+            'dashboard_ano': 2026
+        })
+        response2 = self.client.post(url, data=payload_false, content_type='application/json')
+        self.assertEqual(response2.status_code, 200)
+        
+        prest.refresh_from_db()
+        self.assertFalse(prest.compor_apresentacao)
+
+    def test_consolidar_apresentacao_setor_com_prioritarios(self):
+        """Testa se a consolidação de PDF de setores filtra por compor_apresentacao"""
+        from contratos.models import Setor, PrestacaoContasSetor
+
+        setor1 = Setor.objects.create(nome="Setor 1", sigla="ST1")
+        setor2 = Setor.objects.create(nome="Setor 2", sigla="ST2")
+        
+        # Gerar PDFs válidos mínimos para pypdf ler
+        pdf_minimo = b"%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Resources <<>>\n>>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \ntrailer\n<<\n/Size 4\n/Root 1 0 R\n>>\nstartxref\n212\n%%EOF"
+
+        pdf_file1 = SimpleUploadedFile("arq1.pdf", pdf_minimo, content_type="application/pdf")
+        pdf_file2 = SimpleUploadedFile("arq2.pdf", pdf_minimo, content_type="application/pdf")
+
+        prest1 = PrestacaoContasSetor.objects.create(
+            setor=setor1, agente=self.agente, mes_referencia=5, ano_referencia=2026,
+            arquivo=pdf_file1, status='ok', compor_apresentacao=True
+        )
+        prest2 = PrestacaoContasSetor.objects.create(
+            setor=setor2, agente=self.agente, mes_referencia=5, ano_referencia=2026,
+            arquivo=pdf_file2, status='ok', compor_apresentacao=False
+        )
+
+        from django.contrib.auth.models import Group
+        grupo_auditores, _ = Group.objects.get_or_create(name='Auditores')
+        user_auditor = User.objects.create_user(username='auditor_consolida', password='password123')
+        user_auditor.groups.add(grupo_auditores)
+        self.client.login(username="auditor_consolida", password="password123")
+        url = reverse('consolidar_apresentacao_setor')
+        response = self.client.get(url, {'ano': 2026, 'mes': 5})
+        
+        # Deve retornar 200 com content_type application/pdf
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        
+        # Limpar arquivos
+        if prest1.arquivo and os.path.isfile(prest1.arquivo.path):
+            os.remove(prest1.arquivo.path)
+        if prest2.arquivo and os.path.isfile(prest2.arquivo.path):
+            os.remove(prest2.arquivo.path)
+
 

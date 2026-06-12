@@ -324,18 +324,17 @@
 
     <!-- GRÁFICOS SETORES (Mês Filtrado) -->
     <div class="row mb-4 align-items-stretch">
-        <!-- Gráfico de Pizza de Setores -->
+        <!-- Gráfico de Slides de Apresentação (Setores) -->
         <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                     <h6 class="m-0 fw-bold text-secondary">
-                        <i class="bi bi-pie-chart-fill me-2 text-info"></i>Situação das Entregas (Setores)
+                        <i class="bi bi-pie-chart-fill me-2 text-warning"></i>Slides da Apresentação (Setores)
                     </h6>
-                    <span class="badge bg-primary rounded-pill px-3 py-2">Total: {{ total_setores }} Setor{{ total_setores|pluralize }}</span>
                 </div>
                 <div class="card-body d-flex flex-column align-items-center justify-content-center">
                     <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
-                        <canvas id="setoresPieChart"></canvas>
+                        <canvas id="prioritariosSetoresBarChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -450,6 +449,11 @@
                                             {% endif %}
                                         </div>
                                         {% endif %}
+                                        
+                                        <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                            <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                            <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                        </div>
                                     </div>
                                 {% elif entrega.status == 'correcao' %}
                                     <div class="d-flex flex-column align-items-center">
@@ -464,6 +468,11 @@
                                             </span>
                                         </div>
                                         {% endif %}
+                                        
+                                        <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                            <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                            <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                        </div>
                                     </div>
                                 {% elif entrega.status == 'ok' %}
                                     <div class="d-flex flex-column align-items-center">
@@ -490,9 +499,23 @@
                                             {% endif %}
                                         </div>
                                         {% endif %}
+                                        
+                                        <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                            <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                            <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                        </div>
                                     </div>
                                 {% else %}
-                                    <span class="text-muted"><i class="bi bi-dash fs-4"></i></span>
+                                    <div class="d-flex flex-column align-items-center">
+                                        <div class="text-muted opacity-50 py-2">
+                                            <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
+                                            <span style="font-size: 0.75rem;">Pendente</span>
+                                        </div>
+                                        <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                            <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                            <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                        </div>
+                                    </div>
                                 {% endif %}
                             </td>
                             {% endfor %}
@@ -626,15 +649,15 @@
             }
         });
 
-        // Gráfico de Pizza de Setores
-        var ctxSetores = document.getElementById('setoresPieChart');
+        // Gráfico de Slides de Apresentação de Setores
+        var ctxSetores = document.getElementById('prioritariosSetoresBarChart');
         if (ctxSetores) {
-            window.mySetoresChart = new Chart(ctxSetores.getContext('2d'), {
-                type: 'pie',
+            window.mySetoresBarChart = new Chart(ctxSetores.getContext('2d'), {
+                type: 'doughnut',
                 data: {
                     labels: ['Conformidade (OK!)', 'Aguardando análise', 'Ajustes Necessários', 'Pendente'],
                     datasets: [{
-                        data: [{{ ok_setores_no_mes }}, {{ entregues_setores_no_mes }}, {{ correcao_setores_no_mes }}, {{ pendentes_setores_no_mes }}],
+                        data: [{{ prio_ok_setores }}, {{ prio_entregues_setores }}, {{ prio_correcao_setores }}, {{ prio_pendentes_setores }}],
                         backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#9ca3af'],
                         borderWidth: 0
                     }]
@@ -661,7 +684,8 @@
                                         label += ': ';
                                     }
                                     var value = context.raw || 0;
-                                    var total = {{ total_setores }};
+                                    var datasetData = context.chart.data.datasets[0].data;
+                                    var total = datasetData.reduce((a, b) => a + b, 0);
                                     var percentage = total > 0 ? Math.round((value / total) * 100) : 0;
                                     label += value + ' (' + percentage + '%)';
                                     return label;
@@ -812,6 +836,37 @@
                     <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" style="cursor: grab;">
                         <td class="ps-3"><strong>${g.gestor}</strong></td>
                         <td>${g.contrato}</td>
+                        <td class="text-center">${statusBadge}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function atualizarTabelaGestoresSetores(gestores) {
+            const tbody = document.getElementById('tabelaGestoresSetores');
+            if (!tbody) return;
+            
+            if (!gestores || gestores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Nenhuma entrega de setor.</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            gestores.forEach(g => {
+                let statusBadge = '';
+                if (g.status === 'ok') {
+                    statusBadge = '<span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>';
+                } else if (g.status === 'entregue') {
+                    statusBadge = '<span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>';
+                } else if (g.status === 'correcao') {
+                    statusBadge = '<span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>';
+                }
+                
+                html += `
+                    <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" style="cursor: grab;">
+                        <td class="ps-3"><strong>${g.gestor}</strong></td>
+                        <td>${g.setor}</td>
                         <td class="text-center">${statusBadge}</td>
                     </tr>
                 `;
@@ -1217,6 +1272,67 @@
                         window.myBarChart.update();
                         if (data.stats.gestores_prio) {
                             atualizarTabelaPrioritarios(data.stats.gestores_prio);
+                        }
+                    }
+                }
+                checkbox.disabled = false;
+            })
+            .catch(error => {
+                console.error(error);
+                checkbox.checked = !isChecked;
+                checkbox.disabled = false;
+                alert('Erro de rede ao tentar alterar a seleção do slide.');
+            });
+        });
+
+        // Intercepta os cliques nos checkboxes de apresentação (Setores)
+        const TOGGLE_URL_BASE_SETORES = "{% url 'toggle_apresentacao_prestacao_setor' %}";
+        
+        document.addEventListener("change", function(event) {
+            if (!event.target.classList.contains('checkbox-apresentacao-setor')) return;
+            
+            const checkbox = event.target;
+            const setorId = checkbox.getAttribute('data-setor-id');
+            const mes = checkbox.getAttribute('data-mes');
+            const ano = checkbox.getAttribute('data-ano');
+            
+            if (!setorId || !mes || !ano) return;
+            
+            const isChecked = checkbox.checked;
+            checkbox.disabled = true;
+            
+            fetch(TOGGLE_URL_BASE_SETORES, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ 
+                    checked: isChecked,
+                    setor_id: setorId,
+                    mes: mes,
+                    ano: ano,
+                    dashboard_mes: '{{ filtro_mes }}',
+                    dashboard_ano: '{{ filtro_ano|stringformat:"d" }}'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    checkbox.checked = !isChecked;
+                    alert('Erro: ' + (data.error || 'Não foi possível alterar a seleção do slide.'));
+                } else {
+                    if (window.mySetoresBarChart && data.stats) {
+                        window.mySetoresBarChart.data.datasets[0].data = [
+                            data.stats.prio_ok_setores,
+                            data.stats.prio_entregues_setores,
+                            data.stats.prio_correcao_setores,
+                            data.stats.prio_pendentes_setores
+                        ];
+                        window.mySetoresBarChart.update();
+                        if (data.stats.gestores_setores) {
+                            atualizarTabelaGestoresSetores(data.stats.gestores_setores);
                         }
                     }
                 }
