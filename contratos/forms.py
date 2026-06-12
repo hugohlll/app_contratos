@@ -85,22 +85,30 @@ class AgenteForm(EstiloFormMixin, forms.ModelForm):
 class ComissaoForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = Comissao
-        fields = ['contrato', 'tipo', 'portaria_numero', 'portaria_data', 'boletim_numero', 'boletim_data', 'data_inicio', 'data_fim', 'ativa']
+        fields = ['categoria', 'contrato', 'tipo', 'descricao_objeto', 'portaria_numero', 'portaria_data', 'boletim_numero', 'boletim_data', 'data_inicio', 'data_fim', 'ativa']
         widgets = {
             'portaria_data': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
             'boletim_data': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
             'data_inicio': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
             'data_fim': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'descricao_objeto': forms.Textarea(attrs={'rows': 3}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['contrato'].label_from_instance = lambda obj: f"{obj.numero} - {obj.empresa.razao_social}"
+        self.fields['contrato'].required = False
+        self.fields['descricao_objeto'].required = False
 
     def clean(self):
         cleaned_data = super().clean()
+        categoria = cleaned_data.get('categoria')
         contrato = cleaned_data.get('contrato')
         tipo_comissao = cleaned_data.get('tipo')
+
+        if categoria == 'OUTRAS':
+            cleaned_data['contrato'] = None
+            contrato = None
 
         if contrato and tipo_comissao:
             # Regra: Contratos de RECEITA não podem ter comissão de RECEBIMENTO

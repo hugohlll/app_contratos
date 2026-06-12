@@ -28,4 +28,10 @@ RUN mkdir -p /app/mediafiles/prestacoes
 RUN python manage.py collectstatic --noinput
 
 # Inicialização com Gunicorn (Apontando para core.wsgi)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "core.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", \
+     "--timeout", "120", \
+     "--keep-alive", "5", \
+     "--max-requests", "1000", \
+     "--max-requests-jitter", "50", \
+     "--access-logfile", "-", \
+     "core.wsgi:application"]

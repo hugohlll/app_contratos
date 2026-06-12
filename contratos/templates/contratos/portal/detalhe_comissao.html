@@ -25,7 +25,16 @@
                     {% csrf_token %}
 
                     <div class="row">
-                        <div class="col-md-8 mb-3">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.categoria.id_for_label }}" class="form-label fw-bold">
+                                {{ form.categoria.label }}
+                            </label>
+                            {{ form.categoria }}
+                            {% if form.categoria.errors %}
+                            <div class="text-danger small">{{ form.categoria.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3" id="bloco_contrato">
                             <label for="{{ form.contrato.id_for_label }}" class="form-label fw-bold">
                                 {{ form.contrato.label }}
                             </label>
@@ -41,6 +50,18 @@
                             {{ form.tipo }}
                             {% if form.tipo.errors %}
                             <div class="text-danger small">{{ form.tipo.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row" id="bloco_descricao" style="display: none;">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.descricao_objeto.id_for_label }}" class="form-label fw-bold">
+                                {{ form.descricao_objeto.label }}
+                            </label>
+                            {{ form.descricao_objeto }}
+                            {% if form.descricao_objeto.errors %}
+                            <div class="text-danger small">{{ form.descricao_objeto.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
@@ -229,6 +250,58 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const categoriaSelect = document.getElementById('{{ form.categoria.id_for_label }}');
+        const contratoDiv = document.getElementById('bloco_contrato');
+        const contratoSelect = document.getElementById('{{ form.contrato.id_for_label }}');
+        const descricaoDiv = document.getElementById('bloco_descricao');
+        const descricaoInput = document.getElementById('{{ form.descricao_objeto.id_for_label }}');
+        const tipoSelect = document.getElementById('{{ form.tipo.id_for_label }}');
+
+        // Store original options
+        const allTipoOptions = Array.from(tipoSelect.options).map(opt => ({
+            value: opt.value,
+            text: opt.text
+        }));
+
+        function applyCategoryRules() {
+            if (!categoriaSelect) return;
+            const cat = categoriaSelect.value;
+            const currentTipo = tipoSelect.value;
+
+            // Clear current options
+            tipoSelect.innerHTML = '';
+
+            if (cat === 'CONTRATO') {
+                contratoDiv.style.display = 'block';
+                descricaoDiv.style.display = 'none';
+                descricaoInput.required = false;
+                
+                // Add contract options
+                allTipoOptions.forEach(opt => {
+                    if (opt.value === 'FISCALIZACAO' || opt.value === 'RECEBIMENTO' || opt.value === '') {
+                        tipoSelect.add(new Option(opt.text, opt.value, false, opt.value === currentTipo));
+                    }
+                });
+            } else {
+                contratoDiv.style.display = 'none';
+                contratoSelect.value = '';
+                descricaoDiv.style.display = 'block';
+                descricaoInput.required = true;
+                
+                // Add generic options
+                allTipoOptions.forEach(opt => {
+                    if (opt.value !== 'FISCALIZACAO' && opt.value !== 'RECEBIMENTO') {
+                        tipoSelect.add(new Option(opt.text, opt.value, false, opt.value === currentTipo));
+                    }
+                });
+            }
+        }
+
+        if (categoriaSelect) {
+            categoriaSelect.addEventListener('change', applyCategoryRules);
+            applyCategoryRules(); // initial load
+        }
+
         const dataFimInput = document.getElementById('{{ form.data_fim.id_for_label }}');
         const ativaInput = document.getElementById('{{ form.ativa.id_for_label }}');
 

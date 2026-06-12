@@ -109,8 +109,26 @@ class ComissaoModelTest(TestCase):
             portaria_numero="123/2026",
             portaria_data=date.today()
         )
-        
         self.assertIn(integrante, self.comissao_fisc.integrantes.all())
+
+    def test_auto_geracao_descricao_objeto(self):
+        """Testa se a descricao_objeto é gerada corretamente para comissões de contrato"""
+        # Ao salvar, a comissao_fisc deve ter recebido a descrição automática
+        descricao_esperada = "Comissão de Fiscalização do Contrato de Despesa nº 002/2026 - " + self.contrato.objeto
+        self.assertEqual(self.comissao_fisc.descricao_objeto, descricao_esperada)
+
+    def test_comissao_outras_creation(self):
+        """Testa a criação de uma comissão não vinculada a contrato"""
+        comissao_outra = Comissao.objects.create(
+            categoria='OUTRAS',
+            tipo='RECEBIMENTO_GERAL',
+            descricao_objeto='Recebimento de Material de Consumo',
+            ativa=True
+        )
+        self.assertEqual(comissao_outra.categoria, 'OUTRAS')
+        self.assertIsNone(comissao_outra.contrato)
+        self.assertEqual(comissao_outra.descricao_objeto, 'Recebimento de Material de Consumo')
+        self.assertEqual(str(comissao_outra), 'Comissão de Recebimento (geral)')
 
 class EmpresaModelTest(TestCase):
     def test_empresa_str_with_razao_social_only(self):
