@@ -28,6 +28,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-iq2+m7dvw%9nzk=(&t&m%fq2b&
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1, localhost').split(',')]
+CSRF_TRUSTED_ORIGINS = [f'http://{h}' for h in ALLOWED_HOSTS] + [f'https://{h}' for h in ALLOWED_HOSTS]
 
 
 # Application definition

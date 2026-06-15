@@ -189,7 +189,8 @@
         <!-- SEÇÃO 4: COMISSÕES -->
         <section id="comissoes">
             <h2>4. Comissões e Designações</h2>
-            <p>Uma <strong>Comissão</strong> é o bloco que liga um Contrato à uma equipe (Militares). O sistema prevê dois tipos de comissão: Recebimento e Fiscalização.</p>
+            <p>Uma <strong>Comissão</strong> é a equipe de Militares designada para uma finalidade. O sistema prevê comissões vinculadas a contratos (<strong>Recebimento</strong> e <strong>Fiscalização</strong>) e comissões <strong>Não Contratuais / Internas</strong> (Outros, como PAD, Sindicância, etc.).</p>
+            <p>Na interface de comissões, abas separam as categorias para organizar a visualização entre designações contratuais e internas.</p>
             
             <h3 id="comissoes-automacoes">🤖 Automações Recentes de Ativação (Cron)</h3>
             <p>Para evitar esquecimentos humanos em ligar e desligar comissões, o sistema foi equipado com <strong>Automações de Ciclo de Vida</strong>:</p>
@@ -238,12 +239,15 @@
             <h3 id="matriz-acompanhamento">📋 Matriz de Acompanhamento</h3>
             <p>Ao abrir a página de prestação de contas no portal logado, o sistema exibirá <strong>por padrão as informações do mês anterior ao atual</strong>. A Matriz de Acompanhamento (dividida nas abas Fiscais e Setores) exibe uma tabela dinâmica com as entregas de cada responsável nos <strong>3 meses imediatamente anteriores ao atual</strong>. Os gráficos de estatísticas (Slides e Fiscais) também são sincronizados dinamicamente com o mês e ano selecionados no filtro. Status possíveis:</p>
             <ul>
-                <li><i class="bi bi-file-earmark-arrow-up text-primary"></i> <strong>Aguardando Análise (Entregue):</strong> O fiscal/gestor enviou o PDF, mas o Auditor ainda não analisou.</li>
-                <li><i class="bi bi-check-circle-fill text-success"></i> <strong>Conformidade (OK!):</strong> O PDF foi aprovado e está pronto.</li>
+                <li><i class="bi bi-file-earmark-arrow-up text-primary"></i> <strong>Aguardando Análise (Entregue):</strong> O fiscal/gestor enviou o PDF (limitado a 20MB), mas o Auditor ainda não analisou.</li>
+                <li><i class="bi bi-check-circle-fill text-success"></i> <strong>Conformidade (OK!):</strong> O PDF foi aprovado e está pronto. Auditores podem reabrir uma prestação aprovada e retorná-la para "Correção" se encontrarem inconsistências posteriores.</li>
                 <li><i class="bi bi-exclamation-triangle-fill text-warning"></i> <strong>Ajustes Necessários (Correção):</strong> O auditor encontrou inconsistências. O usuário é notificado no portal e o histórico de apontamentos fica gravado.</li>
                 <li><i class="bi bi-dash-circle text-muted"></i> <strong>Pendente:</strong> Nenhuma entrega foi realizada para o mês em questão.</li>
             </ul>
-            <p>Na aba dos fiscais de contrato, os auditores também podem marcar um envio como <strong>"Prioritário"</strong> caso ele deva compor a apresentação executiva da reunião.</p>
+            <p>Na aba dos fiscais de contrato e gestores, os auditores também podem marcar um envio como <strong>"Prioritário"</strong> caso ele deva compor a apresentação executiva da reunião.</p>
+            <div class="alert alert-warning py-2 mt-2">
+                <i class="bi bi-clock-history me-2"></i> <strong>Controle de Atrasos:</strong> O sistema identifica automaticamente se o <strong>primeiro envio</strong> do mês foi realizado após o prazo estabelecido no Calendário de Entregas, registrando o status de "Entregue com Atraso" para fins de auditoria.
+            </div>
 
             <h3 id="prestacao-setores">🏢 Prestações de Setores (Gestores)</h3>
             <p>Diferente da prestação pública dos contratos (que exige que o usuário esteja ativamente designado numa portaria), as prestações de Chefes de Setores são associadas ao cargo regimental do usuário (ex: Chefe da Seção de TI). A dinâmica de envio, visualização de apontamentos e histórico de aprovação no portal opera da mesma maneira fluída que a dos contratos.</p>
@@ -254,7 +258,7 @@
                 <li>Estar no status <strong>Conformidade (OK!)</strong>.</li>
                 <li>Estar marcado no checkbox <strong>Prioritário</strong>.</li>
             </ol>
-            <p>O documento gerado já é baixado ordenado hierarquicamente pelas patentes dos gestores, do mais antigo ao mais moderno, conforme determinação regulamentar.</p>
+            <p>O documento gerado já é baixado ordenado hierarquicamente pelas patentes dos gestores, do mais antigo ao mais moderno, conforme determinação regulamentar. Adicionalmente, os gestores podem ser ordenados manualmente (arrastando-os no painel) entre militares de mesma patente para um ajuste fino da apresentação.</p>
 
             <h3 id="calendario-entregas">📅 Calendário de Entregas</h3>
             <p>O Dashboard de Prestação de Contas permite ao auditor definir um <strong>Calendário Mensal de Entregas</strong> contendo três datas-chave:</p>
@@ -284,8 +288,8 @@
             <h2>9. Configurações do Sistema</h2>
             <p>A aba <strong>⚙️ Configurações</strong> está disponível no menu lateral <strong>apenas para Superusuários</strong>. Ela centraliza parâmetros técnicos de infraestrutura do sistema.</p>
 
-            <h3 id="backup-automatico">💾 Backup Automático</h3>
-            <p>O sistema possui uma rotina interna de backup que roda automaticamente dentro do ambiente Docker, dispensando qualquer dependência do sistema operacional do servidor hospedeiro.</p>
+            <h3 id="backup-automatico">💾 Backup Automático e Manual</h3>
+            <p>O sistema possui uma rotina interna de backup que roda automaticamente dentro do ambiente Docker, dispensando qualquer dependência do sistema operacional do servidor hospedeiro. Administradores também podem acionar o botão <strong>"Executar Backup Agora"</strong> no painel a qualquer momento.</p>
             <div class="alert alert-automation">
                 <h5 class="alert-heading"><i class="bi bi-robot"></i> Funcionamento da Rotina (Todo dia às 02h00):</h5>
                 <ol class="mb-0 mt-2">
