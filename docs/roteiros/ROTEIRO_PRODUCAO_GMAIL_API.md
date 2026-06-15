@@ -177,20 +177,31 @@ services:
       - 1.1.1.1
 ```
 
-### 3. Configuração de Proxy Corporativo (Se Aplicável)
+### 3. Requisitos de Rede Corporativa (Proxy/Firewall)
 
-Se sua empresa usa proxy para saída de internet:
+Se sua empresa (ex: FAB/intraer) restringe o acesso à internet corporativa via proxy ou firewall fechado. **NUNCA DEVE-SE USAR CREDENCIAIS PESSOAIS**. 
 
-```yaml
-services:
-  web:
-    environment:
-      - HTTP_PROXY=http://proxy.suaempresa.com.br:8080
-      - HTTPS_PROXY=http://proxy.suaempresa.com.br:8080
-      - NO_PROXY=localhost,127.0.0.1,db
+**Opção 1: Liberação Direta no Firewall (Recomendada pela TI)**
+Solicitar liberação de saída HTTPS (porta 443) direta pelo IP deste servidor com destino ao: `gmail.googleapis.com` e `oauth2.googleapis.com`. Não requer proxy na aplicação.
+
+**Opção 2: IP Whitelist no Proxy Corporativo**
+Solicitar que o proxy seja liberado sem requerer usuário/senha para o IP do servidor, bastando:
+```env
+# .env.prod
+HTTP_PROXY=http://proxy.suaempresa.com.br:8080
+HTTPS_PROXY=http://proxy.suaempresa.com.br:8080
 ```
 
-### 4. Dockerfile de Produção
+**Opção 3: Conta de Serviço / Service Account Genérica**
+Se o proxy sempre exige senha, solicitar uma Conta de Serviço genérica que não expira. Assim não fica vinculada à uma pessoa física.
+```env
+# .env.prod
+HTTP_PROXY=http://svc_app_contratos:SenhaForte@proxy:8080
+HTTPS_PROXY=http://svc_app_contratos:SenhaForte@proxy:8080
+```
+
+> **IMPORTANTE:** Sempre configure isso no `.env.prod`, nunca no `docker-compose.yml`, para a senha não ser commitada no Github.
+
 
 ```dockerfile
 # Dockerfile.prod
