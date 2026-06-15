@@ -531,7 +531,11 @@ def exportar_prestacao_csv(request):
     contratos_vigentes = Contrato.objects.filter(
         vigencia_inicio__lte=hoje,
         vigencia_fim__gte=hoje
-    ).order_by('numero').select_related('empresa')
+    ).order_by('numero').select_related('empresa').prefetch_related(
+        Prefetch('comissoes', queryset=Comissao.objects.filter(tipo='FISCALIZACAO', ativa=True).prefetch_related(
+            Prefetch('integrantes', queryset=Integrante.objects.select_related('agente', 'agente__posto', 'funcao', 'posto_graduacao'))
+        ))
+    )
 
     from django.db.models import Max
 
@@ -562,6 +566,7 @@ def exportar_prestacao_csv(request):
         'Empresa',
         'CNPJ',
         'Situação',
+        'Fiscal',
         'Responsável pela Entrega',
         'Data/Hora do Último Envio',
         'Observações do Fiscal',
@@ -570,6 +575,17 @@ def exportar_prestacao_csv(request):
     data = []
 
     for c in contratos_vigentes:
+        fiscal_oficial = "-"
+        comissao = c.comissoes.first()
+        if comissao:
+            integrantes_ativos = [i for i in comissao.integrantes.all() if i.is_ativo]
+            if integrantes_ativos:
+                principal = next((i for i in integrantes_ativos if 'presidente' in i.funcao.titulo.lower()), None)
+                if not principal:
+                    principal = integrantes_ativos[0]
+                posto = principal.posto_graduacao.sigla if principal.posto_graduacao else principal.agente.posto.sigla
+                fiscal_oficial = f"{posto} {principal.agente.nome_de_guerra}"
+
         p = prestacoes_map.get(c.id)
         if p:
             situacao = p.get_status_display()
@@ -596,6 +612,7 @@ def exportar_prestacao_csv(request):
             c.empresa.razao_social,
             c.empresa.cnpj,
             situacao,
+            fiscal_oficial,
             responsavel,
             data_envio,
             observacao,
