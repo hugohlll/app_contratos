@@ -19,6 +19,8 @@ services:
       - ./secrets/credentials.json:/app/credentials.json:ro
       - ./secrets/token.json:/app/token.json
       - ./backups:/backups
+      - ./core/settings.py:/app/core/settings.py:ro
+    command: gunicorn --bind 0.0.0.0:8000 --workers 3 --threads 4 --timeout 120 --keep-alive 5 --max-requests 1000 --max-requests-jitter 50 --access-logfile - core.wsgi:application
     env_file: .env.prod
     environment:
       - GMAIL_CREDENTIALS_PATH=/app/credentials.json

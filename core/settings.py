@@ -79,10 +79,19 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///db.sqlite3',
-        conn_max_age=600,
+        conn_max_age=int(os.environ.get('CONN_MAX_AGE', 0)),
         ssl_require=False
     )
 }
+
+# Configura TCP Keepalives para o PostgreSQL se não for SQLite
+if 'postgresql' in DATABASES['default']['ENGINE']:
+    DATABASES['default']['OPTIONS'] = {
+        'keepalives': 1,
+        'keepalives_idle': 60,
+        'keepalives_interval': 10,
+        'keepalives_count': 5,
+    }
 
 
 # Password validation

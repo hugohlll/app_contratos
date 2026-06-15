@@ -29,6 +29,7 @@ RUN python manage.py collectstatic --noinput
 
 # Inicialização com Gunicorn (Apontando para core.wsgi)
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", \
+     "--threads", "4", \
      "--timeout", "120", \
      "--keep-alive", "5", \
      "--max-requests", "1000", \
