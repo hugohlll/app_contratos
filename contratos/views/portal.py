@@ -190,23 +190,28 @@ def editar_agente(request, pk):
 # --- COMISSÕES ---
 @auditor_required
 def listar_comissoes(request):
-    return generico_listar(
-        request, Comissao, 'contratos/portal/lista_generica.html', 'Comissões', 
-        'nova_comissao', 'editar_comissao',
-        [('id', 'Nº'), ('contrato', 'Contrato'), ('tipo', 'Tipo'), ('ativa', 'Ativa?')],
-        url_exportar='exportar_comissoes_csv',
-        arquivo_exportacao='comissoes.csv'
-    )
+    comissoes = Comissao.objects.select_related('contrato__empresa').all()
+    comissoes_contrato = comissoes.filter(categoria='CONTRATO')
+    comissoes_outras = comissoes.filter(categoria='OUTRAS')
+    
+    return render(request, 'contratos/portal/listar_comissoes.html', {
+        'comissoes_contrato': comissoes_contrato,
+        'comissoes_outras': comissoes_outras,
+        'titulo': 'Comissões',
+        'url_novo': 'nova_comissao'
+    })
 
 @auditor_required
 def exportar_comissoes_csv(request):
-    headers = ['Nº', 'Contrato', 'Empresa', 'Tipo', 'Ativa', 'Portaria Nº', 'Portaria Data', 'Boletim Nº', 'Boletim Data', 'Início', 'Fim']
+    headers = ['Nº', 'Categoria', 'Descrição/Objeto', 'Contrato', 'Empresa', 'Tipo', 'Ativa', 'Portaria Nº', 'Portaria Data', 'Boletim Nº', 'Boletim Data', 'Início', 'Fim']
     data = []
     for comissao in Comissao.objects.select_related('contrato__empresa').all():
         data.append([
             comissao.id,
-            comissao.contrato.numero,
-            comissao.contrato.empresa.razao_social,
+            comissao.get_categoria_display(),
+            comissao.descricao_objeto or '',
+            comissao.contrato.numero if comissao.contrato else '-',
+            comissao.contrato.empresa.razao_social if comissao.contrato else '-',
             comissao.get_tipo_display(),
             'Sim' if comissao.ativa else 'Não',
             comissao.portaria_numero or '',
@@ -297,7 +302,7 @@ def nova_designacao_comissao(request, comissao_id):
     
     return render(request, 'contratos/portal/form_generico.html', {
         'form': form,
-        'titulo': f'Nova Designação ({comissao.contrato.numero})'
+        'titulo': f'Nova Designação ({comissao.contrato.numero if comissao.contrato else comissao.get_tipo_display()})'
     })
 
 @admin_required

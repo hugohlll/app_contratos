@@ -20,6 +20,7 @@ class ComissaoFormTest(TestCase):
     def _form_data(self, **overrides):
         """Helper para gerar dados base do formulário."""
         data = {
+            'categoria': 'CONTRATO',
             'contrato': self.contrato.pk,
             'tipo': 'FISCALIZACAO',
             'portaria_numero': '123',
@@ -106,6 +107,26 @@ class ComissaoFormTest(TestCase):
         # Editar a mesma comissão deve ser permitido
         form = ComissaoForm(data=self._form_data(), instance=comissao)
         self.assertTrue(form.is_valid(), f"Deveria permitir editar a própria comissão ativa: {form.errors}")
+
+    def test_categoria_outras_exige_descricao(self):
+        """Testa se escolher a categoria OUTRAS exige a descricao_objeto e anula o contrato"""
+        data = self._form_data(categoria='OUTRAS', tipo='RECEBIMENTO_GERAL', descricao_objeto='')
+        form = ComissaoForm(data=data)
+        self.assertFalse(form.is_valid())
+        # O model.clean() lança erro para descricao_objeto vazio em categoria OUTRAS
+        self.assertIn('descricao_objeto', form.errors)
+
+    def test_categoria_outras_valida(self):
+        """Testa se a categoria OUTRAS funciona corretamente quando tem descricao_objeto"""
+        data = self._form_data(
+            categoria='OUTRAS', 
+            tipo='PLANEJAMENTO', 
+            descricao_objeto='Equipe de Planejamento X',
+            contrato=self.contrato.pk # enviando contrato para testar se o form.clean limpa ele
+        )
+        form = ComissaoForm(data=data)
+        self.assertTrue(form.is_valid(), f"Deveria ser válido: {form.errors}")
+        self.assertIsNone(form.cleaned_data['contrato'])
 
 class EmpresaFormTest(TestCase):
     def test_empresa_form_has_nome_fantasia(self):

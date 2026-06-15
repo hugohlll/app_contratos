@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from datetime import date, timedelta
 
 
@@ -107,13 +108,28 @@ class Contrato(models.Model):
 
 
 class Comissao(models.Model):
+    CATEGORIA_CHOICES = [
+        ('CONTRATO', 'Comissão de Contrato'),
+        ('OUTRAS', 'Outras Comissões'),
+    ]
+    
     TIPO_CHOICES = [
+        # Para contratos
         ('FISCALIZACAO', 'Fiscalização'),
-        ('RECEBIMENTO', 'Recebimento'),
+        ('RECEBIMENTO', 'Recebimento de Contrato'),
+        # Para outras (específicas)
+        ('RECEBIMENTO_GERAL', 'Recebimento (geral)'),
+        ('PLANEJAMENTO', 'Planejamento'),
+        ('AVALIACAO', 'Avaliação'),
+        ('EXAME', 'Exame'),
+        ('LICITACAO', 'Licitação/Contratação'),
+        ('DIVERSAS', 'Diversas'),
     ]
 
-    contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='comissoes')
+    categoria = models.CharField("Categoria", max_length=20, choices=CATEGORIA_CHOICES, default='CONTRATO')
+    contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='comissoes', null=True, blank=True)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='FISCALIZACAO')
+    descricao_objeto = models.TextField("Descrição/Objeto", blank=True, null=True)
     ativa = models.BooleanField(default=False)
 
     # --- CAMPOS DA PORTARIA DA COMISSÃO ---
@@ -123,6 +139,15 @@ class Comissao(models.Model):
     # --- CAMPOSTO DO BOLETIM DA COMISSÃO ---
     boletim_numero = models.CharField("Nº Boletim", max_length=50, blank=True, null=True)
     boletim_data = models.DateField("Data do Boletim", blank=True, null=True)
+    
+    # --- CÓDIGO SILOMS ---
+    codigo_siloms = models.CharField(
+        "Código SILOMS", 
+        max_length=10, 
+        blank=True, 
+        null=True,
+        validators=[RegexValidator(r'^\d{10}$', 'O código SILOMS deve conter exatamente 10 dígitos numéricos.')]
+    )
     
     # VIGÊNCIA DA COMISSÃO (Global)
     data_inicio = models.DateField("Início da Comissão", blank=True, null=True)
@@ -135,8 +160,25 @@ class Comissao(models.Model):
                 f"({self.data_inicio.strftime('%d/%m/%Y')}). "
                 "Deixe-a inativa até que a data de início seja atingida."
             )
+            
+        if self.categoria == 'CONTRATO':
+            if not self.contrato:
+                raise ValidationError({'contrato': 'Para comissões de contrato, o contrato deve ser informado.'})
+            if self.tipo not in ['FISCALIZACAO', 'RECEBIMENTO']:
+                raise ValidationError({'tipo': 'Para comissões de contrato, o tipo deve ser Fiscalização ou Recebimento de Contrato.'})
+            
+        if self.categoria == 'OUTRAS':
+            if not self.descricao_objeto:
+                raise ValidationError({'descricao_objeto': 'A descrição ou objeto da comissão é obrigatória.'})
+            if self.tipo in ['FISCALIZACAO', 'RECEBIMENTO']:
+                raise ValidationError({'tipo': 'Para outras comissões, selecione um tipo específico (exceto os de contrato).'})
 
     def save(self, *args, **kwargs):
+        # Autogeração da descrição para contratos
+        if self.categoria == 'CONTRATO' and self.contrato:
+            tipo_ct = self.contrato.get_tipo_display()
+            self.descricao_objeto = f"Comissão de {self.get_tipo_display()} do Contrato de {tipo_ct} nº {self.contrato.numero} - {self.contrato.objeto}"
+            
         super().save(*args, **kwargs)
         
         # Se a data fim da comissão mudar, precisamos garantir que as designações (integrantes)
@@ -151,7 +193,9 @@ class Comissao(models.Model):
                 Integrante.objects.filter(pk=integrante.pk).update(data_fim=self.data_fim)
 
     def __str__(self):
-        return f"Comissão de {self.get_tipo_display()} - {self.contrato}"
+        if self.categoria == 'CONTRATO' and self.contrato:
+            return f"Comissão de {self.get_tipo_display()} - {self.contrato.numero}"
+        return f"Comissão de {self.get_tipo_display()}"
 
     class Meta:
         verbose_name = "Comissão"
