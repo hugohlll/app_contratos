@@ -129,7 +129,7 @@
                                 <th class="py-3 px-3 cursor-pointer sortable border-0 text-white" data-sort="text"><div class="d-flex justify-content-between align-items-center">Nº<i class="bi bi-arrow-down-up text-white-50 small ms-2"></i></div></th>
                                 <th class="py-3 px-3 cursor-pointer sortable border-0 text-white" data-sort="text"><div class="d-flex justify-content-between align-items-center">Tipo<i class="bi bi-arrow-down-up text-white-50 small ms-2"></i></div></th>
                                 <th class="py-3 px-3 cursor-pointer sortable border-0 text-white" data-sort="text"><div class="d-flex justify-content-between align-items-center">Descrição/Objeto<i class="bi bi-arrow-down-up text-white-50 small ms-2"></i></div></th>
-                                <th class="py-3 px-3 cursor-pointer sortable border-0 text-white" data-sort="text"><div class="d-flex justify-content-between align-items-center">Doc. Publicação<i class="bi bi-arrow-down-up text-white-50 small ms-2"></i></div></th>
+                                <th class="py-3 px-3 cursor-pointer sortable border-0 text-white" data-sort="text"><div class="d-flex justify-content-between align-items-center">Boletim nº<i class="bi bi-arrow-down-up text-white-50 small ms-2"></i></div></th>
                                 <th class="py-3 px-3 cursor-pointer sortable border-0 text-white" data-sort="text"><div class="d-flex justify-content-between align-items-center">Ativa?<i class="bi bi-arrow-down-up text-white-50 small ms-2"></i></div></th>
                                 {% if request.user|is_admin %}
                                 <th class="text-end py-3 px-3 border-0 text-white" style="width: 100px;">Ações</th>
@@ -144,7 +144,7 @@
                                 <td class="px-3">{{ item.descricao_objeto }}</td>
                                 <td class="px-3">
                                     {% if item.boletim_numero %}
-                                        BCA {{ item.boletim_numero }} - {{ item.boletim_data|date:"d/m/Y" }}
+                                        {{ item.boletim_numero }} - {{ item.boletim_data|date:"d/m/Y" }}
                                     {% elif item.portaria_numero %}
                                         Port. {{ item.portaria_numero }} - {{ item.portaria_data|date:"d/m/Y" }}
                                     {% else %}

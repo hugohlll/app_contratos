@@ -67,6 +67,18 @@
                     </div>
 
                     <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.codigo_siloms.id_for_label }}" class="form-label fw-bold">
+                                {{ form.codigo_siloms.label }}
+                            </label>
+                            {{ form.codigo_siloms }}
+                            {% if form.codigo_siloms.errors %}
+                            <div class="text-danger small">{{ form.codigo_siloms.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-3 mb-3">
                             <label for="{{ form.portaria_numero.id_for_label }}" class="form-label fw-bold">
                                 {{ form.portaria_numero.label }}
@@ -284,7 +296,11 @@
                 });
             } else {
                 contratoDiv.style.display = 'none';
-                contratoSelect.value = '';
+                if (contratoSelect.tomselect) {
+                    contratoSelect.tomselect.clear();
+                } else {
+                    contratoSelect.value = '';
+                }
                 descricaoDiv.style.display = 'block';
                 descricaoInput.required = true;
                 
@@ -294,6 +310,24 @@
                         tipoSelect.add(new Option(opt.text, opt.value, false, opt.value === currentTipo));
                     }
                 });
+            }
+
+            // Sync TomSelect if it is already initialized
+            if (tipoSelect.tomselect) {
+                tipoSelect.tomselect.clear(); // Limpa a seleção atual para que o clearOptions remova todas as opções
+                tipoSelect.tomselect.clearOptions();
+                tipoSelect.tomselect.sync();
+                
+                // Maintain the selected value if valid for the current category
+                if (cat === 'CONTRATO') {
+                    if (currentTipo === 'FISCALIZACAO' || currentTipo === 'RECEBIMENTO') {
+                        tipoSelect.tomselect.setValue(currentTipo);
+                    }
+                } else {
+                    if (currentTipo !== 'FISCALIZACAO' && currentTipo !== 'RECEBIMENTO') {
+                        tipoSelect.tomselect.setValue(currentTipo);
+                    }
+                }
             }
         }
 

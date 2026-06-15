@@ -302,7 +302,7 @@ def nova_designacao_comissao(request, comissao_id):
     
     return render(request, 'contratos/portal/form_generico.html', {
         'form': form,
-        'titulo': f'Nova Designação ({comissao.contrato.numero})'
+        'titulo': f'Nova Designação ({comissao.contrato.numero if comissao.contrato else comissao.get_tipo_display()})'
     })
 
 @admin_required

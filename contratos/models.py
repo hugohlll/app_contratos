@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from datetime import date, timedelta
 
 
@@ -139,6 +140,15 @@ class Comissao(models.Model):
     boletim_numero = models.CharField("Nº Boletim", max_length=50, blank=True, null=True)
     boletim_data = models.DateField("Data do Boletim", blank=True, null=True)
     
+    # --- CÓDIGO SILOMS ---
+    codigo_siloms = models.CharField(
+        "Código SILOMS", 
+        max_length=10, 
+        blank=True, 
+        null=True,
+        validators=[RegexValidator(r'^\d{10}$', 'O código SILOMS deve conter exatamente 10 dígitos numéricos.')]
+    )
+    
     # VIGÊNCIA DA COMISSÃO (Global)
     data_inicio = models.DateField("Início da Comissão", blank=True, null=True)
     data_fim = models.DateField("Fim da Comissão", blank=True, null=True)
@@ -151,11 +161,17 @@ class Comissao(models.Model):
                 "Deixe-a inativa até que a data de início seja atingida."
             )
             
-        if self.categoria == 'CONTRATO' and not self.contrato:
-            raise ValidationError({'contrato': 'Para comissões de contrato, o contrato deve ser informado.'})
+        if self.categoria == 'CONTRATO':
+            if not self.contrato:
+                raise ValidationError({'contrato': 'Para comissões de contrato, o contrato deve ser informado.'})
+            if self.tipo not in ['FISCALIZACAO', 'RECEBIMENTO']:
+                raise ValidationError({'tipo': 'Para comissões de contrato, o tipo deve ser Fiscalização ou Recebimento de Contrato.'})
             
-        if self.categoria == 'OUTRAS' and not self.descricao_objeto:
-            raise ValidationError({'descricao_objeto': 'A descrição ou objeto da comissão é obrigatória.'})
+        if self.categoria == 'OUTRAS':
+            if not self.descricao_objeto:
+                raise ValidationError({'descricao_objeto': 'A descrição ou objeto da comissão é obrigatória.'})
+            if self.tipo in ['FISCALIZACAO', 'RECEBIMENTO']:
+                raise ValidationError({'tipo': 'Para outras comissões, selecione um tipo específico (exceto os de contrato).'})
 
     def save(self, *args, **kwargs):
         # Autogeração da descrição para contratos

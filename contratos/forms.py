@@ -2,6 +2,7 @@ from datetime import date, timedelta
 from django import forms
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
 from django.utils.safestring import mark_safe
 from .models import Empresa, Contrato, Agente, Integrante, Comissao, ConfiguracaoSistema
@@ -85,7 +86,7 @@ class AgenteForm(EstiloFormMixin, forms.ModelForm):
 class ComissaoForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = Comissao
-        fields = ['categoria', 'contrato', 'tipo', 'descricao_objeto', 'portaria_numero', 'portaria_data', 'boletim_numero', 'boletim_data', 'data_inicio', 'data_fim', 'ativa']
+        fields = ['categoria', 'contrato', 'tipo', 'descricao_objeto', 'codigo_siloms', 'portaria_numero', 'portaria_data', 'boletim_numero', 'boletim_data', 'data_inicio', 'data_fim', 'ativa']
         widgets = {
             'portaria_data': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
             'boletim_data': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
@@ -155,8 +156,14 @@ class IntegranteForm(EstiloFormMixin, forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Filtra apenas comissões ativas e contratos vigentes para facilitar
-        qs = Comissao.objects.filter(ativa=True, contrato__vigencia_fim__gte=date.today())
+        # Filtra apenas comissões ativas e contratos vigentes para facilitar,
+        # e inclui também as comissões da categoria OUTRAS que não possuem contratos a vencer
+        qs = Comissao.objects.filter(
+            Q(ativa=True) & (
+                Q(contrato__vigencia_fim__gte=date.today()) | 
+                Q(categoria='OUTRAS')
+            )
+        )
         
         # Garante que a comissão atual (mesmo inativa ou vencida) esteja no queryset
         comissao_id = None
@@ -175,7 +182,7 @@ class IntegranteForm(EstiloFormMixin, forms.ModelForm):
         self.fields['comissao'].queryset = qs.distinct()
         
         # Customiza formato com datas para identificar validade
-        self.fields['comissao'].label_from_instance = lambda obj: f"{obj.contrato.numero} ({obj.get_tipo_display()}) - Vigência: {obj.data_inicio or '?'} a {obj.data_fim or '?'}"
+        self.fields['comissao'].label_from_instance = lambda obj: f"{obj.contrato.numero if obj.contrato else obj.get_tipo_display()} ({obj.get_tipo_display()}) - Vigência: {obj.data_inicio or '?'} a {obj.data_fim or '?'}"
         
         # Customiza o label do Agente para facilitar a busca (SARAM - Posto Nome - Nome Completo)
         self.fields['agente'].label_from_instance = lambda obj: f"{obj.saram} - {obj.posto.sigla} {obj.nome_de_guerra} | {obj.nome_completo}"
