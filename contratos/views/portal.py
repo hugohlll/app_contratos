@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib import messages
 from django.urls import reverse
 from django.db.models import Prefetch, Case, When, Value, IntegerField
-from ..models import Empresa, Contrato, Agente, Integrante, Comissao, Funcao, ConfiguracaoSistema
+from ..models import Empresa, Contrato, Agente, Integrante, Comissao, Funcao, ConfiguracaoSistema, CargoRegimental
 from ..forms import EmpresaForm, ContratoForm, AgenteForm, IntegranteForm, ComissaoForm, ConfiguracaoSistemaForm
 
 
@@ -17,10 +17,12 @@ def _get_integrantes_ordenados():
 def portal_home(request):
     """Tela inicial do Portal do Lançador"""
     context = {
+        'total_empresas': Empresa.objects.count(),
         'total_contratos': Contrato.objects.count(),
         'total_agentes': Agente.objects.count(),
         'total_integrantes': Integrante.objects.count(),
         'total_comissoes': Comissao.objects.count(),
+        'total_cargos': CargoRegimental.objects.count(),
     }
     return render(request, 'contratos/portal/home.html', context)
 

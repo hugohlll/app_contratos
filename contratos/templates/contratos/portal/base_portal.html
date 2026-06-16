@@ -87,31 +87,7 @@
                     📋 Prestação de Contas
                 </a>
             </li>
-            <li>
-                <a href="{% url 'listar_empresas' %}" class="{% if 'empresas' in request.path %}active{% endif %}">
-                    🏢 Empresas
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'listar_contratos' %}" class="{% if 'contratos' in request.path %}active{% endif %}">
-                    📜 Contratos
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'listar_agentes' %}" class="{% if 'agentes' in request.path %}active{% endif %}">
-                    👤 Agentes
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'listar_comissoes' %}" class="{% if 'comissoes' in request.path %}active{% endif %}">
-                    👥 Comissões
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'cargos_regimentais' %}" class="{% if 'cargos' in request.path %}active{% endif %}">
-                    🏛️ Cargos Regimentais
-                </a>
-            </li>
+
             {% if request.user.is_superuser %}
             <li>
                 <a href="{% url 'configuracoes_sistema' %}" class="{% if 'configuracoes' in request.path %}active{% endif %}">

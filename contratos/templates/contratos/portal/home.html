@@ -64,6 +64,36 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card card-custom h-100">
+            <div class="card-body text-center p-4">
+                <div class="display-4 mb-3">🏢</div>
+                <h5 class="card-title">Empresas</h5>
+                <p class="card-text text-muted">{{ total_empresas }} registradas</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'listar_empresas' %}" class="btn btn-outline-primary">Listar</a>
+                    {% if request.user|is_admin %}
+                    <a href="{% url 'nova_empresa' %}" class="btn btn-primary">Adicionar Nova</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card card-custom h-100">
+            <div class="card-body text-center p-4">
+                <div class="display-4 mb-3">🏛️</div>
+                <h5 class="card-title">Cargos Regimentais</h5>
+                <p class="card-text text-muted">{{ total_cargos }} registrados</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'cargos_regimentais' %}" class="btn btn-outline-primary">Acessar Cadastros</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row mt-4">
     <div class="col-12">
         <div class="alert alert-info border-0 shadow-sm">
