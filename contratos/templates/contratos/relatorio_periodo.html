@@ -91,13 +91,15 @@
                     <tbody>
                         {% for item in resultados %}
                         <tr>
-                            <td class="fw-bold px-3">{{ item.comissao.contrato.numero }}</td>
-                            <td>
-                                {% if item.comissao.tipo == 'FISCALIZACAO' %}
-                                <span class="badge bg-info text-dark">Fiscalização</span>
+                            <td class="fw-bold px-3">
+                                {% if item.comissao.contrato %}
+                                    {{ item.comissao.contrato.numero }}
                                 {% else %}
-                                <span class="badge bg-warning text-dark">Recebimento</span>
+                                    <span class="text-info">{{ item.comissao.get_tipo_display }}</span>
                                 {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark">{{ item.comissao.get_tipo_display }}</span>
                             </td>
                             <td>
                                 {{ item.posto_graduacao.sigla|default:item.agente.posto.sigla }}

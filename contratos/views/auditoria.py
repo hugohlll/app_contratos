@@ -41,7 +41,7 @@ def painel_controle(request):
     lista_completa = []
     for comissao in comissoes_ativas:
         # Usa data_fim da comissão ou, se não existir, vigencia_fim do contrato
-        data_fim_efetiva = comissao.data_fim or comissao.contrato.vigencia_fim
+        data_fim_efetiva = comissao.data_fim or (comissao.contrato.vigencia_fim if comissao.contrato else None)
         if not data_fim_efetiva:
             continue
             
@@ -83,19 +83,20 @@ def painel_controle(request):
     for atual in integrantes_ativos:
         data_inicio_real = atual.data_inicio
         # Busca recursiva simples para encontrar a data de início real da sequência de designações no mesmo contrato e tipo de comissão
-        while True:
-            dia_anterior = data_inicio_real - timedelta(days=1)
-            designacao_anterior = Integrante.objects.filter(
-                comissao__contrato=atual.comissao.contrato,
-                comissao__tipo=atual.comissao.tipo,
-                agente=atual.agente,
-                funcao=atual.funcao
-            ).filter(Q(data_fim=dia_anterior) | Q(data_desligamento=dia_anterior)).first()
+        if atual.comissao.contrato:
+            while True:
+                dia_anterior = data_inicio_real - timedelta(days=1)
+                designacao_anterior = Integrante.objects.filter(
+                    comissao__contrato=atual.comissao.contrato,
+                    comissao__tipo=atual.comissao.tipo,
+                    agente=atual.agente,
+                    funcao=atual.funcao
+                ).filter(Q(data_fim=dia_anterior) | Q(data_desligamento=dia_anterior)).first()
 
-            if designacao_anterior:
-                data_inicio_real = designacao_anterior.data_inicio
-            else:
-                break
+                if designacao_anterior:
+                    data_inicio_real = designacao_anterior.data_inicio
+                else:
+                    break
 
         dias_totais = (hoje - data_inicio_real).days
         anos, meses = dias_totais // 365, (dias_totais % 365) // 30
@@ -107,10 +108,11 @@ def painel_controle(request):
         elif dias_totais > 365:  # 1 ano
             classe_tempo = 'bg-warning text-dark'
 
+        contrato_ref = atual.comissao.contrato
         radar_permanencia.append({
             'agente': atual.agente,
             'funcao': atual.funcao,
-            'contrato': atual.comissao.contrato,
+            'contrato': contrato_ref,
             'dias_totais': dias_totais,
             'tempo_formatado': f"{anos}a {meses}m ({dias_totais} dias)",
             'inicio_real': data_inicio_real,
@@ -252,7 +254,7 @@ def exportar_vencimentos_csv(request):
 
     lista_export = []
     for comissao in comissoes:
-        data_fim_efetiva = comissao.data_fim or comissao.contrato.vigencia_fim
+        data_fim_efetiva = comissao.data_fim or (comissao.contrato.vigencia_fim if comissao.contrato else None)
         if not data_fim_efetiva:
             continue
             
@@ -263,8 +265,8 @@ def exportar_vencimentos_csv(request):
     lista_export.sort(key=lambda x: x[0])
     for dias, status, comissao, data_fim_efetiva in lista_export:
         data.append([
-            comissao.contrato.numero,
-            comissao.contrato.empresa.razao_social,
+            comissao.contrato.numero if comissao.contrato else comissao.get_tipo_display(),
+            comissao.contrato.empresa.razao_social if comissao.contrato else (comissao.descricao_objeto or '-'),
             comissao.get_tipo_display(),
             data_fim_efetiva.strftime('%d/%m/%Y'),
             status,
@@ -363,7 +365,8 @@ def exportar_qualificacao_csv(request):
 
         data.append([
             nome_completo, item.agente.saram, item.funcao.titulo,
-            item.comissao.contrato.numero, dt_fmt, validade_fmt, situacao
+            item.comissao.contrato.numero if item.comissao.contrato else item.comissao.get_tipo_display(),
+            dt_fmt, validade_fmt, situacao
         ])
         
     return export_csv_or_xlsx(request, 'relatorio_qualificacao_agentes', headers, data)
@@ -397,10 +400,17 @@ def exportar_relatorio_periodo_csv(request):
             posto = r.posto_graduacao.sigla if r.posto_graduacao else r.agente.posto.sigla
             nome_completo = f"{posto} {r.agente.nome_de_guerra}"
             
-            tipo_label = "Fiscalização" if r.comissao.tipo == 'FISCALIZACAO' else "Recebimento"
+            tipo_label = r.comissao.get_tipo_display()
             
+            if r.comissao.contrato:
+                contrato_numero = r.comissao.contrato.numero
+                empresa_nome = r.comissao.contrato.empresa.razao_social
+            else:
+                contrato_numero = tipo_label
+                empresa_nome = (r.comissao.descricao_objeto or '-')[:50]
+
             data.append([
-                r.comissao.contrato.numero, tipo_label, r.comissao.contrato.empresa.razao_social,
+                contrato_numero, tipo_label, empresa_nome,
                 nome_completo, r.agente.saram, r.agente.cpf or '-', r.funcao.titulo,
                 r.data_inicio.strftime('%d/%m/%Y'), fim_fmt, 
                 r.portaria_numero, data_port, bol_num, bol_data
@@ -458,7 +468,7 @@ def exportar_radar_permanencia_csv(request):
         data.append([
             f"{item['agente'].posto.sigla} {item['agente'].nome_de_guerra}",
             item['funcao'].titulo,
-            item['contrato'].numero,
+            item['contrato'].numero if item['contrato'] else '-',
             item['dias_totais'],
             item['tempo_formatado'],
             item['inicio_real'].strftime('%d/%m/%Y')
