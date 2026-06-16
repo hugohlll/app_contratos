@@ -60,12 +60,19 @@ def exportar_historico_militar_csv(request):
             fim_real = item.data_desligamento.strftime('%d/%m/%Y') if item.data_desligamento else "-"
             motivo = item.motivo_desligamento if item.motivo_desligamento else "-"
 
+            if item.comissao.contrato:
+                contrato_numero = item.comissao.contrato.numero
+                contrato_objeto = item.comissao.contrato.objeto[:50]
+            else:
+                contrato_numero = item.comissao.get_tipo_display()
+                contrato_objeto = (item.comissao.descricao_objeto or '-')[:50]
+
             data.append([
                 item.agente.nome_de_guerra,
                 item.agente.saram,
                 status,
-                item.comissao.contrato.numero,
-                item.comissao.contrato.objeto[:50],
+                contrato_numero,
+                contrato_objeto,
                 item.funcao.titulo,
                 inicio,
                 fim_prev,

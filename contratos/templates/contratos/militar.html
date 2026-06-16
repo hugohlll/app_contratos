@@ -84,6 +84,7 @@
                                 </td>
                                 <td>{{ item.funcao.titulo }}</td>
                                 <td>
+                                    {% if item.comissao.contrato %}
                                     <a href="{% url 'detalhe_contrato' item.comissao.contrato.id %}"
                                     class="text-decoration-none fw-bold">
                                         {{ item.comissao.contrato.numero }}
@@ -91,6 +92,14 @@
                                     <div class="small text-muted text-truncate" style="max-width: 250px;" title="{% if item.comissao.contrato.empresa.nome_fantasia %}{{ item.comissao.contrato.empresa.razao_social }}{% endif %}">
                                         {{ item.comissao.contrato.empresa.nome_exibicao }}
                                     </div>
+                                    {% else %}
+                                    <span class="fw-bold text-info">{{ item.comissao.get_tipo_display }}</span>
+                                    {% if item.comissao.descricao_objeto %}
+                                    <div class="small text-muted text-truncate" style="max-width: 250px;" title="{{ item.comissao.descricao_objeto }}">
+                                        {{ item.comissao.descricao_objeto|truncatechars:60 }}
+                                    </div>
+                                    {% endif %}
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column">
