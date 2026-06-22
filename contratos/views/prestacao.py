@@ -885,7 +885,7 @@ def consolidar_apresentacao(request):
         compor_apresentacao=True,
         status='ok'
     ).select_related('agente', 'agente__posto', 'contrato').order_by(
-        'agente__posto__senioridade', 'agente__nome_de_guerra'
+        'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
     )
 
     if not prestacoes.exists():
