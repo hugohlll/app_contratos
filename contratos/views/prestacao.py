@@ -5,7 +5,7 @@ from django.urls import reverse
 from urllib.parse import urlencode
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count, Q, Prefetch
+from django.db.models import Count, Max, Q, Prefetch
 from django.http import HttpResponse, Http404, JsonResponse
 from django.views.decorators.http import require_POST
 import json
@@ -946,10 +946,15 @@ def consolidar_apresentacao(request):
         vigencia_fim__gte=hoje
     )
 
-    prestacoes = list(PrestacaoContas.objects.filter(
+    # Filtrar apenas o registro mais recente por contrato (mesma lógica do dashboard)
+    latest_ids = PrestacaoContas.objects.filter(
         mes_referencia=filtro_mes,
         ano_referencia=filtro_ano,
-        contrato__in=contratos_vigentes,
+        contrato__in=contratos_vigentes
+    ).values('contrato_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
+
+    prestacoes = list(PrestacaoContas.objects.filter(
+        id__in=latest_ids,
         compor_apresentacao=True,
         status='ok'
     ).select_related('agente', 'agente__posto', 'contrato').order_by(
@@ -1049,9 +1054,14 @@ def consolidar_apresentacao_setor(request):
     except (ValueError, TypeError):
         filtro_ano = hoje.year
 
-    prestacoes = list(PrestacaoContasSetor.objects.filter(
+    # Filtrar apenas o registro mais recente por setor (mesma lógica do dashboard)
+    latest_setor_ids = PrestacaoContasSetor.objects.filter(
         mes_referencia=filtro_mes,
-        ano_referencia=filtro_ano,
+        ano_referencia=filtro_ano
+    ).values('setor_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
+
+    prestacoes = list(PrestacaoContasSetor.objects.filter(
+        id__in=latest_setor_ids,
         compor_apresentacao=True,
         status='ok'
     ).select_related('agente', 'agente__posto', 'setor').order_by(

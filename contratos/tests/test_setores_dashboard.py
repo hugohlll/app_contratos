@@ -49,7 +49,8 @@ class SetoresDashboardTests(TestCase):
             ano_referencia=self.hoje.year,
             status='ok',
             agente=self.agente,
-            arquivo=self.pdf_file
+            arquivo=self.pdf_file,
+            compor_apresentacao=True
         )
         # Setor BRAV has status entregue (aguardando analise)
         PrestacaoContasSetor.objects.create(
@@ -57,7 +58,8 @@ class SetoresDashboardTests(TestCase):
             mes_referencia=self.hoje.month,
             ano_referencia=self.hoje.year,
             status='entregue',
-            agente=self.agente
+            agente=self.agente,
+            compor_apresentacao=True
         )
         # Setor CHAR has no submission (should count as pendente)
         
@@ -90,7 +92,8 @@ class SetoresDashboardTests(TestCase):
             ano_referencia=self.hoje.year,
             status='ok',
             agente=self.agente,
-            arquivo=self.pdf_file
+            arquivo=self.pdf_file,
+            compor_apresentacao=True
         )
         
         self.client.login(username='admin_test', password='password123')
@@ -142,4 +145,68 @@ class SetoresDashboardTests(TestCase):
         url = reverse('consolidar_apresentacao_setor')
         response = self.client.get(url)
         self.assertNotEqual(response.status_code, 200)
+
+    def test_consolidar_setor_sem_duplicacao_envios_multiplos(self):
+        """Regressão: setor que enviou slides duas vezes não deve gerar duplicação na consolidação.
+
+        Cenário real de produção: setor envia, auditor aprova como OK, setor reenvia
+        (atualização), auditor aprova novamente. Apenas o envio mais recente deve ser
+        consolidado no PDF final.
+        """
+        from pypdf import PdfWriter
+
+        # Gera dois PDFs distintos (1 página cada)
+        def _make_pdf():
+            writer = PdfWriter()
+            writer.add_blank_page(width=72, height=72)
+            buf = io.BytesIO()
+            writer.write(buf)
+            buf.seek(0)
+            return SimpleUploadedFile("slide.pdf", buf.read(), content_type="application/pdf")
+
+        # Primeiro envio: aprovado como OK com compor_apresentacao
+        PrestacaoContasSetor.objects.create(
+            setor=self.setor1,
+            mes_referencia=self.hoje.month,
+            ano_referencia=self.hoje.year,
+            status='ok',
+            agente=self.agente,
+            arquivo=_make_pdf(),
+            compor_apresentacao=True
+        )
+
+        # Segundo envio (atualização): também aprovado como OK, herda compor_apresentacao
+        PrestacaoContasSetor.objects.create(
+            setor=self.setor1,
+            mes_referencia=self.hoje.month,
+            ano_referencia=self.hoje.year,
+            status='ok',
+            agente=self.agente,
+            arquivo=_make_pdf(),
+            compor_apresentacao=True
+        )
+
+        # Confirma que existem 2 registros no BD para o mesmo setor/mês
+        total = PrestacaoContasSetor.objects.filter(
+            setor=self.setor1,
+            mes_referencia=self.hoje.month,
+            ano_referencia=self.hoje.year,
+            status='ok',
+            compor_apresentacao=True
+        ).count()
+        self.assertEqual(total, 2, "Setup: devem existir 2 registros OK no BD")
+
+        self.client.login(username='admin_test', password='password123')
+        url = reverse('consolidar_apresentacao_setor') + f"?mes={self.hoje.month}&ano={self.hoje.year}"
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+        # O PDF consolidado deve conter apenas 1 página (somente o envio mais recente)
+        pdf_reader = PdfReader(io.BytesIO(response.content))
+        self.assertEqual(
+            len(pdf_reader.pages), 1,
+            "Consolidação não deve duplicar slides de setores com múltiplos envios"
+        )
 
