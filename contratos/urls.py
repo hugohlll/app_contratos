@@ -105,6 +105,11 @@ urlpatterns = [
     path('portal/prestacao/setor/toggle_apresentacao/', prestacao.toggle_apresentacao_prestacao_setor, name='toggle_apresentacao_prestacao_setor'),
     path('portal/prestacao/setor/consolidar/', prestacao.consolidar_apresentacao_setor, name='consolidar_apresentacao_setor'),
 
+    # Slides Avulsos
+    path('portal/prestacao/slide/upload/', prestacao.upload_slide_avulso, name='upload_slide_avulso'),
+    path('portal/prestacao/slide/excluir/<int:pk>/', prestacao.excluir_slide_avulso, name='excluir_slide_avulso'),
+    path('portal/prestacao/slide/reordenar/', prestacao.reordenar_slide_avulso, name='reordenar_slide_avulso'),
+
     # --- CARGOS REGIMENTAIS ---
     path('portal/cargos/', cargos.cargos_regimentais, name='cargos_regimentais'),
     path('portal/cargos/editar/<int:pk>/', cargos.editar_cargo_regimental, name='editar_cargo_regimental'),

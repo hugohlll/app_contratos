@@ -119,6 +119,11 @@
                 <h6 class="m-0 fw-bold text-secondary">
                     <i class="bi bi-person-lines-fill me-2 text-primary"></i>Fiscais (Apresentação)
                 </h6>
+                {% if is_admin or is_auditor %}
+                <button class="btn btn-sm btn-outline-primary btn-add-slide" data-tipo="fiscais" data-bs-toggle="modal" data-bs-target="#modalSlideAvulso" title="Inserir Slide Avulso">
+                    <i class="bi bi-plus-circle"></i> Slide
+                </button>
+                {% endif %}
             </div>
             <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
                 <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem;">
@@ -131,6 +136,21 @@
                     </thead>
                     <tbody id="tabelaGestoresPrioritarios">
                         {% for gestor in gestores_prio %}
+                        {% if gestor.is_slide %}
+                        <tr class="slide-avulso-row" data-slide-id="{{ gestor.id }}" style="cursor: grab; background-color: #f8f9fa;">
+                            <td colspan="2" class="ps-3 text-secondary">
+                                <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
+                                <strong>{{ gestor.nome_slide }}</strong> (Slide Avulso)
+                            </td>
+                            <td class="text-center">
+                                {% if is_admin or is_auditor %}
+                                <button type="button" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-slide" data-id="{{ gestor.id }}" title="Excluir Slide">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
                         <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" style="cursor: grab;">
                             <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
                             <td>{{ gestor.contrato }}</td>
@@ -141,9 +161,12 @@
                                     <span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>
                                 {% elif gestor.status == 'correcao' %}
                                     <span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>
+                                {% else %}
+                                    <span class="badge bg-secondary" title="Pendente"><i class="bi bi-dash-circle"></i></span>
                                 {% endif %}
                             </td>
                         </tr>
+                        {% endif %}
                         {% empty %}
                         <tr>
                             <td colspan="3" class="text-center text-muted py-4">Nenhuma entrega prioritária.</td>
@@ -347,6 +370,11 @@
                     <h6 class="m-0 fw-bold text-secondary">
                         <i class="bi bi-person-lines-fill me-2 text-primary"></i>Gestores (Apresentação)
                     </h6>
+                    {% if is_admin or is_auditor %}
+                    <button class="btn btn-sm btn-outline-primary btn-add-slide" data-tipo="gestores" data-bs-toggle="modal" data-bs-target="#modalSlideAvulso" title="Inserir Slide Avulso">
+                        <i class="bi bi-plus-circle"></i> Slide
+                    </button>
+                    {% endif %}
                 </div>
                 <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
                     <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem;">
@@ -359,6 +387,21 @@
                         </thead>
                         <tbody id="tabelaGestoresSetores">
                             {% for gestor in gestores_setores %}
+                            {% if gestor.is_slide %}
+                            <tr class="slide-avulso-row" data-slide-id="{{ gestor.id }}" style="cursor: grab; background-color: #f8f9fa;">
+                                <td colspan="2" class="ps-3 text-secondary">
+                                    <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
+                                    <strong>{{ gestor.nome_slide }}</strong> (Slide Avulso)
+                                </td>
+                                <td class="text-center">
+                                    {% if is_admin or is_auditor %}
+                                    <button type="button" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-slide" data-id="{{ gestor.id }}" title="Excluir Slide">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
                             <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" style="cursor: grab;">
                                 <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
                                 <td>{{ gestor.setor }}</td>
@@ -369,9 +412,12 @@
                                         <span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>
                                     {% elif gestor.status == 'correcao' %}
                                         <span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>
+                                    {% else %}
+                                        <span class="badge bg-secondary" title="Pendente"><i class="bi bi-dash-circle"></i></span>
                                     {% endif %}
                                 </td>
                             </tr>
+                            {% endif %}
                             {% empty %}
                             <tr>
                                 <td colspan="3" class="text-center text-muted py-4">Nenhuma entrega de setor.</td>
@@ -822,23 +868,45 @@
             }
             
             let html = '';
+            const isAdminOuAuditor = {{ is_admin|yesno:"true,false" }} || {{ is_auditor|yesno:"true,false" }};
+            
             gestores.forEach(g => {
-                let statusBadge = '';
-                if (g.status === 'ok') {
-                    statusBadge = '<span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>';
-                } else if (g.status === 'entregue') {
-                    statusBadge = '<span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>';
-                } else if (g.status === 'correcao') {
-                    statusBadge = '<span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>';
+                if (g.is_slide) {
+                    let btnExcluir = '';
+                    if (isAdminOuAuditor) {
+                        btnExcluir = `<button type="button" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-slide" data-id="${g.id}" title="Excluir Slide"><i class="bi bi-trash"></i></button>`;
+                    }
+                    html += `
+                        <tr class="slide-avulso-row" data-slide-id="${g.id}" style="cursor: grab; background-color: #f8f9fa;">
+                            <td colspan="2" class="ps-3 text-secondary">
+                                <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
+                                <strong>${g.nome_slide}</strong> (Slide Avulso)
+                            </td>
+                            <td class="text-center">
+                                ${btnExcluir}
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    let statusBadge = '';
+                    if (g.status === 'ok') {
+                        statusBadge = '<span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>';
+                    } else if (g.status === 'entregue') {
+                        statusBadge = '<span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>';
+                    } else if (g.status === 'correcao') {
+                        statusBadge = '<span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>';
+                    } else {
+                        statusBadge = '<span class="badge bg-secondary" title="Pendente"><i class="bi bi-dash-circle"></i></span>';
+                    }
+                    
+                    html += `
+                        <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" style="cursor: grab;">
+                            <td class="ps-3"><strong>${g.gestor}</strong></td>
+                            <td>${g.contrato}</td>
+                            <td class="text-center">${statusBadge}</td>
+                        </tr>
+                    `;
                 }
-                
-                html += `
-                    <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" style="cursor: grab;">
-                        <td class="ps-3"><strong>${g.gestor}</strong></td>
-                        <td>${g.contrato}</td>
-                        <td class="text-center">${statusBadge}</td>
-                    </tr>
-                `;
             });
             tbody.innerHTML = html;
         }
@@ -853,23 +921,45 @@
             }
             
             let html = '';
+            const isAdminOuAuditor = {{ is_admin|yesno:"true,false" }} || {{ is_auditor|yesno:"true,false" }};
+            
             gestores.forEach(g => {
-                let statusBadge = '';
-                if (g.status === 'ok') {
-                    statusBadge = '<span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>';
-                } else if (g.status === 'entregue') {
-                    statusBadge = '<span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>';
-                } else if (g.status === 'correcao') {
-                    statusBadge = '<span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>';
+                if (g.is_slide) {
+                    let btnExcluir = '';
+                    if (isAdminOuAuditor) {
+                        btnExcluir = `<button type="button" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-slide" data-id="${g.id}" title="Excluir Slide"><i class="bi bi-trash"></i></button>`;
+                    }
+                    html += `
+                        <tr class="slide-avulso-row" data-slide-id="${g.id}" style="cursor: grab; background-color: #f8f9fa;">
+                            <td colspan="2" class="ps-3 text-secondary">
+                                <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
+                                <strong>${g.nome_slide}</strong> (Slide Avulso)
+                            </td>
+                            <td class="text-center">
+                                ${btnExcluir}
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    let statusBadge = '';
+                    if (g.status === 'ok') {
+                        statusBadge = '<span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>';
+                    } else if (g.status === 'entregue') {
+                        statusBadge = '<span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>';
+                    } else if (g.status === 'correcao') {
+                        statusBadge = '<span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>';
+                    } else {
+                        statusBadge = '<span class="badge bg-secondary" title="Pendente"><i class="bi bi-dash-circle"></i></span>';
+                    }
+                    
+                    html += `
+                        <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" style="cursor: grab;">
+                            <td class="ps-3"><strong>${g.gestor}</strong></td>
+                            <td>${g.setor}</td>
+                            <td class="text-center">${statusBadge}</td>
+                        </tr>
+                    `;
                 }
-                
-                html += `
-                    <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" style="cursor: grab;">
-                        <td class="ps-3"><strong>${g.gestor}</strong></td>
-                        <td>${g.setor}</td>
-                        <td class="text-center">${statusBadge}</td>
-                    </tr>
-                `;
             });
             tbody.innerHTML = html;
         }
@@ -1397,8 +1487,11 @@
         if (tbodyPrioritarios) {
             Sortable.create(tbodyPrioritarios, {
                 animation: 150,
-                handle: '.gestor-row',
+                handle: 'tr',
                 onMove: function (evt) {
+                    const isSlide = evt.dragged.classList.contains('slide-avulso-row') || evt.related.classList.contains('slide-avulso-row');
+                    if (isSlide) return true;
+                    
                     // Permitir arrastar apenas se o alvo tiver o mesmo posto_id
                     const draggedPosto = evt.dragged.getAttribute('data-posto-id');
                     const targetPosto = evt.related.getAttribute('data-posto-id');
@@ -1407,6 +1500,20 @@
                     }
                 },
                 onEnd: function (evt) {
+                    if (evt.item.classList.contains('slide-avulso-row')) {
+                        const slideId = evt.item.getAttribute('data-slide-id');
+                        const newIndex = evt.newIndex;
+                        fetch("{% url 'reordenar_slide_avulso' %}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ slide_id: slideId, new_index: newIndex })
+                        }).catch(err => console.error('Erro ao reordenar slide:', err));
+                        return;
+                    }
+
                     const postoId = evt.item.getAttribute('data-posto-id');
                     if (!postoId || postoId === "None" || postoId === "null") return;
                     
@@ -1438,8 +1545,11 @@
         if (tbodySetores) {
             Sortable.create(tbodySetores, {
                 animation: 150,
-                handle: '.gestor-row',
+                handle: 'tr',
                 onMove: function (evt) {
+                    const isSlide = evt.dragged.classList.contains('slide-avulso-row') || evt.related.classList.contains('slide-avulso-row');
+                    if (isSlide) return true;
+                    
                     const draggedPosto = evt.dragged.getAttribute('data-posto-id');
                     const targetPosto = evt.related.getAttribute('data-posto-id');
                     if (draggedPosto !== targetPosto) {
@@ -1447,6 +1557,20 @@
                     }
                 },
                 onEnd: function (evt) {
+                    if (evt.item.classList.contains('slide-avulso-row')) {
+                        const slideId = evt.item.getAttribute('data-slide-id');
+                        const newIndex = evt.newIndex;
+                        fetch("{% url 'reordenar_slide_avulso' %}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ slide_id: slideId, new_index: newIndex })
+                        }).catch(err => console.error('Erro ao reordenar slide:', err));
+                        return;
+                    }
+
                     const postoId = evt.item.getAttribute('data-posto-id');
                     if (!postoId || postoId === "None" || postoId === "null") return;
                     
@@ -1473,6 +1597,76 @@
                 }
             });
         }
+    });
+
+    // Lógica para adicionar e excluir Slides Avulsos
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('.btn-add-slide').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tipo = this.getAttribute('data-tipo');
+                document.getElementById('slideTipoApresentacao').value = tipo;
+                document.getElementById('formSlideAvulso').reset();
+            });
+        });
+
+        document.getElementById('btnSalvarSlide').addEventListener('click', function() {
+            const form = document.getElementById('formSlideAvulso');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const formData = new FormData(form);
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
+            
+            fetch("{% url 'upload_slide_avulso' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Recarrega para ver a lista atualizada
+                } else {
+                    alert('Erro ao salvar slide: ' + data.error);
+                }
+            })
+            .catch(err => {
+                alert('Erro de rede ao salvar slide.');
+                console.error(err);
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = 'Salvar Slide';
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            const btnExcluir = e.target.closest('.btn-excluir-slide');
+            if (btnExcluir) {
+                if (confirm('Tem certeza que deseja excluir este slide?')) {
+                    const slideId = btnExcluir.getAttribute('data-id');
+                    fetch(`/portal/prestacao/slide/excluir/${slideId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.success) {
+                            location.reload();
+                        } else {
+                            alert('Erro ao excluir slide.');
+                        }
+                    });
+                }
+            }
+        });
     });
 </script>
 <script>
@@ -1531,4 +1725,35 @@
     });
 
 </script>
+<!-- Modal de Slide Avulso -->
+<div class="modal fade" id="modalSlideAvulso" tabindex="-1" aria-labelledby="modalSlideAvulsoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSlideAvulsoLabel">Inserir Slide Avulso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formSlideAvulso">
+                    <input type="hidden" name="tipo_apresentacao" id="slideTipoApresentacao">
+                    <input type="hidden" name="mes_referencia" value="{{ filtro_mes }}">
+                    <input type="hidden" name="ano_referencia" value="{{ filtro_ano|stringformat:'d' }}">
+                    <div class="mb-3">
+                        <label for="slideNome" class="form-label">Nome do Slide</label>
+                        <input type="text" class="form-control" id="slideNome" name="nome_slide" required placeholder="Ex: Capa Inicial, Encerramento">
+                    </div>
+                    <div class="mb-3">
+                        <label for="slideArquivo" class="form-label">Arquivo PDF</label>
+                        <input class="form-control" type="file" id="slideArquivo" name="arquivo" accept=".pdf" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSalvarSlide">Salvar Slide</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

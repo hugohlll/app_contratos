@@ -13,7 +13,7 @@ from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils import timezone
 
-from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao, Setor, PrestacaoContasSetor, ApontamentoCorrecaoSetor
+from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao, Setor, PrestacaoContasSetor, ApontamentoCorrecaoSetor, SlideApresentacao
 from contratos.forms import PrestacaoContasUploadForm, PrestacaoContasSetorUploadForm
 from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx, get_filtro_ativos, is_admin, is_auditor
 
@@ -229,11 +229,30 @@ def _get_dashboard_stats(ano, mes):
     gestores_prio = []
     for g in lista_gestores_prio:
         gestores_prio.append({
+            'is_slide': False,
             'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
             'agente_id': g.agente.id if g.agente else None,
             'posto_id': g.agente.posto.id if g.agente and g.agente.posto else None,
             'contrato': g.contrato.numero,
             'status': g.status
+        })
+        
+    slides_fiscais = list(SlideApresentacao.objects.filter(
+        tipo_apresentacao='fiscais',
+        ano_referencia=ano,
+        mes_referencia=mes
+    ).order_by('indice_posicao', 'data_registro'))
+    
+    # Inserir os slides na lista baseado no indice_posicao
+    for s in slides_fiscais:
+        idx = int(s.indice_posicao)
+        if idx > len(gestores_prio):
+            idx = len(gestores_prio)
+        gestores_prio.insert(idx, {
+            'is_slide': True,
+            'id': s.id,
+            'nome_slide': s.nome_slide,
+            'indice_posicao': s.indice_posicao
         })
         
     # Estatísticas de Setores
@@ -265,11 +284,30 @@ def _get_dashboard_stats(ano, mes):
     gestores_setores = []
     for g in lista_gestores_setores:
         gestores_setores.append({
+            'is_slide': False,
             'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
             'agente_id': g.agente.id if g.agente else None,
             'posto_id': g.agente.posto.id if g.agente and g.agente.posto else None,
             'setor': g.setor.sigla or g.setor.nome,
             'status': g.status
+        })
+
+    slides_gestores = list(SlideApresentacao.objects.filter(
+        tipo_apresentacao='gestores',
+        ano_referencia=ano,
+        mes_referencia=mes
+    ).order_by('indice_posicao', 'data_registro'))
+    
+    # Inserir os slides na lista baseado no indice_posicao
+    for s in slides_gestores:
+        idx = int(s.indice_posicao)
+        if idx > len(gestores_setores):
+            idx = len(gestores_setores)
+        gestores_setores.insert(idx, {
+            'is_slide': True,
+            'id': s.id,
+            'nome_slide': s.nome_slide,
+            'indice_posicao': s.indice_posicao
         })
     
     return {
@@ -878,7 +916,7 @@ def consolidar_apresentacao(request):
         vigencia_fim__gte=hoje
     )
 
-    prestacoes = PrestacaoContas.objects.filter(
+    prestacoes = list(PrestacaoContas.objects.filter(
         mes_referencia=filtro_mes,
         ano_referencia=filtro_ano,
         contrato__in=contratos_vigentes,
@@ -886,24 +924,46 @@ def consolidar_apresentacao(request):
         status='ok'
     ).select_related('agente', 'agente__posto', 'contrato').order_by(
         'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
-    )
+    ))
 
-    if not prestacoes.exists():
-        messages.warning(request, "Nenhum slide prioritário em conformidade para consolidar.")
+    slides_avulsos = list(SlideApresentacao.objects.filter(
+        tipo_apresentacao='fiscais',
+        ano_referencia=filtro_ano,
+        mes_referencia=filtro_mes
+    ).order_by('indice_posicao', 'data_registro'))
+
+    if not prestacoes and not slides_avulsos:
+        messages.warning(request, "Nenhum slide em conformidade para consolidar.")
         qs = urlencode({'mes': filtro_mes, 'ano': filtro_ano})
         return redirect(f"{reverse('dashboard_prestacao')}?{qs}")
+
+    # Mescla as listas usando o indice_posicao
+    itens_consolidados = prestacoes.copy()
+    for s in slides_avulsos:
+        idx = int(s.indice_posicao)
+        if idx > len(itens_consolidados):
+            idx = len(itens_consolidados)
+        itens_consolidados.insert(idx, s)
 
     writer = PdfWriter()
     erros = []
 
-    for p in prestacoes:
-        if not p.arquivo:
-            erros.append(f"Contrato {p.contrato.numero}: registro sem arquivo.")
+    for item in itens_consolidados:
+        is_slide_avulso = isinstance(item, SlideApresentacao)
+        
+        if not item.arquivo:
+            if is_slide_avulso:
+                erros.append(f"Slide avulso '{item.nome_slide}' sem arquivo.")
+            else:
+                erros.append(f"Contrato {item.contrato.numero}: registro sem arquivo.")
             continue
 
-        caminho = p.arquivo.path
+        caminho = item.arquivo.path
         if not os.path.isfile(caminho):
-            erros.append(f"Contrato {p.contrato.numero}: arquivo não encontrado no servidor.")
+            if is_slide_avulso:
+                erros.append(f"Slide avulso '{item.nome_slide}': arquivo não encontrado no servidor.")
+            else:
+                erros.append(f"Contrato {item.contrato.numero}: arquivo não encontrado no servidor.")
             continue
 
         try:
@@ -911,7 +971,10 @@ def consolidar_apresentacao(request):
             for page in reader.pages:
                 writer.add_page(page)
         except Exception as e:
-            erros.append(f"Contrato {p.contrato.numero}: erro ao ler PDF ({e}).")
+            if is_slide_avulso:
+                erros.append(f"Slide avulso '{item.nome_slide}': erro ao ler PDF ({e}).")
+            else:
+                erros.append(f"Contrato {item.contrato.numero}: erro ao ler PDF ({e}).")
 
     if erros:
         for erro in erros:
@@ -956,31 +1019,53 @@ def consolidar_apresentacao_setor(request):
     except (ValueError, TypeError):
         filtro_ano = hoje.year
 
-    prestacoes = PrestacaoContasSetor.objects.filter(
+    prestacoes = list(PrestacaoContasSetor.objects.filter(
         mes_referencia=filtro_mes,
         ano_referencia=filtro_ano,
         compor_apresentacao=True,
         status='ok'
     ).select_related('agente', 'agente__posto', 'setor').order_by(
         'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
-    )
+    ))
 
-    if not prestacoes.exists():
+    slides_avulsos = list(SlideApresentacao.objects.filter(
+        tipo_apresentacao='gestores',
+        ano_referencia=filtro_ano,
+        mes_referencia=filtro_mes
+    ).order_by('indice_posicao', 'data_registro'))
+
+    if not prestacoes and not slides_avulsos:
         messages.warning(request, "Nenhum slide em conformidade para consolidar.")
         qs = urlencode({'mes': filtro_mes, 'ano': filtro_ano})
         return redirect(f"{reverse('dashboard_prestacao')}?{qs}&tab=setores")
 
+    # Mescla as listas usando o indice_posicao
+    itens_consolidados = prestacoes.copy()
+    for s in slides_avulsos:
+        idx = int(s.indice_posicao)
+        if idx > len(itens_consolidados):
+            idx = len(itens_consolidados)
+        itens_consolidados.insert(idx, s)
+
     writer = PdfWriter()
     erros = []
 
-    for p in prestacoes:
-        if not p.arquivo:
-            erros.append(f"Setor {p.setor.sigla or p.setor.nome}: registro sem arquivo.")
+    for item in itens_consolidados:
+        is_slide_avulso = isinstance(item, SlideApresentacao)
+
+        if not item.arquivo:
+            if is_slide_avulso:
+                erros.append(f"Slide avulso '{item.nome_slide}' sem arquivo.")
+            else:
+                erros.append(f"Setor {item.setor.sigla or item.setor.nome}: registro sem arquivo.")
             continue
 
-        caminho = p.arquivo.path
+        caminho = item.arquivo.path
         if not os.path.isfile(caminho):
-            erros.append(f"Setor {p.setor.sigla or p.setor.nome}: arquivo não encontrado no servidor.")
+            if is_slide_avulso:
+                erros.append(f"Slide avulso '{item.nome_slide}': arquivo não encontrado no servidor.")
+            else:
+                erros.append(f"Setor {item.setor.sigla or item.setor.nome}: arquivo não encontrado no servidor.")
             continue
 
         try:
@@ -988,7 +1073,10 @@ def consolidar_apresentacao_setor(request):
             for page in reader.pages:
                 writer.add_page(page)
         except Exception as e:
-            erros.append(f"Setor {p.setor.sigla or p.setor.nome}: erro ao ler PDF ({e}).")
+            if is_slide_avulso:
+                erros.append(f"Slide avulso '{item.nome_slide}': erro ao ler PDF ({e}).")
+            else:
+                erros.append(f"Setor {item.setor.sigla or item.setor.nome}: erro ao ler PDF ({e}).")
 
     if erros:
         for erro in erros:
@@ -1330,3 +1418,93 @@ def exportar_historico_prestacao_setor_csv(request):
         
     nome_arquivo = "historico_prestacao_contas_setores_completo"
     return export_csv_or_xlsx(request, nome_arquivo, headers, data)
+
+
+@login_required
+@require_POST
+def upload_slide_avulso(request):
+    """Faz o upload de um slide avulso para a apresentação do mês/ano via AJAX."""
+    if not is_auditor(request.user) and not is_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Acesso negado.'}, status=403)
+        
+    tipo = request.POST.get('tipo_apresentacao')
+    ano = request.POST.get('ano_referencia')
+    mes = request.POST.get('mes_referencia')
+    nome_slide = request.POST.get('nome_slide')
+    arquivo = request.FILES.get('arquivo')
+    
+    if not all([tipo, ano, mes, nome_slide, arquivo]):
+        return JsonResponse({'success': False, 'error': 'Preencha todos os campos e anexe o arquivo PDF.'}, status=400)
+        
+    if not arquivo.name.lower().endswith('.pdf'):
+        return JsonResponse({'success': False, 'error': 'Apenas arquivos PDF são permitidos.'}, status=400)
+        
+    try:
+        ano = int(str(ano).replace('.', ''))
+        mes = int(mes)
+        
+        # Encontra o maior indice_posicao para este grupo para inserir no final por padrão
+        from django.db.models import Max
+        max_indice = SlideApresentacao.objects.filter(
+            tipo_apresentacao=tipo,
+            ano_referencia=ano,
+            mes_referencia=mes
+        ).aggregate(Max('indice_posicao'))['indice_posicao__max']
+        
+        proximo_indice = (max_indice + 1) if max_indice is not None else 0.0
+        
+        slide = SlideApresentacao.objects.create(
+            tipo_apresentacao=tipo,
+            ano_referencia=ano,
+            mes_referencia=mes,
+            nome_slide=nome_slide,
+            arquivo=arquivo,
+            indice_posicao=proximo_indice,
+            autor=request.user
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'slide': {
+                'id': slide.id,
+                'nome': slide.nome_slide,
+                'indice_posicao': slide.indice_posicao
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@login_required
+@require_POST
+def excluir_slide_avulso(request, pk):
+    """Exclui um slide avulso via AJAX."""
+    if not is_auditor(request.user) and not is_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Acesso negado.'}, status=403)
+        
+    slide = get_object_or_404(SlideApresentacao, pk=pk)
+    
+    # Remove the actual file from disk
+    if slide.arquivo and os.path.isfile(slide.arquivo.path):
+        os.remove(slide.arquivo.path)
+        
+    slide.delete()
+    return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def reordenar_slide_avulso(request):
+    """Recebe {slide_id: ID, new_index: POSICAO_ABSOLUTA} e atualiza a ordem via AJAX."""
+    if not is_auditor(request.user) and not is_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Acesso negado.'}, status=403)
+        
+    try:
+        data = json.loads(request.body)
+        slide_id = data.get('slide_id')
+        new_index = float(data.get('new_index'))
+        
+        SlideApresentacao.objects.filter(id=slide_id).update(indice_posicao=new_index)
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+

@@ -524,3 +524,34 @@ class ConfiguracaoSistema(models.Model):
 
     def __str__(self):
         return "Configurações Gerais"
+
+
+def upload_slide_avulso_path(instance, filename):
+    """
+    Gera caminho: slides_avulsos/{tipo}/{ano}/{mes}/{nome_limpo}.pdf
+    """
+    nome_limpo = slugify(instance.nome_slide)[:30]
+    return f"slides_avulsos/{instance.tipo_apresentacao}/{instance.ano_referencia}/{instance.mes_referencia:02d}/{nome_limpo}.pdf"
+
+
+class SlideApresentacao(models.Model):
+    TIPO_CHOICES = [
+        ('fiscais', 'Fiscais'),
+        ('gestores', 'Gestores'),
+    ]
+    tipo_apresentacao = models.CharField("Tipo de Apresentação", max_length=15, choices=TIPO_CHOICES)
+    ano_referencia = models.IntegerField("Ano de Referência")
+    mes_referencia = models.IntegerField("Mês de Referência")
+    nome_slide = models.CharField("Nome do Slide", max_length=100)
+    arquivo = models.FileField("Arquivo PDF", upload_to=upload_slide_avulso_path)
+    indice_posicao = models.FloatField("Posição na Apresentação", default=999.0, help_text="Define a ordem do slide na apresentação (menor valor aparece antes).")
+    data_registro = models.DateTimeField(auto_now_add=True)
+    autor = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, verbose_name="Enviado por")
+
+    class Meta:
+        verbose_name = "Slide Avulso"
+        verbose_name_plural = "Slides Avulsos"
+        ordering = ['indice_posicao', 'data_registro']
+
+    def __str__(self):
+        return f"Slide {self.nome_slide} ({self.get_tipo_apresentacao_display()}) - {self.mes_referencia:02d}/{self.ano_referencia}"
