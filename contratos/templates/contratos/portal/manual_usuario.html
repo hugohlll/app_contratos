@@ -122,6 +122,7 @@
                     <li class="nav-item"><a class="nav-link ms-3" href="#matriz-acompanhamento">Matriz de Acompanhamento</a></li>
                     <li class="nav-item"><a class="nav-link ms-3" href="#prestacao-setores">Gestores de Setor</a></li>
                     <li class="nav-item"><a class="nav-link ms-3" href="#consolidacao-pdf">Consolidação de PDF</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#slides-avulsos">Slides Avulsos</a></li>
                     <li class="nav-item"><a class="nav-link ms-3" href="#calendario-entregas">Calendário de Entregas</a></li>
                 </ul>
             </li>
@@ -259,6 +260,29 @@
                 <li>Estar marcado no checkbox <strong>Prioritário</strong>.</li>
             </ol>
             <p>O documento gerado já é baixado ordenado hierarquicamente pelas patentes dos gestores, do mais antigo ao mais moderno, conforme determinação regulamentar. Adicionalmente, os gestores podem ser ordenados manualmente (arrastando-os no painel) entre militares de mesma patente para um ajuste fino da apresentação.</p>
+            <p>Além dos slides dos militares, o PDF consolidado também incorpora automaticamente os <strong>Slides Avulsos</strong> inseridos pelo auditor (ver seção abaixo), respeitando a posição definida pelo arraste na lista.</p>
+
+            <h3 id="slides-avulsos">📎 Slides Avulsos (Injeção Manual)</h3>
+            <p>Para melhorar a experiência visual da apresentação, o sistema permite que auditores e administradores <strong>insiram slides padronizados em PDF</strong> diretamente na lista de apresentação. Exemplos de uso:</p>
+            <ul>
+                <li><strong>Capa inicial</strong> com a identidade visual da organização.</li>
+                <li><strong>Slides de transição</strong> entre blocos de gestores.</li>
+                <li><strong>Encerramento</strong> com informações de contato ou próximas etapas.</li>
+            </ul>
+            <h4>Como inserir um Slide Avulso</h4>
+            <ol>
+                <li>No Dashboard de Prestação de Contas, localize o quadro <strong>"Fiscais (Apresentação)"</strong> ou <strong>"Setores (Apresentação)"</strong>.</li>
+                <li>Clique no botão <strong><i class="bi bi-plus-circle"></i> Slide</strong> no canto superior direito do quadro.</li>
+                <li>Preencha o <strong>Nome do Slide</strong> (ex: "Capa", "Encerramento") e selecione o arquivo PDF.</li>
+                <li>Clique em <strong>Salvar Slide</strong>. O slide será inserido automaticamente no final da lista.</li>
+            </ol>
+            <h4>Ordenação livre por arraste</h4>
+            <p>Diferente dos militares (que só podem ser reordenados entre pares de mesma patente), os slides avulsos podem ser <strong>arrastados livremente para qualquer posição</strong> da lista: no topo (antes de todos os militares), no meio (entre dois gestores de patentes diferentes) ou no final. A posição é salva automaticamente.</p>
+            <h4>Exclusão</h4>
+            <p>Para remover um slide avulso, clique no ícone <i class="bi bi-trash text-danger"></i> ao lado do nome do slide na lista de apresentação. A exclusão é imediata e recarrega a página.</p>
+            <div class="alert alert-info py-2">
+                <i class="bi bi-info-circle-fill me-2"></i> <strong>Observação:</strong> Os slides avulsos são vinculados ao <strong>mês e ano de referência</strong> selecionados no filtro. Um slide inserido no mês de Maio/2026 só aparecerá quando o filtro estiver configurado para esse período.
+            </div>
 
             <h3 id="calendario-entregas">📅 Calendário de Entregas</h3>
             <p>O Dashboard de Prestação de Contas permite ao auditor definir um <strong>Calendário Mensal de Entregas</strong> contendo três datas-chave:</p>
