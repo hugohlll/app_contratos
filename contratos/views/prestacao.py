@@ -575,7 +575,8 @@ def exportar_prestacao_csv(request):
         ))
     )
 
-    from django.db.models import Max
+    from django.db.models import Max, Min
+    from contratos.models import CalendarioPrestacao
 
     # Obter IDs das prestações mais recentes por contrato (pode haver múltiplos envios por período)
     # Exclui registros com status 'pendente' que são registros sem envio efetivo (sem arquivo/agente)
@@ -593,6 +594,18 @@ def exportar_prestacao_csv(request):
 
     prestacoes_map = {p.contrato_id: p for p in prestacoes}
 
+    primeiras_entregas = PrestacaoContas.objects.filter(
+        mes_referencia=filtro_mes,
+        ano_referencia=filtro_ano,
+        contrato__in=contratos_vigentes
+    ).exclude(status='pendente').values('contrato_id').annotate(
+        primeiro_envio=Min('data_envio')
+    )
+    primeiras_entregas_map = {item['contrato_id']: item['primeiro_envio'] for item in primeiras_entregas}
+
+    cal = CalendarioPrestacao.objects.filter(mes=filtro_mes, ano=filtro_ano).first()
+    data_entrega_limite = cal.data_entrega if cal else None
+
     headers = [
         'Contrato',
         'PAG',
@@ -607,6 +620,8 @@ def exportar_prestacao_csv(request):
         'Fiscal',
         'Responsável pela Entrega',
         'Data/Hora do Último Envio',
+        'Data/Hora do Primeiro Envio',
+        'Status Primeiro Envio',
         'Observações do Fiscal',
         'Motivo da Correção'
     ]
@@ -625,6 +640,19 @@ def exportar_prestacao_csv(request):
                 fiscal_oficial = f"{posto} {principal.agente.nome_de_guerra}"
 
         p = prestacoes_map.get(c.id)
+        
+        primeiro_envio_dt = primeiras_entregas_map.get(c.id)
+        if primeiro_envio_dt:
+            primeiro_envio_str = timezone.localtime(primeiro_envio_dt).strftime("%d/%m/%Y %H:%M")
+            if data_entrega_limite:
+                dt_localtime = timezone.localtime(primeiro_envio_dt).date()
+                status_primeiro_envio = 'Atraso' if dt_localtime > data_entrega_limite else 'Ok'
+            else:
+                status_primeiro_envio = '-'
+        else:
+            primeiro_envio_str = '-'
+            status_primeiro_envio = '-'
+
         if p:
             situacao = p.get_status_display()
             responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
@@ -653,6 +681,8 @@ def exportar_prestacao_csv(request):
             fiscal_oficial,
             responsavel,
             data_envio,
+            primeiro_envio_str,
+            status_primeiro_envio,
             observacao,
             motivo_correcao
         ])
@@ -1130,12 +1160,23 @@ def exportar_historico_prestacao_csv(request):
     Exporta o histórico completo de prestações de contas (todos os envios de todos os contratos).
     Restrito a usuários logados.
     """
+    from django.db.models import Min
+    from contratos.models import CalendarioPrestacao
+
     prestacoes = PrestacaoContas.objects.exclude(status='pendente').select_related(
         'contrato', 'contrato__empresa', 'agente', 'agente__posto'
     ).prefetch_related(
         Prefetch('apontamentos', queryset=ApontamentoCorrecao.objects.order_by('-data_registro'))
     ).order_by('-data_envio')
     
+    calendarios = CalendarioPrestacao.objects.all()
+    cal_map = {(c.mes, c.ano): c.data_entrega for c in calendarios}
+
+    primeiros_envios = PrestacaoContas.objects.exclude(status='pendente').values(
+        'contrato_id', 'mes_referencia', 'ano_referencia'
+    ).annotate(primeiro_envio=Min('data_envio'))
+    primeiros_envios_map = {(item['contrato_id'], item['mes_referencia'], item['ano_referencia']): item['primeiro_envio'] for item in primeiros_envios}
+
     headers = [
         'Contrato',
         'PAG',
@@ -1147,6 +1188,8 @@ def exportar_historico_prestacao_csv(request):
         'Ano de Referência',
         'Fiscal Responsável',
         'Data/Hora de Envio',
+        'Data/Hora do Primeiro Envio',
+        'Status Primeiro Envio',
         'Status (Situação)',
         'Observações do Fiscal',
         'Motivo da Correção'
@@ -1156,6 +1199,20 @@ def exportar_historico_prestacao_csv(request):
     for p in prestacoes:
         responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
         data_envio = timezone.localtime(p.data_envio).strftime("%d/%m/%Y %H:%M")
+        
+        primeiro_envio_dt = primeiros_envios_map.get((p.contrato_id, p.mes_referencia, p.ano_referencia))
+        if primeiro_envio_dt:
+            primeiro_envio_str = timezone.localtime(primeiro_envio_dt).strftime("%d/%m/%Y %H:%M")
+            data_entrega_limite = cal_map.get((p.mes_referencia, p.ano_referencia))
+            if data_entrega_limite:
+                dt_localtime = timezone.localtime(primeiro_envio_dt).date()
+                status_primeiro_envio = 'Atraso' if dt_localtime > data_entrega_limite else 'Ok'
+            else:
+                status_primeiro_envio = '-'
+        else:
+            primeiro_envio_str = '-'
+            status_primeiro_envio = '-'
+
         apontamento = p.apontamentos.first()
         motivo_correcao = apontamento.descricao if apontamento else '-'
         
@@ -1170,6 +1227,8 @@ def exportar_historico_prestacao_csv(request):
             str(p.ano_referencia),
             responsavel,
             data_envio,
+            primeiro_envio_str,
+            status_primeiro_envio,
             p.get_status_display(),
             p.observacao or '-',
             motivo_correcao
@@ -1306,7 +1365,8 @@ def exportar_prestacao_setor_csv(request):
 
     setores = Setor.objects.all().prefetch_related('cargos__agente__posto').order_by('nome')
 
-    from django.db.models import Max
+    from django.db.models import Max, Min
+    from contratos.models import CalendarioPrestacao
 
     # Obter IDs das prestações mais recentes por setor
     latest_ids = PrestacaoContasSetor.objects.filter(
@@ -1323,6 +1383,18 @@ def exportar_prestacao_setor_csv(request):
 
     prestacoes_map = {p.setor_id: p for p in prestacoes}
 
+    primeiras_entregas = PrestacaoContasSetor.objects.filter(
+        mes_referencia=filtro_mes,
+        ano_referencia=filtro_ano,
+        setor__in=setores
+    ).exclude(status='pendente').values('setor_id').annotate(
+        primeiro_envio=Min('data_envio')
+    )
+    primeiras_entregas_map = {item['setor_id']: item['primeiro_envio'] for item in primeiras_entregas}
+
+    cal = CalendarioPrestacao.objects.filter(mes=filtro_mes, ano=filtro_ano).first()
+    data_entrega_limite = cal.data_entrega if cal else None
+
     headers = [
         'Setor',
         'Sigla',
@@ -1330,6 +1402,8 @@ def exportar_prestacao_setor_csv(request):
         'Situação',
         'Responsável pela Entrega',
         'Data/Hora do Último Envio',
+        'Data/Hora do Primeiro Envio',
+        'Status Primeiro Envio',
         'Observações do Gestor',
         'Motivo da Correção'
     ]
@@ -1337,6 +1411,19 @@ def exportar_prestacao_setor_csv(request):
 
     for s in setores:
         p = prestacoes_map.get(s.id)
+        
+        primeiro_envio_dt = primeiras_entregas_map.get(s.id)
+        if primeiro_envio_dt:
+            primeiro_envio_str = timezone.localtime(primeiro_envio_dt).strftime("%d/%m/%Y %H:%M")
+            if data_entrega_limite:
+                dt_localtime = timezone.localtime(primeiro_envio_dt).date()
+                status_primeiro_envio = 'Atraso' if dt_localtime > data_entrega_limite else 'Ok'
+            else:
+                status_primeiro_envio = '-'
+        else:
+            primeiro_envio_str = '-'
+            status_primeiro_envio = '-'
+
         if p:
             situacao = p.get_status_display()
             responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
@@ -1365,6 +1452,8 @@ def exportar_prestacao_setor_csv(request):
             situacao,
             responsavel,
             data_envio,
+            primeiro_envio_str,
+            status_primeiro_envio,
             observacao,
             motivo_correcao
         ])
@@ -1379,12 +1468,23 @@ def exportar_historico_prestacao_setor_csv(request):
     Exporta o histórico completo de prestações de contas (todos os envios de todos os setores).
     Restrito a usuários logados.
     """
+    from django.db.models import Min
+    from contratos.models import CalendarioPrestacao
+
     prestacoes = PrestacaoContasSetor.objects.exclude(status='pendente').select_related(
         'setor', 'agente', 'agente__posto'
     ).prefetch_related(
         Prefetch('apontamentos', queryset=ApontamentoCorrecaoSetor.objects.order_by('-data_registro'))
     ).order_by('-data_envio')
     
+    calendarios = CalendarioPrestacao.objects.all()
+    cal_map = {(c.mes, c.ano): c.data_entrega for c in calendarios}
+
+    primeiros_envios = PrestacaoContasSetor.objects.exclude(status='pendente').values(
+        'setor_id', 'mes_referencia', 'ano_referencia'
+    ).annotate(primeiro_envio=Min('data_envio'))
+    primeiros_envios_map = {(item['setor_id'], item['mes_referencia'], item['ano_referencia']): item['primeiro_envio'] for item in primeiros_envios}
+
     headers = [
         'Setor',
         'Sigla',
@@ -1392,6 +1492,8 @@ def exportar_historico_prestacao_setor_csv(request):
         'Ano de Referência',
         'Responsável pela Entrega',
         'Data/Hora de Envio',
+        'Data/Hora do Primeiro Envio',
+        'Status Primeiro Envio',
         'Status (Situação)',
         'Observações do Gestor',
         'Motivo da Correção'
@@ -1401,6 +1503,20 @@ def exportar_historico_prestacao_setor_csv(request):
     for p in prestacoes:
         responsavel = f"{p.agente.posto.sigla} {p.agente.nome_de_guerra}" if p.agente else "Não informado"
         data_envio = timezone.localtime(p.data_envio).strftime("%d/%m/%Y %H:%M")
+        
+        primeiro_envio_dt = primeiros_envios_map.get((p.setor_id, p.mes_referencia, p.ano_referencia))
+        if primeiro_envio_dt:
+            primeiro_envio_str = timezone.localtime(primeiro_envio_dt).strftime("%d/%m/%Y %H:%M")
+            data_entrega_limite = cal_map.get((p.mes_referencia, p.ano_referencia))
+            if data_entrega_limite:
+                dt_localtime = timezone.localtime(primeiro_envio_dt).date()
+                status_primeiro_envio = 'Atraso' if dt_localtime > data_entrega_limite else 'Ok'
+            else:
+                status_primeiro_envio = '-'
+        else:
+            primeiro_envio_str = '-'
+            status_primeiro_envio = '-'
+
         apontamento = p.apontamentos.first()
         motivo_correcao = apontamento.descricao if apontamento else '-'
         
@@ -1411,6 +1527,8 @@ def exportar_historico_prestacao_setor_csv(request):
             str(p.ano_referencia),
             responsavel,
             data_envio,
+            primeiro_envio_str,
+            status_primeiro_envio,
             p.get_status_display(),
             p.observacao or '-',
             motivo_correcao
