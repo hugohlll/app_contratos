@@ -108,3 +108,59 @@ class TestComissaoManagementCommands(TestCase):
         self.assertTrue(comissao_future_end_date.ativa, "Comissão com data de fim no futuro deveria ser ativada.")
         self.assertFalse(comissao_expired.ativa, "Comissão expirada NÃO deveria ser ativada.")
         self.assertIn("Processo concluído. 2 comissão(ões) ativada(s).", out.getvalue())
+
+    def test_ativar_comissoes_nao_permite_duplicidade_mesmo_contrato(self):
+        """
+        Reproduz o bug reportado: uma comissão inativa sem data de término
+        NÃO deve ser ativada se já existe outra comissão ativa do mesmo tipo
+        para o mesmo contrato.
+        """
+        # Comissão de fiscalização vigente (a que está correta)
+        comissao_vigente = Comissao.objects.create(
+            contrato=self.contrato,
+            tipo='FISCALIZACAO',
+            ativa=True,
+            data_inicio=self.hoje - timedelta(days=30),
+            data_fim=self.hoje + timedelta(days=60)
+        )
+
+        # Comissão criada por engano anteriormente, sem data de término,
+        # que estava inativa. A rotina NÃO deve ativá-la.
+        comissao_engano = Comissao.objects.create(
+            contrato=self.contrato,
+            tipo='FISCALIZACAO',
+            ativa=False,
+            data_inicio=self.hoje - timedelta(days=90),
+            data_fim=None  # Sem data de término
+        )
+
+        # Uma comissão de RECEBIMENTO inativa do mesmo contrato, sem conflito —
+        # esta DEVE ser ativada normalmente.
+        comissao_recebimento = Comissao.objects.create(
+            contrato=self.contrato,
+            tipo='RECEBIMENTO',
+            ativa=False,
+            data_inicio=self.hoje - timedelta(days=5),
+            data_fim=self.hoje + timedelta(days=30)
+        )
+
+        out = StringIO()
+        call_command('ativar_comissoes_iniciadas', stdout=out)
+
+        comissao_vigente.refresh_from_db()
+        comissao_engano.refresh_from_db()
+        comissao_recebimento.refresh_from_db()
+
+        # A comissão vigente continua ativa
+        self.assertTrue(comissao_vigente.ativa)
+        # A comissão equivocada NÃO deve ter sido ativada (evita duplicata)
+        self.assertFalse(comissao_engano.ativa,
+            "Comissão duplicada do mesmo tipo NÃO deveria ser ativada quando já existe outra ativa.")
+        # A comissão de recebimento deve ser ativada normalmente (tipo diferente)
+        self.assertTrue(comissao_recebimento.ativa,
+            "Comissão de tipo diferente deveria ser ativada normalmente.")
+        # Verifica que o log registrou a comissão ignorada
+        self.assertIn("IGNORADA", out.getvalue())
+        self.assertIn("Processo concluído. 1 comissão(ões) ativada(s).", out.getvalue())
+        self.assertIn("1 comissão(ões) ignorada(s) por conflito de duplicidade.", out.getvalue())
+
