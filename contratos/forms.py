@@ -430,6 +430,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             'possibilidade_aditivo': forms.RadioSelect(),
             'tratativas_120_dias': forms.RadioSelect(),
             'coordenacao_doc_scon': forms.RadioSelect(),
+            'cronograma_fisico_financeiro': forms.RadioSelect(),
             'notas_empenho': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Ex: 2026NE000123, 2026NE000456'}),
             'obs_sem_empenho': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Detalhar gestões providenciadas no SILOMS...'}),
             'detalhamento_cronograma': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Descreva brevemente o status da execução...'}),

@@ -169,7 +169,17 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-6"><label class="form-label fw-bold">Notas de Empenho</label>{{ form.notas_empenho }}</div>
                 <div class="col-md-6"><label class="form-label fw-bold">Obs. sem empenho</label>{{ form.obs_sem_empenho }}</div>
-                <div class="col-12"><label class="form-label fw-bold">Cronograma Físico-Financeiro</label>{{ form.cronograma_fisico_financeiro }}</div>
+                <div class="col-12">
+                    <label class="form-label fw-bold small d-block mb-2">Cronograma Físico-Financeiro</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for radio in form.cronograma_fisico_financeiro %}
+                        <div class="form-check form-check-inline mb-0 me-3">
+                            {{ radio.tag }}
+                            <label class="form-check-label fw-bold ms-1" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
             <h6 class="fw-bold text-primary mb-2"><i class="bi bi-receipt me-1"></i>Faturas Registradas no Mês</h6>
             <div class="table-responsive mb-2">
