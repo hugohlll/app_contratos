@@ -297,18 +297,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const tbodyFat = document.getElementById('tbodyFaturas');
     const inputFat = document.getElementById('faturas_json_input');
     let faturas = []; try { faturas = JSON.parse(inputFat.value || '[]'); } catch(e) {}
+
+    function applyCurrencyMask(val) {
+        let digits = String(val || '').replace(/\D/g, '');
+        if (!digits) return '0,00';
+        let cents = parseInt(digits, 10);
+        return (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
     function renderFat() {
         tbodyFat.innerHTML = '';
-        if (!faturas.length) { tbodyFat.innerHTML = '<tr><td colspan="4" class="text-center text-muted small">Nenhuma fatura.</td></tr>'; return; }
+        if (!faturas.length) { tbodyFat.innerHTML = '<tr><td colspan="4" class="text-center text-muted small">Nenhuma fatura cadastrada. Clique no botão "Adicionar Fatura" abaixo.</td></tr>'; return; }
         faturas.forEach((f,i) => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td><input type="text" class="form-control form-control-sm fn" value="${f.numero_nf||''}" data-i="${i}"></td><td><input type="number" step="0.01" class="form-control form-control-sm fv" value="${f.valor||0}" data-i="${i}"></td><td><input type="text" class="form-control form-control-sm fo" value="${f.numero_ob||''}" data-i="${i}"></td><td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm fd" data-i="${i}"><i class="bi bi-trash"></i></button></td>`;
+            let valFormatted = applyCurrencyMask(Math.round((parseFloat(f.valor) || 0) * 100));
+            tr.innerHTML = `<td><input type="text" class="form-control form-control-sm fn" value="${f.numero_nf||''}" data-i="${i}" placeholder="Ex: 2023555"></td>` +
+                           `<td><input type="text" inputmode="numeric" class="form-control form-control-sm fv" value="${valFormatted}" data-i="${i}" placeholder="0,00"></td>` +
+                           `<td><input type="text" class="form-control form-control-sm fo" value="${f.numero_ob||''}" data-i="${i}" placeholder="Ex: 20233"></td>` +
+                           `<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm fd" data-i="${i}"><i class="bi bi-trash"></i></button></td>`;
             tbodyFat.appendChild(tr);
         });
         inputFat.value = JSON.stringify(faturas);
     }
     document.getElementById('btnAdicionarFatura').addEventListener('click', () => { faturas.push({numero_nf:'',valor:0,numero_ob:''}); renderFat(); });
-    tbodyFat.addEventListener('change', e => { const i=e.target.dataset.i; if(i!==undefined){if(e.target.classList.contains('fn'))faturas[i].numero_nf=e.target.value;if(e.target.classList.contains('fv'))faturas[i].valor=parseFloat(e.target.value)||0;if(e.target.classList.contains('fo'))faturas[i].numero_ob=e.target.value;inputFat.value=JSON.stringify(faturas);} });
+
+    tbodyFat.addEventListener('input', e => {
+        const i = e.target.dataset.i;
+        if (i === undefined) return;
+        if (e.target.classList.contains('fv')) {
+            let masked = applyCurrencyMask(e.target.value);
+            e.target.value = masked;
+            let digits = e.target.value.replace(/\D/g, '');
+            faturas[i].valor = (parseInt(digits, 10) || 0) / 100;
+            inputFat.value = JSON.stringify(faturas);
+        } else if (e.target.classList.contains('fn')) {
+            faturas[i].numero_nf = e.target.value;
+            inputFat.value = JSON.stringify(faturas);
+        } else if (e.target.classList.contains('fo')) {
+            faturas[i].numero_ob = e.target.value;
+            inputFat.value = JSON.stringify(faturas);
+        }
+    });
+
     tbodyFat.addEventListener('click', e => { const b=e.target.closest('.fd'); if(b){faturas.splice(b.dataset.i,1);renderFat();} });
     renderFat();
 
