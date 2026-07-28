@@ -1,0 +1,50 @@
+{% extends 'contratos/prestacao/base_prestacao_publica.html' %}
+{% load static %}
+
+{% block title %}Controle de Execução Contratual - SISCONT{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-5 fw-bold mb-2">Controle de Execução Contratual</h1>
+        <h2 class="h5 text-secondary font-monospace mb-4">LIVRO DO FISCAL DIGITAL</h2>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="alert alert-info shadow-sm mb-4 border-start border-4 border-info">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-calendar-event fs-3 me-3 text-info"></i>
+                        <div class="text-start">
+                            <h5 class="mb-0 fw-bold">Mês de Referência: {{ nome_mes_referencia }}/{{ ano_referencia|stringformat:"d" }}</h5>
+                            {% if data_limite %}
+                            <p class="mb-0 text-dark">Prazo limite: <strong class="text-danger">{{ data_limite|date:"d/m/Y" }}</strong></p>
+                            {% else %}
+                            <p class="mb-0 text-muted">Prazo limite: <span class="badge bg-secondary">A ser definido pela ACI</span></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden mb-4">
+                    <div class="card-body p-4 text-center">
+                        <span class="badge bg-primary rounded-circle p-3 mb-3 d-inline-block">
+                            <i class="bi bi-journal-check fs-2 text-white"></i>
+                        </span>
+                        <h4 class="card-title fw-bold text-dark mb-2">Fiscais de Contrato</h4>
+                        <p class="card-text text-muted mb-4">
+                            Preencha o registro mensal de acompanhamento da execução contratual (Livro do Fiscal) com apoio de assistente virtual para registro de ocorrências.
+                        </p>
+                        <a href="{% url 'portal_execucao_fiscais' %}" class="btn btn-primary btn-lg w-100 py-3 rounded-3 fw-bold shadow-sm">
+                            <i class="bi bi-pencil-square me-2"></i> Preencher Livro do Fiscal
+                        </a>
+                    </div>
+                </div>
+
+                <a href="{% url 'portal_prestacao_index' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Ir para Entrega de Slides
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,333 @@
+{% extends 'contratos/prestacao/base_prestacao_publica.html' %}
+{% block title %}Livro do Fiscal - {{ contrato.numero }} - SISCONT{% endblock %}
+{% block extra_css %}
+<style>
+.chat-card { background: #f8f9fa; border-radius: 1rem; border: 1px solid #dee2e6; }
+.chat-bubble-bot { background: #e9ecef; color: #212529; border-radius: 1rem 1rem 1rem .2rem; padding: .75rem 1rem; max-width: 85%; margin-bottom: .75rem; }
+.chat-bubble-user { background: #0d6efd; color: #fff; border-radius: 1rem 1rem .2rem 1rem; padding: .75rem 1rem; max-width: 85%; margin-left: auto; margin-bottom: .75rem; }
+.section-header { background: #0d6efd; color: #fff; padding: .6rem 1rem; border-radius: .5rem; font-weight: 600; margin-bottom: 1.25rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% url 'portal_execucao_fiscais' %}" class="btn btn-outline-secondary btn-sm me-3"><i class="bi bi-arrow-left"></i> Voltar</a>
+        <div>
+            <h2 class="h4 mb-0 fw-bold">Livro do Fiscal Digital</h2>
+            <p class="text-muted mb-0 small">Contrato {{ contrato.numero }} — Ref. {{ mes_referencia|stringformat:"02d" }}/{{ ano_referencia|stringformat:"d" }}</p>
+        </div>
+    </div>
+    {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
+
+    <form method="post" id="formLivroFiscal">
+        {% csrf_token %}
+        {{ form.mes_referencia }}{{ form.ano_referencia }}
+        <input type="hidden" name="faturas_json" id="faturas_json_input" value="{{ faturas_json }}">
+        <input type="hidden" name="ocorrencias_json" id="ocorrencias_json_input" value="{{ ocorrencias_json }}">
+
+        <!-- SEÇÃO 1 -->
+        <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
+            <div class="section-header"><i class="bi bi-card-heading me-2"></i>Seção 1: Identificação</div>
+            <div class="row g-3 bg-light p-3 rounded mb-3">
+                <div class="col-md-4"><label class="form-label text-muted small fw-bold mb-0">Contrato</label><div class="fw-bold fs-6 text-primary">{{ contrato.numero }}</div></div>
+                <div class="col-md-8"><label class="form-label text-muted small fw-bold mb-0">Empresa</label><div class="fw-bold fs-6">{{ contrato.empresa.razao_social|default:"Não informada" }}</div></div>
+                <div class="col-12"><label class="form-label text-muted small fw-bold mb-0">Objeto</label><div class="small text-secondary">{{ contrato.objeto }}</div></div>
+                <div class="col-md-6"><label class="form-label text-muted small fw-bold mb-0">Vigência</label><div class="small fw-bold">{{ contrato.vigencia_inicio|date:"d/m/Y" }} até {{ contrato.vigencia_fim|date:"d/m/Y" }}</div></div>
+                <div class="col-md-6"><label class="form-label text-muted small fw-bold mb-0">Comissão Ativa</label><div class="small fw-bold">{% if comissao %}{{ comissao.portaria_numero }}{% else %}<span class="text-danger">Sem comissão ativa</span>{% endif %}</div></div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6"><label for="{{ form.agente.id_for_label }}" class="form-label fw-bold">Fiscal Responsável <span class="text-danger">*</span></label>{{ form.agente }}</div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold d-block">Houve substituição de fiscal?</label>
+                    <div class="d-flex gap-3 align-items-center mt-2">
+                        {% for radio in form.houve_substituicao %}
+                        <div class="form-check form-check-inline mb-0">
+                            {{ radio.tag }}
+                            <label class="form-check-label fw-bold ms-1" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6 div-substituicao" style="display:none">
+                    <label class="form-label fw-bold">Entrega formal dos registros pelo substituto?</label>
+                    {{ form.substituicao_entrega_formal }}
+                    <small class="form-text text-muted d-block mt-1">
+                        <i class="bi bi-info-circle me-1"></i>Confirmação se os registros, documentos e histórico foram entregues formalmente pelo antecessor, garantindo a continuidade e integridade no acompanhamento contratual.
+                    </small>
+                </div>
+                <div class="col-md-6 div-substituicao" style="display:none"><label class="form-label fw-bold">Observações da Transição</label>{{ form.substituicao_obs }}</div>
+            </div>
+        </div></div>
+
+        <!-- SEÇÃO 2 -->
+        <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
+            <div class="section-header"><i class="bi bi-clock-history me-2"></i>Seção 2: Controle de Prazos e SILOMS</div>
+
+            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-check2-square me-1"></i>Verificações de Lançamento no SILOMS</h6>
+            <div class="bg-light p-3 rounded mb-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small d-block mb-2">Prazos de assinatura/início atualizados no SILOMS?</label>
+                        <div class="d-flex gap-3">
+                            {% for radio in form.confirmacao_siloms_assinatura %}
+                            <div class="form-check form-check-inline mb-0 me-2">
+                                {{ radio.tag }}
+                                <label class="form-check-label fw-bold ms-1" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small d-block mb-2">Vigência (incluindo aditivos) correta no SILOMS?</label>
+                        <div class="d-flex gap-3">
+                            {% for radio in form.confirmacao_siloms_vigencia %}
+                            <div class="form-check form-check-inline mb-0 me-2">
+                                {{ radio.tag }}
+                                <label class="form-check-label fw-bold ms-1" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small d-block mb-2">Execução físico-financeira / OS consta no SILOMS?</label>
+                        <div class="d-flex gap-3">
+                            {% for radio in form.confirmacao_siloms_execucao %}
+                            <div class="form-check form-check-inline mb-0 me-2">
+                                {{ radio.tag }}
+                                <label class="form-check-label fw-bold ms-1" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-calendar-range me-1"></i>Acompanhamento de Aditivação e Prazos</h6>
+            
+            <!-- Prazos Calculados para Aditivo -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded border border-primary border-opacity-25 h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="text-primary fw-bold small text-uppercase"><i class="bi bi-calendar-check me-1"></i>Data Recomendada (120 dias antes)</span>
+                            <span class="badge bg-primary fs-6">{{ contrato.data_recomendada_aditivo|date:"d/m/Y"|default:"—" }}</span>
+                        </div>
+                        <small class="text-muted d-block mt-1">Data recomendada para início das tratativas relacionadas à renovação (aditivo), calculada automaticamente (120 dias antes do término da vigência em {{ contrato.vigencia_fim|date:"d/m/Y" }}).</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded border border-warning border-opacity-50 h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="text-dark fw-bold small text-uppercase"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Data Limite (90 dias antes)</span>
+                            <span class="badge bg-warning text-dark fs-6">{{ contrato.data_limite_aditivo|date:"d/m/Y"|default:"—" }}</span>
+                        </div>
+                        <small class="text-muted d-block mt-1">Data limite para o início das tratativas sobre renovação (aditivo), calculada automaticamente (90 dias antes do término da vigência em {{ contrato.vigencia_fim|date:"d/m/Y" }}).</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small d-block mb-2">Contrato admite termo aditivo?</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for radio in form.possibilidade_aditivo %}
+                        <div class="form-check form-check-inline mb-0 me-2">
+                            {{ radio.tag }}
+                            <label class="form-check-label fw-bold ms-1" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small d-block mb-2">Iniciadas tratativas 120 dias antes?</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for radio in form.tratativas_120_dias %}
+                        <div class="form-check form-check-inline mb-0 me-2">
+                            {{ radio.tag }}
+                            <label class="form-check-label fw-bold ms-1" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small d-block mb-2">Coordenada informação com DOC/SCON?</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for radio in form.coordenacao_doc_scon %}
+                        <div class="form-check form-check-inline mb-0 me-2">
+                            {{ radio.tag }}
+                            <label class="form-check-label fw-bold ms-1" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div></div>
+
+        <!-- SEÇÃO 3 -->
+        <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
+            <div class="section-header"><i class="bi bi-cash-stack me-2"></i>Seção 3: Execução Orçamentária e Financeira</div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6"><label class="form-label fw-bold">Notas de Empenho</label>{{ form.notas_empenho }}</div>
+                <div class="col-md-6"><label class="form-label fw-bold">Obs. sem empenho</label>{{ form.obs_sem_empenho }}</div>
+                <div class="col-12"><label class="form-label fw-bold">Cronograma Físico-Financeiro</label>{{ form.cronograma_fisico_financeiro }}</div>
+            </div>
+            <h6 class="fw-bold text-primary mb-2"><i class="bi bi-receipt me-1"></i>Faturas Registradas no Mês</h6>
+            <div class="table-responsive mb-2">
+                <table class="table table-bordered align-middle" id="tabelaFaturas">
+                    <thead class="table-light"><tr><th>Nº Fatura/NF</th><th>Valor (R$)</th><th>Nº OB</th><th style="width:80px;text-align:center">Ação</th></tr></thead>
+                    <tbody id="tbodyFaturas"></tbody>
+                </table>
+            </div>
+            <button type="button" class="btn btn-outline-success btn-sm" id="btnAdicionarFatura"><i class="bi bi-plus-circle me-1"></i> Adicionar Fatura</button>
+        </div></div>
+
+        <!-- SEÇÃO 4 -->
+        <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
+            <div class="section-header"><i class="bi bi-graph-up-arrow me-2"></i>Seção 4: Cronograma e Medição de Resultados</div>
+            <div class="row g-3">
+                <div class="col-12"><label class="form-label fw-bold">Detalhamento do Status</label>{{ form.detalhamento_cronograma }}</div>
+                <div class="col-md-6"><div class="form-check">{{ form.alteracao_cronograma }}<label class="form-check-label fw-bold" for="{{ form.alteracao_cronograma.id_for_label }}">Alteração no cronograma?</label></div><div class="mt-2 div-alteracao-cronograma" style="display:none">{{ form.alteracao_cronograma_desc }}</div></div>
+                <div class="col-md-6"><div class="form-check">{{ form.atraso_entrega }}<label class="form-check-label fw-bold" for="{{ form.atraso_entrega.id_for_label }}">Atraso na entrega?</label></div><div class="mt-2 div-atraso-entrega" style="display:none">{{ form.atraso_entrega_desc }}</div></div>
+                <div class="col-md-6"><div class="form-check">{{ form.impossibilidade_recebimento }}<label class="form-check-label fw-bold" for="{{ form.impossibilidade_recebimento.id_for_label }}">Impossibilidade de recebimento?</label></div><div class="mt-2 div-impossibilidade" style="display:none">{{ form.impossibilidade_recebimento_desc }}</div></div>
+                <div class="col-md-6"><div class="form-check">{{ form.diligencia_visita }}<label class="form-check-label fw-bold" for="{{ form.diligencia_visita.id_for_label }}">Diligência/visita técnica?</label></div><div class="mt-2 div-diligencia" style="display:none">{{ form.diligencia_visita_desc }}</div></div>
+                <div class="col-md-6"><label class="form-label fw-bold">IMR aplicado?</label>{{ form.imr_aplicado }}</div>
+                <div class="col-md-6"><div class="form-check">{{ form.glosa_realizada }}<label class="form-check-label fw-bold" for="{{ form.glosa_realizada.id_for_label }}">Glosa realizada?</label></div><div class="mt-2 div-glosa" style="display:none">{{ form.glosa_desc }}</div></div>
+            </div>
+        </div></div>
+
+        <!-- SEÇÃO 5: OCORRÊNCIAS -->
+        <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
+            <div class="section-header d-flex justify-content-between align-items-center"><span><i class="bi bi-robot me-2"></i>Seção 5: Ocorrências e Tratativas</span><span class="badge bg-light text-primary">Chatbot</span></div>
+            <div class="chat-card p-3 mb-3">
+                <div id="chatMessages"><div class="chat-bubble-bot"><i class="bi bi-robot text-primary me-1"></i><strong>Assistente ACI:</strong> Houve alguma reunião, notificação, falha ou evento relevante no período?</div></div>
+                <div id="chatControls" class="mt-3">
+                    <div id="stepInicio" class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary btn-sm" id="btnSimOcorrencia"><i class="bi bi-plus-lg me-1"></i> Sim, registrar</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnNaoOcorrencia"><i class="bi bi-check-lg me-1"></i> Não houve</button>
+                    </div>
+                    <div id="stepFormOcorrencia" style="display:none" class="bg-white p-3 rounded border">
+                        <h6 class="fw-bold text-primary mb-3">Cadastrar Ocorrência</h6>
+                        <div class="row g-2">
+                            <div class="col-md-4"><label class="form-label small fw-bold">Data</label><input type="date" class="form-control form-control-sm" id="ocData"></div>
+                            <div class="col-md-8"><label class="form-label small fw-bold">Tipo</label><select class="form-select form-select-sm" id="ocTipo"><option value="reuniao">Reunião</option><option value="email">E-mail/Ofício</option><option value="visita">Visita Técnica</option><option value="falha">Falha/Descumprimento</option><option value="notificacao">Notificação</option><option value="outro">Outro</option></select></div>
+                            <div class="col-12"><label class="form-label small fw-bold">Descrição</label><textarea class="form-control form-control-sm" id="ocDesc" rows="2"></textarea></div>
+                            <div class="col-12"><label class="form-label small fw-bold">Ação do Fiscal</label><textarea class="form-control form-control-sm" id="ocAcao" rows="2"></textarea></div>
+                            <div class="col-md-6"><label class="form-label small fw-bold">Prazo (se houver)</label><input type="text" class="form-control form-control-sm" id="ocPrazo" placeholder="Ex: 5 dias úteis"></div>
+                            <div class="col-md-6 d-flex align-items-end"><button type="button" class="btn btn-success btn-sm w-100" id="btnSalvarOcorrenciaBot"><i class="bi bi-check-circle me-1"></i> Adicionar</button></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h6 class="fw-bold text-dark mb-2">Relatório Consolidado:</h6>
+            {{ form.relatorio_ocorrencias }}
+        </div></div>
+
+        <!-- SEÇÃO 6 -->
+        <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
+            <div class="section-header"><i class="bi bi-shield-exclamation me-2"></i>Seção 6: PAAI</div>
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label fw-bold">Ocorrências ativas reincidentes?</label>{{ form.ocorrencias_ativas_empresa }}</div>
+                <div class="col-md-6"><label class="form-label fw-bold">Necessidade de PAAI?</label>{{ form.necessidade_paai }}</div>
+                <div class="col-12 div-paai" style="display:none"><label class="form-label fw-bold">Justificativa PAAI</label>{{ form.paai_justificativa }}</div>
+            </div>
+        </div></div>
+
+        <!-- OBSERVAÇÕES E SUBMIT -->
+        <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-chat-left-text me-1"></i>Observações Gerais</h6>
+            {{ form.observacao }}
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{% url 'portal_execucao_fiscais' %}" class="btn btn-outline-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="bi bi-send me-1"></i> Enviar Livro do Fiscal</button>
+            </div>
+        </div></div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function setupConditional(cbId, cls) {
+        const cb = document.getElementById(cbId);
+        if (!cb) return;
+        const tgts = document.querySelectorAll('.' + cls);
+        function upd() { tgts.forEach(t => t.style.display = cb.checked ? 'block' : 'none'); }
+        cb.addEventListener('change', upd); upd();
+    }
+    function setupSubstituicaoRadio() {
+        const radios = document.querySelectorAll('input[name="houve_substituicao"]');
+        const tgts = document.querySelectorAll('.div-substituicao');
+        function upd() {
+            let isSim = false;
+            radios.forEach(r => {
+                if (r.checked && (r.value === 'sim' || r.value === 'True' || r.value === 'true')) {
+                    isSim = true;
+                }
+            });
+            tgts.forEach(t => t.style.display = isSim ? 'block' : 'none');
+        }
+        radios.forEach(r => r.addEventListener('change', upd));
+        upd();
+    }
+    setupSubstituicaoRadio();
+    setupConditional('id_alteracao_cronograma', 'div-alteracao-cronograma');
+    setupConditional('id_atraso_entrega', 'div-atraso-entrega');
+    setupConditional('id_impossibilidade_recebimento', 'div-impossibilidade');
+    setupConditional('id_diligencia_visita', 'div-diligencia');
+    setupConditional('id_glosa_realizada', 'div-glosa');
+    setupConditional('id_alteracao_cronograma', 'div-alteracao-cronograma');
+    setupConditional('id_atraso_entrega', 'div-atraso-entrega');
+    setupConditional('id_impossibilidade_recebimento', 'div-impossibilidade');
+    setupConditional('id_diligencia_visita', 'div-diligencia');
+    setupConditional('id_glosa_realizada', 'div-glosa');
+    const selPaai = document.getElementById('id_necessidade_paai');
+    if (selPaai) { function upPaai() { const d = document.querySelector('.div-paai'); if(d) d.style.display = selPaai.value==='sim'?'block':'none'; } selPaai.addEventListener('change', upPaai); upPaai(); }
+
+    // FATURAS
+    const tbodyFat = document.getElementById('tbodyFaturas');
+    const inputFat = document.getElementById('faturas_json_input');
+    let faturas = []; try { faturas = JSON.parse(inputFat.value || '[]'); } catch(e) {}
+    function renderFat() {
+        tbodyFat.innerHTML = '';
+        if (!faturas.length) { tbodyFat.innerHTML = '<tr><td colspan="4" class="text-center text-muted small">Nenhuma fatura.</td></tr>'; return; }
+        faturas.forEach((f,i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="text" class="form-control form-control-sm fn" value="${f.numero_nf||''}" data-i="${i}"></td><td><input type="number" step="0.01" class="form-control form-control-sm fv" value="${f.valor||0}" data-i="${i}"></td><td><input type="text" class="form-control form-control-sm fo" value="${f.numero_ob||''}" data-i="${i}"></td><td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm fd" data-i="${i}"><i class="bi bi-trash"></i></button></td>`;
+            tbodyFat.appendChild(tr);
+        });
+        inputFat.value = JSON.stringify(faturas);
+    }
+    document.getElementById('btnAdicionarFatura').addEventListener('click', () => { faturas.push({numero_nf:'',valor:0,numero_ob:''}); renderFat(); });
+    tbodyFat.addEventListener('change', e => { const i=e.target.dataset.i; if(i!==undefined){if(e.target.classList.contains('fn'))faturas[i].numero_nf=e.target.value;if(e.target.classList.contains('fv'))faturas[i].valor=parseFloat(e.target.value)||0;if(e.target.classList.contains('fo'))faturas[i].numero_ob=e.target.value;inputFat.value=JSON.stringify(faturas);} });
+    tbodyFat.addEventListener('click', e => { const b=e.target.closest('.fd'); if(b){faturas.splice(b.dataset.i,1);renderFat();} });
+    renderFat();
+
+    // OCORRÊNCIAS BOT
+    const chatMsg = document.getElementById('chatMessages');
+    const stepIni = document.getElementById('stepInicio');
+    const stepForm = document.getElementById('stepFormOcorrencia');
+    const inputOc = document.getElementById('ocorrencias_json_input');
+    const relTxt = document.getElementById('id_relatorio_ocorrencias');
+    let ocs = []; try { ocs = JSON.parse(inputOc.value || '[]'); } catch(e) {}
+    function addBot(m) { const d=document.createElement('div');d.className='chat-bubble-bot';d.innerHTML=`<i class="bi bi-robot text-primary me-1"></i><strong>Assistente:</strong> ${m}`;chatMsg.appendChild(d); }
+    function addUser(m) { const d=document.createElement('div');d.className='chat-bubble-user';d.textContent=m;chatMsg.appendChild(d); }
+    function syncOc() {
+        inputOc.value = JSON.stringify(ocs);
+        if (!ocs.length) { relTxt.value = 'Sem ocorrências registradas no período.'; return; }
+        let t=''; ocs.forEach((o,i) => { t+=`[${i+1}] Data: ${o.data} | Tipo: ${o.tipo.toUpperCase()}\n    Descrição: ${o.descricao}\n    Providência: ${o.acao_fiscal}\n    Prazo: ${o.prazo||'N/A'}\n\n`; });
+        relTxt.value = t.trim();
+    }
+    document.getElementById('btnSimOcorrencia').addEventListener('click', () => { addUser("Sim, registrar."); addBot("Preencha abaixo:"); stepIni.style.display='none'; stepForm.style.display='block'; });
+    document.getElementById('btnNaoOcorrencia').addEventListener('click', () => { addUser("Não houve ocorrências."); addBot("OK! Marcado como 'Sem ocorrências'."); ocs=[]; syncOc(); });
+    document.getElementById('btnSalvarOcorrenciaBot').addEventListener('click', () => {
+        const dt=document.getElementById('ocData').value, tp=document.getElementById('ocTipo').value, desc=document.getElementById('ocDesc').value.trim(), acao=document.getElementById('ocAcao').value.trim(), prazo=document.getElementById('ocPrazo').value.trim();
+        if(!dt||!desc){alert('Informe data e descrição.');return;}
+        ocs.push({data:dt,tipo:tp,descricao:desc,acao_fiscal:acao,prazo:prazo}); syncOc();
+        addUser(`Ocorrência ${dt} (${tp})`); addBot(`#${ocs.length} salva! Mais alguma?`);
+        document.getElementById('ocDesc').value=''; document.getElementById('ocAcao').value=''; document.getElementById('ocPrazo').value='';
+        stepForm.style.display='none'; stepIni.style.display='flex';
+    });
+    if(ocs.length) addBot(`${ocs.length} ocorrência(s) prévia(s) encontrada(s).`);
+});
+</script>
+{% endblock %}

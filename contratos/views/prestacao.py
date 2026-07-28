@@ -13,7 +13,7 @@ from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils import timezone
 
-from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao, Setor, PrestacaoContasSetor, ApontamentoCorrecaoSetor, SlideApresentacao
+from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao, Setor, PrestacaoContasSetor, ApontamentoCorrecaoSetor, SlideApresentacao, ControleExecucao
 from contratos.forms import PrestacaoContasUploadForm, PrestacaoContasSetorUploadForm
 from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx, get_filtro_ativos, is_admin, is_auditor
 
@@ -441,14 +441,43 @@ def dashboard_prestacao(request):
             'entregas': entregas
         })
 
+    # Busca todos os registros de Controle de Execução (Livro do Fiscal) dos últimos 3 meses
+    todos_controles_exec = ControleExecucao.objects.filter(
+        ano_referencia__gte=ultimos_3_meses[0][0],
+        contrato__in=contratos_vigentes
+    ).order_by('id')
+
+    execucoes_map = {}
+    for ex in todos_controles_exec:
+        if ex.contrato_id not in execucoes_map:
+            execucoes_map[ex.contrato_id] = {}
+        execucoes_map[ex.contrato_id][(ex.ano_referencia, ex.mes_referencia)] = ex
+
+    matriz_execucao = []
+    for c in contratos_vigentes:
+        entregas = []
+        for ano, mes in ultimos_3_meses:
+            controle = execucoes_map.get(c.id, {}).get((ano, mes))
+            entregas.append({
+                'ano': ano,
+                'mes': mes,
+                'controle': controle,
+                'status': controle.status if controle else 'pendente'
+            })
+        matriz_execucao.append({
+            'contrato': c,
+            'entregas': entregas
+        })
+
     meses_nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
-    
+
     context = {
         'is_admin': is_admin(request.user),
         'is_auditor': is_auditor(request.user),
         
         'matriz_contratos': matriz_contratos,
         'matriz_setores': matriz_setores,
+        'matriz_execucao': matriz_execucao,
         'ultimos_3_meses_tuplas': ultimos_3_meses,
         
         'filtro_mes': filtro_mes,
@@ -456,7 +485,7 @@ def dashboard_prestacao(request):
         'meses_choices': [(i, meses_nomes[i-1]) for i in range(1, 13)],
         'anos_choices': range(hoje.year - 2, hoje.year + 1),
     }
-    
+
     # Busca calendário do ano selecionado
     calendarios = {c.mes: c for c in CalendarioPrestacao.objects.filter(ano=filtro_ano)}
     calendario_anual = []
@@ -466,6 +495,7 @@ def dashboard_prestacao(request):
             'mes': m,
             'nome_mes': meses_nomes[m-1],
             'data_entrega': cal.data_entrega.strftime('%Y-%m-%d') if cal and cal.data_entrega else '',
+            'data_entrega_execucao': cal.data_entrega_execucao.strftime('%Y-%m-%d') if cal and cal.data_entrega_execucao else '',
             'data_apresentacao_fiscais': cal.data_apresentacao_fiscais.strftime('%Y-%m-%d') if cal and cal.data_apresentacao_fiscais else '',
             'data_apresentacao_gestores': cal.data_apresentacao_gestores.strftime('%Y-%m-%d') if cal and cal.data_apresentacao_gestores else ''
         })
@@ -1259,11 +1289,13 @@ def salvar_calendario_prestacao(request):
         ano = int(data.get('ano'))
         mes = int(data.get('mes'))
         data_entrega = data.get('data_entrega') or None
+        data_entrega_execucao = data.get('data_entrega_execucao') or None
         data_apresentacao_fiscais = data.get('data_apresentacao_fiscais') or None
         data_apresentacao_gestores = data.get('data_apresentacao_gestores') or None
         
         cal, _ = CalendarioPrestacao.objects.get_or_create(ano=ano, mes=mes)
         cal.data_entrega = data_entrega
+        cal.data_entrega_execucao = data_entrega_execucao
         cal.data_apresentacao_fiscais = data_apresentacao_fiscais
         cal.data_apresentacao_gestores = data_apresentacao_gestores
         cal.save()

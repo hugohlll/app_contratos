@@ -97,6 +97,20 @@ class Contrato(models.Model):
     vigencia_fim = models.DateField("Fim da Vigência")
     valor_total = models.DecimalField("Valor Total", max_digits=12, decimal_places=2)
 
+    @property
+    def data_recomendada_aditivo(self):
+        """Data recomendada para início das tratativas de aditivo (120 dias antes do término da vigência)"""
+        if self.vigencia_fim:
+            return self.vigencia_fim - timedelta(days=120)
+        return None
+
+    @property
+    def data_limite_aditivo(self):
+        """Data limite para o início das tratativas de aditivo (90 dias antes do término da vigência)"""
+        if self.vigencia_fim:
+            return self.vigencia_fim - timedelta(days=90)
+        return None
+
     def __str__(self):
         return f"CT {self.numero} - {self.empresa.razao_social}"
 
@@ -368,6 +382,7 @@ class CalendarioPrestacao(models.Model):
     ano = models.IntegerField("Ano")
     mes = models.IntegerField("Mês")
     data_entrega = models.DateField("Data de Entrega dos Slides", null=True, blank=True)
+    data_entrega_execucao = models.DateField("Data de Entrega do Livro do Fiscal", null=True, blank=True)
     data_apresentacao_fiscais = models.DateField("Data de Apresentação - Fiscais", null=True, blank=True)
     data_apresentacao_gestores = models.DateField("Data de Apresentação - Gestores", null=True, blank=True)
 
@@ -555,3 +570,138 @@ class SlideApresentacao(models.Model):
 
     def __str__(self):
         return f"Slide {self.nome_slide} ({self.get_tipo_apresentacao_display()}) - {self.mes_referencia:02d}/{self.ano_referencia}"
+
+
+class ControleExecucao(models.Model):
+    contrato = models.ForeignKey(
+        Contrato, on_delete=models.CASCADE, related_name='controles_execucao'
+    )
+    agente = models.ForeignKey(
+        Agente, on_delete=models.SET_NULL, null=True, verbose_name="Fiscal"
+    )
+    ano_referencia = models.IntegerField("Ano de Referência")
+    mes_referencia = models.IntegerField("Mês de Referência")
+    data_envio = models.DateTimeField(auto_now_add=True)
+
+    STATUS_CHOICES = [
+        ('pendente', 'Pendente'),
+        ('entregue', 'Entregue'),
+        ('correcao', 'Aguardando Correção'),
+        ('ok', 'Conformidade (OK!)'),
+    ]
+    status = models.CharField(
+        "Status", max_length=15, choices=STATUS_CHOICES, default='entregue'
+    )
+
+    SIM_NAO_NA = [('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')]
+    SIM_NAO = [('sim', 'Sim'), ('nao', 'Não')]
+    CONFORME_ATRASADO = [('conforme', 'Conforme o previsto'), ('atrasado', 'Atrasado')]
+
+    # === Seção 2: Controle de Prazos e Marcos ===
+    confirmacao_siloms_assinatura = models.BooleanField("Conferido com SILOMS (Assinatura)", default=False)
+    confirmacao_siloms_vigencia = models.BooleanField("Conferido com SILOMS/Aditivo (Vigência)", default=False)
+    confirmacao_siloms_execucao = models.BooleanField("Conferido com Cronograma/OS (Execução)", default=False)
+    ADMITIR_ADITIVO_CHOICES = [
+        ('sim', 'Sim'),
+        ('na', 'Não há mais possibilidade/Não se aplica'),
+        ('nao', 'Não há mais possibilidade/Não se aplica'),
+    ]
+    possibilidade_aditivo = models.CharField("Contrato admite termo aditivo?", max_length=10, choices=ADMITIR_ADITIVO_CHOICES, default='na')
+    tratativas_120_dias = models.CharField("Iniciadas tratativas 120 dias antes?", max_length=5, choices=SIM_NAO_NA, default='na')
+    coordenacao_doc_scon = models.CharField("Coordenada informação com DOC/SCON?", max_length=5, choices=SIM_NAO_NA, default='na')
+
+    # === Seção 3: Execução Orçamentária e Financeira ===
+    notas_empenho = models.TextField("Notas de Empenho (NEs Vigentes)", blank=True)
+    obs_sem_empenho = models.TextField("Obs. caso não haja empenho", blank=True)
+    cronograma_fisico_financeiro = models.CharField("Cumprimento do Cronograma Físico-Financeiro", max_length=10, choices=CONFORME_ATRASADO, default='conforme')
+
+    # === Seção 4: Cronograma e Medição de Resultados ===
+    detalhamento_cronograma = models.TextField("Status do Cronograma de Execução", blank=True)
+    alteracao_cronograma = models.BooleanField("Houve alteração em relação ao mês anterior?", default=False)
+    alteracao_cronograma_desc = models.TextField("Ações do fiscal (Alteração Cronograma)", blank=True)
+    atraso_entrega = models.BooleanField("Atraso na entrega dos produtos/serviços?", default=False)
+    atraso_entrega_desc = models.TextField("Ações do fiscal (Atraso Entrega)", blank=True)
+    impossibilidade_recebimento = models.BooleanField("Impossibilidade de recebimento?", default=False)
+    impossibilidade_recebimento_desc = models.TextField("Ações do fiscal (Impossibilidade)", blank=True)
+    diligencia_visita = models.BooleanField("Realização de diligência ou visita técnica?", default=False)
+    diligencia_visita_desc = models.TextField("Resultados obtidos e ações (Diligência)", blank=True)
+
+    imr_aplicado = models.CharField("Aplicado IMR?", max_length=5, choices=SIM_NAO, default='nao')
+    glosa_realizada = models.BooleanField("Realizada glosa no período?", default=False)
+    glosa_desc = models.TextField("Detalhamento de glosa e valores", blank=True)
+
+    # === Seção 5: Ocorrências (Relatório Consolidado) ===
+    relatorio_ocorrencias = models.TextField("Relatório de Ocorrências e Tratativas", blank=True)
+
+    # === Seção 6: Apuração de Irregularidades (PAAI) ===
+    ocorrencias_ativas_empresa = models.CharField("Ocorrências ativas por atraso/descumprimento reincidente?", max_length=5, choices=SIM_NAO, default='nao')
+    necessidade_paai = models.CharField("Necessária solicitação de abertura de PAAI neste mês?", max_length=5, choices=SIM_NAO, default='nao')
+    paai_justificativa = models.TextField("Detalhamento de infrações / Justificativa PAAI", blank=True)
+
+    # === Controle de Substituição ===
+    houve_substituicao = models.BooleanField("Houve substituição do fiscal/membro no período?", default=False)
+    substituicao_entrega_formal = models.CharField("Entrega formal dos registros realizada pelo substituto?", max_length=5, choices=SIM_NAO_NA, default='na')
+    substituicao_obs = models.TextField("Observações sobre a substituição", blank=True)
+
+    # === Observações Gerais ===
+    observacao = models.TextField("Observações Gerais", blank=True)
+
+    class Meta:
+        verbose_name = "Controle de Execução Contratual"
+        verbose_name_plural = "Controles de Execução Contratual"
+        ordering = ['-ano_referencia', '-mes_referencia']
+
+    def __str__(self):
+        return f"Controle Execução {self.contrato.numero} - {self.mes_referencia:02d}/{self.ano_referencia}"
+
+
+class RegistroFatura(models.Model):
+    controle = models.ForeignKey(
+        ControleExecucao, on_delete=models.CASCADE, related_name='faturas'
+    )
+    numero_nf = models.CharField("Nº da Nota Fiscal / Fatura", max_length=50)
+    valor = models.DecimalField("Valor (R$)", max_digits=14, decimal_places=2, default=0)
+    numero_ob = models.CharField("Nº da Ordem Bancária (OB)", max_length=50, blank=True)
+
+    class Meta:
+        verbose_name = "Registro de Fatura"
+        verbose_name_plural = "Registros de Faturas"
+
+    def __str__(self):
+        return f"NF {self.numero_nf} - R$ {self.valor}"
+
+
+class OcorrenciaContratual(models.Model):
+    controle = models.ForeignKey(
+        ControleExecucao, on_delete=models.CASCADE, related_name='ocorrencias'
+    )
+    data = models.DateField("Data da Ocorrência")
+    tipo = models.CharField("Tipo de Ocorrência", max_length=30, default='outro')
+    descricao = models.TextField("Descrição da Ocorrência")
+    acao_fiscal = models.TextField("Ação do Fiscal / Providência", blank=True)
+    prazo = models.CharField("Prazo para Resolução", max_length=50, blank=True)
+
+    class Meta:
+        verbose_name = "Ocorrência Contratual"
+        verbose_name_plural = "Ocorrências Contratuais"
+        ordering = ['data']
+
+    def __str__(self):
+        return f"Ocorrência {self.tipo} - {self.data}"
+
+
+class ApontamentoCorrecaoExecucao(models.Model):
+    controle = models.ForeignKey(
+        ControleExecucao, on_delete=models.CASCADE, related_name='apontamentos'
+    )
+    autor = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True)
+    descricao = models.TextField("Descrição das Inconsistências")
+    data_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Apontamento de Correção (Execução)"
+        verbose_name_plural = "Apontamentos de Correção (Execução)"
+        ordering = ['-data_registro']
+
+    def __str__(self):
+        return f"Apontamento #{self.id} - {self.controle}"

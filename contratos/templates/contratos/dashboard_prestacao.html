@@ -61,7 +61,12 @@
 <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="fiscais-tab" data-bs-toggle="tab" data-bs-target="#fiscais-pane" type="button" role="tab" aria-controls="fiscais-pane" aria-selected="true">
-            <i class="bi bi-person-badge me-1"></i>Fiscais
+            <i class="bi bi-person-badge me-1"></i>Fiscais (Slides)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="execucao-tab" data-bs-toggle="tab" data-bs-target="#execucao-pane" type="button" role="tab" aria-controls="execucao-pane" aria-selected="false">
+            <i class="bi bi-journal-check me-1"></i>Livro do Fiscal (Execução)
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -574,6 +579,70 @@
     </div>
 </div><!-- /tab-pane setores -->
 
+<!-- ABA: EXECUÇÃO CONTRATUAL (LIVRO DO FISCAL) -->
+<div class="tab-pane fade" id="execucao-pane" role="tabpanel" aria-labelledby="execucao-tab">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <h6 class="m-0 fw-bold text-secondary">
+                <i class="bi bi-journal-check me-2 text-primary"></i>Acompanhamento do Livro do Fiscal (Últimos 3 Mêses)
+            </h6>
+            <a href="{% url 'exportar_execucao_csv' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:'d' }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                <i class="bi bi-download me-1"></i> Exportar Execução (CSV)
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 25%;">Contrato / Empresa</th>
+                            {% for ano, mes in ultimos_3_meses_tuplas %}
+                            <th class="text-center" style="width: 25%;">
+                                {% if mes == 1 %}Jan{% elif mes == 2 %}Fev{% elif mes == 3 %}Mar{% elif mes == 4 %}Abr{% elif mes == 5 %}Mai{% elif mes == 6 %}Jun{% elif mes == 7 %}Jul{% elif mes == 8 %}Ago{% elif mes == 9 %}Set{% elif mes == 10 %}Out{% elif mes == 11 %}Nov{% else %}Dez{% endif %}/{{ ano }}
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in matriz_execucao %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-primary">{{ item.contrato.numero }}</div>
+                                <small class="text-muted text-truncate d-block" style="max-width: 300px;">{{ item.contrato.objeto }}</small>
+                            </td>
+                            {% for entrega in item.entregas %}
+                            <td class="text-center">
+                                {% if entrega.controle %}
+                                    <div class="mb-1">
+                                        {% if entrega.controle.status == 'ok' %}
+                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>OK</span>
+                                        {% elif entrega.controle.status == 'correcao' %}
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Correção</span>
+                                        {% else %}
+                                            <span class="badge bg-info text-dark"><i class="bi bi-clock me-1"></i>Entregue</span>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="btn btn-sm btn-outline-primary py-0 px-2" title="Visualizar Livro">
+                                        <i class="bi bi-eye"></i> Detalhes
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-secondary text-white-50">Pendente</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">Nenhum contrato ativo cadastrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div><!-- /tab-pane execucao -->
+
 <!-- ABA 3: CALENDÁRIO -->
 <div class="tab-pane fade" id="calendario-pane" role="tabpanel" aria-labelledby="calendario-tab">
 
@@ -587,10 +656,11 @@
             <table class="table table-bordered table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 25%;">Mês de Referência</th>
-                        <th style="width: 25%;">Entrega dos Slides</th>
-                        <th style="width: 25%;">Apresentação Fiscais</th>
-                        <th style="width: 25%;">Apresentação Gestores</th>
+                        <th style="width: 20%;">Mês de Referência</th>
+                        <th style="width: 20%;">Entrega dos Slides</th>
+                        <th style="width: 20%;">Livro do Fiscal</th>
+                        <th style="width: 20%;">Apresentação Fiscais</th>
+                        <th style="width: 20%;">Apresentação Gestores</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -598,13 +668,16 @@
                     <tr>
                         <td class="fw-bold">{{ cal.nome_mes }}</td>
                         <td>
-                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_entrega" value="{{ cal.data_entrega }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_entrega" value="{{ cal.data_entrega }}" style="max-width: 140px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
                         </td>
                         <td>
-                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao_fiscais" value="{{ cal.data_apresentacao_fiscais }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_entrega_execucao" value="{{ cal.data_entrega_execucao }}" style="max-width: 140px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
                         </td>
                         <td>
-                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao_gestores" value="{{ cal.data_apresentacao_gestores }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao_fiscais" value="{{ cal.data_apresentacao_fiscais }}" style="max-width: 140px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                        </td>
+                        <td>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao_gestores" value="{{ cal.data_apresentacao_gestores }}" style="max-width: 140px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
                         </td>
                     </tr>
                     {% endfor %}
@@ -1446,6 +1519,7 @@
             
             const row = input.closest('tr');
             const data_entrega = row.querySelector('[data-campo="data_entrega"]').value;
+            const data_entrega_execucao = row.querySelector('[data-campo="data_entrega_execucao"]').value;
             const data_apresentacao_fiscais = row.querySelector('[data-campo="data_apresentacao_fiscais"]').value;
             const data_apresentacao_gestores = row.querySelector('[data-campo="data_apresentacao_gestores"]').value;
             
@@ -1460,6 +1534,7 @@
                     ano: ano,
                     mes: mes,
                     data_entrega: data_entrega,
+                    data_entrega_execucao: data_entrega_execucao,
                     data_apresentacao_fiscais: data_apresentacao_fiscais,
                     data_apresentacao_gestores: data_apresentacao_gestores
                 })
