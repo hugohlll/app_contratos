@@ -401,6 +401,46 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         initial='na',
         required=False
     )
+    alteracao_cronograma = forms.TypedChoiceField(
+        label="Alteração no cronograma?",
+        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
+        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        widget=forms.RadioSelect,
+        initial='nao',
+        required=False
+    )
+    atraso_entrega = forms.TypedChoiceField(
+        label="Atraso na entrega?",
+        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
+        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        widget=forms.RadioSelect,
+        initial='nao',
+        required=False
+    )
+    impossibilidade_recebimento = forms.TypedChoiceField(
+        label="Impossibilidade de recebimento?",
+        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
+        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        widget=forms.RadioSelect,
+        initial='nao',
+        required=False
+    )
+    diligencia_visita = forms.TypedChoiceField(
+        label="Diligência/visita técnica?",
+        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
+        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        widget=forms.RadioSelect,
+        initial='nao',
+        required=False
+    )
+    glosa_realizada = forms.TypedChoiceField(
+        label="Glosa realizada?",
+        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
+        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        widget=forms.RadioSelect,
+        initial='nao',
+        required=False
+    )
 
     class Meta:
         model = ControleExecucao
@@ -463,6 +503,11 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             self.initial['confirmacao_siloms_assinatura'] = 'sim' if self.instance.confirmacao_siloms_assinatura else 'nao'
             self.initial['confirmacao_siloms_vigencia'] = 'sim' if self.instance.confirmacao_siloms_vigencia else 'nao'
             self.initial['confirmacao_siloms_execucao'] = 'sim' if self.instance.confirmacao_siloms_execucao else 'nao'
+            self.initial['alteracao_cronograma'] = 'sim' if self.instance.alteracao_cronograma else 'nao'
+            self.initial['atraso_entrega'] = 'sim' if self.instance.atraso_entrega else 'nao'
+            self.initial['impossibilidade_recebimento'] = 'sim' if self.instance.impossibilidade_recebimento else 'nao'
+            self.initial['diligencia_visita'] = 'sim' if self.instance.diligencia_visita else 'nao'
+            self.initial['glosa_realizada'] = 'sim' if self.instance.glosa_realizada else 'nao'
 
         # Campos booleanos (checkboxes) não devem ser obrigatórios
         bool_fields = [

@@ -598,7 +598,7 @@
                             <th style="width: 25%;">Contrato / Empresa</th>
                             {% for ano, mes in ultimos_3_meses_tuplas %}
                             <th class="text-center" style="width: 25%;">
-                                {% if mes == 1 %}Jan{% elif mes == 2 %}Fev{% elif mes == 3 %}Mar{% elif mes == 4 %}Abr{% elif mes == 5 %}Mai{% elif mes == 6 %}Jun{% elif mes == 7 %}Jul{% elif mes == 8 %}Ago{% elif mes == 9 %}Set{% elif mes == 10 %}Out{% elif mes == 11 %}Nov{% else %}Dez{% endif %}/{{ ano }}
+                                {% if mes == 1 %}Jan{% elif mes == 2 %}Fev{% elif mes == 3 %}Mar{% elif mes == 4 %}Abr{% elif mes == 5 %}Mai{% elif mes == 6 %}Jun{% elif mes == 7 %}Jul{% elif mes == 8 %}Ago{% elif mes == 9 %}Set{% elif mes == 10 %}Out{% elif mes == 11 %}Nov{% else %}Dez{% endif %}/{{ ano|stringformat:"d" }}
                             </th>
                             {% endfor %}
                         </tr>

@@ -611,7 +611,7 @@ class ControleExecucao(models.Model):
     coordenacao_doc_scon = models.CharField("Coordenada informação com DOC/SCON?", max_length=5, choices=SIM_NAO_NA, default='na')
 
     # === Seção 3: Execução Orçamentária e Financeira ===
-    notas_empenho = models.TextField("Notas de Empenho (NEs Vigentes)", blank=True)
+    notas_empenho = models.TextField("Notas de Empenho (com saldo)", blank=True)
     obs_sem_empenho = models.TextField("Obs. caso não haja empenho", blank=True)
     cronograma_fisico_financeiro = models.CharField("Cumprimento do Cronograma Físico-Financeiro", max_length=10, choices=CONFORME_ATRASADO, default='conforme')
 

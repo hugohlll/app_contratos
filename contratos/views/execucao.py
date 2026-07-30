@@ -54,11 +54,51 @@ def portal_execucao_fiscais(request):
         vigencia_fim__gte=hoje
     ).order_by('numero')
 
+    controles = ControleExecucao.objects.filter(
+        mes_referencia=filtro_mes, ano_referencia=filtro_ano
+    ).prefetch_related('apontamentos')
+    controles_map = {c.contrato_id: c for c in controles}
+
+    contratos_info = []
+    for c in contratos:
+        ctrl = controles_map.get(c.id)
+        is_enviado = bool(ctrl and ctrl.status in ['entregue', 'correcao', 'ok'])
+        ultimo_apontamento = ctrl.apontamentos.first() if (ctrl and ctrl.apontamentos.exists()) else None
+
+        contratos_info.append({
+            'contrato': c,
+            'controle': ctrl,
+            'is_enviado': is_enviado,
+            'ultimo_apontamento': ultimo_apontamento,
+        })
+
     return render(request, 'contratos/execucao/fiscais.html', {
-        'contratos': contratos,
+        'contratos_info': contratos_info,
         'mes_referencia': filtro_mes,
         'ano_referencia': filtro_ano,
     })
+
+
+def excluir_controle_execucao_publico(request, contrato_id):
+    """Permite ao fiscal excluir o registro do Livro do Fiscal do contrato no mês de referência atual."""
+    contrato = get_object_or_404(Contrato, pk=contrato_id)
+    hoje = date.today()
+    primeiro_dia_mes_atual = hoje.replace(day=1)
+    ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+    filtro_mes = ultimo_dia_mes_anterior.month
+    filtro_ano = ultimo_dia_mes_anterior.year
+
+    controle = ControleExecucao.objects.filter(
+        contrato=contrato, mes_referencia=filtro_mes, ano_referencia=filtro_ano
+    ).first()
+
+    if controle:
+        controle.delete()
+        messages.success(request, f"Registro do Livro do Fiscal do Contrato {contrato.numero} excluído com sucesso.")
+    else:
+        messages.info(request, "Nenhum registro encontrado para este contrato no período atual.")
+
+    return redirect('portal_execucao_fiscais')
 
 
 def formulario_execucao(request, contrato_id):
@@ -153,7 +193,7 @@ def formulario_execucao(request, contrato_id):
                 controle.relatorio_ocorrencias = "Sem ocorrências registradas no período."
             controle.save()
 
-            messages.success(request, f"Livro do Fiscal do Contrato {contrato.numero} enviado com sucesso!")
+            messages.success(request, "Livro do Fiscal enviado com sucesso!")
             return redirect('portal_execucao_index')
         else:
             messages.error(request, "Por favor, corrija os erros apontados no formulário.")
@@ -162,9 +202,11 @@ def formulario_execucao(request, contrato_id):
 
     faturas_existentes = []
     ocorrencias_existentes = []
+    apontamentos = []
     if controle_existente:
         faturas_existentes = list(controle_existente.faturas.values('numero_nf', 'valor', 'numero_ob'))
         ocorrencias_existentes = list(controle_existente.ocorrencias.values('data', 'tipo', 'descricao', 'acao_fiscal', 'prazo'))
+        apontamentos = controle_existente.apontamentos.select_related('autor').all()
 
     return render(request, 'contratos/execucao/formulario.html', {
         'contrato': contrato,
@@ -172,6 +214,7 @@ def formulario_execucao(request, contrato_id):
         'integrantes': integrantes,
         'form': form,
         'controle_existente': controle_existente,
+        'apontamentos': apontamentos,
         'faturas_json': json.dumps(faturas_existentes, default=str),
         'ocorrencias_json': json.dumps(ocorrencias_existentes, default=str),
         'mes_referencia': filtro_mes,

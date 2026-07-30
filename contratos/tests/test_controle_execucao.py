@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User, Group
@@ -213,3 +213,38 @@ class ControleExecucaoTests(TestCase):
         content = res.content.decode('utf-8-sig')
         self.assertIn("55/2026", content)
         self.assertIn("Conformidade (OK!)", content)
+
+    def test_status_correcao_e_observacao_aci_na_lista_e_formulario(self):
+        """Verifica se o status 'correção' e o texto de observação da ACI são exibidos na lista e no formulário."""
+        from contratos.models import ApontamentoCorrecaoExecucao
+        
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=ultimo_dia_mes_anterior.month,
+            ano_referencia=ultimo_dia_mes_anterior.year,
+            status='correcao'
+        )
+        ApontamentoCorrecaoExecucao.objects.create(
+            controle=ctrl,
+            autor=self.user_auditor,
+            descricao="Inconsistência nos valores das faturas apresentadas."
+        )
+
+        # 1. Verificar na página de seleção de contratos (fiscais.html)
+        res_fiscais = self.client.get(reverse('portal_execucao_fiscais'))
+        self.assertEqual(res_fiscais.status_code, 200)
+        self.assertContains(res_fiscais, "correção")
+        self.assertContains(res_fiscais, "Inconsistência nos valores das faturas apresentadas.")
+
+        # 2. Verificar no formulário do fiscal (formulario.html)
+        url_form = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id})
+        res_form = self.client.get(url_form)
+        self.assertEqual(res_form.status_code, 200)
+        self.assertContains(res_form, "Observação / Apontamentos da ACI após Análise")
+        self.assertContains(res_form, "Inconsistência nos valores das faturas apresentadas.")
+

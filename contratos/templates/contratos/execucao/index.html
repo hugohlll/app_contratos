@@ -15,7 +15,7 @@
                     <div class="d-flex align-items-center">
                         <i class="bi bi-calendar-event fs-3 me-3 text-info"></i>
                         <div class="text-start">
-                            <h5 class="mb-0 fw-bold">Mês de Referência: {{ nome_mes_referencia }}/{{ ano_referencia|stringformat:"d" }}</h5>
+                            <h5 class="mb-0 fw-bold">Mês de Referência: {{ nome_mes_referencia }}/{{ ano_referencia }}</h5>
                             {% if data_limite %}
                             <p class="mb-0 text-dark">Prazo limite: <strong class="text-danger">{{ data_limite|date:"d/m/Y" }}</strong></p>
                             {% else %}

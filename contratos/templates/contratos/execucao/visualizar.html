@@ -7,7 +7,7 @@
             <a href="{% url 'dashboard_prestacao' %}" class="btn btn-outline-secondary btn-sm me-3"><i class="bi bi-arrow-left"></i> Dashboard</a>
             <div>
                 <h2 class="h4 mb-0 fw-bold">Livro do Fiscal — {{ controle.contrato.numero }}</h2>
-                <p class="text-muted mb-0 small">Ref. {{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia|stringformat:"d" }} | Fiscal: {{ controle.agente.posto.sigla }} {{ controle.agente.nome_de_guerra }}</p>
+                <p class="text-muted mb-0 small">Ref. {{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia }} | Fiscal: {{ controle.agente.posto.sigla }} {{ controle.agente.nome_de_guerra }}</p>
             </div>
         </div>
         <span class="badge fs-6 {% if controle.status == 'ok' %}bg-success{% elif controle.status == 'correcao' %}bg-warning text-dark{% else %}bg-primary{% endif %}">{{ controle.get_status_display }}</span>
