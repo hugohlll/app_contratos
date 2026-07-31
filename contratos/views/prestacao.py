@@ -123,11 +123,32 @@ def upload_prestacao(request, contrato_id):
     """View pública para envio do PDF de prestação de contas de contratos."""
     contrato = get_object_or_404(Contrato, pk=contrato_id)
     
+    hoje = date.today()
+    primeiro_dia_mes_atual = hoje.replace(day=1)
+    ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+    mes_ref_padrao = ultimo_dia_mes_anterior.month
+    ano_ref_padrao = ultimo_dia_mes_anterior.year
+
     if request.method == 'POST':
         form = PrestacaoContasUploadForm(request.POST, request.FILES, contrato=contrato)
         is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
         
-        if form.is_valid():
+        mes = int(request.POST.get('mes_referencia', mes_ref_padrao))
+        ano = int(request.POST.get('ano_referencia', ano_ref_padrao))
+        
+        # Verificar se o Livro do Fiscal foi preenchido para este contrato e período
+        controle_execucao = ControleExecucao.objects.filter(
+            contrato=contrato, mes_referencia=mes, ano_referencia=ano
+        ).order_by('-data_envio').first()
+        
+        execucao_preenchida = bool(controle_execucao and controle_execucao.status in ['entregue', 'correcao', 'ok'])
+        
+        if not execucao_preenchida:
+            msg_erro = "O preenchimento do Livro do Fiscal é obrigatório antes de enviar a prestação de contas mensal."
+            if is_ajax:
+                return JsonResponse({'success': False, 'errors': {'__all__': [msg_erro]}}, status=400)
+            form.add_error(None, msg_erro)
+        elif form.is_valid():
             mes = form.cleaned_data['mes_referencia']
             ano = form.cleaned_data['ano_referencia']
             
@@ -166,6 +187,19 @@ def upload_prestacao(request, contrato_id):
     else:
         form = PrestacaoContasUploadForm(contrato=contrato)
         
+    mes_ref = form.initial.get('mes_referencia', mes_ref_padrao)
+    ano_ref = form.initial.get('ano_referencia', ano_ref_padrao)
+
+    controle_execucao = ControleExecucao.objects.filter(
+        contrato=contrato, mes_referencia=mes_ref, ano_referencia=ano_ref
+    ).order_by('-data_envio').first()
+
+    execucao_preenchida = bool(controle_execucao and controle_execucao.status in ['entregue', 'correcao', 'ok'])
+    ultimo_apontamento_execucao = controle_execucao.apontamentos.first() if (controle_execucao and controle_execucao.apontamentos.exists()) else None
+
+    cal = CalendarioPrestacao.objects.filter(mes=mes_ref, ano=ano_ref).first()
+    data_limite_execucao = cal.data_entrega_execucao if (cal and cal.data_entrega_execucao) else None
+
     historico = PrestacaoContas.objects.filter(
         contrato=contrato
     ).exclude(status='pendente').order_by('-ano_referencia', '-mes_referencia', '-data_envio')
@@ -179,11 +213,26 @@ def upload_prestacao(request, contrato_id):
             vistos.add(chave)
             if len(historico_filtrado) >= 6:
                 break
-                
+
+    controles_past = ControleExecucao.objects.filter(
+        contrato=contrato
+    ).prefetch_related('apontamentos')
+    controles_past_map = {(c.mes_referencia, c.ano_referencia): c for c in controles_past}
+
+    for p in historico_filtrado:
+        ctrl = controles_past_map.get((p.mes_referencia, p.ano_referencia))
+        p.controle_execucao = ctrl
+
     context = {
         'contrato': contrato,
         'form': form,
-        'historico': historico_filtrado
+        'historico': historico_filtrado,
+        'controle_execucao': controle_execucao,
+        'execucao_preenchida': execucao_preenchida,
+        'ultimo_apontamento_execucao': ultimo_apontamento_execucao,
+        'data_limite_execucao': data_limite_execucao,
+        'mes_ref': f"{mes_ref:02d}",
+        'ano_ref': str(ano_ref),
     }
     return render(request, 'contratos/prestacao/upload_contrato.html', context)
 

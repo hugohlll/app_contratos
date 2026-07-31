@@ -123,7 +123,7 @@ class ControleExecucaoTests(TestCase):
 
         response = self.client.post(url, post_data)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('portal_execucao_index'))
+        self.assertEqual(response.url, reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id}))
 
         # Verificar se salvou no BD
         self.assertEqual(ControleExecucao.objects.count(), 1)
@@ -247,4 +247,50 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(res_form.status_code, 200)
         self.assertContains(res_form, "Observação / Apontamentos da ACI após Análise")
         self.assertContains(res_form, "Inconsistência nos valores das faturas apresentadas.")
+
+    def test_upload_prestacao_obrigatoriedade_livro_fiscal(self):
+        """Testa se o envio da prestação de contas (slides) é bloqueado até que o Livro do Fiscal seja preenchido."""
+        url_upload = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+
+        # 1. GET na tela sem o Livro do Fiscal preenchido -> execucao_preenchida deve ser False
+        res_get = self.client.get(url_upload)
+        self.assertEqual(res_get.status_code, 200)
+        self.assertFalse(res_get.context['execucao_preenchida'])
+        self.assertContains(res_get, "Preenchimento Obrigatório")
+
+        # 2. Tentativa de POST sem Livro do Fiscal -> Bloqueado com mensagem de erro
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        fake_pdf = SimpleUploadedFile("slides.pdf", b"%PDF-1.4 test pdf content", content_type="application/pdf")
+        
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+
+        post_data = {
+            'mes_referencia': ultimo_dia_mes_anterior.month,
+            'ano_referencia': ultimo_dia_mes_anterior.year,
+            'agente': self.agente.id,
+            'arquivo': fake_pdf
+        }
+
+        res_post_bloqueado = self.client.post(url_upload, post_data)
+        self.assertEqual(res_post_bloqueado.status_code, 200)
+        self.assertContains(res_post_bloqueado, "O preenchimento do Livro do Fiscal é obrigatório")
+
+        # 3. Preencher o Livro do Fiscal e tentar o POST novamente -> Sucesso
+        ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=ultimo_dia_mes_anterior.month,
+            ano_referencia=ultimo_dia_mes_anterior.year,
+            status='entregue'
+        )
+
+        res_get_liberado = self.client.get(url_upload)
+        self.assertTrue(res_get_liberado.context['execucao_preenchida'])
+
+        fake_pdf.seek(0)
+        res_post_sucesso = self.client.post(url_upload, post_data)
+        self.assertEqual(res_post_sucesso.status_code, 302)
+        self.assertIn("enviado=1", res_post_sucesso.url)
 

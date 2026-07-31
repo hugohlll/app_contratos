@@ -193,8 +193,8 @@ def formulario_execucao(request, contrato_id):
                 controle.relatorio_ocorrencias = "Sem ocorrências registradas no período."
             controle.save()
 
-            messages.success(request, "Livro do Fiscal enviado com sucesso!")
-            return redirect('portal_execucao_index')
+            messages.success(request, "Livro do Fiscal enviado com sucesso! Agora você pode enviar a prestação de contas mensal.")
+            return redirect('upload_prestacao', contrato_id=contrato.id)
         else:
             messages.error(request, "Por favor, corrija os erros apontados no formulário.")
     else:

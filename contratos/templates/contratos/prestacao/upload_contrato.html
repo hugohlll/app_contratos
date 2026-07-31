@@ -11,7 +11,7 @@
     {% if messages %}
     <div class="mb-4">
         {% for msg in messages %}
-        <div class="alert alert-{{ msg.tags }} alert-dismissible fade show">
+        <div class="alert alert-{{ msg.tags }} alert-dismissible fade show shadow-sm">
             {{ msg }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -20,14 +20,100 @@
     {% endif %}
     
     <div class="row">
-        <!-- Lado Esquerdo: Formulário -->
+        <!-- Lado Esquerdo: Formulário com Livro do Fiscal -->
         <div class="col-md-5">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Contrato {{ contrato.numero }}</h5>
+            <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
+                <div class="card-header bg-primary text-white p-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-journal-bookmark me-2"></i>Contrato {{ contrato.numero }}</h5>
                 </div>
-                <div class="card-body">
-                    <p class="small text-muted mb-4">{{ contrato.empresa.razao_social }}</p>
+                <div class="card-body p-4">
+                    <p class="small text-muted mb-3 fw-semibold">{{ contrato.empresa.razao_social }}</p>
+
+                    <!-- BANNER OPÇÃO B: LIVRO DO FISCAL (CONTROLE DE EXECUÇÃO) -->
+                    {% if not execucao_preenchida %}
+                        <!-- STATUS 1: PENDENTE (AMARELO / LARANJA) -->
+                        <div class="border border-warning bg-warning bg-opacity-10 rounded-3 p-3 mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-journal-x fs-2 text-warning me-2"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">Livro do Fiscal</h6>
+                                    <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.75rem;">Preenchimento Obrigatório</span>
+                                </div>
+                            </div>
+                            <p class="small text-dark mb-2">
+                                É necessário preencher o Controle de Execução Contratual (Livro do Fiscal) referente ao mês de referência antes de enviar os slides.
+                            </p>
+                            {% if data_limite_execucao %}
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-calendar-event me-1"></i>Prazo Limite: <strong class="text-danger">{{ data_limite_execucao|date:"d/m/Y" }}</strong>
+                            </div>
+                            {% endif %}
+                            <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-warning fw-bold w-100 text-dark shadow-sm">
+                                <i class="bi bi-journal-plus me-1"></i> Preencher Livro do Fiscal
+                            </a>
+                        </div>
+                    {% elif controle_execucao.status == 'correcao' %}
+                        <!-- STATUS 2: AGUARDANDO CORREÇÃO (VERMELHO / ALERTA) -->
+                        <div class="border border-danger bg-danger bg-opacity-10 rounded-3 p-3 mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-journal-exclamation fs-2 text-danger me-2"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-danger">Livro do Fiscal</h6>
+                                    <span class="badge bg-danger text-white fw-bold" style="font-size: 0.75rem;">Ajustes Solicitados pela ACI</span>
+                                </div>
+                            </div>
+                            <p class="small text-dark mb-2">
+                                Foram apontadas inconsistências no Livro do Fiscal pela Assessoria de Controle Interno.
+                            </p>
+                            {% if ultimo_apontamento_execucao %}
+                            <div class="alert alert-warning py-2 px-3 mb-2 small border-warning">
+                                <strong><i class="bi bi-exclamation-triangle-fill"></i> Apontamento da ACI:</strong><br>
+                                {{ ultimo_apontamento_execucao.descricao|linebreaksbr }}
+                            </div>
+                            {% endif %}
+                            <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-danger fw-bold w-100 text-white shadow-sm">
+                                <i class="bi bi-pencil-square me-1"></i> Corrigir Livro do Fiscal
+                            </a>
+                        </div>
+                    {% elif controle_execucao.status == 'ok' %}
+                        <!-- STATUS 3: OK / APROVADO (VERDE) -->
+                        <div class="border border-success bg-success bg-opacity-10 rounded-3 p-3 mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-journal-check fs-2 text-success me-2"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-success">Livro do Fiscal</h6>
+                                    <span class="badge bg-success text-white fw-bold" style="font-size: 0.75rem;">Conformidade (OK!)</span>
+                                </div>
+                            </div>
+                            <p class="small text-dark mb-2">
+                                O Controle de Execução Contratual do período foi analisado e aprovado.
+                            </p>
+                            <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-outline-success fw-bold w-100">
+                                <i class="bi bi-eye me-1"></i> Visualizar Livro do Fiscal
+                            </a>
+                        </div>
+                    {% else %}
+                        <!-- STATUS 4: ENTREGUE / EM ANÁLISE (AZUL) -->
+                        <div class="border border-primary bg-primary bg-opacity-10 rounded-3 p-3 mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-journal-check fs-2 text-primary me-2"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-primary">Livro do Fiscal</h6>
+                                    <span class="badge bg-primary text-white fw-bold" style="font-size: 0.75rem;">Preenchido / Entregue</span>
+                                </div>
+                            </div>
+                            <p class="small text-dark mb-2">
+                                Livro do Fiscal preenchido com sucesso para este mês de referência.
+                            </p>
+                            <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-outline-primary fw-bold w-100">
+                                <i class="bi bi-pencil-square me-1"></i> Editar Livro do Fiscal
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <hr class="my-4 text-muted border-opacity-25">
+
+                    <!-- FORMULÁRIO DE ENVIO DOS SLIDES DA PRESTAÇÃO DE CONTAS -->
                     <form id="form-upload-prestacao" action="{% url 'upload_prestacao' contrato_id=contrato.id %}" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ form.non_field_errors }}
@@ -46,8 +132,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Arquivo PDF</label>
-                            <input type="file" name="arquivo" class="form-control" accept="application/pdf" required>
+                            <label class="form-label fw-bold">Arquivo PDF da Prestação</label>
+                            <input type="file" name="arquivo" class="form-control" accept="application/pdf" required {% if not execucao_preenchida %}disabled{% endif %}>
                             <div class="form-text">Apenas formato PDF, máx. 10MB.</div>
                             {% if form.arquivo.errors %}
                             <div class="text-danger mt-2 fw-bold" style="font-size: 0.95rem;">
@@ -62,38 +148,62 @@
                             {% if form.observacao.errors %}<div class="text-danger small">{{ form.observacao.errors }}</div>{% endif %}
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 fw-bold">
-                            <i class="bi bi-cloud-arrow-up"></i> Enviar Prestação de Contas
+                        {% if execucao_preenchida %}
+                        <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">
+                            <i class="bi bi-cloud-arrow-up me-1"></i> Enviar Prestação de Contas
                         </button>
+                        {% else %}
+                        <button type="button" class="btn btn-secondary w-100 fw-bold" disabled>
+                            <i class="bi bi-lock-fill me-1"></i> Enviar Prestação de Contas
+                        </button>
+                        <div class="text-danger small mt-2 text-center fw-bold">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i> Preencha o Livro do Fiscal acima para liberar o envio.
+                        </div>
+                        {% endif %}
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- Lado Direito: Histórico -->
+        <!-- Lado Direito: Histórico de Envios -->
         <div class="col-md-7">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i> Últimos Envios (6 meses)</h5>
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-light p-3 border-bottom">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history me-2 text-primary"></i> Últimos Envios (6 meses)</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
                         {% for p in historico %}
                         <div class="list-group-item p-3">
                             <div class="d-flex w-100 justify-content-between align-items-center mb-1">
-                                <h6 class="mb-0 fw-bold">Referência {{ p.mes_referencia|stringformat:"02d" }}/{{ p.ano_referencia|stringformat:"d" }}</h6>
-                                <small class="text-muted">{{ p.data_envio|date:"d/m/Y H:i" }}</small>
+                                <h6 class="mb-0 fw-bold text-dark">Referência {{ p.mes_referencia|stringformat:"02d" }}/{{ p.ano_referencia|stringformat:"d" }}</h6>
+                                <small class="text-muted"><i class="bi bi-calendar-check me-1"></i>{{ p.data_envio|date:"d/m/Y H:i" }}</small>
                             </div>
-                            <div class="d-flex align-items-center mb-2">
-                                <span class="badge {% if p.status == 'entregue' %}bg-primary{% elif p.status == 'ok' %}bg-success{% elif p.status == 'correcao' %}bg-warning text-dark{% else %}bg-secondary{% endif %} me-2">
-                                    {{ p.get_status_display }}
+                            <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                                <span class="badge {% if p.status == 'entregue' %}bg-primary{% elif p.status == 'ok' %}bg-success{% elif p.status == 'correcao' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    Slides: {{ p.get_status_display }}
                                 </span>
-                                <small class="text-muted"><i class="bi bi-person"></i> {{ p.agente.posto.sigla|default:'' }} {{ p.agente.nome_de_guerra|default:'Fiscal' }}</small>
+                                {% if p.controle_execucao %}
+                                <span class="badge {% if p.controle_execucao.status == 'entregue' %}bg-info text-dark{% elif p.controle_execucao.status == 'ok' %}bg-success{% elif p.controle_execucao.status == 'correcao' %}bg-danger text-white{% else %}bg-secondary{% endif %}">
+                                    Livro: {{ p.controle_execucao.get_status_display }}
+                                </span>
+                                {% endif %}
+                                <small class="text-muted ms-auto"><i class="bi bi-person me-1"></i> {{ p.agente.posto.sigla|default:'' }} {{ p.agente.nome_de_guerra|default:'Fiscal' }}</small>
                             </div>
+
+                            <!-- Apontamentos da Prestação de Contas (Slides) -->
                             {% if p.status == 'correcao' and p.apontamentos.exists %}
-                            <div class="alert alert-warning py-2 px-3 mt-2 mb-0 small">
-                                <strong><i class="bi bi-exclamation-triangle-fill"></i> Apontamentos da ACI:</strong><br>
+                            <div class="alert alert-warning py-2 px-3 mt-2 mb-1 small border-warning">
+                                <strong><i class="bi bi-exclamation-triangle-fill"></i> Apontamentos da ACI (Slides):</strong><br>
                                 {{ p.apontamentos.first.descricao|linebreaksbr }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Apontamentos do Livro do Fiscal -->
+                            {% if p.controle_execucao and p.controle_execucao.status == 'correcao' and p.controle_execucao.apontamentos.exists %}
+                            <div class="alert alert-danger py-2 px-3 mt-2 mb-0 small border-danger">
+                                <strong><i class="bi bi-exclamation-circle-fill"></i> Apontamentos da ACI (Livro do Fiscal):</strong><br>
+                                {{ p.controle_execucao.apontamentos.first.descricao|linebreaksbr }}
                             </div>
                             {% endif %}
                         </div>
@@ -110,10 +220,15 @@
     </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script>
     // Customizar classes dos inputs do form
     $('#id_agente').addClass('form-select');
+    if (!{{ execucao_preenchida|yesno:"true,false" }}) {
+        $('#id_agente').prop('disabled', true);
+        $('#id_observacao').prop('disabled', true);
+    }
     $('#id_observacao').addClass('form-control');
 </script>
 {% endblock %}
