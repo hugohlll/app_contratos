@@ -241,7 +241,7 @@ body {
 {% block content %}
 <div class="container py-4">
     <div class="d-flex align-items-center mb-4">
-        <a href="{% url 'portal_execucao_fiscais' %}" class="btn btn-outline-secondary btn-sm me-3"><i class="bi bi-arrow-left"></i> Voltar</a>
+        <a href="{% url 'upload_prestacao' contrato_id=contrato.id %}" class="btn btn-outline-secondary btn-sm me-3"><i class="bi bi-arrow-left"></i> Voltar</a>
         <div>
             <h2 class="h4 mb-0 fw-bold">Livro do Fiscal Digital</h2>
             <p class="text-muted mb-0 small">Contrato {{ contrato.numero }} — Ref. {{ mes_referencia|stringformat:"02d" }}/{{ ano_referencia }}</p>
@@ -636,7 +636,7 @@ body {
             <h6 class="fw-bold text-dark mb-2"><i class="bi bi-chat-left-text me-1"></i>Observações Gerais</h6>
             {{ form.observacao }}
             <div class="d-flex justify-content-end gap-2 mt-4">
-                <a href="{% url 'portal_execucao_fiscais' %}" class="btn btn-outline-secondary">Cancelar</a>
+                <a href="{% url 'upload_prestacao' contrato_id=contrato.id %}" class="btn btn-outline-secondary">Cancelar</a>
                 <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm"><i class="bi bi-send me-1"></i> Enviar Livro do Fiscal</button>
             </div>
         </div></div>

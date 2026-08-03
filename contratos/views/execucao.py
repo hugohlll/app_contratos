@@ -17,66 +17,13 @@ from contratos.utils import is_admin, is_auditor, admin_required, auditor_requir
 
 
 def portal_execucao_index(request):
-    """Landing page pública do Portal de Controle de Execução Contratual (Livro do Fiscal)."""
-    hoje = date.today()
-    primeiro_dia_mes_atual = hoje.replace(day=1)
-    ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
-
-    filtro_mes = ultimo_dia_mes_anterior.month
-    filtro_ano = ultimo_dia_mes_anterior.year
-
-    cal = CalendarioPrestacao.objects.filter(ano=filtro_ano, mes=filtro_mes).first()
-    data_limite = cal.data_entrega_execucao if cal and cal.data_entrega_execucao else None
-
-    meses_nomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-                   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
-    nome_mes_referencia = meses_nomes[filtro_mes - 1]
-
-    return render(request, 'contratos/execucao/index.html', {
-        'mes_referencia': filtro_mes,
-        'ano_referencia': filtro_ano,
-        'nome_mes_referencia': nome_mes_referencia,
-        'data_limite': data_limite,
-    })
+    """Redireciona para o Portal de Prestação de Contas público."""
+    return redirect('portal_prestacao_index')
 
 
 def portal_execucao_fiscais(request):
-    """Lista de contratos vigentes para seleção do fiscal no preenchimento do Livro do Fiscal."""
-    hoje = date.today()
-    primeiro_dia_mes_atual = hoje.replace(day=1)
-    ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
-
-    filtro_mes = ultimo_dia_mes_anterior.month
-    filtro_ano = ultimo_dia_mes_anterior.year
-
-    contratos = Contrato.objects.filter(
-        vigencia_inicio__lte=hoje,
-        vigencia_fim__gte=hoje
-    ).order_by('numero')
-
-    controles = ControleExecucao.objects.filter(
-        mes_referencia=filtro_mes, ano_referencia=filtro_ano
-    ).prefetch_related('apontamentos')
-    controles_map = {c.contrato_id: c for c in controles}
-
-    contratos_info = []
-    for c in contratos:
-        ctrl = controles_map.get(c.id)
-        is_enviado = bool(ctrl and ctrl.status in ['entregue', 'correcao', 'ok'])
-        ultimo_apontamento = ctrl.apontamentos.first() if (ctrl and ctrl.apontamentos.exists()) else None
-
-        contratos_info.append({
-            'contrato': c,
-            'controle': ctrl,
-            'is_enviado': is_enviado,
-            'ultimo_apontamento': ultimo_apontamento,
-        })
-
-    return render(request, 'contratos/execucao/fiscais.html', {
-        'contratos_info': contratos_info,
-        'mes_referencia': filtro_mes,
-        'ano_referencia': filtro_ano,
-    })
+    """Redireciona para a Seleção de Contratos no Portal de Prestação de Contas."""
+    return redirect('portal_prestacao_fiscais')
 
 
 def excluir_controle_execucao_publico(request, contrato_id):
@@ -98,7 +45,7 @@ def excluir_controle_execucao_publico(request, contrato_id):
     else:
         messages.info(request, "Nenhum registro encontrado para este contrato no período atual.")
 
-    return redirect('portal_execucao_fiscais')
+    return redirect('upload_prestacao', contrato_id=contrato.id)
 
 
 def formulario_execucao(request, contrato_id):

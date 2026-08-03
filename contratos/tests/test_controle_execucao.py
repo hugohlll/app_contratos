@@ -65,14 +65,14 @@ class ControleExecucaoTests(TestCase):
         )
 
     def test_acesso_portal_execucao_publico(self):
-        """Testa se a landing page e a lista de contratos do portal de execução são acessíveis sem login."""
+        """Testa se as rotas antigas do portal de execução redirecionam para o portal de prestação de contas."""
         response_index = self.client.get(reverse('portal_execucao_index'))
-        self.assertEqual(response_index.status_code, 200)
-        self.assertContains(response_index, "Controle de Execução Contratual")
+        self.assertEqual(response_index.status_code, 302)
+        self.assertEqual(response_index.url, reverse('portal_prestacao_index'))
 
         response_fiscais = self.client.get(reverse('portal_execucao_fiscais'))
-        self.assertEqual(response_fiscais.status_code, 200)
-        self.assertContains(response_fiscais, "55/2026")
+        self.assertEqual(response_fiscais.status_code, 302)
+        self.assertEqual(response_fiscais.url, reverse('portal_prestacao_fiscais'))
 
     def test_preenchimento_formulario_livro_fiscal(self):
         """Testa a submissão completa do formulário do Livro do Fiscal com faturas e ocorrências."""
@@ -235,11 +235,11 @@ class ControleExecucaoTests(TestCase):
             descricao="Inconsistência nos valores das faturas apresentadas."
         )
 
-        # 1. Verificar na página de seleção de contratos (fiscais.html)
-        res_fiscais = self.client.get(reverse('portal_execucao_fiscais'))
-        self.assertEqual(res_fiscais.status_code, 200)
-        self.assertContains(res_fiscais, "correção")
-        self.assertContains(res_fiscais, "Inconsistência nos valores das faturas apresentadas.")
+        # 1. Verificar na página de upload de prestação do contrato (upload_contrato.html)
+        res_upload = self.client.get(reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id}))
+        self.assertEqual(res_upload.status_code, 200)
+        self.assertContains(res_upload, "Ajustes Solicitados pela ACI")
+        self.assertContains(res_upload, "Inconsistência nos valores das faturas apresentadas.")
 
         # 2. Verificar no formulário do fiscal (formulario.html)
         url_form = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id})
