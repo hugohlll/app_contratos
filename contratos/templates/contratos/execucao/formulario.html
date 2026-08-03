@@ -734,6 +734,13 @@ document.addEventListener('DOMContentLoaded', function() {
         'outro': 'Outro'
     };
 
+    function formatDateBR(dateStr) {
+        if (!dateStr) return '-';
+        const parts = String(dateStr).split('-');
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        return dateStr;
+    }
+
     function syncOc() {
         inputOc.value = JSON.stringify(ocs);
         renderOc();
@@ -744,7 +751,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let t = '';
         ocs.forEach((o, i) => {
             let label = tipoLabels[o.tipo] || o.tipo;
-            t += `[${i+1}] Data: ${o.data} | Tipo: ${label.toUpperCase()}\n    Descrição: ${o.descricao}\n    Ação do Fiscal: ${o.acao_fiscal||'N/A'}\n    Prazo: ${o.prazo||'N/A'}\n\n`;
+            t += `[${i+1}] Data: ${formatDateBR(o.data)} | Tipo: ${label.toUpperCase()}\n    Descrição: ${o.descricao}\n    Ação do Fiscal: ${o.acao_fiscal||'N/A'}\n    Prazo: ${o.prazo||'N/A'}\n\n`;
         });
         relTxt.value = t.trim();
     }
@@ -758,7 +765,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ocs.forEach((o, i) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="small">${o.data||'-'}</td>
+                <td class="small">${formatDateBR(o.data)}</td>
                 <td class="small fw-bold">${tipoLabels[o.tipo] || o.tipo}</td>
                 <td class="small">${o.descricao||'-'}</td>
                 <td class="small">${o.acao_fiscal||'-'}</td>
