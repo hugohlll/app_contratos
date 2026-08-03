@@ -202,16 +202,13 @@
                 <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
                 <input type="text" id="filtroMatrizFiscais" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
             </div>
-            <div class="input-group input-group-sm" style="width: 195px;">
-                <span class="input-group-text bg-light border-end-0"><i class="bi bi-funnel text-muted"></i></span>
-                <select id="filtroMatrizFiscaisStatus" class="form-select border-start-0 ps-1 bg-white" style="font-size: 0.825rem; text-overflow: ellipsis; white-space: nowrap;">
-                    <option value="">Todos os status</option>
-                    <option value="correcao">Correção</option>
-                    <option value="pendente">Pendente</option>
-                    <option value="entregue">Entregue</option>
-                    <option value="ok">Conformidade (OK)</option>
-                </select>
-            </div>
+            <select id="filtroMatrizFiscaisStatus" class="form-select form-select-sm no-tomselect" style="width: 165px; height: 31px;">
+                <option value="">Todos os status</option>
+                <option value="correcao">Correção</option>
+                <option value="pendente">Pendente</option>
+                <option value="entregue">Entregue</option>
+                <option value="ok">Conformidade (OK)</option>
+            </select>
         </div>
     </div>
     <div class="card-body p-0">
@@ -603,16 +600,13 @@
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" id="filtroMatrizExecucao" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
                 </div>
-                <div class="input-group input-group-sm" style="width: 195px;">
-                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-funnel text-muted"></i></span>
-                    <select id="filtroMatrizExecucaoStatus" class="form-select border-start-0 ps-1 bg-white" style="font-size: 0.825rem; text-overflow: ellipsis; white-space: nowrap;">
-                        <option value="">Todos os status</option>
-                        <option value="correcao">Correção</option>
-                        <option value="pendente">Pendente</option>
-                        <option value="entregue">Entregue</option>
-                        <option value="ok">Conformidade (OK)</option>
-                    </select>
-                </div>
+                <select id="filtroMatrizExecucaoStatus" class="form-select form-select-sm no-tomselect" style="width: 165px; height: 31px;">
+                    <option value="">Todos os status</option>
+                    <option value="correcao">Correção</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="entregue">Entregue</option>
+                    <option value="ok">Conformidade (OK)</option>
+                </select>
                 <a href="{% url 'exportar_execucao_csv' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:'d' }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
                     <i class="bi bi-download me-1"></i> Exportar Execução (CSV)
                 </a>
