@@ -499,7 +499,7 @@ class TextoApontamentosTests(BaseSetorTestSetup):
         )
         url_contrato = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
         response_c = self.client.get(url_contrato)
-        self.assertContains(response_c, "Apontamentos da ACI:")
+        self.assertContains(response_c, "Apontamentos da ACI")
 
         # Testando para setor
         p_setor = self._criar_prestacao_setor(3, 2026, status='correcao')

@@ -25,6 +25,7 @@ from contratos.models import (
     Integrante,
     PostoGraduacao,
     PrestacaoContas,
+    ControleExecucao,
 )
 
 
@@ -92,6 +93,13 @@ class UploadArquivoInvalidoTests(_BaseFixture):
     def setUp(self):
         super().setUp()
         self._criar_comissao_ativa_com_fiscal()
+        ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            status="entregue",
+        )
         self.url = reverse("upload_prestacao", kwargs={"contrato_id": self.contrato.id})
 
     def test_arquivo_invalido_renderiza_mesma_pagina(self):
@@ -332,7 +340,7 @@ class ExportacaoPendenteFanatmasmaTests(_BaseFixture):
         # Essa linha única deve mostrar "Pendente" com campos em branco
         cols = linhas_contrato[0].split(";")
         situacao_col = cols[9]  # coluna Situação
-        responsavel_col = cols[10]  # coluna Responsável
+        responsavel_col = cols[11]  # coluna Responsável pela Entrega
 
         self.assertEqual(situacao_col, "Pendente")
         self.assertEqual(responsavel_col, "-")

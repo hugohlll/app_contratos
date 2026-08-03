@@ -294,3 +294,241 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(res_post_sucesso.status_code, 302)
         self.assertIn("enviado=1", res_post_sucesso.url)
 
+    def test_exclusao_publica_livro_fiscal(self):
+        """Testa a exclusão pública do Livro do Fiscal via portal (com e sem registro existente)."""
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+
+        # 1. Exclusão quando NÃO existe registro → redireciona com mensagem info
+        url = reverse('excluir_controle_execucao_publico', kwargs={'contrato_id': self.contrato.id})
+        res_sem_registro = self.client.get(url)
+        self.assertEqual(res_sem_registro.status_code, 302)
+
+        # 2. Criar registro e excluir → deve remover do banco
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=ultimo_dia_mes_anterior.month,
+            ano_referencia=ultimo_dia_mes_anterior.year,
+            status='entregue'
+        )
+        self.assertEqual(ControleExecucao.objects.count(), 1)
+
+        res_com_registro = self.client.get(url)
+        self.assertEqual(res_com_registro.status_code, 302)
+        self.assertEqual(ControleExecucao.objects.count(), 0)
+
+    def test_exclusao_admin_livro_fiscal(self):
+        """Testa que apenas administradores conseguem excluir o Livro do Fiscal via painel."""
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            status='entregue'
+        )
+        url = reverse('excluir_controle_execucao', kwargs={'pk': ctrl.id})
+
+        # 1. Sem login → redireciona para portal_home
+        res_no_login = self.client.get(url)
+        self.assertEqual(res_no_login.status_code, 302)
+        self.assertTrue(ControleExecucao.objects.filter(pk=ctrl.id).exists())
+
+        # 2. Auditor (não admin) → redireciona (user_passes_test falha)
+        self.client.login(username='auditor1', password='password123')
+        res_auditor = self.client.get(url)
+        self.assertEqual(res_auditor.status_code, 302)
+        self.assertTrue(ControleExecucao.objects.filter(pk=ctrl.id).exists())
+
+        # 3. Admin → exclusão com sucesso
+        self.client.login(username='admin1', password='password123')
+        res_admin = self.client.get(url)
+        self.assertEqual(res_admin.status_code, 302)
+        self.assertFalse(ControleExecucao.objects.filter(pk=ctrl.id).exists())
+
+    def test_visualizacao_somente_leitura_requer_login(self):
+        """Testa que a visualização do Livro do Fiscal requer login e exibe dados e apontamentos."""
+        from contratos.models import ApontamentoCorrecaoExecucao
+
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            status='correcao'
+        )
+        ApontamentoCorrecaoExecucao.objects.create(
+            controle=ctrl,
+            autor=self.user_auditor,
+            descricao="Fatura NF-1001 com valor divergente."
+        )
+
+        url = reverse('visualizar_controle_execucao', kwargs={'pk': ctrl.id})
+
+        # 1. Sem login → redireciona
+        res_no_login = self.client.get(url)
+        self.assertEqual(res_no_login.status_code, 302)
+
+        # 2. Com login → exibe dados e apontamentos
+        self.client.login(username='auditor1', password='password123')
+        res_ok = self.client.get(url)
+        self.assertEqual(res_ok.status_code, 200)
+        self.assertEqual(res_ok.context['controle'], ctrl)
+        self.assertEqual(res_ok.context['apontamentos'].count(), 1)
+        self.assertContains(res_ok, "Fatura NF-1001 com valor divergente.")
+
+    def test_reenvio_formulario_atualiza_sem_duplicar(self):
+        """Testa que o reenvio do formulário para o mesmo contrato/mês atualiza o registro existente."""
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        filtro_mes = ultimo_dia_mes_anterior.month
+        filtro_ano = ultimo_dia_mes_anterior.year
+
+        # Criar primeiro registro
+        ctrl_original = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=filtro_mes,
+            ano_referencia=filtro_ano,
+            status='entregue',
+            observacao='Primeira versão'
+        )
+        RegistroFatura.objects.create(controle=ctrl_original, numero_nf='NF-OLD', valor=100)
+        self.assertEqual(ControleExecucao.objects.count(), 1)
+        self.assertEqual(ctrl_original.faturas.count(), 1)
+
+        # Reenviar o formulário (simula edição)
+        url = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id})
+        post_data = {
+            'mes_referencia': filtro_mes,
+            'ano_referencia': filtro_ano,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'substituicao_entrega_formal': 'na',
+            'substituicao_obs': '',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'confirmacao_siloms_execucao': 'sim',
+            'possibilidade_aditivo': 'na',
+            'tratativas_120_dias': 'na',
+            'coordenacao_doc_scon': 'sim',
+            'notas_empenho': '2026NE999999',
+            'cronograma_fisico_financeiro': 'conforme',
+            'detalhamento_cronograma': 'Status ok.',
+            'imr_aplicado': 'nao',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'observacao': 'Versão atualizada',
+            'faturas_json': json.dumps([{'numero_nf': 'NF-NEW', 'valor': 500, 'numero_ob': 'OB-1'}]),
+            'ocorrencias_json': '[]'
+        }
+
+
+        res = self.client.post(url, post_data)
+        self.assertEqual(res.status_code, 302)
+
+        # Deve ter atualizado, não duplicado
+        self.assertEqual(ControleExecucao.objects.count(), 1)
+        ctrl_atualizado = ControleExecucao.objects.first()
+        self.assertEqual(ctrl_atualizado.observacao, 'Versão atualizada')
+
+        # Faturas antigas foram substituídas
+        self.assertEqual(ctrl_atualizado.faturas.count(), 1)
+        self.assertEqual(ctrl_atualizado.faturas.first().numero_nf, 'NF-NEW')
+
+    def test_correcao_sem_justificativa_bloqueada(self):
+        """Testa que alterar status para 'correcao' sem justificativa é rejeitado."""
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            status='entregue'
+        )
+
+        self.client.login(username='auditor1', password='password123')
+        url = reverse('alterar_status_execucao', kwargs={'pk': ctrl.id, 'novo_status': 'correcao'})
+
+        # POST sem justificativa → deve redirecionar sem alterar status
+        res = self.client.post(url, {'justificativa': ''})
+        self.assertEqual(res.status_code, 302)
+        ctrl.refresh_from_db()
+        self.assertEqual(ctrl.status, 'entregue')  # Não alterou
+        self.assertEqual(ctrl.apontamentos.count(), 0)  # Nenhum apontamento criado
+
+        # GET (sem body) também deve bloquear
+        res_get = self.client.get(url)
+        self.assertEqual(res_get.status_code, 302)
+        ctrl.refresh_from_db()
+        self.assertEqual(ctrl.status, 'entregue')
+
+    def test_status_invalido_rejeitado(self):
+        """Testa que um status inexistente é rejeitado na alteração do Livro do Fiscal."""
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            status='entregue'
+        )
+
+        self.client.login(username='auditor1', password='password123')
+        url = reverse('alterar_status_execucao', kwargs={'pk': ctrl.id, 'novo_status': 'invalido'})
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 302)
+        ctrl.refresh_from_db()
+        self.assertEqual(ctrl.status, 'entregue')  # Permanece inalterado
+
+    def test_usuario_sem_permissao_nao_altera_status(self):
+        """Testa que um usuário logado sem grupo Auditores não consegue alterar status do Livro."""
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            status='entregue'
+        )
+
+        # Criar usuário sem nenhum grupo
+        user_normal = User.objects.create_user(username='normal1', password='password123')
+        self.client.login(username='normal1', password='password123')
+
+        url = reverse('alterar_status_execucao', kwargs={'pk': ctrl.id, 'novo_status': 'ok'})
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 302)
+        ctrl.refresh_from_db()
+        self.assertEqual(ctrl.status, 'entregue')  # Não alterou
+
+    def test_dashboard_matriz_execucao(self):
+        """Testa que o dashboard inclui a matriz de execução contratual no contexto."""
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+
+        ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=ultimo_dia_mes_anterior.month,
+            ano_referencia=ultimo_dia_mes_anterior.year,
+            status='ok'
+        )
+
+        self.client.login(username='auditor1', password='password123')
+        res = self.client.get(reverse('dashboard_prestacao'))
+        self.assertEqual(res.status_code, 200)
+
+        # Verificar que a chave matriz_execucao existe no contexto
+        self.assertIn('matriz_execucao', res.context)
+        matriz = res.context['matriz_execucao']
+        self.assertTrue(len(matriz) > 0)
+
+        # Verificar que o contrato está na matriz
+        contratos_na_matriz = [item['contrato'] for item in matriz]
+        self.assertIn(self.contrato, contratos_na_matriz)
+
+        # Verificar que as entregas incluem o status correto
+        item = next(i for i in matriz if i['contrato'] == self.contrato)
+        statuses = [e['status'] for e in item['entregas']]
+        self.assertIn('ok', statuses)
