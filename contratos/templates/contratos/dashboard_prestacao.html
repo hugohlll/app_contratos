@@ -197,9 +197,21 @@
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="m-0 text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento (Últimos 3 meses)</h5>
-        <div class="input-group input-group-sm" style="width: 250px;">
-            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-            <input type="text" id="filtroMatrizFiscais" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="input-group input-group-sm" style="width: 220px;">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" id="filtroMatrizFiscais" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
+            </div>
+            <div class="input-group input-group-sm" style="width: 160px;">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-funnel text-muted"></i></span>
+                <select id="filtroMatrizFiscaisStatus" class="form-select border-start-0 ps-0 bg-white" style="font-size: 0.85rem;">
+                    <option value="">Todos os status</option>
+                    <option value="correcao">Correção</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="entregue">Entregue</option>
+                    <option value="ok">Conformidade (OK)</option>
+                </select>
+            </div>
         </div>
     </div>
     <div class="card-body p-0">
@@ -215,7 +227,7 @@
                 </thead>
                 <tbody>
                     {% for c_data in matriz_contratos %}
-                    <tr>
+                    <tr class="linha-matriz-fiscais" data-statuses="{% for e in c_data.entregas %}{{ e.status }} {% endfor %}">
                         <td class="text-start">
                              <div class="fw-bold text-primary">{{ c_data.contrato.numero }}</div>
                              <div class="small text-muted text-truncate" style="max-width: 250px;" title="{% if c_data.contrato.empresa.nome_fantasia %}{{ c_data.contrato.empresa.razao_social }}{% endif %}">{{ c_data.contrato.empresa.nome_exibicao }}</div>
@@ -582,13 +594,29 @@
 <!-- ABA: EXECUÇÃO CONTRATUAL (LIVRO DO FISCAL) -->
 <div class="tab-pane fade" id="execucao-pane" role="tabpanel" aria-labelledby="execucao-tab">
     <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
             <h6 class="m-0 fw-bold text-secondary">
                 <i class="bi bi-journal-check me-2 text-primary"></i>Acompanhamento do Livro do Fiscal (Últimos 3 Mêses)
             </h6>
-            <a href="{% url 'exportar_execucao_csv' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:'d' }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
-                <i class="bi bi-download me-1"></i> Exportar Execução (CSV)
-            </a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="input-group input-group-sm" style="width: 220px;">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="filtroMatrizExecucao" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
+                </div>
+                <div class="input-group input-group-sm" style="width: 160px;">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-funnel text-muted"></i></span>
+                    <select id="filtroMatrizExecucaoStatus" class="form-select border-start-0 ps-0 bg-white" style="font-size: 0.85rem;">
+                        <option value="">Todos os status</option>
+                        <option value="correcao">Correção</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="entregue">Entregue</option>
+                        <option value="ok">Conformidade (OK)</option>
+                    </select>
+                </div>
+                <a href="{% url 'exportar_execucao_csv' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:'d' }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                    <i class="bi bi-download me-1"></i> Exportar Execução (CSV)
+                </a>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -605,10 +633,13 @@
                     </thead>
                     <tbody>
                         {% for item in matriz_execucao %}
-                        <tr>
+                        <tr class="linha-matriz-execucao" data-statuses="{% for e in item.entregas %}{{ e.status }} {% endfor %}">
                             <td>
                                 <div class="fw-bold text-primary">{{ item.contrato.numero }}</div>
-                                <small class="text-muted text-truncate d-block" style="max-width: 300px;">{{ item.contrato.objeto }}</small>
+                                {% if item.contrato.empresa %}
+                                <div class="small text-muted text-truncate" style="max-width: 280px;" title="{% if item.contrato.empresa.nome_fantasia %}{{ item.contrato.empresa.razao_social }}{% endif %}">{{ item.contrato.empresa.nome_exibicao }}</div>
+                                {% endif %}
+                                <small class="text-muted text-truncate d-block" style="max-width: 280px;" title="{{ item.contrato.objeto }}">{{ item.contrato.objeto }}</small>
                             </td>
                             {% for entrega in item.entregas %}
                             <td class="text-center">
@@ -857,18 +888,47 @@
 
         // Filtro Matriz Fiscais
         const inputFiltroFiscais = document.getElementById('filtroMatrizFiscais');
-        if (inputFiltroFiscais) {
-            inputFiltroFiscais.addEventListener('keyup', function() {
-                const termo = this.value.toLowerCase();
-                const linhas = document.querySelectorAll('#fiscais-pane .table-responsive tbody tr');
-                
-                linhas.forEach(linha => {
-                    if (linha.cells.length === 1) return; // ignora linha de fallback
-                    const textoLinha = linha.cells[0].textContent.toLowerCase();
-                    linha.style.display = textoLinha.includes(termo) ? '' : 'none';
-                });
+        const selectFiltroFiscaisStatus = document.getElementById('filtroMatrizFiscaisStatus');
+
+        function aplicarFiltroFiscais() {
+            const termo = (inputFiltroFiscais ? inputFiltroFiscais.value : '').toLowerCase().trim();
+            const statusFiltro = (selectFiltroFiscaisStatus ? selectFiltroFiscaisStatus.value : '').toLowerCase().trim();
+            const linhas = document.querySelectorAll('#fiscais-pane .table-responsive tbody tr.linha-matriz-fiscais');
+
+            linhas.forEach(linha => {
+                const textoLinha = linha.cells[0].textContent.toLowerCase();
+                const matchesTexto = !termo || textoLinha.includes(termo);
+                const statuses = (linha.dataset.statuses || '').toLowerCase();
+                const matchesStatus = !statusFiltro || statuses.includes(statusFiltro);
+
+                linha.style.display = (matchesTexto && matchesStatus) ? '' : 'none';
             });
         }
+
+        if (inputFiltroFiscais) inputFiltroFiscais.addEventListener('input', aplicarFiltroFiscais);
+        if (selectFiltroFiscaisStatus) selectFiltroFiscaisStatus.addEventListener('change', aplicarFiltroFiscais);
+
+        // Filtro Matriz Execução (Livro do Fiscal)
+        const inputFiltroExecucao = document.getElementById('filtroMatrizExecucao');
+        const selectFiltroExecucaoStatus = document.getElementById('filtroMatrizExecucaoStatus');
+
+        function aplicarFiltroExecucao() {
+            const termo = (inputFiltroExecucao ? inputFiltroExecucao.value : '').toLowerCase().trim();
+            const statusFiltro = (selectFiltroExecucaoStatus ? selectFiltroExecucaoStatus.value : '').toLowerCase().trim();
+            const linhas = document.querySelectorAll('#execucao-pane .table-responsive tbody tr.linha-matriz-execucao');
+
+            linhas.forEach(linha => {
+                const textoLinha = linha.cells[0].textContent.toLowerCase();
+                const matchesTexto = !termo || textoLinha.includes(termo);
+                const statuses = (linha.dataset.statuses || '').toLowerCase();
+                const matchesStatus = !statusFiltro || statuses.includes(statusFiltro);
+
+                linha.style.display = (matchesTexto && matchesStatus) ? '' : 'none';
+            });
+        }
+
+        if (inputFiltroExecucao) inputFiltroExecucao.addEventListener('input', aplicarFiltroExecucao);
+        if (selectFiltroExecucaoStatus) selectFiltroExecucaoStatus.addEventListener('change', aplicarFiltroExecucao);
 
         // Filtro Matriz Setores
         const inputFiltroSetores = document.getElementById('filtroMatrizSetores');

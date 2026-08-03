@@ -509,3 +509,26 @@ class TextoApontamentosTests(BaseSetorTestSetup):
         url_setor = reverse('upload_prestacao_setor', kwargs={'setor_id': self.setor.id})
         response_s = self.client.get(url_setor)
         self.assertContains(response_s, "Apontamentos da ACI:")
+
+
+# ===================================================================
+# 10. FILTROS DE BUSCA E STATUS NA MATRIZ DO DASHBOARD
+# ===================================================================
+class FiltrosMatrizDashboardTests(BaseSetorTestSetup):
+    """Verifica se os campos de busca e filtros de status estão presentes na matriz do dashboard."""
+
+    def test_elementos_de_filtro_no_dashboard(self):
+        self.client.force_login(self.admin_user)
+        url = reverse('dashboard_prestacao')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        # Filtros da matriz de Fiscais
+        self.assertContains(response, 'id="filtroMatrizFiscais"')
+        self.assertContains(response, 'id="filtroMatrizFiscaisStatus"')
+
+        # Filtros da matriz do Livro do Fiscal (Execução)
+        self.assertContains(response, 'id="filtroMatrizExecucao"')
+        self.assertContains(response, 'id="filtroMatrizExecucaoStatus"')
+        self.assertContains(response, 'linha-matriz-execucao')
+
