@@ -503,7 +503,17 @@ body {
                     <div class="mt-2 div-diligencia" style="display:none">{{ form.diligencia_visita_desc }}</div>
                 </div>
 
-                <div class="col-md-6"><label class="form-label fw-bold">IMR aplicado?</label>{{ form.imr_aplicado }}</div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small d-block mb-2">IMR aplicado?</label>
+                    <div class="segmented-control">
+                        {% for radio in form.imr_aplicado %}
+                        <div class="form-check">
+                            {{ radio.tag }}
+                            <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-bold small d-block mb-2">Glosa realizada no pagamento?</label>
@@ -606,7 +616,17 @@ body {
                         {% endfor %}
                     </div>
                 </div>
-                <div class="col-md-6"><label class="form-label fw-bold">Necessidade de PAAI?</label>{{ form.necessidade_paai }}</div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold d-block">Necessidade de PAAI?</label>
+                    <div class="segmented-control mt-1">
+                        {% for radio in form.necessidade_paai %}
+                        <div class="form-check">
+                            {{ radio.tag }}
+                            <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
                 <div class="col-12 div-paai" style="display:none"><label class="form-label fw-bold">Justificativa PAAI</label>{{ form.paai_justificativa }}</div>
             </div>
         </div></div>
