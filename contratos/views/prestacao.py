@@ -410,31 +410,32 @@ def dashboard_prestacao(request):
 
     stats = _get_dashboard_stats(filtro_ano, filtro_mes)
     
-    # Construir tabela-matriz (Últimos 3 meses excluindo o atual)
-    # Lista de tuplas (ano, mes) dos últimos 3 meses
-    ultimos_3_meses = []
-    _ano = ano_padrao
-    _mes = mes_padrao
-    for _ in range(3):
-        ultimos_3_meses.append((_ano, _mes))
+    # Construir tabela-matriz (Últimos 6 meses a partir do mês selecionado)
+    # Lista de tuplas (ano, mes) dos últimos 6 meses
+    ultimos_6_meses = []
+    _ano = filtro_ano
+    _mes = filtro_mes
+    for _ in range(6):
+        ultimos_6_meses.append((_ano, _mes))
         _mes -= 1
         if _mes == 0:
             _mes = 12
             _ano -= 1
-    ultimos_3_meses.reverse() # Colocar em ordem cronológica
+    ultimos_6_meses.reverse() # Colocar em ordem cronológica
     
     # Mapear as entregas por contrato para acesso rápido na view
     # estrutura: {contrato_id: {(ano, mes): prestacao_id}}
     prestacoes_map = {}
     
-    # Busca todas as prestações dos últimos 3 meses
     contratos_vigentes = Contrato.objects.filter(
         vigencia_inicio__lte=hoje,
         vigencia_fim__gte=hoje
     ).order_by('numero')
     
+    # Busca todas as prestações dos últimos 6 meses
+    min_ano_6 = ultimos_6_meses[0][0]
     todas_prestacoes = PrestacaoContas.objects.filter(
-        ano_referencia__gte=ultimos_3_meses[0][0],
+        ano_referencia__gte=min_ano_6,
         contrato__in=contratos_vigentes
     ).order_by('id')
     
@@ -443,11 +444,11 @@ def dashboard_prestacao(request):
             prestacoes_map[p.contrato_id] = {}
         prestacoes_map[p.contrato_id][(p.ano_referencia, p.mes_referencia)] = p
 
-    # Monta matriz estruturada para o template
+    # Monta matriz estruturada para o template (6 meses)
     matriz_contratos = []
     for c in contratos_vigentes:
         entregas = []
-        for ano, mes in ultimos_3_meses:
+        for ano, mes in ultimos_6_meses:
             prestacao = prestacoes_map.get(c.id, {}).get((ano, mes))
             entregas.append({
                 'ano': ano,
@@ -461,10 +462,10 @@ def dashboard_prestacao(request):
             'entregas': entregas
         })
 
-    # Busca todas as prestações dos setores dos últimos 3 meses
+    # Busca todas as prestações dos setores dos últimos 6 meses
     setores = Setor.objects.all().order_by('nome')
     todas_prestacoes_setores = PrestacaoContasSetor.objects.filter(
-        ano_referencia__gte=ultimos_3_meses[0][0]
+        ano_referencia__gte=min_ano_6
     ).order_by('id')
     
     prestacoes_setor_map = {}
@@ -476,7 +477,7 @@ def dashboard_prestacao(request):
     matriz_setores = []
     for s in setores:
         entregas = []
-        for ano, mes in ultimos_3_meses:
+        for ano, mes in ultimos_6_meses:
             prestacao = prestacoes_setor_map.get(s.id, {}).get((ano, mes))
             entregas.append({
                 'ano': ano,
@@ -490,9 +491,9 @@ def dashboard_prestacao(request):
             'entregas': entregas
         })
 
-    # Busca todos os registros de Controle de Execução (Livro do Fiscal) dos últimos 3 meses
+    # Busca todos os registros de Controle de Execução (Livro do Fiscal) dos últimos 6 meses
     todos_controles_exec = ControleExecucao.objects.filter(
-        ano_referencia__gte=ultimos_3_meses[0][0],
+        ano_referencia__gte=min_ano_6,
         contrato__in=contratos_vigentes
     ).order_by('id')
 
@@ -505,7 +506,7 @@ def dashboard_prestacao(request):
     matriz_execucao = []
     for c in contratos_vigentes:
         entregas = []
-        for ano, mes in ultimos_3_meses:
+        for ano, mes in ultimos_6_meses:
             controle = execucoes_map.get(c.id, {}).get((ano, mes))
             entregas.append({
                 'ano': ano,
@@ -518,6 +519,39 @@ def dashboard_prestacao(request):
             'entregas': entregas
         })
 
+    # Monta visão detalhada unificada para o mês selecionado (Fiscais: Slides + Livro do Fiscal + Apontamentos ACI)
+    entregas_mes_selecionado = []
+    for c in contratos_vigentes:
+        prestacao = prestacoes_map.get(c.id, {}).get((filtro_ano, filtro_mes))
+        controle = execucoes_map.get(c.id, {}).get((filtro_ano, filtro_mes))
+        
+        apontamentos_slides = list(prestacao.apontamentos.select_related('autor').all()) if prestacao else []
+        apontamentos_controle = list(controle.apontamentos.select_related('autor').all()) if controle else []
+        
+        entregas_mes_selecionado.append({
+            'contrato': c,
+            'prestacao': prestacao,
+            'controle': controle,
+            'status_prestacao': prestacao.status if prestacao else 'pendente',
+            'status_controle': controle.status if controle else 'pendente',
+            'observacao_fiscal': prestacao.observacao if (prestacao and prestacao.observacao) else '',
+            'apontamentos_slides': apontamentos_slides,
+            'apontamentos_controle': apontamentos_controle,
+        })
+
+    # Monta visão detalhada para o mês selecionado (Setores: Slides + Apontamentos ACI)
+    entregas_setor_mes_selecionado = []
+    for s in setores:
+        prestacao = prestacoes_setor_map.get(s.id, {}).get((filtro_ano, filtro_mes))
+        apontamentos_setor = list(prestacao.apontamentos.select_related('autor').all()) if prestacao else []
+        entregas_setor_mes_selecionado.append({
+            'setor': s,
+            'prestacao': prestacao,
+            'status': prestacao.status if prestacao else 'pendente',
+            'observacao_gestor': prestacao.observacao if (prestacao and prestacao.observacao) else '',
+            'apontamentos': apontamentos_setor,
+        })
+
     meses_nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
     context = {
@@ -527,7 +561,11 @@ def dashboard_prestacao(request):
         'matriz_contratos': matriz_contratos,
         'matriz_setores': matriz_setores,
         'matriz_execucao': matriz_execucao,
-        'ultimos_3_meses_tuplas': ultimos_3_meses,
+        'ultimos_6_meses_tuplas': ultimos_6_meses,
+        'ultimos_3_meses_tuplas': ultimos_6_meses[-3:], # mantem compatibilidade
+        
+        'entregas_mes_selecionado': entregas_mes_selecionado,
+        'entregas_setor_mes_selecionado': entregas_setor_mes_selecionado,
         
         'filtro_mes': filtro_mes,
         'filtro_ano': filtro_ano,
