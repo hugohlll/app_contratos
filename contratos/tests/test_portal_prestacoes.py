@@ -23,7 +23,7 @@ from contratos.models import (
     Contrato, Empresa, PrestacaoContas, PrestacaoContasSetor,
     Agente, PostoGraduacao, Comissao, Integrante, Funcao,
     Setor, CargoRegimental, ApontamentoCorrecaoSetor, ApontamentoCorrecao,
-    CalendarioPrestacao
+    CalendarioPrestacao, ControleExecucao
 )
 
 
@@ -543,4 +543,80 @@ class FiltrosMatrizDashboardTests(BaseSetorTestSetup):
         self.assertContains(response, 'id="filtroMatrizExecucao"')
         self.assertContains(response, 'id="filtroMatrizExecucaoStatus"')
         self.assertContains(response, 'linha-matriz-execucao')
+
+
+# ===================================================================
+# 11. REENGENHARIA DASHBOARD — SUB-ABAS E HISTÓRICO DE 6 MESES
+# ===================================================================
+class DashboardReengenhariaSubAbasTests(BaseSetorTestSetup):
+    """Testes para a reengenharia do Dashboard (sub-abas e histórico de 6 meses)."""
+
+    def test_dashboard_contem_novas_subabas_fiscais_e_setores(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse('dashboard_prestacao'))
+        self.assertEqual(response.status_code, 200)
+
+        # Novas sub-abas da aba Fiscais
+        self.assertContains(response, 'id="fiscais-mes-subtab"')
+        self.assertContains(response, 'id="fiscais-slides-subtab"')
+        self.assertContains(response, 'id="fiscais-execucao-subtab"')
+
+        # Novas sub-abas da aba Setores
+        self.assertContains(response, 'id="setores-mes-subtab"')
+        self.assertContains(response, 'id="setores-matriz-subtab"')
+
+    def test_contexto_retorna_ultimos_6_meses(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse('dashboard_prestacao'))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertIn('ultimos_6_meses_tuplas', response.context)
+        ultimos_6_meses = response.context['ultimos_6_meses_tuplas']
+        self.assertEqual(len(ultimos_6_meses), 6)
+
+    def test_entregas_mes_selecionado_unificado(self):
+        # Cria uma prestação de contas (slides) para o mês corrente/selecionado
+        hoje = date.today()
+        mes_atual = hoje.month
+        ano_atual = hoje.year
+
+        # Cria prestação
+        pdf = self._make_pdf("c.pdf")
+        prestacao = PrestacaoContas.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=mes_atual, ano_referencia=ano_atual,
+            arquivo=pdf, status='entregue', observacao="Relatorio de teste"
+        )
+        
+        # Cria apontamento para a prestação
+        ApontamentoCorrecao.objects.create(
+            prestacao=prestacao, autor=self.admin_user, descricao="Corrigir slides"
+        )
+
+        # Cria controle de execução (Livro do Fiscal)
+        controle = ControleExecucao.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=mes_atual, ano_referencia=ano_atual,
+            status='ok'
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse('dashboard_prestacao') + f"?mes={mes_atual}&ano={ano_atual}")
+        self.assertEqual(response.status_code, 200)
+
+        # Verifica se os dados unificados do mês selecionado estão corretos no contexto
+        self.assertIn('entregas_mes_selecionado', response.context)
+        entregas_mes = response.context['entregas_mes_selecionado']
+        
+        # Procura pelo nosso contrato
+        dados_contrato = next((x for x in entregas_mes if x['contrato'] == self.contrato), None)
+        self.assertIsNotNone(dados_contrato)
+        self.assertEqual(dados_contrato['prestacao'], prestacao)
+        self.assertEqual(dados_contrato['controle'], controle)
+        self.assertEqual(dados_contrato['status_prestacao'], 'entregue')
+        self.assertEqual(dados_contrato['status_controle'], 'ok')
+        self.assertEqual(dados_contrato['observacao_fiscal'], 'Relatorio de teste')
+        self.assertEqual(len(dados_contrato['apontamentos_slides']), 1)
+        self.assertEqual(dados_contrato['apontamentos_slides'][0].descricao, "Corrigir slides")
+
 
