@@ -300,12 +300,15 @@ class ControleExecucaoTests(TestCase):
         primeiro_dia_mes_atual = hoje.replace(day=1)
         ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
 
+        url_upload_esperada = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+
         # 1. Exclusão quando NÃO existe registro → redireciona com mensagem info
         url = reverse('excluir_controle_execucao_publico', kwargs={'contrato_id': self.contrato.id})
         res_sem_registro = self.client.get(url)
         self.assertEqual(res_sem_registro.status_code, 302)
+        self.assertEqual(res_sem_registro.url, url_upload_esperada)
 
-        # 2. Criar registro e excluir → deve remover do banco
+        # 2. Criar registro e excluir → deve remover do banco e redirecionar
         ctrl = ControleExecucao.objects.create(
             contrato=self.contrato,
             agente=self.agente,
@@ -317,6 +320,7 @@ class ControleExecucaoTests(TestCase):
 
         res_com_registro = self.client.get(url)
         self.assertEqual(res_com_registro.status_code, 302)
+        self.assertEqual(res_com_registro.url, url_upload_esperada)
         self.assertEqual(ControleExecucao.objects.count(), 0)
 
     def test_exclusao_admin_livro_fiscal(self):

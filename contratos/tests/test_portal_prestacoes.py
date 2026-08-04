@@ -110,6 +110,7 @@ class PortalLandingPageTests(BaseSetorTestSetup):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Fiscais de Contrato")
         self.assertContains(response, "Chefes de Setor")
+        self.assertNotContains(response, "Controle de Execução Contratual (Livro do Fiscal)")
 
     def test_pagina_fiscais_lista_contratos_vigentes(self):
         response = self.client.get(reverse('portal_prestacao_fiscais'))
