@@ -878,6 +878,14 @@ def alterar_status_prestacao(request, pk, novo_status):
 
         stats = _get_dashboard_stats(filtro_ano, filtro_mes)
 
+        apontamentos_slides_list = []
+        for ap in prestacao.apontamentos.all().order_by('-data_registro'):
+            apontamentos_slides_list.append({
+                'descricao': ap.descricao,
+                'autor': ap.autor.get_full_name() or ap.autor.username,
+                'data_registro': ap.data_registro.strftime("%d/%m/%Y %H:%M")
+            })
+
         return JsonResponse({
             'success': True,
             'status': prestacao.status,
@@ -887,6 +895,7 @@ def alterar_status_prestacao(request, pk, novo_status):
             'compor_apresentacao': prestacao.compor_apresentacao,
             'is_admin': is_admin(request.user),
             'is_auditor': is_auditor(request.user),
+            'apontamentos_slides': apontamentos_slides_list,
             'stats': stats
         })
 

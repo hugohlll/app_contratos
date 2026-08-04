@@ -238,16 +238,15 @@
                         <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 25%;">Contrato / Empresa</th>
-                                    <th class="text-center" style="width: 20%;">Slides (Apresentação)</th>
-                                    <th class="text-center" style="width: 20%;">Livro do Fiscal (Execução)</th>
-                                    <th style="width: 35%;">Observações do Fiscal & Apontamentos da ACI</th>
+                                    <th style="width: 20%;">Contrato / Empresa</th>
+                                    <th class="text-center" style="width: 40%;">Slides</th>
+                                    <th class="text-center" style="width: 40%;">Livro do Fiscal</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in entregas_mes_selecionado %}
                                 <tr class="linha-tabela-mes-fiscais" data-statuses="{{ item.status_prestacao }} {{ item.status_controle }}">
-                                    <td>
+                                    <td class="align-top">
                                         <div class="fw-bold text-primary">{{ item.contrato.numero }}</div>
                                         {% if item.contrato.empresa %}
                                         <div class="small text-muted text-truncate" style="max-width: 260px;" title="{% if item.contrato.empresa.nome_fantasia %}{{ item.contrato.empresa.razao_social }}{% endif %}">{{ item.contrato.empresa.nome_exibicao }}</div>
@@ -256,7 +255,7 @@
                                     </td>
                                     
                                     <!-- SLIDES -->
-                                    <td class="text-center p-2">
+                                    <td class="p-3 text-center align-top">
                                         {% if item.status_prestacao == 'entregue' %}
                                             <div class="d-flex flex-column align-items-center">
                                                 <a href="{% url 'download_prestacao' item.prestacao.id %}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
@@ -278,9 +277,9 @@
                                                     {% endif %}
                                                 </div>
                                                 {% endif %}
-                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-{{ item.contrato.id }}" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-{{ item.contrato.id }}">Prioritário</label>
                                                 </div>
                                             </div>
                                         {% elif item.status_prestacao == 'correcao' %}
@@ -301,9 +300,9 @@
                                                     {% endif %}
                                                 </div>
                                                 {% endif %}
-                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-{{ item.contrato.id }}" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-{{ item.contrato.id }}">Prioritário</label>
                                                 </div>
                                             </div>
                                         {% elif item.status_prestacao == 'ok' %}
@@ -324,9 +323,9 @@
                                                     {% endif %}
                                                 </div>
                                                 {% endif %}
-                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-{{ item.contrato.id }}" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-{{ item.contrato.id }}">Prioritário</label>
                                                 </div>
                                             </div>
                                         {% else %}
@@ -337,69 +336,76 @@
                                                 </div>
                                             </div>
                                         {% endif %}
-                                    </td>
 
-                                    <!-- LIVRO DO FISCAL -->
-                                    <td class="text-center p-2">
-                                        {% if item.controle %}
-                                            <div class="mb-1">
-                                                {% if item.controle.status == 'ok' %}
-                                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>OK</span>
-                                                {% elif item.controle.status == 'correcao' %}
-                                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Correção</span>
-                                                {% else %}
-                                                    <span class="badge bg-info text-dark"><i class="bi bi-clock me-1"></i>Entregue</span>
-                                                {% endif %}
-                                            </div>
-                                            <a href="{% url 'visualizar_controle_execucao' item.controle.id %}" class="btn btn-sm btn-outline-primary py-0 px-2" title="Visualizar Livro">
-                                                <i class="bi bi-eye me-1"></i> Detalhes
-                                            </a>
-                                        {% else %}
-                                            <span class="badge bg-secondary text-white-50">Pendente</span>
-                                        {% endif %}
-                                    </td>
-
-                                    <!-- OBSERVAÇÕES & APONTAMENTOS DA ACI (INTEGRAL) -->
-                                    <td class="text-start p-3 align-top">
                                         {% if item.observacao_fiscal %}
-                                        <div class="mb-2 p-2 rounded bg-light border">
+                                        <div class="mt-3 text-start p-2 rounded bg-light border w-100 mx-auto" style="max-width: 320px;">
                                             <strong class="text-secondary small d-block mb-1"><i class="bi bi-chat-left-text me-1"></i>Obs. do Fiscal:</strong>
-                                            <span class="small text-dark text-break">{{ item.observacao_fiscal }}</span>
+                                            <span class="small text-dark text-break" style="font-size: 0.8rem;">{{ item.observacao_fiscal }}</span>
                                         </div>
                                         {% endif %}
                                         
                                         {% if item.apontamentos_slides %}
-                                        <div class="mb-2">
-                                            <strong class="text-warning small d-block mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Apontamentos ACI (Slides):</strong>
+                                        <div class="mt-3 text-start w-100 mx-auto" style="max-width: 320px;">
+                                            <strong class="text-warning small d-block mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Apontamentos ACI:</strong>
                                             {% for ap in item.apontamentos_slides %}
-                                            <div class="alert alert-warning py-1 px-2 mb-1 small border-warning" style="font-size: 0.8rem;">
+                                            <div class="alert alert-warning py-1 px-2 mb-1 small border-warning" style="font-size: 0.75rem;">
                                                 <div class="fw-semibold text-dark mb-1">{{ ap.descricao }}</div>
-                                                <div class="text-muted text-end" style="font-size: 0.72rem;">por {{ ap.autor.get_full_name|default:ap.autor.username }} em {{ ap.data_registro|date:"d/m/Y H:i" }}</div>
+                                                <div class="text-muted text-end" style="font-size: 0.7rem;">por {{ ap.autor.get_full_name|default:ap.autor.username }} em {{ ap.data_registro|date:"d/m/Y H:i" }}</div>
                                             </div>
                                             {% endfor %}
                                         </div>
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- LIVRO DO FISCAL -->
+                                    <td class="p-3 text-center align-top">
+                                        {% if item.controle %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                {% if item.controle.status == 'ok' %}
+                                                    <a href="{% url 'visualizar_controle_execucao' item.controle.id %}" class="text-success text-decoration-none fw-bold p-1" title="Visualizar Livro">
+                                                        <i class="bi bi-journal-check fs-5 mb-1 d-block"></i>
+                                                        <span style="font-size: 0.75rem;">Conformidade</span>
+                                                    </a>
+                                                {% elif item.controle.status == 'correcao' %}
+                                                    <a href="{% url 'visualizar_controle_execucao' item.controle.id %}" class="text-warning text-decoration-none fw-bold p-1" title="Visualizar Livro">
+                                                        <div class="position-relative d-inline-block">
+                                                            <i class="bi bi-journal fs-5 mb-1 d-block"></i>
+                                                            <i class="bi bi-exclamation-triangle-fill text-warning position-absolute" style="font-size: 0.7rem; bottom: 2px; right: -5px; background: white; border-radius: 50%; padding: 1px;"></i>
+                                                        </div>
+                                                        <span style="font-size: 0.75rem;">Corrigir</span>
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'visualizar_controle_execucao' item.controle.id %}" class="text-primary text-decoration-none fw-bold p-1" title="Visualizar Livro">
+                                                        <i class="bi bi-journal-arrow-up fs-5 mb-1 d-block"></i>
+                                                        <span style="font-size: 0.75rem;">Entregue</span>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="text-muted opacity-50 py-2">
+                                                    <i class="bi bi-journal fs-5 d-block mb-1"></i>
+                                                    <span style="font-size: 0.75rem;">Pendente</span>
+                                                </div>
+                                            </div>
                                         {% endif %}
 
                                         {% if item.apontamentos_controle %}
-                                        <div>
-                                            <strong class="text-primary small d-block mb-1"><i class="bi bi-journal-text me-1"></i>Apontamentos ACI (Livro do Fiscal):</strong>
+                                        <div class="mt-3 text-start w-100 mx-auto" style="max-width: 320px;">
+                                            <strong class="text-primary small d-block mb-1"><i class="bi bi-journal-text me-1"></i>Apontamentos ACI:</strong>
                                             {% for ap in item.apontamentos_controle %}
-                                            <div class="alert alert-info py-1 px-2 mb-1 small border-info" style="font-size: 0.8rem;">
+                                            <div class="alert alert-info py-1 px-2 mb-1 small border-info" style="font-size: 0.75rem;">
                                                 <div class="fw-semibold text-dark mb-1">{{ ap.descricao }}</div>
-                                                <div class="text-muted text-end" style="font-size: 0.72rem;">por {{ ap.autor.get_full_name|default:ap.autor.username }} em {{ ap.data_registro|date:"d/m/Y H:i" }}</div>
+                                                <div class="text-muted text-end" style="font-size: 0.7rem;">por {{ ap.autor.get_full_name|default:ap.autor.username }} em {{ ap.data_registro|date:"d/m/Y H:i" }}</div>
                                             </div>
                                             {% endfor %}
                                         </div>
-                                        {% endif %}
-
-                                        {% if not item.observacao_fiscal and not item.apontamentos_slides and not item.apontamentos_controle %}
-                                        <span class="text-muted small fst-italic opacity-75">Nenhuma observação registrada.</span>
                                         {% endif %}
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">Nenhum contrato ativo cadastrado.</td>
+                                    <td colspan="3" class="text-center text-muted py-4">Nenhum contrato ativo cadastrado.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -620,20 +626,34 @@
                                     {% for entrega in item.entregas %}
                                     <td class="text-center p-2">
                                         {% if entrega.controle %}
-                                            <div class="mb-1">
+                                            <div class="d-flex flex-column align-items-center">
                                                 {% if entrega.controle.status == 'ok' %}
-                                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>OK</span>
+                                                    <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="text-success text-decoration-none fw-bold p-1" title="Visualizar Livro">
+                                                        <i class="bi bi-journal-check fs-5 mb-1 d-block"></i>
+                                                        <span style="font-size: 0.75rem;">Conformidade</span>
+                                                    </a>
                                                 {% elif entrega.controle.status == 'correcao' %}
-                                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Correção</span>
+                                                    <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="text-warning text-decoration-none fw-bold p-1" title="Visualizar Livro">
+                                                        <div class="position-relative d-inline-block">
+                                                            <i class="bi bi-journal fs-5 mb-1 d-block"></i>
+                                                            <i class="bi bi-exclamation-triangle-fill text-warning position-absolute" style="font-size: 0.7rem; bottom: 2px; right: -5px; background: white; border-radius: 50%; padding: 1px;"></i>
+                                                        </div>
+                                                        <span style="font-size: 0.75rem;">Corrigir</span>
+                                                    </a>
                                                 {% else %}
-                                                    <span class="badge bg-info text-dark"><i class="bi bi-clock me-1"></i>Entregue</span>
+                                                    <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="text-primary text-decoration-none fw-bold p-1" title="Visualizar Livro">
+                                                        <i class="bi bi-journal-arrow-up fs-5 mb-1 d-block"></i>
+                                                        <span style="font-size: 0.75rem;">Entregue</span>
+                                                    </a>
                                                 {% endif %}
                                             </div>
-                                            <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="btn btn-sm btn-outline-primary py-0 px-2" title="Visualizar Livro">
-                                                <i class="bi bi-eye me-1"></i> Detalhes
-                                            </a>
                                         {% else %}
-                                            <span class="badge bg-secondary text-white-50">Pendente</span>
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="text-muted opacity-50 py-2">
+                                                    <i class="bi bi-journal fs-5 d-block mb-1"></i>
+                                                    <span style="font-size: 0.75rem;">Pendente</span>
+                                                </div>
+                                            </div>
                                         {% endif %}
                                     </td>
                                     {% endfor %}
@@ -1515,20 +1535,9 @@
         const URL_EXCLUIR_BASE = "{% url 'excluir_prestacao' 999999 %}";
 
         // Função para gerar o HTML da célula baseado no novo status
-        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor, comporApresentacao, contratoId, mes, ano, observacao) {
+        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor, comporApresentacao, contratoId, mes, ano, observacao, apontamentosSlides) {
             let html = '<div class="d-flex flex-column align-items-center">';
-            
-            let obsHtml = '';
-            if (observacao) {
-                const truncated = observacao.length > 20 ? observacao.substring(0, 17) + '...' : observacao;
-                obsHtml = `
-                    <div class="mt-1">
-                        <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="${observacao}">
-                            <i class="bi bi-chat-left-text-fill me-1"></i>Obs: ${truncated}
-                        </span>
-                    </div>
-                `;
-            }
+            let checkboxState = comporApresentacao ? 'checked' : '';
             
             if (status === 'pendente') {
                 html += `
@@ -1538,100 +1547,120 @@
                     </div>
                 `;
             } else {
-            
-            const urlDownload = URL_DOWNLOAD_BASE.replace('999999', prestacaoId);
-            const urlOk = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'ok');
-            const urlCorrecao = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'correcao');
-            const urlExcluir = URL_EXCLUIR_BASE.replace('999999', prestacaoId);
-            
-            if (status === 'entregue') {
-                html += `
-                    <a href="${urlDownload}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
-                        <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
-                        <span style="font-size: 0.75rem;">Entregue</span>
-                    </a>
-                    ${obsHtml}
-                `;
-                if (isAuditor) {
+                const urlDownload = URL_DOWNLOAD_BASE.replace('999999', prestacaoId);
+                const urlOk = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'ok');
+                const urlCorrecao = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'correcao');
+                const urlExcluir = URL_EXCLUIR_BASE.replace('999999', prestacaoId);
+                
+                if (status === 'entregue') {
                     html += `
-                        <div class="d-flex gap-1 mt-1">
-                            <a href="${urlOk}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
-                                <i class="bi bi-check-lg"></i>
-                            </a>
-                            <a href="${urlCorrecao}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
-                                <i class="bi bi-exclamation-triangle"></i>
-                            </a>
+                        <a href="${urlDownload}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
+                            <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
+                            <span style="font-size: 0.75rem;">Entregue</span>
+                        </a>
                     `;
-                    if (isAdmin) {
+                    if (isAuditor) {
                         html += `
-                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                            <div class="d-flex gap-1 mt-1">
+                                <a href="${urlOk}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
+                                <a href="${urlCorrecao}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </a>
                         `;
+                        if (isAdmin) {
+                            html += `
+                                <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            `;
+                        }
+                        html += '</div>';
                     }
-                    html += '</div>';
-                }
-            } else if (status === 'correcao') {
-                html += `
-                    <a href="${urlDownload}" target="_blank" class="text-warning text-decoration-none fw-bold p-1" title="Baixar PDF">
-                        <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
-                        <span style="font-size: 0.75rem;">Corrigir</span>
-                    </a>
-                    ${obsHtml}
-                `;
-                if (isAuditor) {
+                } else if (status === 'correcao') {
                     html += `
-                        <div class="d-flex gap-1 mt-1">
-                            <a href="${urlOk}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
-                                <i class="bi bi-check-lg"></i>
-                            </a>
+                        <a href="${urlDownload}" target="_blank" class="text-warning text-decoration-none fw-bold p-1" title="Baixar PDF">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
+                            <span style="font-size: 0.75rem;">Corrigir</span>
+                        </a>
                     `;
-                    if (isAdmin) {
+                    if (isAuditor) {
                         html += `
-                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                            <div class="d-flex gap-1 mt-1">
+                                <a href="${urlOk}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
                         `;
+                        if (isAdmin) {
+                            html += `
+                                <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            `;
+                        }
+                        html += '</div>';
                     }
-                    html += '</div>';
-                }
-            } else if (status === 'ok') {
-                html += `
-                    <a href="${urlDownload}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
-                        <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
-                        <span style="font-size: 0.75rem;">Conformidade</span>
-                    </a>
-                    ${obsHtml}
-                `;
-                if (isAuditor) {
+                } else if (status === 'ok') {
                     html += `
-                        <div class="d-flex gap-1 mt-1">
-                            <a href="${urlCorrecao}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
-                                <i class="bi bi-exclamation-triangle"></i>
-                            </a>
+                        <a href="${urlDownload}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
+                            <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                            <span style="font-size: 0.75rem;">Conformidade</span>
+                        </a>
                     `;
-                    if (isAdmin) {
+                    if (isAuditor) {
                         html += `
-                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                            <div class="d-flex gap-1 mt-1">
+                                <a href="${urlCorrecao}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </a>
                         `;
+                        if (isAdmin) {
+                            html += `
+                                <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            `;
+                        }
+                        html += '</div>';
                     }
-                    html += '</div>';
                 }
+
+                // Switch Toggle
+                html += `
+                    <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                        <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-${contratoId}" data-contrato-id="${contratoId}" data-mes="${mes}" data-ano="${ano}" ${checkboxState}>
+                        <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-${contratoId}">Prioritário</label>
+                    </div>
+                `;
             }
+            
+            // Obs do Fiscal
+            if (observacao) {
+                html += `
+                    <div class="mt-3 text-start p-2 rounded bg-light border w-100 mx-auto" style="max-width: 320px;">
+                        <strong class="text-secondary small d-block mb-1"><i class="bi bi-chat-left-text me-1"></i>Obs. do Fiscal:</strong>
+                        <span class="small text-dark text-break" style="font-size: 0.8rem;">${observacao}</span>
+                    </div>
+                `;
             }
-            
-            // Adiciona o checkbox de prioritário
-            let checkboxState = comporApresentacao ? 'checked' : '';
-            let tooltipText = 'Marcar como prioritário na apresentação';
-            
-            html += `
-                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="${contratoId}" data-mes="${mes}" data-ano="${ano}" ${checkboxState} title="${tooltipText}">
-                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="${tooltipText}">Prioritário</label>
-                </div>
-            `;
+
+            // Apontamentos Slides
+            if (apontamentosSlides && apontamentosSlides.length > 0) {
+                html += `
+                    <div class="mt-3 text-start w-100 mx-auto" style="max-width: 320px;">
+                        <strong class="text-warning small d-block mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Apontamentos ACI:</strong>
+                `;
+                apontamentosSlides.forEach(ap => {
+                    html += `
+                        <div class="alert alert-warning py-1 px-2 mb-1 small border-warning" style="font-size: 0.75rem;">
+                            <div class="fw-semibold text-dark mb-1">${ap.descricao}</div>
+                            <div class="text-muted text-end" style="font-size: 0.7rem;">por ${ap.autor} em ${ap.data_registro}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
             
             html += '</div>';
             return html;
@@ -1719,7 +1748,7 @@
                                 const m = checkboxDentro ? checkboxDentro.getAttribute('data-mes') : null;
                                 const a = checkboxDentro ? checkboxDentro.getAttribute('data-ano') : null;
                                 
-                                td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao);
+                                td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao, data.apontamentos_slides);
                                 
                                 if (window.myChart && data.stats) {
                                     window.myChart.data.datasets[0].data = [
@@ -1818,7 +1847,7 @@
                         const a = checkboxDentro ? checkboxDentro.getAttribute('data-ano') : null;
                         
                         // Atualiza o conteúdo da célula
-                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao);
+                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao, data.apontamentos_slides);
                         
                         // Atualiza os gráficos se os dados de estatística estiverem disponíveis
                         if (window.myChart && data.stats) {

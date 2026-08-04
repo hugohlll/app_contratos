@@ -56,7 +56,10 @@
                         <!-- STATUS 2: AGUARDANDO CORREÇÃO (VERMELHO / ALERTA) -->
                         <div class="border border-danger bg-danger bg-opacity-10 rounded-3 p-3 mb-4">
                             <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-journal-exclamation fs-2 text-danger me-2"></i>
+                                <div class="position-relative d-inline-block me-2" style="line-height: 1;">
+                                    <i class="bi bi-journal fs-2 text-danger"></i>
+                                    <i class="bi bi-exclamation-triangle-fill text-danger position-absolute" style="font-size: 0.9rem; bottom: -2px; right: -5px; background: #fdf2f2; border-radius: 50%; padding: 1px;"></i>
+                                </div>
                                 <div>
                                     <h6 class="fw-bold mb-0 text-danger">Livro do Fiscal</h6>
                                     <span class="badge bg-danger text-white fw-bold" style="font-size: 0.75rem;">Ajustes Solicitados pela ACI</span>

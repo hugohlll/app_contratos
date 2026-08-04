@@ -619,4 +619,56 @@ class DashboardReengenhariaSubAbasTests(BaseSetorTestSetup):
         self.assertEqual(len(dados_contrato['apontamentos_slides']), 1)
         self.assertEqual(dados_contrato['apontamentos_slides'][0].descricao, "Corrigir slides")
 
+    def test_dashboard_3_colunas_layout_e_switch(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse('dashboard_prestacao'))
+        self.assertEqual(response.status_code, 200)
+
+        # HTML table headers: should contain exactly "Contrato / Empresa", "Slides", "Livro do Fiscal"
+        # and should not contain the old 4th column header or old name
+        self.assertContains(response, 'Contrato / Empresa')
+        self.assertContains(response, '<th class="text-center" style="width: 40%;">Slides</th>')
+        self.assertContains(response, '<th class="text-center" style="width: 40%;">Livro do Fiscal</th>')
+        self.assertNotContains(response, 'Observações do Fiscal & Apontamentos da ACI')
+
+        # Check for prioritário switch component attributes
+        self.assertContains(response, 'role="switch"')
+        self.assertContains(response, 'class="form-check-input checkbox-apresentacao cursor-pointer"')
+
+    def test_dashboard_livro_fiscal_icons_and_links(self):
+        # Create a controle execucao (Livro do Fiscal) in 'ok' status
+        hoje = date.today()
+        controle_ok = ControleExecucao.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=hoje.month, ano_referencia=hoje.year,
+            status='ok'
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse('dashboard_prestacao') + f"?mes={hoje.month}&ano={hoje.year}")
+        self.assertEqual(response.status_code, 200)
+
+        # Should render book check icon and "Conformidade" link pointing to details
+        self.assertContains(response, 'bi-journal-check')
+        self.assertContains(response, 'Conformidade')
+        self.assertContains(response, reverse('visualizar_controle_execucao', args=[controle_ok.id]))
+
+        # The old button and badge styles should not exist
+        self.assertNotContains(response, 'class="badge bg-success"><i class="bi bi-check-circle me-1"></i>OK')
+        self.assertNotContains(response, 'class="btn btn-sm btn-outline-primary py-0 px-2" title="Visualizar Livro"')
+
+        # Now change status to 'correcao'
+        controle_ok.status = 'correcao'
+        controle_ok.save()
+        response = self.client.get(reverse('dashboard_prestacao') + f"?mes={hoje.month}&ano={hoje.year}")
+        self.assertContains(response, 'bi-exclamation-triangle-fill')
+        self.assertContains(response, 'Corrigir')
+
+        # Now change status to 'entregue'
+        controle_ok.status = 'entregue'
+        controle_ok.save()
+        response = self.client.get(reverse('dashboard_prestacao') + f"?mes={hoje.month}&ano={hoje.year}")
+        self.assertContains(response, 'bi-journal-arrow-up')
+        self.assertContains(response, 'Entregue')
+
 
