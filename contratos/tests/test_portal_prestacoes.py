@@ -516,13 +516,24 @@ class TextoApontamentosTests(BaseSetorTestSetup):
 # 10. FILTROS DE BUSCA E STATUS NA MATRIZ DO DASHBOARD
 # ===================================================================
 class FiltrosMatrizDashboardTests(BaseSetorTestSetup):
-    """Verifica se os campos de busca e filtros de status estão presentes na matriz do dashboard."""
+    """Verifica se os campos de busca, filtros de status e sub-abas estão presentes na matriz do dashboard."""
 
-    def test_elementos_de_filtro_no_dashboard(self):
+    def test_elementos_de_filtro_e_subabas_no_dashboard(self):
         self.client.force_login(self.admin_user)
         url = reverse('dashboard_prestacao')
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+
+        # Abas principais
+        self.assertContains(response, 'id="fiscais-tab"')
+        self.assertContains(response, 'id="setores-tab"')
+        self.assertContains(response, 'id="calendario-tab"')
+
+        # Sub-abas internas da aba Fiscais (Slides vs Livro do Fiscal)
+        self.assertContains(response, 'id="fiscaisSubTabs"')
+        self.assertContains(response, 'id="fiscais-slides-subtab"')
+        self.assertContains(response, 'id="fiscais-execucao-subtab"')
+        self.assertContains(response, 'id="fiscais-slides-subpane"')
 
         # Filtros da matriz de Fiscais
         self.assertContains(response, 'id="filtroMatrizFiscais"')
