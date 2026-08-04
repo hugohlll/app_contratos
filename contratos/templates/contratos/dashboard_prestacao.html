@@ -61,12 +61,7 @@
 <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="fiscais-tab" data-bs-toggle="tab" data-bs-target="#fiscais-pane" type="button" role="tab" aria-controls="fiscais-pane" aria-selected="true">
-            <i class="bi bi-person-badge me-1"></i>Fiscais (Slides)
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="execucao-tab" data-bs-toggle="tab" data-bs-target="#execucao-pane" type="button" role="tab" aria-controls="execucao-pane" aria-selected="false">
-            <i class="bi bi-journal-check me-1"></i>Livro do Fiscal (Execução)
+            <i class="bi bi-person-badge me-1"></i>Fiscais
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -84,6 +79,26 @@
 <div class="tab-content" id="dashboardTabContent">
 <!-- ABA 1: FISCAIS -->
 <div class="tab-pane fade show active" id="fiscais-pane" role="tabpanel" aria-labelledby="fiscais-tab">
+
+    <!-- SUB-ABAS INTERNAS DA ABA FISCAIS -->
+    <div class="mb-4">
+        <ul class="nav nav-pills bg-light p-1 rounded-3 d-inline-flex border m-0" id="fiscaisSubTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active px-3 py-1-5 fw-semibold" id="fiscais-slides-subtab" data-bs-toggle="pill" data-bs-target="#fiscais-slides-subpane" type="button" role="tab" aria-controls="fiscais-slides-subpane" aria-selected="true">
+                    <i class="bi bi-easel me-1"></i>Slides (Apresentação)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-3 py-1-5 fw-semibold" id="fiscais-execucao-subtab" data-bs-toggle="pill" data-bs-target="#execucao-pane" type="button" role="tab" aria-controls="execucao-pane" aria-selected="false">
+                    <i class="bi bi-journal-check me-1"></i>Livro do Fiscal (Execução)
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content" id="fiscaisSubTabContent">
+        <!-- SUB-ABA 1: SLIDES DA APRESENTAÇÃO -->
+        <div class="tab-pane fade show active" id="fiscais-slides-subpane" role="tabpanel" aria-labelledby="fiscais-slides-subtab">
 
 <!-- GRÁFICOS (Mês Filtrado) -->
 <div class="row mb-4 align-items-stretch">
@@ -353,6 +368,88 @@
         </div>
     </div>
 </div>
+        </div><!-- /subpane slides -->
+
+        <!-- SUB-ABA 2: EXECUÇÃO CONTRATUAL (LIVRO DO FISCAL) -->
+        <div class="tab-pane fade" id="execucao-pane" role="tabpanel" aria-labelledby="fiscais-execucao-subtab">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+                    <h6 class="m-0 fw-bold text-secondary">
+                        <i class="bi bi-journal-check me-2 text-primary"></i>Acompanhamento do Livro do Fiscal (Últimos 3 Mêses)
+                    </h6>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="input-group input-group-sm" style="width: 220px;">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="filtroMatrizExecucao" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
+                        </div>
+                        <select id="filtroMatrizExecucaoStatus" class="form-select form-select-sm no-tomselect" style="width: 165px; height: 31px;">
+                            <option value="">Todos os status</option>
+                            <option value="correcao">Correção</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="entregue">Entregue</option>
+                            <option value="ok">Conformidade (OK)</option>
+                        </select>
+                        <a href="{% url 'exportar_execucao_csv' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:'d' }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                            <i class="bi bi-download me-1"></i> Exportar Execução (CSV)
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 25%;">Contrato / Empresa</th>
+                                    {% for ano, mes in ultimos_3_meses_tuplas %}
+                                    <th class="text-center" style="width: 25%;">
+                                        {% if mes == 1 %}Jan{% elif mes == 2 %}Fev{% elif mes == 3 %}Mar{% elif mes == 4 %}Abr{% elif mes == 5 %}Mai{% elif mes == 6 %}Jun{% elif mes == 7 %}Jul{% elif mes == 8 %}Ago{% elif mes == 9 %}Set{% elif mes == 10 %}Out{% elif mes == 11 %}Nov{% else %}Dez{% endif %}/{{ ano|stringformat:"d" }}
+                                    </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in matriz_execucao %}
+                                <tr class="linha-matriz-execucao" data-statuses="{% for e in item.entregas %}{{ e.status }} {% endfor %}">
+                                    <td>
+                                        <div class="fw-bold text-primary">{{ item.contrato.numero }}</div>
+                                        {% if item.contrato.empresa %}
+                                        <div class="small text-muted text-truncate" style="max-width: 280px;" title="{% if item.contrato.empresa.nome_fantasia %}{{ item.contrato.empresa.razao_social }}{% endif %}">{{ item.contrato.empresa.nome_exibicao }}</div>
+                                        {% endif %}
+                                        <small class="text-muted text-truncate d-block" style="max-width: 280px;" title="{{ item.contrato.objeto }}">{{ item.contrato.objeto }}</small>
+                                    </td>
+                                    {% for entrega in item.entregas %}
+                                    <td class="text-center">
+                                        {% if entrega.controle %}
+                                            <div class="mb-1">
+                                                {% if entrega.controle.status == 'ok' %}
+                                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>OK</span>
+                                                {% elif entrega.controle.status == 'correcao' %}
+                                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Correção</span>
+                                                {% else %}
+                                                    <span class="badge bg-info text-dark"><i class="bi bi-clock me-1"></i>Entregue</span>
+                                                {% endif %}
+                                            </div>
+                                            <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="btn btn-sm btn-outline-primary py-0 px-2" title="Visualizar Livro">
+                                                <i class="bi bi-eye"></i> Detalhes
+                                            </a>
+                                        {% else %}
+                                            <span class="badge bg-secondary text-white-50">Pendente</span>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">Nenhum contrato ativo cadastrado.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /subpane execucao -->
+    </div><!-- /fiscaisSubTabContent -->
 
 </div><!-- /tab-pane fiscais -->
 
@@ -588,86 +685,6 @@
     </div>
 </div><!-- /tab-pane setores -->
 
-<!-- ABA: EXECUÇÃO CONTRATUAL (LIVRO DO FISCAL) -->
-<div class="tab-pane fade" id="execucao-pane" role="tabpanel" aria-labelledby="execucao-tab">
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
-            <h6 class="m-0 fw-bold text-secondary">
-                <i class="bi bi-journal-check me-2 text-primary"></i>Acompanhamento do Livro do Fiscal (Últimos 3 Mêses)
-            </h6>
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-                <div class="input-group input-group-sm" style="width: 220px;">
-                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" id="filtroMatrizExecucao" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
-                </div>
-                <select id="filtroMatrizExecucaoStatus" class="form-select form-select-sm no-tomselect" style="width: 165px; height: 31px;">
-                    <option value="">Todos os status</option>
-                    <option value="correcao">Correção</option>
-                    <option value="pendente">Pendente</option>
-                    <option value="entregue">Entregue</option>
-                    <option value="ok">Conformidade (OK)</option>
-                </select>
-                <a href="{% url 'exportar_execucao_csv' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:'d' }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
-                    <i class="bi bi-download me-1"></i> Exportar Execução (CSV)
-                </a>
-            </div>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 25%;">Contrato / Empresa</th>
-                            {% for ano, mes in ultimos_3_meses_tuplas %}
-                            <th class="text-center" style="width: 25%;">
-                                {% if mes == 1 %}Jan{% elif mes == 2 %}Fev{% elif mes == 3 %}Mar{% elif mes == 4 %}Abr{% elif mes == 5 %}Mai{% elif mes == 6 %}Jun{% elif mes == 7 %}Jul{% elif mes == 8 %}Ago{% elif mes == 9 %}Set{% elif mes == 10 %}Out{% elif mes == 11 %}Nov{% else %}Dez{% endif %}/{{ ano|stringformat:"d" }}
-                            </th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in matriz_execucao %}
-                        <tr class="linha-matriz-execucao" data-statuses="{% for e in item.entregas %}{{ e.status }} {% endfor %}">
-                            <td>
-                                <div class="fw-bold text-primary">{{ item.contrato.numero }}</div>
-                                {% if item.contrato.empresa %}
-                                <div class="small text-muted text-truncate" style="max-width: 280px;" title="{% if item.contrato.empresa.nome_fantasia %}{{ item.contrato.empresa.razao_social }}{% endif %}">{{ item.contrato.empresa.nome_exibicao }}</div>
-                                {% endif %}
-                                <small class="text-muted text-truncate d-block" style="max-width: 280px;" title="{{ item.contrato.objeto }}">{{ item.contrato.objeto }}</small>
-                            </td>
-                            {% for entrega in item.entregas %}
-                            <td class="text-center">
-                                {% if entrega.controle %}
-                                    <div class="mb-1">
-                                        {% if entrega.controle.status == 'ok' %}
-                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>OK</span>
-                                        {% elif entrega.controle.status == 'correcao' %}
-                                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Correção</span>
-                                        {% else %}
-                                            <span class="badge bg-info text-dark"><i class="bi bi-clock me-1"></i>Entregue</span>
-                                        {% endif %}
-                                    </div>
-                                    <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="btn btn-sm btn-outline-primary py-0 px-2" title="Visualizar Livro">
-                                        <i class="bi bi-eye"></i> Detalhes
-                                    </a>
-                                {% else %}
-                                    <span class="badge bg-secondary text-white-50">Pendente</span>
-                                {% endif %}
-                            </td>
-                            {% endfor %}
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center text-muted py-4">Nenhum contrato ativo cadastrado.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div><!-- /tab-pane execucao -->
-
 <!-- ABA 3: CALENDÁRIO -->
 <div class="tab-pane fade" id="calendario-pane" role="tabpanel" aria-labelledby="calendario-tab">
 
@@ -841,7 +858,7 @@
             });
         }
 
-        // Ativa a aba Setores se estiver na URL
+        // Ativa a aba Setores ou Execução se estiver na URL
         const urlParams = new URLSearchParams(window.location.search);
         const tabParam = urlParams.get('tab');
         if (tabParam === 'setores') {
@@ -849,6 +866,15 @@
             if (tabEl) {
                 const tabInstance = bootstrap.Tab.getInstance(tabEl) || new bootstrap.Tab(tabEl);
                 tabInstance.show();
+            }
+        } else if (tabParam === 'execucao' || tabParam === 'execucao-pane') {
+            const tabFiscais = document.getElementById('fiscais-tab');
+            if (tabFiscais) {
+                (bootstrap.Tab.getInstance(tabFiscais) || new bootstrap.Tab(tabFiscais)).show();
+            }
+            const subTabExec = document.getElementById('fiscais-execucao-subtab');
+            if (subTabExec) {
+                (bootstrap.Tab.getInstance(subTabExec) || new bootstrap.Tab(subTabExec)).show();
             }
         }
 
@@ -1824,8 +1850,8 @@
             }
         }
 
-        // Atualiza o hidden input ao trocar de aba
-        document.querySelectorAll('#dashboardTabs button[data-bs-toggle="tab"]').forEach(btn => {
+        // Atualiza o hidden input ao trocar de aba (principal ou sub-abas de Fiscais)
+        document.querySelectorAll('#dashboardTabs button[data-bs-toggle="tab"], #fiscaisSubTabs button[data-bs-toggle="pill"]').forEach(btn => {
             btn.addEventListener('shown.bs.tab', function(e) {
                 const paneId = e.target.getAttribute('data-bs-target').replace('#', '');
                 const hiddenInput = document.getElementById('hiddenTabInput');
