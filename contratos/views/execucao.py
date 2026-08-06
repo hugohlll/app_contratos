@@ -8,6 +8,19 @@ from django.views.decorators.http import require_POST
 from django.urls import reverse
 import csv
 
+import io
+import os
+from django.conf import settings
+from django.utils.text import slugify
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, HRFlowable, KeepTogether
+)
+
 from contratos.models import (
     Contrato, Agente, Integrante, Comissao, CalendarioPrestacao,
     ControleExecucao, RegistroFatura, OcorrenciaContratual, ApontamentoCorrecaoExecucao
@@ -284,3 +297,500 @@ def exportar_execucao_csv(request):
         ])
 
     return response
+
+
+def gerar_livro_fiscal_pdf(request, pk):
+    """Gera o relatório em PDF do Livro do Fiscal (Controle de Execução Contratual)."""
+    controle = get_object_or_404(
+        ControleExecucao.objects.select_related(
+            'contrato', 'contrato__empresa', 'agente', 'agente__posto'
+        ),
+        pk=pk
+    )
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=1.5 * cm,
+        rightMargin=1.5 * cm,
+        topMargin=1.5 * cm,
+        bottomMargin=1.5 * cm
+    )
+
+    styles = getSampleStyleSheet()
+
+    # Custom Styles
+    style_header_title = ParagraphStyle(
+        'HeaderTitle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=12,
+        leading=14,
+        textColor=colors.HexColor('#0F172A'),
+        alignment=1
+    )
+    style_header_sub = ParagraphStyle(
+        'HeaderSub',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=11,
+        leading=13,
+        textColor=colors.HexColor('#0D6EFD'),
+        alignment=1
+    )
+    style_header_meta = ParagraphStyle(
+        'HeaderMeta',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor('#64748B'),
+        alignment=1
+    )
+
+    style_section_title = ParagraphStyle(
+        'SectionTitle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10,
+        leading=12,
+        textColor=colors.white
+    )
+
+    style_label = ParagraphStyle(
+        'CellLabel',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor('#475569')
+    )
+    style_value = ParagraphStyle(
+        'CellValue',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=8.5,
+        leading=11,
+        textColor=colors.HexColor('#0F172A')
+    )
+    style_value_bold = ParagraphStyle(
+        'CellValueBold',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8.5,
+        leading=11,
+        textColor=colors.HexColor('#0F172A')
+    )
+    style_table_head = ParagraphStyle(
+        'TableHead',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor('#1E293B'),
+        alignment=0
+    )
+
+    story = []
+    printable_width = 18.0 * cm
+
+    # --- CABEÇALHO DO DOCUMENTO ---
+    logo_path = os.path.join(settings.BASE_DIR, 'contratos', 'static', 'contratos', 'img', 'gap_logo.png')
+    logo_img = None
+    if os.path.exists(logo_path):
+        try:
+            logo_img = Image(logo_path, width=1.7 * cm, height=2.1 * cm)
+        except Exception:
+            logo_img = None
+
+    header_text_nodes = [
+        Paragraph("GRUPAMENTO DE APOIO DE BRASÍLIA", style_header_title),
+        Spacer(1, 2),
+        Paragraph(
+            f"LIVRO DO FISCAL — CT Nº {controle.contrato.numero} — {controle.mes_referencia:02d}/{controle.ano_referencia}",
+            style_header_sub
+        ),
+        Spacer(1, 2),
+        Paragraph(
+            f"Relatório Mensal de Controle de Execução Contratual | Registrado em {controle.data_envio.strftime('%d/%m/%Y às %H:%M')}",
+            style_header_meta
+        )
+    ]
+
+    if logo_img:
+        header_table = Table([[logo_img, header_text_nodes]], colWidths=[2.2 * cm, 15.8 * cm])
+        header_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+        ]))
+        story.append(header_table)
+    else:
+        story.extend(header_text_nodes)
+
+    story.append(Spacer(1, 10))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#0D6EFD'), spaceAfter=12))
+
+    def make_section_header(title):
+        p = Paragraph(f"<b>{title}</b>", style_section_title)
+        t = Table([[p]], colWidths=[printable_width])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#0D6EFD')),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        return t
+
+    def make_kv_table(data_rows, col_widths=None):
+        if not col_widths:
+            col_widths = [4.5 * cm, 13.5 * cm]
+        formatted_rows = []
+        for r in data_rows:
+            label_p = Paragraph(r[0], style_label)
+            val_p = Paragraph(str(r[1]), style_value)
+            formatted_rows.append([label_p, val_p])
+        t = Table(formatted_rows, colWidths=col_widths)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#F8FAFC')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E8F0')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        return t
+
+    # --- SEÇÃO 1: IDENTIFICAÇÃO DO CONTRATO E DA EQUIPE ---
+    story.append(make_section_header("SEÇÃO 1: IDENTIFICAÇÃO DO CONTRATO E DA EQUIPE"))
+    story.append(Spacer(1, 4))
+
+    empresa_str = f"{controle.contrato.empresa.razao_social} (CNPJ: {controle.contrato.empresa.cnpj})" if (controle.contrato and controle.contrato.empresa) else "Não informada"
+    vigencia_str = f"{controle.contrato.vigencia_inicio.strftime('%d/%m/%Y')} a {controle.contrato.vigencia_fim.strftime('%d/%m/%Y')}" if (controle.contrato and controle.contrato.vigencia_inicio and controle.contrato.vigencia_fim) else "Não informada"
+    fiscal_resp = f"{controle.agente.posto.sigla} {controle.agente.nome_de_guerra}" if (controle.agente and controle.agente.posto) else (controle.agente.nome_de_guerra if controle.agente else "Não informado")
+
+    # Comissão Ativa
+    comissao = Comissao.objects.filter(contrato=controle.contrato, ativa=True, tipo='FISCALIZACAO').first()
+    if not comissao:
+        comissao = Comissao.objects.filter(contrato=controle.contrato, tipo='FISCALIZACAO').order_by('-data_inicio').first()
+
+    portaria_str = comissao.portaria_numero if (comissao and comissao.portaria_numero) else "Não informada"
+    
+    sec1_data = [
+        ["Contrato Nº:", controle.contrato.numero],
+        ["Empresa Contratada:", empresa_str],
+        ["Objeto:", controle.contrato.objeto],
+        ["Período de Vigência:", vigencia_str],
+        ["Fiscal Responsável (Registro):", fiscal_resp],
+        ["Portaria da Comissão:", portaria_str],
+    ]
+    story.append(make_kv_table(sec1_data))
+
+    # Tabela de Integrantes da Comissão
+    integrantes = []
+    if comissao:
+        integrantes = list(
+            comissao.integrantes.filter(data_desligamento__isnull=True).select_related(
+                'agente', 'agente__posto', 'posto_graduacao', 'funcao'
+            ).order_by('ordem', 'funcao__ordem', 'id')
+        )
+
+    if integrantes:
+        story.append(Spacer(1, 6))
+        story.append(Paragraph("<b>Integrantes da Comissão de Fiscalização:</b>", style_label))
+        story.append(Spacer(1, 3))
+
+        ing_rows = [[
+            Paragraph("Posto/Graduação", style_table_head),
+            Paragraph("Nome de Guerra / Completo", style_table_head),
+            Paragraph("Função na Comissão", style_table_head)
+        ]]
+        for ing in integrantes:
+            p_sigla = ing.posto_graduacao.sigla if ing.posto_graduacao else (ing.agente.posto.sigla if (ing.agente and ing.agente.posto) else "")
+            n_guerra = f"{ing.agente.nome_de_guerra} ({ing.agente.nome_completo})" if ing.agente else "-"
+            f_nome = ing.funcao.titulo if ing.funcao else "Integrante"
+            ing_rows.append([
+                Paragraph(p_sigla, style_value_bold),
+                Paragraph(n_guerra, style_value),
+                Paragraph(f_nome, style_value)
+            ])
+
+        t_ing = Table(ing_rows, colWidths=[3.5 * cm, 9.5 * cm, 5.0 * cm])
+        t_ing.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F1F5F9')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+        ]))
+        story.append(t_ing)
+
+    # Controle de Substituição na Fiscalização
+    story.append(Spacer(1, 6))
+    houve_sub_str = "Sim" if controle.houve_substituicao else "Não"
+    entrega_formal_str = controle.get_substituicao_entrega_formal_display()
+
+    sub_desc = f"<b>Substituição no Período:</b> {houve_sub_str} &nbsp;|&nbsp; <b>Entrega Formal dos Registros pelo Substituto:</b> {entrega_formal_str}"
+    if controle.houve_substituicao and controle.substituicao_obs:
+        sub_desc += f"<br/><b>Obs. Transição:</b> {controle.substituicao_obs}"
+
+    story.append(make_kv_table([["Controle de Substituição:", sub_desc]]))
+
+    story.append(Spacer(1, 10))
+
+    # --- SEÇÃO 2: CONTROLE DE PRAZOS E MARCOS ---
+    story.append(make_section_header("SEÇÃO 2: CONTROLE DE PRAZOS E SILOMS"))
+    story.append(Spacer(1, 4))
+
+    dt_rec = controle.contrato.data_recomendada_aditivo.strftime('%d/%m/%Y') if (controle.contrato and controle.contrato.data_recomendada_aditivo) else "—"
+    dt_lim = controle.contrato.data_limite_aditivo.strftime('%d/%m/%Y') if (controle.contrato and controle.contrato.data_limite_aditivo) else "—"
+
+    sec2_data = [
+        ["SILOMS — Assinatura/Início:", "✓ Conferido e atualizado" if controle.confirmacao_siloms_assinatura else "✗ Pendente / Não conferido"],
+        ["SILOMS — Vigência/Aditivos:", "✓ Conferido e atualizado" if controle.confirmacao_siloms_vigencia else "✗ Pendente / Não conferido"],
+        ["SILOMS — Execução/OS:", "✓ Conferido e atualizado" if controle.confirmacao_siloms_execucao else "✗ Pendente / Não conferido"],
+        ["Admite Termo Aditivo?", controle.get_possibilidade_aditivo_display()],
+        ["Tratativas 120 dias antes:", controle.get_tratativas_120_dias_display()],
+        ["Coordenação DOC/SCON:", controle.get_coordenacao_doc_scon_display()],
+        ["Data Recomendada (120d):", dt_rec],
+        ["Data Limite para Aditivo (90d):", dt_lim],
+    ]
+    story.append(make_kv_table(sec2_data))
+    story.append(Spacer(1, 10))
+
+    # --- SEÇÃO 3: EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA ---
+    story.append(make_section_header("SEÇÃO 3: EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA"))
+    story.append(Spacer(1, 4))
+
+    sec3_data = [
+        ["Notas de Empenho (com saldo):", controle.notas_empenho or "Nenhuma nota de empenho informada"],
+        ["Obs. caso sem empenho:", controle.obs_sem_empenho or "N/A"],
+        ["Cronograma Físico-Financeiro:", controle.get_cronograma_fisico_financeiro_display()],
+    ]
+    story.append(make_kv_table(sec3_data))
+
+    faturas = list(controle.faturas.all())
+    story.append(Spacer(1, 6))
+    story.append(Paragraph("<b>Faturas Registradas no Mês de Referência:</b>", style_label))
+    story.append(Spacer(1, 3))
+
+    if faturas:
+        fat_rows = [[
+            Paragraph("Nº Nota Fiscal / Fatura", style_table_head),
+            Paragraph("Valor (R$)", style_table_head),
+            Paragraph("Nº Ordem Bancária (OB)", style_table_head)
+        ]]
+        total_val = 0
+        for f in faturas:
+            total_val += f.valor
+            val_str = f"R$ {f.valor:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+            fat_rows.append([
+                Paragraph(f.numero_nf, style_value),
+                Paragraph(val_str, style_value_bold),
+                Paragraph(f.numero_ob or "-", style_value)
+            ])
+        total_str = f"R$ {total_val:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+        fat_rows.append([
+            Paragraph("<b>TOTAL REGISTRADO:</b>", style_label),
+            Paragraph(f"<b>{total_str}</b>", style_value_bold),
+            Paragraph("", style_value)
+        ])
+
+        t_fat = Table(fat_rows, colWidths=[6.0 * cm, 6.0 * cm, 6.0 * cm])
+        t_fat.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F1F5F9')),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#E2E8F0')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(t_fat)
+    else:
+        story.append(make_kv_table([["Faturas do Mês:", "Nenhuma fatura registrada no período."]]))
+
+    story.append(Spacer(1, 10))
+
+    # --- SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS ---
+    story.append(make_section_header("SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS"))
+    story.append(Spacer(1, 4))
+
+    alt_desc = f"Sim — {controle.alteracao_cronograma_desc}" if (controle.alteracao_cronograma and controle.alteracao_cronograma_desc) else ("Sim" if controle.alteracao_cronograma else "Não")
+    atr_desc = f"Sim — {controle.atraso_entrega_desc}" if (controle.atraso_entrega and controle.atraso_entrega_desc) else ("Sim" if controle.atraso_entrega else "Não")
+    imp_desc = f"Sim — {controle.impossibilidade_recebimento_desc}" if (controle.impossibilidade_recebimento and controle.impossibilidade_recebimento_desc) else ("Sim" if controle.impossibilidade_recebimento else "Não")
+    dil_desc = f"Sim — {controle.diligencia_visita_desc}" if (controle.diligencia_visita and controle.diligencia_visita_desc) else ("Sim" if controle.diligencia_visita else "Não")
+    glo_desc = f"Sim — {controle.glosa_desc}" if (controle.glosa_realizada and controle.glosa_desc) else ("Sim" if controle.glosa_realizada else "Não")
+
+    sec4_data = [
+        ["Status do Cronograma:", controle.detalhamento_cronograma or "Sem observações específicas"],
+        ["Alteração no Cronograma?", alt_desc],
+        ["Atraso na Entrega?", atr_desc],
+        ["Impossibilidade de Recebimento?", imp_desc],
+        ["Diligência / Visita Técnica?", dil_desc],
+        ["IMR Aplicado?", controle.get_imr_aplicado_display()],
+        ["Glosa Realizada?", glo_desc],
+    ]
+    story.append(make_kv_table(sec4_data))
+    story.append(Spacer(1, 10))
+
+    # --- SEÇÃO 5: OCORRÊNCIAS E TRATATIVAS ---
+    story.append(make_section_header("SEÇÃO 5: OCORRÊNCIAS E TRATATIVAS"))
+    story.append(Spacer(1, 4))
+
+    ocorrencias = list(controle.ocorrencias.all())
+    if ocorrencias:
+        oc_rows = [[
+            Paragraph("Data", style_table_head),
+            Paragraph("Tipo", style_table_head),
+            Paragraph("Descrição da Ocorrência", style_table_head),
+            Paragraph("Ação do Fiscal / Providência", style_table_head),
+            Paragraph("Prazo", style_table_head)
+        ]]
+        tipo_dict = {
+            'reuniao': 'Reunião', 'email': 'E-mail/Ofício', 'visita': 'Visita Técnica',
+            'falha': 'Falha/Descumprimento', 'notificacao': 'Notificação', 'outro': 'Outro'
+        }
+        for o in ocorrencias:
+            t_lbl = tipo_dict.get(o.tipo, o.tipo).upper()
+            dt_str = o.data.strftime('%d/%m/%Y') if o.data else "-"
+            oc_rows.append([
+                Paragraph(dt_str, style_value),
+                Paragraph(t_lbl, style_value_bold),
+                Paragraph(o.descricao or "-", style_value),
+                Paragraph(o.acao_fiscal or "-", style_value),
+                Paragraph(o.prazo or "-", style_value)
+            ])
+        t_oc = Table(oc_rows, colWidths=[2.2 * cm, 2.8 * cm, 5.5 * cm, 5.5 * cm, 2.0 * cm])
+        t_oc.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F1F5F9')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(t_oc)
+    else:
+        story.append(make_kv_table([["Ocorrências Registradas:", "Nenhuma ocorrência registrada no período."]]))
+
+    if controle.relatorio_ocorrencias:
+        story.append(Spacer(1, 4))
+        story.append(make_kv_table([["Relatório Consolidado:", controle.relatorio_ocorrencias]]))
+
+    story.append(Spacer(1, 10))
+
+    # --- SEÇÃO 6: APURAÇÃO DE IRREGULARIDADES (PAAI) ---
+    story.append(make_section_header("SEÇÃO 6: APURAÇÃO DE IRREGULARIDADES (PAAI)"))
+    story.append(Spacer(1, 4))
+
+    sec6_data = [
+        ["Ocorrências Ativas/Reincidentes:", controle.get_ocorrencias_ativas_empresa_display()],
+        ["Necessidade de PAAI?", controle.get_necessidade_paai_display()],
+    ]
+    if controle.paai_justificativa:
+        sec6_data.append(["Justificativa PAAI:", controle.paai_justificativa])
+
+    story.append(make_kv_table(sec6_data))
+
+    if controle.observacao:
+        story.append(Spacer(1, 10))
+        story.append(make_section_header("OBSERVAÇÕES GERAIS"))
+        story.append(Spacer(1, 4))
+        story.append(make_kv_table([["Observações:", controle.observacao]]))
+
+    # --- ASSINATURAS DA COMISSÃO DE FISCALIZAÇÃO ---
+    story.append(Spacer(1, 20))
+
+    MESES_PT = [
+        '', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+    ]
+    dt_envio = controle.data_envio
+    data_str_pt = f"Brasília-DF, {dt_envio.day:02d} de {MESES_PT[dt_envio.month]} de {dt_envio.year}."
+
+    style_date_right = ParagraphStyle(
+        'DateRight',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=9,
+        leading=11,
+        textColor=colors.HexColor('#0F172A'),
+        alignment=2
+    )
+
+    story.append(Paragraph(
+        "Atesto a veracidade das informações prestadas no presente Livro do Fiscal relativo ao acompanhamento e fiscalização deste contrato.",
+        style_value
+    ))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph(data_str_pt, style_date_right))
+    story.append(Spacer(1, 25))
+
+    # Determinar a assinatura do responsável pelo envio
+    assinantes = []
+    if controle.agente:
+        p_sigla = controle.agente.posto.sigla if (controle.agente and controle.agente.posto) else ""
+        n_guerra = controle.agente.nome_de_guerra.upper()
+        funcao_titulo = "Fiscal Responsável"
+        if comissao:
+            ing_resp = comissao.integrantes.filter(agente=controle.agente, data_desligamento__isnull=True).first()
+            if ing_resp:
+                if ing_resp.posto_graduacao:
+                    p_sigla = ing_resp.posto_graduacao.sigla
+                if ing_resp.funcao:
+                    funcao_titulo = ing_resp.funcao.titulo
+        assinantes.append((f"{p_sigla} {n_guerra}".strip(), funcao_titulo))
+    elif integrantes:
+        ing = integrantes[0]
+        p_sigla = ing.posto_graduacao.sigla if ing.posto_graduacao else (ing.agente.posto.sigla if (ing.agente and ing.agente.posto) else "")
+        n_guerra = ing.agente.nome_de_guerra.upper() if ing.agente else "FISCAL"
+        f_nome = ing.funcao.titulo if ing.funcao else "Fiscal Responsável"
+        assinantes.append((f"{p_sigla} {n_guerra}".strip(), f_nome))
+
+    sig_cells = []
+    for nome_sig, func_sig in assinantes:
+        cell_content = [
+            Paragraph("____________________________________________", ParagraphStyle('Line', parent=styles['Normal'], alignment=1, fontSize=9, textColor=colors.HexColor('#94A3B8'))),
+            Spacer(1, 2),
+            Paragraph(f"<b>{nome_sig}</b>", ParagraphStyle('Name', parent=styles['Normal'], alignment=1, fontSize=8.5, leading=10, textColor=colors.HexColor('#0F172A'))),
+            Paragraph(func_sig, ParagraphStyle('Func', parent=styles['Normal'], alignment=1, fontSize=8, leading=10, textColor=colors.HexColor('#64748B')))
+        ]
+        sig_cells.append(cell_content)
+
+    if sig_cells:
+        t_sig = Table([[sig_cells[0]]], colWidths=[printable_width])
+        t_sig.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ]))
+        story.append(KeepTogether(t_sig))
+
+    # Construir PDF
+    doc.build(story)
+    buffer.seek(0)
+
+    # Nomenclatura solicitada: livro_fiscal_{contrato}_{empresa}_{ano_referencia}_{mes_referencia}.pdf
+    contrato_slug = slugify(controle.contrato.numero.replace('/', '-')) if (controle.contrato and controle.contrato.numero) else f"contrato-{controle.contrato.id}"
+    empresa_slug = slugify(controle.contrato.empresa.razao_social) if (controle.contrato and controle.contrato.empresa and controle.contrato.empresa.razao_social) else "empresa"
+    filename = f"livro_fiscal_{contrato_slug}_{empresa_slug}_{controle.ano_referencia}_{controle.mes_referencia:02d}.pdf"
+
+    from django.http import FileResponse
+    response = FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response
+
