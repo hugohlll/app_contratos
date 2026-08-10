@@ -299,6 +299,7 @@ docker compose -f docker-compose.prod.yml exec db bash -c "psql -U admin_siscont
 | Parar sem perder dados | `docker compose -f docker-compose.prod.yml stop` |
 | Verificar status | `docker compose -f docker-compose.prod.yml ps` |
 | Acessar shell do container | `docker compose -f docker-compose.prod.yml exec web bash` |
+| Executar testes automatizados | `docker compose -f docker-compose.prod.yml exec web python manage.py test` |
 | Ativar modo de manutenção | `bash scripts/maintenance_on.sh` |
 | Desativar modo de manutenção | `bash scripts/maintenance_off.sh` |
 

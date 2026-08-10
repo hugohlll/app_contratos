@@ -271,17 +271,40 @@ def _get_dashboard_stats(ano, mes):
     # Lista ordenada de gestores prioritários
     lista_gestores_prio = prestacoes_filtradas.filter(
         compor_apresentacao=True
-    ).select_related('agente', 'agente__posto', 'contrato').order_by(
+    ).select_related('agente', 'agente__posto', 'contrato').prefetch_related(
+        'contrato__comissoes__integrantes__agente__posto',
+        'contrato__comissoes__integrantes__posto_graduacao',
+        'contrato__comissoes__integrantes__funcao'
+    ).order_by(
         'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
     )
     
     gestores_prio = []
     for g in lista_gestores_prio:
+        gestor_nome = "Não informado"
+        agente_id = None
+        posto_id = None
+        if g.agente:
+            posto_sigla = g.agente.posto.sigla if g.agente.posto else ""
+            gestor_nome = f"{posto_sigla} {g.agente.nome_de_guerra}".strip()
+            agente_id = g.agente.id
+            posto_id = g.agente.posto.id if g.agente.posto else None
+        else:
+            comissao = g.contrato.comissoes.filter(tipo='FISCALIZACAO', ativa=True).first()
+            if comissao:
+                integrantes = [i for i in comissao.integrantes.all() if i.is_ativo]
+                if integrantes:
+                    principal = next((i for i in integrantes if 'presidente' in i.funcao.titulo.lower()), None) or integrantes[0]
+                    posto_sigla = principal.posto_graduacao.sigla if principal.posto_graduacao else (principal.agente.posto.sigla if principal.agente and principal.agente.posto else "")
+                    gestor_nome = f"{posto_sigla} {principal.agente.nome_de_guerra}".strip()
+                    agente_id = principal.agente.id
+                    posto_id = principal.agente.posto.id if principal.agente and principal.agente.posto else None
+
         gestores_prio.append({
             'is_slide': False,
-            'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
-            'agente_id': g.agente.id if g.agente else None,
-            'posto_id': g.agente.posto.id if g.agente and g.agente.posto else None,
+            'gestor': gestor_nome,
+            'agente_id': agente_id,
+            'posto_id': posto_id,
             'contrato': g.contrato.numero,
             'status': g.status
         })
@@ -326,17 +349,35 @@ def _get_dashboard_stats(ano, mes):
     # Lista ordenada de gestores de setores prioritários
     lista_gestores_setores = prestacoes_setor_filtradas.filter(
         compor_apresentacao=True
-    ).select_related('agente', 'agente__posto', 'setor').order_by(
+    ).select_related('agente', 'agente__posto', 'setor').prefetch_related(
+        'setor__cargos__agente__posto'
+    ).order_by(
         'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
     )
     
     gestores_setores = []
     for g in lista_gestores_setores:
+        gestor_nome = "Não informado"
+        agente_id = None
+        posto_id = None
+        if g.agente:
+            posto_sigla = g.agente.posto.sigla if g.agente.posto else ""
+            gestor_nome = f"{posto_sigla} {g.agente.nome_de_guerra}".strip()
+            agente_id = g.agente.id
+            posto_id = g.agente.posto.id if g.agente.posto else None
+        else:
+            cargo = g.setor.cargos.filter(ativo=True).first()
+            if cargo and cargo.agente:
+                posto_sigla = cargo.agente.posto.sigla if cargo.agente.posto else ""
+                gestor_nome = f"{posto_sigla} {cargo.agente.nome_de_guerra}".strip()
+                agente_id = cargo.agente.id
+                posto_id = cargo.agente.posto.id if cargo.agente.posto else None
+
         gestores_setores.append({
             'is_slide': False,
-            'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
-            'agente_id': g.agente.id if g.agente else None,
-            'posto_id': g.agente.posto.id if g.agente and g.agente.posto else None,
+            'gestor': gestor_nome,
+            'agente_id': agente_id,
+            'posto_id': posto_id,
             'setor': g.setor.sigla or g.setor.nome,
             'status': g.status
         })

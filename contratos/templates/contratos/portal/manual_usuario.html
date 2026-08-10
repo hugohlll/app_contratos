@@ -127,10 +127,19 @@
                 </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#cargos-regimentais">8. Cargos Regimentais</a>
+                <a class="nav-link" href="#livro-fiscal">8. Livro do Fiscal Digital</a>
+                <ul class="nav flex-column border-start border-2 ms-2 mt-1 mb-2">
+                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-pre-requisito">Requisito Obrigatório</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-secoes-formulario">Seções do Formulário</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-fluxo-correcao">Fluxo de Auditoria & Correção</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-geracao-pdf">Relatório em PDF Oficial</a></li>
+                </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#configuracoes-sistema">9. Configurações do Sistema</a>
+                <a class="nav-link" href="#cargos-regimentais">9. Cargos Regimentais</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#configuracoes-sistema">10. Configurações do Sistema</a>
                 <ul class="nav flex-column border-start border-2 ms-2 mt-1 mb-2">
                     <li class="nav-item"><a class="nav-link ms-3" href="#backup-automatico">Backup Automático</a></li>
                 </ul>
@@ -238,14 +247,14 @@
             </div>
             
             <h3 id="matriz-acompanhamento">📋 Matriz de Acompanhamento</h3>
-            <p>Ao abrir a página de prestação de contas no portal logado, o sistema exibirá <strong>por padrão as informações do mês anterior ao atual</strong>. A Matriz de Acompanhamento (dividida nas abas Fiscais e Setores) exibe uma tabela dinâmica com as entregas de cada responsável nos <strong>3 meses imediatamente anteriores ao atual</strong>. Os gráficos de estatísticas (Slides e Fiscais) também são sincronizados dinamicamente com o mês e ano selecionados no filtro. Status possíveis:</p>
+            <p>Ao abrir a página de prestação de contas no portal logado, o sistema exibirá <strong>por padrão as informações do mês anterior ao atual</strong>. A Matriz de Acompanhamento (dividida nas abas Fiscais e Setores) exibe uma tabela dinâmica com as entregas de cada responsável no <strong>histórico dos últimos 6 meses</strong>. Os gráficos de estatísticas (Slides e Fiscais) também são sincronizados dinamicamente com o mês e ano selecionados no filtro. Status possíveis:</p>
             <ul>
                 <li><i class="bi bi-file-earmark-arrow-up text-primary"></i> <strong>Aguardando Análise (Entregue):</strong> O fiscal/gestor enviou o PDF (limitado a 20MB), mas o Auditor ainda não analisou.</li>
                 <li><i class="bi bi-check-circle-fill text-success"></i> <strong>Conformidade (OK!):</strong> O PDF foi aprovado e está pronto. Auditores podem reabrir uma prestação aprovada e retorná-la para "Correção" se encontrarem inconsistências posteriores.</li>
                 <li><i class="bi bi-exclamation-triangle-fill text-warning"></i> <strong>Ajustes Necessários (Correção):</strong> O auditor encontrou inconsistências. O usuário é notificado no portal e o histórico de apontamentos fica gravado.</li>
                 <li><i class="bi bi-dash-circle text-muted"></i> <strong>Pendente:</strong> Nenhuma entrega foi realizada para o mês em questão.</li>
             </ul>
-            <p>Na aba dos fiscais de contrato e gestores, os auditores também podem marcar um envio como <strong>"Prioritário"</strong> caso ele deva compor a apresentação executiva da reunião.</p>
+            <p>Na aba dos fiscais de contrato e gestores, os auditores podem marcar qualquer prestação de contas como <strong>"Prioritário"</strong> em qualquer status (inclusive no status <strong>Pendente</strong>), garantindo controle proativo para composição da apresentação executiva da reunião.</p>
             <div class="alert alert-warning py-2 mt-2">
                 <i class="bi bi-clock-history me-2"></i> <strong>Controle de Atrasos:</strong> O sistema identifica automaticamente se o <strong>primeiro envio</strong> do mês foi realizado após o prazo estabelecido no Calendário de Entregas, registrando o status de "Entregue com Atraso" para fins de auditoria.
             </div>
@@ -294,9 +303,63 @@
             <p>Essas datas são exibidas na <strong>página inicial do portal logado</strong> para que todos os militares tenham visibilidade dos prazos vigentes. A data de entrega dos slides possui um efeito visual de destaque (pulso em vermelho) para chamar atenção.</p>
         </section>
 
-        <!-- SEÇÃO 8: CARGOS REGIMENTAIS -->
+        <!-- SEÇÃO 8: LIVRO DO FISCAL DIGITAL -->
+        <section id="livro-fiscal">
+            <h2>8. Livro do Fiscal Digital (Controle de Execução Contratual)</h2>
+            <p>O <strong>Livro do Fiscal Digital</strong> é o instrumento oficial de registro e controle contínuo da execução física e financeira do contrato administrativo pela equipe de fiscalização designada.</p>
+            
+            <h3 id="lf-pre-requisito">⚠️ Requisito Prévia Obrigatório</h3>
+            <div class="alert alert-warning py-2">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Atenção:</strong> O envio do formulário do Livro do Fiscal é um <strong>pré-requisito obrigatório</strong> para que o fiscal possa realizar o upload da prestação de contas mensal (slides PDF). Caso o Livro do Fiscal do mês de referência esteja pendente ou em correção, a caixa de upload de slides fica bloqueada.
+            </div>
+
+            <h3 id="lf-secoes-formulario">📝 Seções do Formulário de Execução</h3>
+            <p>O formulário é estruturado em quatro seções principais de preenchimento intuitivo:</p>
+            <ol>
+                <li><strong>Seção 1 — Identificação do Contrato e da Equipe:</strong> Exibe os dados gerais do contrato (objeto, vigência, comissão) e valida se houve substituição de fiscal no período com a devida passagem formal de serviço.</li>
+                <li><strong>Seção 2 — Controle de Prazos e SILOMS:</strong>
+                    <ul>
+                        <li>Conferência das datas de assinatura e vigência atualizadas no SILOMS.</li>
+                        <li><strong>Data término da execução físico-financeira conferida no SILOMS?:</strong> Seleção via botões entre <code>[ Sim ]</code> (que abre dinamicamente o campo de inserção da data) e <code>[ N/A ]</code> (que oculta e limpa o campo).</li>
+                        <li><strong>Vigência da garantia contratual:</strong> Seleção entre <code>[ Sim ]</code>, <code>[ Não ]</code> e <code>[ N/A ]</code>. Caso a garantia esteja vencida (marcado <code>Não</code>), abre-se um campo obrigatório para detalhamento das <em>Providências Adotadas</em>.</li>
+                        <li><strong>Acompanhamento de Aditivação:</strong> Prazos de 120 e 90 dias antes do vencimento com status de tratativas e coordenação com a DOC/SCON.</li>
+                    </ul>
+                </li>
+                <li><strong>Seção 3 — Execução Orçamentária e Financeira:</strong>
+                    <ul>
+                        <li>Notas de Empenho (NE) vigentes.</li>
+                        <li>Cumprimento do cronograma físico-financeiro e detalhamento.</li>
+                        <li><strong>Tabela Dinâmica de Faturas:</strong> Registro de número de Nota Fiscal, valor (com máscara de moeda automática em R$) e número de Ordem Bancária (OB).</li>
+                        <li>Instrumento de Medição de Resultado (IMR) e glosas efetuadas no período.</li>
+                    </ul>
+                </li>
+                <li><strong>Seção 4 — Livro de Ocorrências, PAAI e Avaliação de Risco:</strong>
+                    <ul>
+                        <li>Detalhamento de alterações de cronograma, atrasos, diligências e impossibilidade de recebimento.</li>
+                        <li><strong>Tabela de Ocorrências e Tratativas:</strong> Registro com data, tipo (reunião/e-mail/visita/falha), descrição e ação/prazo do fiscal.</li>
+                        <li>Avaliação quanto à solicitação de abertura de Processo Administrativo de Apuração de Irregularidade (PAAI).</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3 id="lf-fluxo-correcao">🔍 Fluxo de Auditoria e Apontamentos da ACI</h3>
+            <p>Após a submissão pelo fiscal, a equipe de auditoria da ACI analisa as informações declaradas:</p>
+            <ul>
+                <li><strong>Status de Aprovação (OK!):</strong> Indica que o Livro do Fiscal foi homologado pela auditoria.</li>
+                <li><strong>Status de Correção (Apontamento):</strong> Caso sejam identificadas pendências, o auditor altera o status para <code>Correção</code> com indicação de cor <strong>âmbar/vermelha</strong> em destaque. As orientações da ACI ficam disponíveis diretamente no portal e na tela de upload para que o fiscal realize os ajustes necessários e reenvie.</li>
+            </ul>
+
+            <h3 id="lf-geracao-pdf">📄 Relatório em PDF Oficial</h3>
+            <p>O sistema gera dinamicamente um arquivo PDF completo do Livro do Fiscal pronto para ser assinado ou anexado ao Processo Administrativo de Gestão (PAG):</p>
+            <ul>
+                <li>Controle de quebra de página por seção (evitando o particionamento indevido de itens).</li>
+                <li>Rodapé regulamentar padronizado alinhado à direita a partir da 2ª página: <code>"Livro do Fiscal CT xxx (Empresa) - mm/aaaa - pág x/n"</code>.</li>
+            </ul>
+        </section>
+
+        <!-- SEÇÃO 9: CARGOS REGIMENTAIS -->
         <section id="cargos-regimentais">
-            <h2>8. Cargos Regimentais</h2>
+            <h2>9. Cargos Regimentais</h2>
             <p>O módulo de <strong>Cargos Regimentais</strong> permite ao administrador cadastrar e organizar a estrutura de setores e os respectivos cargos de chefia da organização militar.</p>
             <ul>
                 <li><strong>Setores:</strong> Representam as seções/divisões da OM (ex: Seção de TI, Seção de Suprimento). Os setores podem ser reordenados manualmente por arraste.</li>
@@ -307,9 +370,9 @@
             </div>
         </section>
 
-        <!-- SEÇÃO 9: CONFIGURAÇÕES DO SISTEMA -->
+        <!-- SEÇÃO 10: CONFIGURAÇÕES DO SISTEMA -->
         <section id="configuracoes-sistema">
-            <h2>9. Configurações do Sistema</h2>
+            <h2>10. Configurações do Sistema</h2>
             <p>A aba <strong>⚙️ Configurações</strong> está disponível no menu lateral <strong>apenas para Superusuários</strong>. Ela centraliza parâmetros técnicos de infraestrutura do sistema.</p>
 
             <h3 id="backup-automatico">💾 Backup Automático e Manual</h3>

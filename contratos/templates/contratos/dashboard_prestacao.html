@@ -334,6 +334,10 @@
                                                     <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
                                                     <span style="font-size: 0.75rem;">Pendente</span>
                                                 </div>
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-{{ item.contrato.id }}" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao and item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-{{ item.contrato.id }}">Prioritário</label>
+                                                </div>
                                             </div>
                                         {% endif %}
 
@@ -840,6 +844,10 @@
                                                     {% endif %}
                                                 </div>
                                                 {% endif %}
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor cursor-pointer" type="checkbox" role="switch" id="switch-setor-{{ item.setor.id }}" data-setor-id="{{ item.setor.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao and item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-setor-{{ item.setor.id }}">Prioritário</label>
+                                                </div>
                                             </div>
                                         {% elif item.status == 'correcao' %}
                                             <div class="d-flex flex-column align-items-center">
@@ -859,6 +867,10 @@
                                                     {% endif %}
                                                 </div>
                                                 {% endif %}
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor cursor-pointer" type="checkbox" role="switch" id="switch-setor-{{ item.setor.id }}" data-setor-id="{{ item.setor.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao and item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-setor-{{ item.setor.id }}">Prioritário</label>
+                                                </div>
                                             </div>
                                         {% elif item.status == 'ok' %}
                                             <div class="d-flex flex-column align-items-center">
@@ -878,12 +890,20 @@
                                                     {% endif %}
                                                 </div>
                                                 {% endif %}
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor cursor-pointer" type="checkbox" role="switch" id="switch-setor-{{ item.setor.id }}" data-setor-id="{{ item.setor.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao and item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-setor-{{ item.setor.id }}">Prioritário</label>
+                                                </div>
                                             </div>
                                         {% else %}
                                             <div class="d-flex flex-column align-items-center">
                                                 <div class="text-muted opacity-50 py-2">
                                                     <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
                                                     <span style="font-size: 0.75rem;">Pendente</span>
+                                                </div>
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor cursor-pointer" type="checkbox" role="switch" id="switch-setor-{{ item.setor.id }}" data-setor-id="{{ item.setor.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao and item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-setor-{{ item.setor.id }}">Prioritário</label>
                                                 </div>
                                             </div>
                                         {% endif %}
@@ -983,6 +1003,10 @@
                                                     {% endif %}
                                                 </div>
                                                 {% endif %}
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
                                             </div>
                                         {% elif entrega.status == 'correcao' %}
                                             <div class="d-flex flex-column align-items-center">
@@ -1009,6 +1033,10 @@
                                                     {% endif %}
                                                 </div>
                                                 {% endif %}
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
                                             </div>
                                         {% elif entrega.status == 'ok' %}
                                             <div class="d-flex flex-column align-items-center">
@@ -1035,12 +1063,20 @@
                                                     {% endif %}
                                                 </div>
                                                 {% endif %}
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
                                             </div>
                                         {% else %}
                                             <div class="d-flex flex-column align-items-center">
                                                 <div class="text-muted opacity-50 py-2">
                                                     <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
                                                     <span style="font-size: 0.75rem;">Pendente</span>
+                                                </div>
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
                                                 </div>
                                             </div>
                                         {% endif %}
@@ -1625,15 +1661,15 @@
                         html += '</div>';
                     }
                 }
-
-                // Switch Toggle
-                html += `
-                    <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
-                        <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-${contratoId}" data-contrato-id="${contratoId}" data-mes="${mes}" data-ano="${ano}" ${checkboxState}>
-                        <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-${contratoId}">Prioritário</label>
-                    </div>
-                `;
             }
+
+            // Switch Toggle
+            html += `
+                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                    <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-${contratoId}" data-contrato-id="${contratoId}" data-mes="${mes}" data-ano="${ano}" ${checkboxState}>
+                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-${contratoId}">Prioritário</label>
+                </div>
+            `;
             
             // Obs do Fiscal
             if (observacao) {
@@ -1987,6 +2023,10 @@
                     checkbox.checked = !isChecked;
                     alert('Erro: ' + (data.error || 'Não foi possível alterar a seleção do slide.'));
                 } else {
+                    document.querySelectorAll(`.checkbox-apresentacao-setor[data-setor-id="${setorId}"][data-mes="${mes}"][data-ano="${ano}"]`).forEach(cb => {
+                        cb.checked = isChecked;
+                    });
+
                     if (window.mySetoresBarChart && data.stats) {
                         window.mySetoresBarChart.data.datasets[0].data = [
                             data.stats.prio_ok_setores,

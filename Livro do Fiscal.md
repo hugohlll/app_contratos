@@ -19,20 +19,21 @@
 
 > **Controle de Substituição:** \> \[ \] Se houve substituição do fiscal ou de membro da Comissão, foi realizada a entrega formal dos registros pelo seu substituto, garantindo continuidade e integridade no acompanhamento? *(Sim/Não/Não se aplica)*
 
-## **2\. CONTROLE DE PRAZOS E MARCOS**
+## **2\. CONTROLE DE PRAZOS E SILOMS**
 
 *(Referência: Orientações RSC \- Item 1 / Checklists)*
 
-* **Data de Assinatura do Contrato:** \[DD/MM/AAAA\] (Conferido com SILOMS: \[ \] Sim)  
-* **Data Término da Vigência:** \[DD/MM/AAAA\] (Conferido com SILOMS/Termo Aditivo: \[ \] Sim)  
-* **Data Término da Execução:** \[DD/MM/AAAA\] (Conferido com Cronograma Físico/OS: \[ \] Sim)  
+* **Prazos de assinatura/início atualizados no SILOMS?:** *(Sim/Não)*  
+* **Vigência (incluindo aditivos) correta no SILOMS?:** *(Sim/Não)*  
+* **Data término da execução físico-financeira conferida no SILOMS?:** `[ ] Sim` *(Inserir data: DD/MM/AAAA)* | `[ ] N/A`  
+* **Vigência da garantia contratual (se houver):** `[ ] Sim` | `[ ] Não` *(Descrever Providências Adotadas)* | `[ ] N/A`  
 * **Data Limite para providenciar Termo Aditivo (120 a 90 dias antes do término):** \[DD/MM/AAAA\]
 
 **Acompanhamento de Aditivação:**
 
-* \[ \] Possibilidade de aditivar o contrato? *(Sim/Não)*  
-* \[ \] Iniciadas tratativas 120 dias antes do vencimento? *(Sim/Não)*  
-* \[ \] Coordenada a informação com a DOC/SCON? *(Sim/Não/Ações do fiscal)*
+* \[ \] Possibilidade de aditivar o contrato? *(Sim/Não/Não há mais possibilidade/Não se aplica)*  
+* \[ \] Iniciadas tratativas 120 dias antes do vencimento? *(Sim/Não/Não se aplica)*  
+* \[ \] Coordenada a informação com a DOC/SCON? *(Sim/Não/Não se aplica)*
 
 ## **3\. EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA**
 

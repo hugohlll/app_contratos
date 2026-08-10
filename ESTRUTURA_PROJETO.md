@@ -87,6 +87,7 @@ As views estão organizadas em um pacote `views/` para melhor modularização:
 - **`portal.py`**: Views do portal operacional e gerenciamento de contratos.
 - **`auditoria.py`**: Painel de auditoria, gráficos e relatórios gerenciais.
 - **`prestacao.py`**: Módulo completo de Prestação de Contas (upload, dashboard, matriz, consolidação de PDF, apontamentos).
+- **`execucao.py`**: Módulo de Controle de Execução Contratual (Livro do Fiscal Digital: formulário, validações, emissão de PDF e fluxo de auditoria).
 - **`cargos.py`**: Gestão de Cargos Regimentais e Setores.
 - **`militar.py`**: Área de consulta individual do militar.
 - **`auth.py`**: Lógica de login e autenticação customizada.
@@ -96,6 +97,7 @@ As views estão organizadas em um pacote `views/` para melhor modularização:
 Localizados em `contratos/templates/contratos/`:
 - **`portal/`**: Templates do portal (dashboard, detalhes, edição, configurações).
     - `detalhe_contrato.html`, `base_portal.html`, `configuracoes.html`, etc.
+- **`execucao/`**: Templates do Livro do Fiscal Digital (`formulario.html`, `visualizar.html`, `fiscais.html`, `index.html`).
 - **`relatorio_periodo.html`**, **`relatorio_transparencia.html`**: Páginas de relatórios.
 - **`home.html`**, **`pesquisa.html`**: Páginas públicas iniciais.
 
@@ -108,12 +110,19 @@ Localizados em `contratos/tests/`:
 - **`test_models.py`**: Testes unitários dos modelos.
 - **`test_views.py`**: Testes de integração das views e URLs.
 - **`test_forms.py`**: Validação de formulários.
-- **`test_portal_rendering.py`**: Testes de renderização do portal administrativo.
-- **`test_view_ordering.py`**: Testes de ordenação de views.
-- **`test_configuracoes.py`**: Testes do painel de Configurações e Backup.
-- **`test_calendario_prestacao.py`**: Testes do calendário de entregas.
-- **`test_setores_dashboard.py`**: Testes do dashboard de setores.
-- **`test_regression_*.py`**: Testes específicos para bugs corrigidos (regressão).
+- **`test_prestacao.py`**: Testes do módulo de prestação de contas (Fiscais, prioridades, exclusão e AJAX).
+- **`test_envio_prestacao.py`**: Testes de envio de slides, validação de prazos e restrições de mês.
+- **`test_portal_prestacoes.py`**: Testes das views do portal público de prestação de contas.
+- **`test_controle_execucao.py`**: Testes funcionais e de validação do formulário do Livro do Fiscal Digital.
+- **`test_livro_fiscal_pdf.py`**: Testes de geração e formatação do PDF do Livro do Fiscal.
+- **`test_slides_avulsos.py`**: Testes de upload, reordenação e exclusão de slides avulsos na apresentação.
+- **`test_apontamentos.py`**: Testes de registro de pendências e solicitações de correção pela ACI.
+- **`test_setores_dashboard.py`**: Testes do dashboard de prestação de contas de setores.
+- **`test_calendario_prestacao.py`**: Testes do calendário de entregas e exibição de datas limite.
+- **`test_configuracoes.py`**: Testes do painel de Configurações e rotina de Backup.
+- **`test_cargos.py` / `test_persistencia_cargos_setores.py`**: Testes de cargos regimentais e ordenação de setores.
+- **`test_historico_ultimos_envios.py`**: Testes das matrizes históricas de envios (6 meses).
+- **`test_regressao_*.py`**: Testes específicos para validação de regressão e comportamentos corrigidos.
 
 ### 💾 Migrations
 Pasta `contratos/migrations/`: Contém o histórico de alterações no esquema do banco de dados (versionamento do DB).

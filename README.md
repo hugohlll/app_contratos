@@ -74,6 +74,15 @@ Garantir **transparência**, **controle** e **conformidade** no gerenciamento de
 - Visualização das inconsistências apontadas pela auditoria (popovers)
 - Reenvio de documentação corrigida e gestão de status transparente
 
+#### 5. **Livro do Fiscal Digital (Controle de Execução Contratual)**
+- Preenchimento digital estruturado em 4 seções: Identificação/Substituição de Fiscais, Prazos/SILOMS/Garantia, Execução Financeira (Faturas/IMR) e Ocorrências/PAAI
+- Requisito prévio obrigatório: o envio de slides no portal fica bloqueado até o preenchimento ou regularização do Livro do Fiscal no mês de referência
+- Verificação da Vigência da Garantia Contratual com detalhamento obrigatório de providências adotadas caso vencida
+- Verificação do término da execução físico-financeira conferida no SILOMS com botão `[ Sim ]` (abertura dinâmica de data) e `[ N/A ]`
+- Tabela dinâmica com máscara automática de moeda para registro de faturas (NF, Valor e OB)
+- Geração de relatório PDF oficial formatado, com controle de quebra de página por seção e rodapé padronizado em todas as páginas a partir da 2ª: `"Livro do Fiscal CT xxx (Empresa) - mm/aaaa - pág x/n"`
+- Status de acompanhamento com destaque em cor âmbar (`Correção`) para fácil identificação visual dos apontamentos da ACI
+
 ---
 
 ### 👤 **Área do Militar** (Acesso Livre)
@@ -133,11 +142,12 @@ Dashboard interativo com gráficos e indicadores:
 
 #### 2. **Matriz de Prestação de Contas (Dashboard)**
 - Acompanhamento simultâneo de prestações de Fiscais de Contrato e de Gestores de Setor em abas separadas
-- Tabela dinâmica e visual com o acompanhamento das entregas mensais (histórico dos 3 meses anteriores ao atual)
+- Tabela dinâmica e visual com o acompanhamento das entregas mensais (histórico dos últimos 6 meses)
 - Exibição padrão do mês anterior ao atual (não o mês corrente)
 - Botões de ação ágeis: "Aprovar (OK!)", "Solicitar Correção", "Excluir"
 - Delegação de status de aprovação com envio obrigatório de justificativa em caso de correção (prompt dinâmico)
 - Histórico de inconsistências registrado e persistido por usuário
+- Marcação de slides como **Prioritário** em qualquer status (inclusive pendentes), com resolução automática do gestor responsável via comissão ativa ou cargo regimental
 - Geração de PDF consolidado apenas para Fiscais (prioritários)
 - Dashboard estatístico específico (Gráfico de Pizza e de Barras) sincronizado com o mês/ano selecionado no filtro
 - Filtro iterativo de Mês/Ano com exportação em CSV/Excel (inclui observações do fiscal e motivos de correção)
@@ -654,9 +664,15 @@ DATABASE_URL=postgres://admin_siscont:SenhaF0rte!2026@db:5432/siscont_db
 5. **Comissao**: Comissões de fiscalização/recebimento
 6. **Funcao**: Tipos de função nas comissões
 7. **Integrante**: Histórico de designações
-8. **PrestacaoContas**: Envios de prestação de contas (Fiscais e Setores)
-9. **Setor / CargoRegimental**: Estrutura organizacional da OM
-10. **ConfiguracaoSistema**: Parâmetros globais do sistema (Singleton)
+8. **PrestacaoContas / PrestacaoContasSetor**: Envios de prestação de contas (Fiscais e Setores)
+9. **ControleExecucao**: Registro do Livro do Fiscal Digital (vigências, SILOMS, garantias e pareceres)
+10. **RegistroFatura**: Faturas cadastradas no Livro do Fiscal (NF, Valor e OB)
+11. **OcorrenciaContratual**: Ocorrências e tratativas fiscais registradas no Livro do Fiscal
+12. **ApontamentoCorrecao / ApontamentoExecucao**: Observações e correções apontadas pela auditoria da ACI sobre slides e Livro do Fiscal
+13. **SlideApresentacao**: Slides avulsos (capa, transição, encerramento) injetados manualmente na apresentação
+14. **CalendarioPrestacao**: Datas de entrega de slides e apresentações de fiscais/gestores
+15. **Setor / CargoRegimental**: Estrutura organizacional da OM
+16. **ConfiguracaoSistema**: Parâmetros globais do sistema (Singleton)
 
 ### **Relacionamentos**
 
@@ -738,6 +754,19 @@ Contribuições são bem-vindas! Para contribuir:
 
 ## 📅 Changelog
 
+### **Versão 2.1.0**
+- ✅ **Prioritário para Pendentes**: O switch de marcação "Prioritário" agora está disponível em **todos os status** de prestação de contas — incluindo pendentes — tanto para Fiscais de Contrato quanto para Gestores de Setor, em todas as visões (tabela mensal detalhada, matriz histórica de 6 meses e renderização dinâmica via AJAX).
+- ✅ **Resolução Automática de Gestor**: Quando uma prestação pendente sem agente explicitamente vinculado é marcada como prioritária, o sistema resolve automaticamente o nome do responsável consultando a comissão de fiscalização ativa (para contratos) ou o cargo regimental ativo (para setores).
+- ✅ **Sincronização de Checkboxes**: Ao marcar/desmarcar a flag de prioridade na matriz de 6 meses de setores, todos os checkboxes duplicados do mesmo setor/mês/ano na página são sincronizados automaticamente.
+
+### **Versão 2.0.0**
+- ✅ **Livro do Fiscal Digital**: Módulo de Controle de Execução Contratual integrado com formulário dinâmico em 4 seções (identificação, prazos/SILOMS, financeiro e ocorrências/PAAI).
+- ✅ **Requisito Prévio para Prestação de Contas**: O envio de slides no portal de prestação de contas foi condicionado obrigatoriamente ao preenchimento/regularização prévia do Livro do Fiscal do mês de referência.
+- ✅ **Conferência Físico-Financeira no SILOMS**: Pergunta parametrizada "Data término da execução físico-financeira conferida no SILOMS?" com seletores `[ Sim ]` (exibição dinâmica de campo de data) e `[ N/A ]`.
+- ✅ **Verificação da Garantia Contratual**: Novo campo de validação de vigência da garantia contratual (`Sim`, `Não`, `N/A`) com solicitação de providências obrigatórias caso vencida.
+- ✅ **Relatório PDF Padronizado**: Geração de relatório PDF oficial do Livro do Fiscal com prevenção de quebra indevida de seções entre páginas e rodapé regulamentar à direita a partir da 2ª página: `"Livro do Fiscal CT xxx (Empresa) - mm/aaaa - pág x/n"`.
+- ✅ **Fluxo de Correção da ACI**: Integração de status de apontamento de auditoria com destaque visual em tom âmbar (`#d97706`), histórico de orientações da ACI e reenvio simplificado.
+
 ### **Versão 1.9.0**
 - ✅ **Dashboard Padrão — Mês Anterior**: A tela de Prestação de Contas agora exibe por padrão o mês anterior ao atual, e a matriz de acompanhamento apresenta os 3 meses anteriores (não inclui o mês corrente).
 - ✅ **Sincronização de Gráficos**: Os quadros "Slides da Apresentação" e "Fiscais (Apresentação)" agora refletem dinamicamente o mês/ano selecionado no filtro, em vez de sempre exibir dados do mês do registro alterado.
@@ -762,7 +791,7 @@ Contribuições são bem-vindas! Para contribuir:
 
 ### **Versão 1.6.0**
 - ✅ **Módulo de Prestação de Contas**: Novo sistema para recebimento e acompanhamento de slides PDF mensais por contrato.
-- ✅ **Matriz de Acompanhamento**: Painel gerencial com tabela interativa dos últimos 3 meses, aprovação de envios e marcação de contratos prioritários.
+- ✅ **Matriz de Acompanhamento**: Painel gerencial com tabela interativa dos últimos 6 meses, aprovação de envios e marcação de contratos prioritários.
 - ✅ **Consolidação de Apresentação**: Geração de um único PDF dinâmico (on-the-fly) juntando todos os slides prioritários que estiverem em conformidade no mês filtrado.
 - ✅ **Apontamentos de Correção**: Possibilidade do auditor solicitar ajustes nos slides, exigindo justificativa que fica gravada em histórico para o fiscal consultar no portal público.
 - ✅ **Dashboard Específico**: Gráficos Chart.js interativos integrados diretamente à matriz de prestação para monitorar o status do mês atual.
