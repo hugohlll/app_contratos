@@ -387,14 +387,14 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         required=False
     )
     confirmacao_siloms_execucao = forms.ChoiceField(
-        label="Execução físico-financeira / OS consta no SILOMS?",
-        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'N/A')],
+        label="Data término da execução físico-financeira conferida no SILOMS?",
+        choices=[('sim', 'Sim'), ('na', 'N/A')],
         widget=forms.RadioSelect,
         initial='na',
         required=False
     )
     data_execucao_fisico_financeira = forms.DateField(
-        label="Data término da execução físico-financeira",
+        label="Data do término da execução físico-financeira",
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'id': 'id_data_execucao_fisico_financeira'}),
         required=False
     )
@@ -549,6 +549,18 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             ).values_list('agente_id', flat=True).distinct()
             self.fields['agente'].queryset = Agente.objects.filter(id__in=agentes_ids).select_related('posto')
             self.fields['agente'].empty_label = "Selecione o Fiscal..."
+
+    def clean(self):
+        cleaned_data = super().clean()
+        siloms_exec = cleaned_data.get('confirmacao_siloms_execucao')
+        dt_exec = cleaned_data.get('data_execucao_fisico_financeira')
+
+        if siloms_exec == 'sim' and not dt_exec:
+            self.add_error('data_execucao_fisico_financeira', 'Informe a data do término da execução físico-financeira ao marcar Sim.')
+        elif siloms_exec != 'sim':
+            cleaned_data['data_execucao_fisico_financeira'] = None
+
+        return cleaned_data
 
 
 class RegistroFaturaForm(EstiloFormMixin, forms.ModelForm):

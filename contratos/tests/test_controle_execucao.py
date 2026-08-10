@@ -106,6 +106,7 @@ class ControleExecucaoTests(TestCase):
             'confirmacao_siloms_assinatura': 'sim',
             'confirmacao_siloms_vigencia': 'sim',
             'confirmacao_siloms_execucao': 'sim',
+            'data_execucao_fisico_financeira': '2026-12-31',
             'possibilidade_aditivo': 'na',
             'tratativas_120_dias': 'na',
             'coordenacao_doc_scon': 'sim',
@@ -419,6 +420,7 @@ class ControleExecucaoTests(TestCase):
             'confirmacao_siloms_assinatura': 'sim',
             'confirmacao_siloms_vigencia': 'sim',
             'confirmacao_siloms_execucao': 'sim',
+            'data_execucao_fisico_financeira': '2026-12-31',
             'possibilidade_aditivo': 'na',
             'tratativas_120_dias': 'na',
             'coordenacao_doc_scon': 'sim',
@@ -574,3 +576,37 @@ class ControleExecucaoTests(TestCase):
         ctrl = ControleExecucao.objects.filter(contrato=self.contrato).latest('id')
         self.assertEqual(ctrl.data_execucao_fisico_financeira, date(2026, 12, 31))
         self.assertEqual(ctrl.confirmacao_siloms_execucao, 'sim')
+
+    def test_data_execucao_fisico_financeira_na(self):
+        """Testa quando SILOMS execucao é N/A (data deve ser nula no BD)."""
+        self.client.login(username='fiscal1', password='password123')
+        payload = {
+            'mes_referencia': 5,
+            'ano_referencia': 2026,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'substituicao_entrega_formal': 'na',
+            'data_execucao_fisico_financeira': '2026-12-31',  # Enviando data que deve ser limpa
+            'confirmacao_siloms_execucao': 'na',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'possibilidade_aditivo': 'na',
+            'tratativas_120_dias': 'na',
+            'coordenacao_doc_scon': 'sim',
+            'garantia_vigente': 'sim',
+            'notas_empenho': '2026NE000123',
+            'cronograma_fisico_financeiro': 'conforme',
+            'detalhamento_cronograma': 'Em dia.',
+            'imr_aplicado': 'nao',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'relatorio_ocorrencias': 'Ok',
+            'faturas_json': '[]',
+            'ocorrencias_json': '[]'
+        }
+        resp = self.client.post(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}), payload)
+        self.assertEqual(resp.status_code, 302)
+
+        ctrl = ControleExecucao.objects.filter(contrato=self.contrato).latest('id')
+        self.assertIsNone(ctrl.data_execucao_fisico_financeira)
+        self.assertEqual(ctrl.confirmacao_siloms_execucao, 'na')

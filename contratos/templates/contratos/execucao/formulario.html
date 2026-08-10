@@ -340,28 +340,18 @@ body {
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold small d-block mb-2 text-dark">Data término da execução físico-financeira</label>
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <div class="flex-grow-1">
-                                {{ form.data_execucao_fisico_financeira }}
+                        <label class="form-label fw-bold small d-block mb-2 text-dark">Data término da execução físico-financeira conferida no SILOMS?</label>
+                        <div class="segmented-control d-inline-flex mb-2">
+                            {% for radio in form.confirmacao_siloms_execucao %}
+                            <div class="form-check">
+                                {{ radio.tag }}
+                                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
                             </div>
-                            <div class="form-check form-check-inline mb-0 bg-light px-2 py-1 rounded border">
-                                <input class="form-check-input ms-0 me-1" type="checkbox" id="chk_execucao_na" name="execucao_na" {% if not form.data_execucao_fisico_financeira.value and form.confirmacao_siloms_execucao.value == 'na' or form.confirmacao_siloms_execucao.value == None %}checked{% endif %}>
-                                <label class="form-check-label fw-bold small text-dark me-1" for="chk_execucao_na">N/A</label>
-                            </div>
+                            {% endfor %}
                         </div>
-                        <div class="div-siloms-execucao-opcoes align-items-center" id="divSilomsExecucaoOpcoes">
-                            <small class="form-label fw-bold text-secondary me-2 mb-1">Caso seja inserida a data, consta no SILOMS?</small>
-                            <div class="segmented-control d-inline-flex">
-                                {% for radio in form.confirmacao_siloms_execucao %}
-                                {% if radio.choice_value != 'na' %}
-                                <div class="form-check">
-                                    {{ radio.tag }}
-                                    <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-                                </div>
-                                {% endif %}
-                                {% endfor %}
-                            </div>
+                        <div class="mt-2 div-data-execucao-fisico-financeira" style="display:none">
+                            <label class="form-label fw-bold small text-muted">Data do término da execução físico-financeira</label>
+                            {{ form.data_execucao_fisico_financeira }}
                         </div>
                     </div>
                 </div>
@@ -717,51 +707,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (selPaai) { function upPaai() { const d = document.querySelector('.div-paai'); if(d) d.style.display = selPaai.value==='sim'?'block':'none'; } selPaai.addEventListener('change', upPaai); upPaai(); }
 
     // EXECUÇÃO FÍSICO-FINANCEIRA & SILOMS
-    const inputDateExec = document.getElementById('id_data_execucao_fisico_financeira');
-    const chkNaExec = document.getElementById('chk_execucao_na');
-    const divSilomsOpcoes = document.getElementById('divSilomsExecucaoOpcoes');
-    const radiosSilomsExec = document.querySelectorAll('input[name="confirmacao_siloms_execucao"]');
+    function setupSilomsExecucaoToggle() {
+        const radios = document.querySelectorAll('input[name="confirmacao_siloms_execucao"]');
+        const divDt = document.querySelector('.div-data-execucao-fisico-financeira');
+        const inputDt = document.getElementById('id_data_execucao_fisico_financeira');
 
-    function updateExecucaoFisicoFinanceiraUI() {
-        if (chkNaExec && chkNaExec.checked) {
-            if (inputDateExec) {
-                inputDateExec.value = '';
-                inputDateExec.disabled = true;
-            }
-            if (divSilomsOpcoes) {
-                divSilomsOpcoes.style.display = 'none';
-            }
-            radiosSilomsExec.forEach(r => {
-                if (r.value === 'na') r.checked = true;
-                else r.checked = false;
+        function upd() {
+            let isSim = false;
+            radios.forEach(r => {
+                if (r.checked && r.value === 'sim') isSim = true;
             });
-        } else {
-            if (inputDateExec) {
-                inputDateExec.disabled = false;
-            }
-            if (divSilomsOpcoes) {
-                divSilomsOpcoes.style.display = 'block';
-            }
-            let isAnyChecked = Array.from(radiosSilomsExec).some(r => r.checked && r.value !== 'na');
-            if (!isAnyChecked && radiosSilomsExec.length) {
-                let rSim = Array.from(radiosSilomsExec).find(r => r.value === 'sim');
-                if (rSim) rSim.checked = true;
-            }
+            if (divDt) divDt.style.display = isSim ? 'block' : 'none';
+            if (!isSim && inputDt) inputDt.value = '';
         }
+        radios.forEach(r => r.addEventListener('change', upd));
+        upd();
     }
-
-    if (chkNaExec) {
-        chkNaExec.addEventListener('change', updateExecucaoFisicoFinanceiraUI);
-    }
-    if (inputDateExec) {
-        inputDateExec.addEventListener('input', function() {
-            if (this.value && chkNaExec && chkNaExec.checked) {
-                chkNaExec.checked = false;
-                updateExecucaoFisicoFinanceiraUI();
-            }
-        });
-    }
-    updateExecucaoFisicoFinanceiraUI();
+    setupSilomsExecucaoToggle();
 
     // FATURAS
     const tbodyFat = document.getElementById('tbodyFaturas');
