@@ -609,6 +609,13 @@ class ControleExecucao(models.Model):
     possibilidade_aditivo = models.CharField("Contrato admite termo aditivo?", max_length=10, choices=ADMITIR_ADITIVO_CHOICES, default='na')
     tratativas_120_dias = models.CharField("Iniciadas tratativas 120 dias antes?", max_length=5, choices=SIM_NAO_NA, default='na')
     coordenacao_doc_scon = models.CharField("Coordenada informação com DOC/SCON?", max_length=5, choices=SIM_NAO_NA, default='na')
+    GARANTIA_CHOICES = [
+        ('sim', 'Sim'),
+        ('nao', 'Não (Vencida)'),
+        ('na', 'Não se aplica / Sem garantia'),
+    ]
+    garantia_vigente = models.CharField("Garantia contratual dentro da vigência?", max_length=10, choices=GARANTIA_CHOICES, default='na')
+    garantia_providencias = models.TextField("Providências adotadas (Garantia Vencida)", blank=True)
 
     # === Seção 3: Execução Orçamentária e Financeira ===
     notas_empenho = models.TextField("Notas de Empenho (com saldo)", blank=True)

@@ -109,6 +109,8 @@ class ControleExecucaoTests(TestCase):
             'possibilidade_aditivo': 'na',
             'tratativas_120_dias': 'na',
             'coordenacao_doc_scon': 'sim',
+            'garantia_vigente': 'nao',
+            'garantia_providencias': 'Notificada a empresa contratada para renovação da garantia bancária.',
             'notas_empenho': '2026NE000123',
             'cronograma_fisico_financeiro': 'conforme',
             'detalhamento_cronograma': 'Execução normal conforme planejado.',
@@ -132,6 +134,8 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(ctrl.agente, self.agente)
         self.assertEqual(ctrl.status, 'entregue')
         self.assertTrue(ctrl.houve_substituicao)
+        self.assertEqual(ctrl.garantia_vigente, 'nao')
+        self.assertEqual(ctrl.garantia_providencias, 'Notificada a empresa contratada para renovação da garantia bancária.')
 
         # Verificar faturas relacionadas
         self.assertEqual(ctrl.faturas.count(), 2)

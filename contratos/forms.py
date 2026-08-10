@@ -401,6 +401,13 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         initial='na',
         required=False
     )
+    garantia_vigente = forms.ChoiceField(
+        label="Garantia contratual dentro da vigência?",
+        choices=[('sim', 'Sim'), ('nao', 'Não (Vencida)'), ('na', 'Não se aplica / Sem garantia')],
+        widget=forms.RadioSelect,
+        initial='na',
+        required=False
+    )
     alteracao_cronograma = forms.TypedChoiceField(
         label="Alteração no cronograma?",
         coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
@@ -451,6 +458,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             # Seção 2
             'confirmacao_siloms_assinatura', 'confirmacao_siloms_vigencia', 'confirmacao_siloms_execucao',
             'possibilidade_aditivo', 'tratativas_120_dias', 'coordenacao_doc_scon',
+            'garantia_vigente', 'garantia_providencias',
             # Seção 3
             'notas_empenho', 'obs_sem_empenho', 'cronograma_fisico_financeiro',
             # Seção 4
@@ -468,6 +476,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             'mes_referencia': forms.HiddenInput(),
             'ano_referencia': forms.HiddenInput(),
             'possibilidade_aditivo': forms.RadioSelect(),
+            'garantia_vigente': forms.RadioSelect(),
             'tratativas_120_dias': forms.RadioSelect(),
             'coordenacao_doc_scon': forms.RadioSelect(),
             'cronograma_fisico_financeiro': forms.RadioSelect(),
@@ -475,6 +484,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             'necessidade_paai': forms.RadioSelect(),
             'substituicao_entrega_formal': forms.RadioSelect(),
             'ocorrencias_ativas_empresa': forms.RadioSelect(),
+            'garantia_providencias': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Relatar providências adotadas quanto à renovação ou execução da garantia...'}),
             'notas_empenho': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Ex: 2026NE000123, 2026NE000456'}),
             'obs_sem_empenho': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Detalhar gestões providenciadas no SILOMS...'}),
             'detalhamento_cronograma': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Descreva brevemente o status da execução...'}),
@@ -512,6 +522,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             self.initial['impossibilidade_recebimento'] = 'sim' if self.instance.impossibilidade_recebimento else 'nao'
             self.initial['diligencia_visita'] = 'sim' if self.instance.diligencia_visita else 'nao'
             self.initial['glosa_realizada'] = 'sim' if self.instance.glosa_realizada else 'nao'
+            self.initial['garantia_vigente'] = self.instance.garantia_vigente or 'na'
 
         # Campos booleanos (checkboxes) não devem ser obrigatórios
         bool_fields = [

@@ -273,6 +273,7 @@ def exportar_execucao_csv(request):
     writer.writerow([
         'Contrato', 'Objeto', 'Fiscal Responsável', 'Mês Ref.', 'Ano Ref.',
         'Data Envio', 'Status', 'Substituição Fiscal',
+        'Garantia Vigente', 'Providências Garantia',
         'Glosa Realizada', 'Necessidade PAAI', 'Relatório Ocorrências'
     ])
 
@@ -291,6 +292,8 @@ def exportar_execucao_csv(request):
             c.data_envio.strftime('%d/%m/%Y %H:%M'),
             c.get_status_display(),
             'Sim' if c.houve_substituicao else 'Não',
+            c.get_garantia_vigente_display(),
+            c.garantia_providencias or '-',
             'Sim' if c.glosa_realizada else 'Não',
             c.get_necessidade_paai_display(),
             c.relatorio_ocorrencias[:100]
@@ -554,6 +557,10 @@ def gerar_livro_fiscal_pdf(request, pk):
     dt_rec = controle.contrato.data_recomendada_aditivo.strftime('%d/%m/%Y') if (controle.contrato and controle.contrato.data_recomendada_aditivo) else "—"
     dt_lim = controle.contrato.data_limite_aditivo.strftime('%d/%m/%Y') if (controle.contrato and controle.contrato.data_limite_aditivo) else "—"
 
+    garantia_desc = controle.get_garantia_vigente_display()
+    if controle.garantia_vigente == 'nao' and controle.garantia_providencias:
+        garantia_desc += f"<br/><b>Providências Adotadas:</b> {controle.garantia_providencias}"
+
     sec2_data = [
         ["SILOMS — Assinatura/Início:", "✓ Conferido e atualizado" if controle.confirmacao_siloms_assinatura else "✗ Pendente / Não conferido"],
         ["SILOMS — Vigência/Aditivos:", "✓ Conferido e atualizado" if controle.confirmacao_siloms_vigencia else "✗ Pendente / Não conferido"],
@@ -561,6 +568,7 @@ def gerar_livro_fiscal_pdf(request, pk):
         ["Admite Termo Aditivo?", controle.get_possibilidade_aditivo_display()],
         ["Tratativas 120 dias antes:", controle.get_tratativas_120_dias_display()],
         ["Coordenação DOC/SCON:", controle.get_coordenacao_doc_scon_display()],
+        ["Garantia Contratual Vigente:", garantia_desc],
         ["Data Recomendada (120d):", dt_rec],
         ["Data Limite para Aditivo (90d):", dt_lim],
     ]

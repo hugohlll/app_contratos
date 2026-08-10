@@ -48,6 +48,7 @@
             <div class="col-md-4"><small class="text-muted">Coord. DOC/SCON</small><div class="fw-bold">{{ controle.get_coordenacao_doc_scon_display }}</div></div>
             <div class="col-md-6"><small class="text-muted">Data Recomendada p/ Tratativas (120d antes)</small><div class="fw-bold text-primary">{{ controle.contrato.data_recomendada_aditivo|date:"d/m/Y"|default:"—" }}</div></div>
             <div class="col-md-6"><small class="text-muted">Data Limite p/ Tratativas (90d antes)</small><div class="fw-bold text-warning text-dark">{{ controle.contrato.data_limite_aditivo|date:"d/m/Y"|default:"—" }}</div></div>
+            <div class="col-md-12 mt-2"><small class="text-muted">Garantia Contratual Vigente</small><div class="fw-bold {% if controle.garantia_vigente == 'nao' %}text-danger{% endif %}">{{ controle.get_garantia_vigente_display }}</div>{% if controle.garantia_vigente == 'nao' and controle.garantia_providencias %}<div class="alert alert-danger p-2 mt-2 mb-0 small"><strong class="d-block mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Providências Adotadas (Garantia Vencida):</strong>{{ controle.garantia_providencias }}</div>{% endif %}</div>
         </div>
     </div></div>
 

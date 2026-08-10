@@ -54,6 +54,8 @@ class LivroFiscalPDFTestCase(TestCase):
             possibilidade_aditivo='sim',
             tratativas_120_dias='sim',
             coordenacao_doc_scon='sim',
+            garantia_vigente='nao',
+            garantia_providencias='Notificação emitida para renovação da fiança bancária.',
             notas_empenho='2026NE000123',
             cronograma_fisico_financeiro='conforme',
             detalhamento_cronograma='Cronograma em dia',
