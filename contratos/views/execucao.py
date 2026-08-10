@@ -305,10 +305,11 @@ def exportar_execucao_csv(request):
 
 class LivroFiscalCanvas(canvas.Canvas):
     """Canvas customizado de 2 passos para adicionar rodapé a partir da página 2 com totalização de páginas."""
-    def __init__(self, *args, contrato_numero="", mes_referencia=0, ano_referencia=0, **kwargs):
+    def __init__(self, *args, contrato_numero="", empresa_nome="", mes_referencia=0, ano_referencia=0, **kwargs):
         super().__init__(*args, **kwargs)
         self._saved_page_states = []
         self.contrato_numero = contrato_numero
+        self.empresa_nome = empresa_nome
         self.mes_referencia = mes_referencia
         self.ano_referencia = ano_referencia
 
@@ -325,14 +326,15 @@ class LivroFiscalCanvas(canvas.Canvas):
                 self.setFont("Helvetica", 8)
                 self.setFillColor(colors.HexColor('#64748B'))
                 
-                # Identificação solicitada: "livro do fiscal ct xxx - mm/aaaa - pág x/n"
-                footer_text = f"livro do fiscal ct {self.contrato_numero} - {self.mes_referencia:02d}/{self.ano_referencia} - pág {self._pageNumber}/{num_pages}"
+                # Identificação solicitada: "Livro do Fiscal CT xxx (Empresa) - mm/aaaa - pág x/n"
+                emp_str = f" ({self.empresa_nome})" if self.empresa_nome else ""
+                footer_text = f"Livro do Fiscal CT {self.contrato_numero}{emp_str} - {self.mes_referencia:02d}/{self.ano_referencia} - pág {self._pageNumber}/{num_pages}"
                 
                 self.setStrokeColor(colors.HexColor('#CBD5E1'))
                 self.setLineWidth(0.5)
                 self.line(1.5 * cm, 1.2 * cm, 19.5 * cm, 1.2 * cm)
                 
-                self.drawCentredString(10.5 * cm, 0.8 * cm, footer_text)
+                self.drawRightString(19.5 * cm, 0.8 * cm, footer_text)
                 self.restoreState()
             super().showPage()
         super().save()
@@ -859,9 +861,11 @@ def gerar_livro_fiscal_pdf(request, pk):
 
     # Construir PDF com o canvas customizado de rodapé
     def make_canvas(*args, **kwargs):
+        emp_nome = controle.contrato.empresa.nome_exibicao if (controle.contrato and controle.contrato.empresa) else ""
         return LivroFiscalCanvas(
             *args,
             contrato_numero=controle.contrato.numero if controle.contrato else "",
+            empresa_nome=emp_nome,
             mes_referencia=controle.mes_referencia,
             ano_referencia=controle.ano_referencia,
             **kwargs

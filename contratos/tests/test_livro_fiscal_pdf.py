@@ -129,11 +129,11 @@ class LivroFiscalPDFTestCase(TestCase):
 
         # Página 1 não deve conter o rodapé
         page1_text = reader.pages[0].extract_text()
-        self.assertNotIn('livro do fiscal ct 001/2025', page1_text)
+        self.assertNotIn('Livro do Fiscal CT 001/2025', page1_text)
 
         # Página 2 deve conter a identificação do rodapé
         page2_text = reader.pages[1].extract_text()
-        expected_footer = f"livro do fiscal ct 001/2025 - 07/2026 - pág 2/{num_pages}"
+        expected_footer = f"Livro do Fiscal CT 001/2025 (Consultoria Nascimento ME) - 07/2026 - pág 2/{num_pages}"
         self.assertIn(expected_footer, page2_text)
 
     def test_botan_download_pdf_visivel_apenas_quando_ok(self):
