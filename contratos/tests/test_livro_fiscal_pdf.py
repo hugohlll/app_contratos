@@ -136,6 +136,92 @@ class LivroFiscalPDFTestCase(TestCase):
         expected_footer = f"Livro do Fiscal CT 001/2025 (Consultoria Nascimento ME) - 07/2026 - pág 2/{num_pages}"
         self.assertIn(expected_footer, page2_text)
 
+    def test_gerar_pdf_dados_minimos_sem_faturas_sem_ocorrencias(self):
+        """Verifica que o PDF é gerado corretamente com dados mínimos (sem faturas, sem ocorrências, sem observação)."""
+        controle_min = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            status='ok'
+        )
+
+        url = reverse('download_livro_fiscal_pdf', kwargs={'pk': controle_min.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        pdf_bytes = b''.join(response.streaming_content)
+        reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+        self.assertGreaterEqual(len(reader.pages), 1)
+
+        # Extrair todo o texto do PDF
+        full_text = ''.join(page.extract_text() for page in reader.pages)
+
+        # Deve conter as seções obrigatórias
+        self.assertIn('Nenhuma fatura registrada', full_text)
+        self.assertIn('Nenhuma ocorrência registrada', full_text)
+
+        # Não deve conter a seção de observações gerais (campo vazio)
+        self.assertNotIn('OBSERVAÇÕES GERAIS', full_text)
+
+    def test_gerar_pdf_muitas_faturas_fallback_extend(self):
+        """Verifica que o PDF é gerado corretamente quando há mais de 10 faturas (fallback sem KeepTogether)."""
+        for i in range(15):
+            RegistroFatura.objects.create(
+                controle=self.controle_ok,
+                numero_nf=f'NF-{i+2000}',
+                valor=1000.00 + i,
+                numero_ob=f'2026OB{i:06d}'
+            )
+
+        url = reverse('download_livro_fiscal_pdf', kwargs={'pk': self.controle_ok.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        pdf_bytes = b''.join(response.streaming_content)
+        reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+        full_text = ''.join(page.extract_text() for page in reader.pages)
+
+        # Deve conter todas as 16 faturas (15 novas + 1 do setUp)
+        self.assertIn('NF-2000', full_text)
+        self.assertIn('NF-2014', full_text)
+        self.assertIn('TOTAL REGISTRADO', full_text)
+
+    def test_conteudo_textual_secoes_do_pdf(self):
+        """Verifica que o texto extraído do PDF contém todas as 6 seções e a assinatura."""
+        url = reverse('download_livro_fiscal_pdf', kwargs={'pk': self.controle_ok.pk})
+        response = self.client.get(url)
+
+        pdf_bytes = b''.join(response.streaming_content)
+        reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+        full_text = ''.join(page.extract_text() for page in reader.pages)
+
+        secoes_esperadas = [
+            'SEÇÃO 1: IDENTIFICAÇÃO DO CONTRATO E DA EQUIPE',
+            'SEÇÃO 2: CONTROLE DE PRAZOS E SILOMS',
+            'SEÇÃO 3: EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA',
+            'SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS',
+            'SEÇÃO 5: OCORRÊNCIAS E TRATATIVAS',
+            'SEÇÃO 6: APURAÇÃO DE IRREGULARIDADES (PAAI)',
+        ]
+        for secao in secoes_esperadas:
+            self.assertIn(secao, full_text)
+
+        # Verificar dados do contrato na seção 1
+        self.assertIn('001/2025', full_text)
+        self.assertIn('Consultoria Nascimento ME', full_text)
+
+        # Verificar bloco de assinatura
+        self.assertIn('Atesto a veracidade das informações prestadas', full_text)
+        self.assertIn('MENDES', full_text)
+
+        # Verificar seção de observações (presente pois controle_ok tem observação)
+        self.assertIn('OBSERVAÇÕES GERAIS', full_text)
+        self.assertIn('Tudo ok', full_text)
+
+        # Verificar garantia vencida com providências (presente pois controle_ok tem garantia_vigente='nao')
+        self.assertIn('Notificação emitida para renovação da fiança bancária', full_text)
+
     def test_botan_download_pdf_visivel_apenas_quando_ok(self):
         """Verifica se o botão de download PDF é exibido na página de upload quando status é 'ok'."""
         url = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
