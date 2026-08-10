@@ -602,10 +602,14 @@ def gerar_livro_fiscal_pdf(request, pk):
     if controle.garantia_vigente == 'nao' and controle.garantia_providencias:
         garantia_desc += f"<br/><b>Providências Adotadas:</b> {controle.garantia_providencias}"
 
+    dt_exec_str = controle.data_execucao_fisico_financeira.strftime('%d/%m/%Y') if controle.data_execucao_fisico_financeira else "N/A"
+    consta_siloms_str = controle.get_confirmacao_siloms_execucao_display()
+    exec_info_pdf = f"{dt_exec_str} (Consta no SILOMS: {consta_siloms_str})" if controle.data_execucao_fisico_financeira else "N/A"
+
     sec2_data = [
         ["SILOMS — Assinatura/Início:", "✓ Conferido e atualizado" if controle.confirmacao_siloms_assinatura else "✗ Pendente / Não conferido"],
         ["SILOMS — Vigência/Aditivos:", "✓ Conferido e atualizado" if controle.confirmacao_siloms_vigencia else "✗ Pendente / Não conferido"],
-        ["SILOMS — Execução/OS:", "✓ Conferido e atualizado" if controle.confirmacao_siloms_execucao else "✗ Pendente / Não conferido"],
+        ["Término Exec. Físico-Financeira:", exec_info_pdf],
         ["Admite Termo Aditivo?", controle.get_possibilidade_aditivo_display()],
         ["Tratativas 120 dias antes:", controle.get_tratativas_120_dias_display()],
         ["Coordenação DOC/SCON:", controle.get_coordenacao_doc_scon_display()],

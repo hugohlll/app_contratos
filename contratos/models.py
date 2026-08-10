@@ -600,7 +600,8 @@ class ControleExecucao(models.Model):
     # === Seção 2: Controle de Prazos e Marcos ===
     confirmacao_siloms_assinatura = models.BooleanField("Conferido com SILOMS (Assinatura)", default=False)
     confirmacao_siloms_vigencia = models.BooleanField("Conferido com SILOMS/Aditivo (Vigência)", default=False)
-    confirmacao_siloms_execucao = models.BooleanField("Conferido com Cronograma/OS (Execução)", default=False)
+    confirmacao_siloms_execucao = models.CharField("Conferido com Cronograma/OS (Execução)", max_length=10, choices=SIM_NAO_NA, default='na')
+    data_execucao_fisico_financeira = models.DateField("Data término da execução físico-financeira", null=True, blank=True)
     ADMITIR_ADITIVO_CHOICES = [
         ('sim', 'Sim'),
         ('na', 'Não há mais possibilidade/Não se aplica'),

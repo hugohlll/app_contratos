@@ -540,3 +540,37 @@ class ControleExecucaoTests(TestCase):
         item = next(i for i in matriz if i['contrato'] == self.contrato)
         statuses = [e['status'] for e in item['entregas']]
         self.assertIn('ok', statuses)
+
+    def test_data_execucao_fisico_financeira_com_siloms(self):
+        """Testa o salvamento da data de término da execução físico-financeira e constatação no SILOMS."""
+        self.client.login(username='fiscal1', password='password123')
+        payload = {
+            'mes_referencia': 5,
+            'ano_referencia': 2026,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'substituicao_entrega_formal': 'na',
+            'data_execucao_fisico_financeira': '2026-12-31',
+            'confirmacao_siloms_execucao': 'sim',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'possibilidade_aditivo': 'na',
+            'tratativas_120_dias': 'na',
+            'coordenacao_doc_scon': 'sim',
+            'garantia_vigente': 'sim',
+            'notas_empenho': '2026NE000123',
+            'cronograma_fisico_financeiro': 'conforme',
+            'detalhamento_cronograma': 'Em dia.',
+            'imr_aplicado': 'nao',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'relatorio_ocorrencias': 'Ok',
+            'faturas_json': '[]',
+            'ocorrencias_json': '[]'
+        }
+        resp = self.client.post(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}), payload)
+        self.assertEqual(resp.status_code, 302)
+
+        ctrl = ControleExecucao.objects.filter(contrato=self.contrato).latest('id')
+        self.assertEqual(ctrl.data_execucao_fisico_financeira, date(2026, 12, 31))
+        self.assertEqual(ctrl.confirmacao_siloms_execucao, 'sim')

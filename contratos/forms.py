@@ -386,12 +386,16 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         initial='nao',
         required=False
     )
-    confirmacao_siloms_execucao = forms.TypedChoiceField(
+    confirmacao_siloms_execucao = forms.ChoiceField(
         label="Execução físico-financeira / OS consta no SILOMS?",
-        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'N/A')],
         widget=forms.RadioSelect,
-        initial='nao',
+        initial='na',
+        required=False
+    )
+    data_execucao_fisico_financeira = forms.DateField(
+        label="Data término da execução físico-financeira",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'id': 'id_data_execucao_fisico_financeira'}),
         required=False
     )
     possibilidade_aditivo = forms.ChoiceField(
@@ -457,6 +461,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             'houve_substituicao', 'substituicao_entrega_formal', 'substituicao_obs',
             # Seção 2
             'confirmacao_siloms_assinatura', 'confirmacao_siloms_vigencia', 'confirmacao_siloms_execucao',
+            'data_execucao_fisico_financeira',
             'possibilidade_aditivo', 'tratativas_120_dias', 'coordenacao_doc_scon',
             'garantia_vigente', 'garantia_providencias',
             # Seção 3
@@ -476,6 +481,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             'mes_referencia': forms.HiddenInput(),
             'ano_referencia': forms.HiddenInput(),
             'possibilidade_aditivo': forms.RadioSelect(),
+            'confirmacao_siloms_execucao': forms.RadioSelect(),
             'garantia_vigente': forms.RadioSelect(),
             'tratativas_120_dias': forms.RadioSelect(),
             'coordenacao_doc_scon': forms.RadioSelect(),
@@ -516,7 +522,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             self.initial['houve_substituicao'] = 'sim' if self.instance.houve_substituicao else 'nao'
             self.initial['confirmacao_siloms_assinatura'] = 'sim' if self.instance.confirmacao_siloms_assinatura else 'nao'
             self.initial['confirmacao_siloms_vigencia'] = 'sim' if self.instance.confirmacao_siloms_vigencia else 'nao'
-            self.initial['confirmacao_siloms_execucao'] = 'sim' if self.instance.confirmacao_siloms_execucao else 'nao'
+            self.initial['confirmacao_siloms_execucao'] = self.instance.confirmacao_siloms_execucao or 'na'
             self.initial['alteracao_cronograma'] = 'sim' if self.instance.alteracao_cronograma else 'nao'
             self.initial['atraso_entrega'] = 'sim' if self.instance.atraso_entrega else 'nao'
             self.initial['impossibilidade_recebimento'] = 'sim' if self.instance.impossibilidade_recebimento else 'nao'
@@ -527,7 +533,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         # Campos booleanos (checkboxes) não devem ser obrigatórios
         bool_fields = [
             'houve_substituicao', 'confirmacao_siloms_assinatura', 'confirmacao_siloms_vigencia',
-            'confirmacao_siloms_execucao', 'alteracao_cronograma', 'atraso_entrega',
+            'alteracao_cronograma', 'atraso_entrega',
             'impossibilidade_recebimento', 'diligencia_visita', 'glosa_realizada'
         ]
         for bf in bool_fields:
