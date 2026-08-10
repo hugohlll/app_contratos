@@ -2,6 +2,8 @@
 Testes para geração do PDF do Livro do Fiscal (ControleExecucao).
 """
 import os
+import io
+import pypdf
 from datetime import date
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -102,6 +104,37 @@ class LivroFiscalPDFTestCase(TestCase):
         pdf_content = b''.join(response.streaming_content)
         self.assertTrue(pdf_content.startswith(b'%PDF'))
         self.assertGreater(len(pdf_content), 1000)
+
+    def test_gerar_pdf_multipagina_rodape(self):
+        """Verifica se o rodapé 'livro do fiscal ct xxx - mm/aaaa - pág x/n' é exibido a partir da página 2."""
+        # Criar múltiplas ocorrências para forçar mais de uma página no PDF
+        for i in range(10):
+            OcorrenciaContratual.objects.create(
+                controle=self.controle_ok,
+                data=date(2026, 7, 1 + i),
+                tipo='email',
+                descricao=f'Ocorrência de teste de paginação nº {i+1}',
+                acao_fiscal='Notificação enviada',
+                prazo='5 dias'
+            )
+
+        url = reverse('download_livro_fiscal_pdf', kwargs={'pk': self.controle_ok.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        pdf_bytes = b''.join(response.streaming_content)
+        reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+        num_pages = len(reader.pages)
+        self.assertGreaterEqual(num_pages, 2)
+
+        # Página 1 não deve conter o rodapé
+        page1_text = reader.pages[0].extract_text()
+        self.assertNotIn('livro do fiscal ct 001/2025', page1_text)
+
+        # Página 2 deve conter a identificação do rodapé
+        page2_text = reader.pages[1].extract_text()
+        expected_footer = f"livro do fiscal ct 001/2025 - 07/2026 - pág 2/{num_pages}"
+        self.assertIn(expected_footer, page2_text)
 
     def test_botan_download_pdf_visivel_apenas_quando_ok(self):
         """Verifica se o botão de download PDF é exibido na página de upload quando status é 'ok'."""

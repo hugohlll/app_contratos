@@ -17,6 +17,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
+from reportlab.pdfgen import canvas
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, HRFlowable, KeepTogether
 )
@@ -302,6 +303,41 @@ def exportar_execucao_csv(request):
     return response
 
 
+class LivroFiscalCanvas(canvas.Canvas):
+    """Canvas customizado de 2 passos para adicionar rodapé a partir da página 2 com totalização de páginas."""
+    def __init__(self, *args, contrato_numero="", mes_referencia=0, ano_referencia=0, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+        self.contrato_numero = contrato_numero
+        self.mes_referencia = mes_referencia
+        self.ano_referencia = ano_referencia
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            if self._pageNumber > 1:
+                self.saveState()
+                self.setFont("Helvetica", 8)
+                self.setFillColor(colors.HexColor('#64748B'))
+                
+                # Identificação solicitada: "livro do fiscal ct xxx - mm/aaaa - pág x/n"
+                footer_text = f"livro do fiscal ct {self.contrato_numero} - {self.mes_referencia:02d}/{self.ano_referencia} - pág {self._pageNumber}/{num_pages}"
+                
+                self.setStrokeColor(colors.HexColor('#CBD5E1'))
+                self.setLineWidth(0.5)
+                self.line(1.5 * cm, 1.2 * cm, 19.5 * cm, 1.2 * cm)
+                
+                self.drawCentredString(10.5 * cm, 0.8 * cm, footer_text)
+                self.restoreState()
+            super().showPage()
+        super().save()
+
+
 def gerar_livro_fiscal_pdf(request, pk):
     """Gera o relatório em PDF do Livro do Fiscal (Controle de Execução Contratual)."""
     controle = get_object_or_404(
@@ -472,9 +508,6 @@ def gerar_livro_fiscal_pdf(request, pk):
         return t
 
     # --- SEÇÃO 1: IDENTIFICAÇÃO DO CONTRATO E DA EQUIPE ---
-    story.append(make_section_header("SEÇÃO 1: IDENTIFICAÇÃO DO CONTRATO E DA EQUIPE"))
-    story.append(Spacer(1, 4))
-
     empresa_str = f"{controle.contrato.empresa.razao_social} (CNPJ: {controle.contrato.empresa.cnpj})" if (controle.contrato and controle.contrato.empresa) else "Não informada"
     vigencia_str = f"{controle.contrato.vigencia_inicio.strftime('%d/%m/%Y')} a {controle.contrato.vigencia_fim.strftime('%d/%m/%Y')}" if (controle.contrato and controle.contrato.vigencia_inicio and controle.contrato.vigencia_fim) else "Não informada"
     fiscal_resp = f"{controle.agente.posto.sigla} {controle.agente.nome_de_guerra}" if (controle.agente and controle.agente.posto) else (controle.agente.nome_de_guerra if controle.agente else "Não informado")
@@ -494,7 +527,12 @@ def gerar_livro_fiscal_pdf(request, pk):
         ["Fiscal Responsável (Registro):", fiscal_resp],
         ["Portaria da Comissão:", portaria_str],
     ]
-    story.append(make_kv_table(sec1_data))
+
+    sec1_flowables = [
+        make_section_header("SEÇÃO 1: IDENTIFICAÇÃO DO CONTRATO E DA EQUIPE"),
+        Spacer(1, 4),
+        make_kv_table(sec1_data)
+    ]
 
     # Tabela de Integrantes da Comissão
     integrantes = []
@@ -506,10 +544,6 @@ def gerar_livro_fiscal_pdf(request, pk):
         )
 
     if integrantes:
-        story.append(Spacer(1, 6))
-        story.append(Paragraph("<b>Integrantes da Comissão de Fiscalização:</b>", style_label))
-        story.append(Spacer(1, 3))
-
         ing_rows = [[
             Paragraph("Posto/Graduação", style_table_head),
             Paragraph("Nome de Guerra / Completo", style_table_head),
@@ -525,7 +559,7 @@ def gerar_livro_fiscal_pdf(request, pk):
                 Paragraph(f_nome, style_value)
             ])
 
-        t_ing = Table(ing_rows, colWidths=[3.5 * cm, 9.5 * cm, 5.0 * cm])
+        t_ing = Table(ing_rows, colWidths=[3.5 * cm, 9.5 * cm, 5.0 * cm], repeatRows=1)
         t_ing.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F1F5F9')),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
@@ -535,10 +569,14 @@ def gerar_livro_fiscal_pdf(request, pk):
             ('LEFTPADDING', (0, 0), (-1, -1), 5),
             ('RIGHTPADDING', (0, 0), (-1, -1), 5),
         ]))
-        story.append(t_ing)
+        sec1_flowables.extend([
+            Spacer(1, 6),
+            Paragraph("<b>Integrantes da Comissão de Fiscalização:</b>", style_label),
+            Spacer(1, 3),
+            t_ing
+        ])
 
     # Controle de Substituição na Fiscalização
-    story.append(Spacer(1, 6))
     houve_sub_str = "Sim" if controle.houve_substituicao else "Não"
     entrega_formal_str = controle.get_substituicao_entrega_formal_display()
 
@@ -546,14 +584,15 @@ def gerar_livro_fiscal_pdf(request, pk):
     if controle.houve_substituicao and controle.substituicao_obs:
         sub_desc += f"<br/><b>Obs. Transição:</b> {controle.substituicao_obs}"
 
-    story.append(make_kv_table([["Controle de Substituição:", sub_desc]]))
+    sec1_flowables.extend([
+        Spacer(1, 6),
+        make_kv_table([["Controle de Substituição:", sub_desc]])
+    ])
 
+    story.append(KeepTogether(sec1_flowables))
     story.append(Spacer(1, 10))
 
     # --- SEÇÃO 2: CONTROLE DE PRAZOS E MARCOS ---
-    story.append(make_section_header("SEÇÃO 2: CONTROLE DE PRAZOS E SILOMS"))
-    story.append(Spacer(1, 4))
-
     dt_rec = controle.contrato.data_recomendada_aditivo.strftime('%d/%m/%Y') if (controle.contrato and controle.contrato.data_recomendada_aditivo) else "—"
     dt_lim = controle.contrato.data_limite_aditivo.strftime('%d/%m/%Y') if (controle.contrato and controle.contrato.data_limite_aditivo) else "—"
 
@@ -572,24 +611,33 @@ def gerar_livro_fiscal_pdf(request, pk):
         ["Data Recomendada (120d):", dt_rec],
         ["Data Limite para Aditivo (90d):", dt_lim],
     ]
-    story.append(make_kv_table(sec2_data))
+    sec2_flowables = [
+        make_section_header("SEÇÃO 2: CONTROLE DE PRAZOS E SILOMS"),
+        Spacer(1, 4),
+        make_kv_table(sec2_data)
+    ]
+    story.append(KeepTogether(sec2_flowables))
     story.append(Spacer(1, 10))
 
     # --- SEÇÃO 3: EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA ---
-    story.append(make_section_header("SEÇÃO 3: EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA"))
-    story.append(Spacer(1, 4))
-
     sec3_data = [
         ["Notas de Empenho (com saldo):", controle.notas_empenho or "Nenhuma nota de empenho informada"],
         ["Obs. caso sem empenho:", controle.obs_sem_empenho or "N/A"],
         ["Cronograma Físico-Financeiro:", controle.get_cronograma_fisico_financeiro_display()],
     ]
-    story.append(make_kv_table(sec3_data))
+
+    sec3_flowables = [
+        make_section_header("SEÇÃO 3: EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA"),
+        Spacer(1, 4),
+        make_kv_table(sec3_data)
+    ]
 
     faturas = list(controle.faturas.all())
-    story.append(Spacer(1, 6))
-    story.append(Paragraph("<b>Faturas Registradas no Mês de Referência:</b>", style_label))
-    story.append(Spacer(1, 3))
+    sec3_flowables.extend([
+        Spacer(1, 6),
+        Paragraph("<b>Faturas Registradas no Mês de Referência:</b>", style_label),
+        Spacer(1, 3)
+    ])
 
     if faturas:
         fat_rows = [[
@@ -613,7 +661,7 @@ def gerar_livro_fiscal_pdf(request, pk):
             Paragraph("", style_value)
         ])
 
-        t_fat = Table(fat_rows, colWidths=[6.0 * cm, 6.0 * cm, 6.0 * cm])
+        t_fat = Table(fat_rows, colWidths=[6.0 * cm, 6.0 * cm, 6.0 * cm], repeatRows=1)
         t_fat.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F1F5F9')),
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#E2E8F0')),
@@ -624,16 +672,17 @@ def gerar_livro_fiscal_pdf(request, pk):
             ('LEFTPADDING', (0, 0), (-1, -1), 6),
             ('RIGHTPADDING', (0, 0), (-1, -1), 6),
         ]))
-        story.append(t_fat)
+        sec3_flowables.append(t_fat)
     else:
-        story.append(make_kv_table([["Faturas do Mês:", "Nenhuma fatura registrada no período."]]))
+        sec3_flowables.append(make_kv_table([["Faturas do Mês:", "Nenhuma fatura registrada no período."]]))
 
+    if len(faturas) <= 10:
+        story.append(KeepTogether(sec3_flowables))
+    else:
+        story.extend(sec3_flowables)
     story.append(Spacer(1, 10))
 
     # --- SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS ---
-    story.append(make_section_header("SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS"))
-    story.append(Spacer(1, 4))
-
     alt_desc = f"Sim — {controle.alteracao_cronograma_desc}" if (controle.alteracao_cronograma and controle.alteracao_cronograma_desc) else ("Sim" if controle.alteracao_cronograma else "Não")
     atr_desc = f"Sim — {controle.atraso_entrega_desc}" if (controle.atraso_entrega and controle.atraso_entrega_desc) else ("Sim" if controle.atraso_entrega else "Não")
     imp_desc = f"Sim — {controle.impossibilidade_recebimento_desc}" if (controle.impossibilidade_recebimento and controle.impossibilidade_recebimento_desc) else ("Sim" if controle.impossibilidade_recebimento else "Não")
@@ -649,12 +698,19 @@ def gerar_livro_fiscal_pdf(request, pk):
         ["IMR Aplicado?", controle.get_imr_aplicado_display()],
         ["Glosa Realizada?", glo_desc],
     ]
-    story.append(make_kv_table(sec4_data))
+    sec4_flowables = [
+        make_section_header("SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS"),
+        Spacer(1, 4),
+        make_kv_table(sec4_data)
+    ]
+    story.append(KeepTogether(sec4_flowables))
     story.append(Spacer(1, 10))
 
     # --- SEÇÃO 5: OCORRÊNCIAS E TRATATIVAS ---
-    story.append(make_section_header("SEÇÃO 5: OCORRÊNCIAS E TRATATIVAS"))
-    story.append(Spacer(1, 4))
+    sec5_flowables = [
+        make_section_header("SEÇÃO 5: OCORRÊNCIAS E TRATATIVAS"),
+        Spacer(1, 4)
+    ]
 
     ocorrencias = list(controle.ocorrencias.all())
     if ocorrencias:
@@ -679,7 +735,7 @@ def gerar_livro_fiscal_pdf(request, pk):
                 Paragraph(o.acao_fiscal or "-", style_value),
                 Paragraph(o.prazo or "-", style_value)
             ])
-        t_oc = Table(oc_rows, colWidths=[2.2 * cm, 2.8 * cm, 5.5 * cm, 5.5 * cm, 2.0 * cm])
+        t_oc = Table(oc_rows, colWidths=[2.2 * cm, 2.8 * cm, 5.5 * cm, 5.5 * cm, 2.0 * cm], repeatRows=1)
         t_oc.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F1F5F9')),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
@@ -689,20 +745,23 @@ def gerar_livro_fiscal_pdf(request, pk):
             ('LEFTPADDING', (0, 0), (-1, -1), 4),
             ('RIGHTPADDING', (0, 0), (-1, -1), 4),
         ]))
-        story.append(t_oc)
+        sec5_flowables.append(t_oc)
     else:
-        story.append(make_kv_table([["Ocorrências Registradas:", "Nenhuma ocorrência registrada no período."]]))
+        sec5_flowables.append(make_kv_table([["Ocorrências Registradas:", "Nenhuma ocorrência registrada no período."]]))
 
     if controle.relatorio_ocorrencias:
-        story.append(Spacer(1, 4))
-        story.append(make_kv_table([["Relatório Consolidado:", controle.relatorio_ocorrencias]]))
+        sec5_flowables.extend([
+            Spacer(1, 4),
+            make_kv_table([["Relatório Consolidado:", controle.relatorio_ocorrencias]])
+        ])
 
+    if len(ocorrencias) <= 8:
+        story.append(KeepTogether(sec5_flowables))
+    else:
+        story.extend(sec5_flowables)
     story.append(Spacer(1, 10))
 
     # --- SEÇÃO 6: APURAÇÃO DE IRREGULARIDADES (PAAI) ---
-    story.append(make_section_header("SEÇÃO 6: APURAÇÃO DE IRREGULARIDADES (PAAI)"))
-    story.append(Spacer(1, 4))
-
     sec6_data = [
         ["Ocorrências Ativas/Reincidentes:", controle.get_ocorrencias_ativas_empresa_display()],
         ["Necessidade de PAAI?", controle.get_necessidade_paai_display()],
@@ -710,17 +769,24 @@ def gerar_livro_fiscal_pdf(request, pk):
     if controle.paai_justificativa:
         sec6_data.append(["Justificativa PAAI:", controle.paai_justificativa])
 
-    story.append(make_kv_table(sec6_data))
+    sec6_flowables = [
+        make_section_header("SEÇÃO 6: APURAÇÃO DE IRREGULARIDADES (PAAI)"),
+        Spacer(1, 4),
+        make_kv_table(sec6_data)
+    ]
+    story.append(KeepTogether(sec6_flowables))
+    story.append(Spacer(1, 10))
 
     if controle.observacao:
+        obs_flowables = [
+            make_section_header("OBSERVAÇÕES GERAIS"),
+            Spacer(1, 4),
+            make_kv_table([["Observações:", controle.observacao]])
+        ]
+        story.append(KeepTogether(obs_flowables))
         story.append(Spacer(1, 10))
-        story.append(make_section_header("OBSERVAÇÕES GERAIS"))
-        story.append(Spacer(1, 4))
-        story.append(make_kv_table([["Observações:", controle.observacao]]))
 
     # --- ASSINATURAS DA COMISSÃO DE FISCALIZAÇÃO ---
-    story.append(Spacer(1, 20))
-
     MESES_PT = [
         '', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
         'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
@@ -738,13 +804,16 @@ def gerar_livro_fiscal_pdf(request, pk):
         alignment=2
     )
 
-    story.append(Paragraph(
-        "Atesto a veracidade das informações prestadas no presente Livro do Fiscal relativo ao acompanhamento e fiscalização deste contrato.",
-        style_value
-    ))
-    story.append(Spacer(1, 10))
-    story.append(Paragraph(data_str_pt, style_date_right))
-    story.append(Spacer(1, 25))
+    sig_block = [
+        Spacer(1, 10),
+        Paragraph(
+            "Atesto a veracidade das informações prestadas no presente Livro do Fiscal relativo ao acompanhamento e fiscalização deste contrato.",
+            style_value
+        ),
+        Spacer(1, 10),
+        Paragraph(data_str_pt, style_date_right),
+        Spacer(1, 25)
+    ]
 
     # Determinar a assinatura do responsável pelo envio
     assinantes = []
@@ -784,10 +853,21 @@ def gerar_livro_fiscal_pdf(request, pk):
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
         ]))
-        story.append(KeepTogether(t_sig))
+        sig_block.append(t_sig)
 
-    # Construir PDF
-    doc.build(story)
+    story.append(KeepTogether(sig_block))
+
+    # Construir PDF com o canvas customizado de rodapé
+    def make_canvas(*args, **kwargs):
+        return LivroFiscalCanvas(
+            *args,
+            contrato_numero=controle.contrato.numero if controle.contrato else "",
+            mes_referencia=controle.mes_referencia,
+            ano_referencia=controle.ano_referencia,
+            **kwargs
+        )
+
+    doc.build(story, canvasmaker=make_canvas)
     buffer.seek(0)
 
     # Nomenclatura solicitada: livro_fiscal_{contrato}_{empresa}_{ano_referencia}_{mes_referencia}.pdf
