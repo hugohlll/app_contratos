@@ -176,56 +176,64 @@ body {
     background-color: #ffffff !important;
 }
 
-/* Segmented Controls (Sim / Não Toggle Buttons) */
-.segmented-control {
-    display: inline-flex;
-    background-color: #f1f5f9;
-    padding: 3px;
-    border-radius: 0.6rem;
-    border: 1px solid #cbd5e1;
-    gap: 2px;
+/* Checkbox Controls (Square Checkbox Options) */
+.checkbox-control {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    align-items: center;
+    padding: 0.35rem 0;
 }
 
-.segmented-control .form-check {
+.checkbox-control .form-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    cursor: pointer;
+}
+
+.checkbox-control .form-check-input {
+    width: 1.2em !important;
+    height: 1.2em !important;
     margin: 0 !important;
     padding: 0 !important;
-}
-
-.segmented-control .form-check-input {
-    position: absolute !important;
-    opacity: 0 !important;
-    width: 0 !important;
-    height: 0 !important;
-    pointer-events: none !important;
-}
-
-.segmented-control .form-check-label {
-    display: inline-block;
-    padding: 6px 18px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #475569;
-    background-color: transparent;
-    border-radius: 0.45rem;
+    border: 1.5px solid #64748b !important;
+    border-radius: 0.25rem !important;
+    background-color: #ffffff !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.15s ease-in-out;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative !important;
+    opacity: 1 !important;
+}
+
+.checkbox-control .form-check-input:checked {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: contain !important;
+}
+
+.checkbox-control .form-check-input:focus {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+}
+
+.checkbox-control .form-check-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
     user-select: none;
-    margin: 0 !important;
-    text-align: center;
-}
-
-.segmented-control .form-check-input:checked + .form-check-label {
-    background-color: #0d6efd;
-    color: #ffffff;
-    box-shadow: 0 2px 5px rgba(13, 110, 253, 0.25);
-}
-
-.segmented-control .form-check-input:focus + .form-check-label {
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
-}
-
-.segmented-control .form-check-label:hover {
-    color: #0f172a;
+    margin: 0;
 }
 
 /* Delimitação de Áreas de Ação */
@@ -282,9 +290,9 @@ body {
             </div>
             <div class="row g-3">
                 <div class="col-md-6 field-required"><label for="{{ form.agente.id_for_label }}" class="form-label fw-bold">Fiscal Responsável <span class="text-danger">*</span></label>{{ form.agente }}</div>
-                <div class="col-md-6">
-                    <label class="form-label fw-bold d-block">Houve substituição de fiscal?</label>
-                    <div class="segmented-control mt-1">
+                <div class="col-md-6 field-required">
+                    <label class="form-label fw-bold d-block">Houve substituição de fiscal? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control mt-1">
                         {% for radio in form.houve_substituicao %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -295,7 +303,7 @@ body {
                 </div>
                 <div class="col-md-6 div-substituicao" style="display:none">
                     <label class="form-label fw-bold d-block">Entrega formal dos registros pelo substituto?</label>
-                    <div class="segmented-control mt-1">
+                    <div class="checkbox-control mt-1">
                         {% for radio in form.substituicao_entrega_formal %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -307,7 +315,7 @@ body {
                         <i class="bi bi-info-circle me-1"></i>Confirmação se os registros, documentos e histórico foram entregues formalmente pelo antecessor, garantindo a continuidade e integridade no acompanhamento contratual.
                     </small>
                 </div>
-                <div class="col-md-6 div-substituicao" style="display:none"><label class="form-label fw-bold">Observações da Transição</label>{{ form.substituicao_obs }}</div>
+                <div class="col-md-6 div-substituicao" style="display:none"><label for="{{ form.substituicao_obs.id_for_label }}" class="form-label fw-bold">Observações da Transição</label>{{ form.substituicao_obs }}</div>
             </div>
         </div></div>
 
@@ -318,9 +326,9 @@ body {
             <h6 class="fw-bold text-primary mb-3"><i class="bi bi-check2-square me-1"></i>Verificações de Lançamento no SILOMS</h6>
             <div class="read-only-section mb-4">
                 <div class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold small d-block mb-2 text-dark">Prazos de assinatura/início atualizados no SILOMS?</label>
-                        <div class="segmented-control">
+                    <div class="col-md-4 field-required">
+                        <label class="form-label fw-bold small d-block mb-2 text-dark">Prazos de assinatura/início atualizados no SILOMS? <span class="text-danger">*</span></label>
+                        <div class="checkbox-control">
                             {% for radio in form.confirmacao_siloms_assinatura %}
                             <div class="form-check">
                                 {{ radio.tag }}
@@ -329,9 +337,9 @@ body {
                             {% endfor %}
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold small d-block mb-2 text-dark">Vigência (incluindo aditivos) correta no SILOMS?</label>
-                        <div class="segmented-control">
+                    <div class="col-md-4 field-required">
+                        <label class="form-label fw-bold small d-block mb-2 text-dark">Vigência (incluindo aditivos) correta no SILOMS? <span class="text-danger">*</span></label>
+                        <div class="checkbox-control">
                             {% for radio in form.confirmacao_siloms_vigencia %}
                             <div class="form-check">
                                 {{ radio.tag }}
@@ -340,9 +348,9 @@ body {
                             {% endfor %}
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold small d-block mb-2 text-dark">Data término da execução físico-financeira conferida no SILOMS?</label>
-                        <div class="segmented-control d-inline-flex mb-2">
+                    <div class="col-md-4 field-required">
+                        <label class="form-label fw-bold small d-block mb-2 text-dark">Data término da execução físico-financeira conferida no SILOMS? <span class="text-danger">*</span></label>
+                        <div class="checkbox-control">
                             {% for radio in form.confirmacao_siloms_execucao %}
                             <div class="form-check">
                                 {{ radio.tag }}
@@ -351,7 +359,7 @@ body {
                             {% endfor %}
                         </div>
                         <div class="mt-2 div-data-execucao-fisico-financeira" style="display:none">
-                            <label class="form-label fw-bold small text-muted">Data do término da execução físico-financeira</label>
+                            <label for="{{ form.data_execucao_fisico_financeira.id_for_label }}" class="form-label fw-bold small text-muted">Data do término da execução físico-financeira <span class="text-danger">*</span></label>
                             {{ form.data_execucao_fisico_financeira }}
                         </div>
                     </div>
@@ -383,9 +391,9 @@ body {
             </div>
 
             <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold small d-block mb-2">Contrato admite termo aditivo?</label>
-                    <div class="segmented-control">
+                <div class="col-md-4 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">Contrato admite termo aditivo? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.possibilidade_aditivo %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -394,9 +402,9 @@ body {
                         {% endfor %}
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-bold small d-block mb-2">Iniciadas tratativas 120 dias antes?</label>
-                    <div class="segmented-control">
+                <div class="col-md-4 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">Iniciadas tratativas 120 dias antes? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.tratativas_120_dias %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -405,9 +413,9 @@ body {
                         {% endfor %}
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-bold small d-block mb-2">Coordenada informação com DOC/SCON?</label>
-                    <div class="segmented-control">
+                <div class="col-md-4 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">Coordenada informação com DOC/SCON? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.coordenacao_doc_scon %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -416,9 +424,9 @@ body {
                         {% endfor %}
                     </div>
                 </div>
-                <div class="col-md-6 mt-3">
-                    <label class="form-label fw-bold small d-block mb-2">Garantia contratual dentro da vigência?</label>
-                    <div class="segmented-control">
+                <div class="col-md-6 mt-3 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">Garantia contratual dentro da vigência? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.garantia_vigente %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -428,7 +436,7 @@ body {
                     </div>
                 </div>
                 <div class="col-md-6 mt-3 div-garantia-providencias" style="display:none">
-                    <label class="form-label fw-bold small text-danger">Providências Adotadas (Garantia Vencida)</label>
+                    <label for="{{ form.garantia_providencias.id_for_label }}" class="form-label fw-bold small text-danger">Providências Adotadas (Garantia Vencida)</label>
                     {{ form.garantia_providencias }}
                 </div>
             </div>
@@ -440,9 +448,9 @@ body {
             <div class="row g-3 mb-4">
                 <div class="col-md-6"><label class="form-label fw-bold">Notas de Empenho (com saldo)</label>{{ form.notas_empenho }}</div>
                 <div class="col-md-6"><label class="form-label fw-bold">Obs. sem empenho</label>{{ form.obs_sem_empenho }}</div>
-                <div class="col-12">
-                    <label class="form-label fw-bold small d-block mb-2">Cronograma Físico-Financeiro</label>
-                    <div class="segmented-control">
+                <div class="col-12 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">Cronograma Físico-Financeiro <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.cronograma_fisico_financeiro %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -471,9 +479,9 @@ body {
             <div class="row g-3">
                 <div class="col-12"><label class="form-label fw-bold">Detalhamento do Status</label>{{ form.detalhamento_cronograma }}</div>
                 
-                <div class="col-md-6">
-                    <label class="form-label fw-bold small d-block mb-2">Alteração no cronograma?</label>
-                    <div class="segmented-control">
+                <div class="col-md-6 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">Alteração no cronograma? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.alteracao_cronograma %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -484,9 +492,9 @@ body {
                     <div class="mt-2 div-alteracao-cronograma" style="display:none">{{ form.alteracao_cronograma_desc }}</div>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label fw-bold small d-block mb-2">Atraso na entrega?</label>
-                    <div class="segmented-control">
+                <div class="col-md-6 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">Atraso na entrega? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.atraso_entrega %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -497,9 +505,9 @@ body {
                     <div class="mt-2 div-atraso-entrega" style="display:none">{{ form.atraso_entrega_desc }}</div>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label fw-bold small d-block mb-2">Impossibilidade de recebimento?</label>
-                    <div class="segmented-control">
+                <div class="col-md-6 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">Impossibilidade de recebimento? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.impossibilidade_recebimento %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -510,9 +518,9 @@ body {
                     <div class="mt-2 div-impossibilidade" style="display:none">{{ form.impossibilidade_recebimento_desc }}</div>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label fw-bold small d-block mb-2">Diligência/visita técnica?</label>
-                    <div class="segmented-control">
+                <div class="col-md-6 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">Diligência/visita técnica? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.diligencia_visita %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -523,9 +531,9 @@ body {
                     <div class="mt-2 div-diligencia" style="display:none">{{ form.diligencia_visita_desc }}</div>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label fw-bold small d-block mb-2">IMR aplicado?</label>
-                    <div class="segmented-control">
+                <div class="col-md-6 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">IMR aplicado? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.imr_aplicado %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -535,9 +543,9 @@ body {
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label fw-bold small d-block mb-2">Glosa realizada no pagamento?</label>
-                    <div class="segmented-control">
+                <div class="col-md-6 field-required">
+                    <label class="form-label fw-bold small d-block mb-2">Glosa realizada no pagamento? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control">
                         {% for radio in form.glosa_realizada %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -545,7 +553,7 @@ body {
                         </div>
                         {% endfor %}
                     </div>
-                    <div class="mt-2 div-glosa" style="display:none">{{ form.glosa_detalhes }}</div>
+                    <div class="mt-2 div-glosa" style="display:none">{{ form.glosa_desc }}</div>
                 </div>
             </div>
         </div></div>
@@ -625,9 +633,9 @@ body {
         <div class="card card-livro-fiscal mb-4"><div class="card-body p-4">
             <div class="section-header"><i class="bi bi-shield-exclamation me-2"></i>Seção 6: PAAI</div>
             <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-bold d-block">Ocorrências ativas reincidentes?</label>
-                    <div class="segmented-control mt-1">
+                <div class="col-md-6 field-required">
+                    <label class="form-label fw-bold d-block">Ocorrências ativas reincidentes? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control mt-1">
                         {% for radio in form.ocorrencias_ativas_empresa %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -636,9 +644,9 @@ body {
                         {% endfor %}
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-bold d-block">Necessidade de PAAI?</label>
-                    <div class="segmented-control mt-1">
+                <div class="col-md-6 field-required">
+                    <label class="form-label fw-bold d-block">Necessidade de PAAI? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control mt-1">
                         {% for radio in form.necessidade_paai %}
                         <div class="form-check">
                             {{ radio.tag }}
@@ -647,7 +655,7 @@ body {
                         {% endfor %}
                     </div>
                 </div>
-                <div class="col-12 div-paai" style="display:none"><label class="form-label fw-bold">Justificativa PAAI</label>{{ form.paai_justificativa }}</div>
+                <div class="col-12 div-paai" style="display:none"><label for="{{ form.paai_justificativa.id_for_label }}" class="form-label fw-bold">Justificativa PAAI</label>{{ form.paai_justificativa }}</div>
             </div>
         </div></div>
 
@@ -669,10 +677,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupRadioConditional(fieldName, cls) {
         const radios = document.querySelectorAll(`input[name="${fieldName}"]`);
         const tgts = document.querySelectorAll('.' + cls);
+        if (!radios.length) return;
         function upd() {
             let isSim = false;
             radios.forEach(r => {
-                if (r.checked && (r.value === 'sim' || r.value === 'True' || r.value === 'true')) {
+                if (r.checked && (r.value === 'sim' || r.value === 'True' || r.value === 'true' || r.value === '1')) {
                     isSim = true;
                 }
             });
@@ -691,6 +700,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupRadioValueConditional(fieldName, cls, targetVal) {
         const radios = document.querySelectorAll(`input[name="${fieldName}"]`);
         const tgts = document.querySelectorAll('.' + cls);
+        if (!radios.length) return;
         function upd() {
             let isMatch = false;
             radios.forEach(r => {
@@ -704,14 +714,14 @@ document.addEventListener('DOMContentLoaded', function() {
         upd();
     }
     setupRadioValueConditional('garantia_vigente', 'div-garantia-providencias', 'nao');
-    const selPaai = document.getElementById('id_necessidade_paai');
-    if (selPaai) { function upPaai() { const d = document.querySelector('.div-paai'); if(d) d.style.display = selPaai.value==='sim'?'block':'none'; } selPaai.addEventListener('change', upPaai); upPaai(); }
+    setupRadioValueConditional('necessidade_paai', 'div-paai', 'sim');
 
     // EXECUÇÃO FÍSICO-FINANCEIRA & SILOMS
     function setupSilomsExecucaoToggle() {
         const radios = document.querySelectorAll('input[name="confirmacao_siloms_execucao"]');
         const divDt = document.querySelector('.div-data-execucao-fisico-financeira');
         const inputDt = document.getElementById('id_data_execucao_fisico_financeira');
+        if (!radios.length) return;
 
         function upd() {
             let isSim = false;

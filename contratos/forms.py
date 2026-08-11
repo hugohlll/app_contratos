@@ -367,7 +367,12 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
         choices=[('sim', 'Sim'), ('nao', 'Não')],
         widget=forms.RadioSelect,
-        initial='nao',
+        required=True
+    )
+    substituicao_entrega_formal = forms.ChoiceField(
+        label="Entrega formal dos registros pelo substituto?",
+        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
+        widget=forms.RadioSelect,
         required=False
     )
     confirmacao_siloms_assinatura = forms.TypedChoiceField(
@@ -375,23 +380,20 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
         choices=[('sim', 'Sim'), ('nao', 'Não')],
         widget=forms.RadioSelect,
-        initial='nao',
-        required=False
+        required=True
     )
     confirmacao_siloms_vigencia = forms.TypedChoiceField(
         label="Vigência (incluindo aditivos) correta no SILOMS?",
         coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
         choices=[('sim', 'Sim'), ('nao', 'Não')],
         widget=forms.RadioSelect,
-        initial='nao',
-        required=False
+        required=True
     )
     confirmacao_siloms_execucao = forms.ChoiceField(
         label="Data término da execução físico-financeira conferida no SILOMS?",
         choices=[('sim', 'Sim'), ('na', 'N/A')],
         widget=forms.RadioSelect,
-        initial='na',
-        required=False
+        required=True
     )
     data_execucao_fisico_financeira = forms.DateField(
         label="Data do término da execução físico-financeira",
@@ -402,55 +404,84 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         label="Contrato admite termo aditivo?",
         choices=[('sim', 'Sim'), ('na', 'Não há mais possibilidade/Não se aplica')],
         widget=forms.RadioSelect,
-        initial='na',
-        required=False
+        required=True
+    )
+    tratativas_120_dias = forms.ChoiceField(
+        label="Iniciadas tratativas 120 dias antes?",
+        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
+        widget=forms.RadioSelect,
+        required=True
+    )
+    coordenacao_doc_scon = forms.ChoiceField(
+        label="Coordenada informação com DOC/SCON?",
+        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
+        widget=forms.RadioSelect,
+        required=True
     )
     garantia_vigente = forms.ChoiceField(
         label="Garantia contratual dentro da vigência?",
         choices=[('sim', 'Sim'), ('nao', 'Não (Vencida)'), ('na', 'Não se aplica / Sem garantia')],
         widget=forms.RadioSelect,
-        initial='na',
-        required=False
+        required=True
+    )
+    cronograma_fisico_financeiro = forms.ChoiceField(
+        label="Cumprimento do Cronograma Físico-Financeiro",
+        choices=[('conforme', 'Conforme o previsto'), ('atrasado', 'Atrasado')],
+        widget=forms.RadioSelect,
+        required=True
     )
     alteracao_cronograma = forms.TypedChoiceField(
         label="Alteração no cronograma?",
         coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
         choices=[('sim', 'Sim'), ('nao', 'Não')],
         widget=forms.RadioSelect,
-        initial='nao',
-        required=False
+        required=True
     )
     atraso_entrega = forms.TypedChoiceField(
         label="Atraso na entrega?",
         coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
         choices=[('sim', 'Sim'), ('nao', 'Não')],
         widget=forms.RadioSelect,
-        initial='nao',
-        required=False
+        required=True
     )
     impossibilidade_recebimento = forms.TypedChoiceField(
         label="Impossibilidade de recebimento?",
         coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
         choices=[('sim', 'Sim'), ('nao', 'Não')],
         widget=forms.RadioSelect,
-        initial='nao',
-        required=False
+        required=True
     )
     diligencia_visita = forms.TypedChoiceField(
         label="Diligência/visita técnica?",
         coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
         choices=[('sim', 'Sim'), ('nao', 'Não')],
         widget=forms.RadioSelect,
-        initial='nao',
-        required=False
+        required=True
+    )
+    imr_aplicado = forms.ChoiceField(
+        label="IMR aplicado?",
+        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        widget=forms.RadioSelect,
+        required=True
     )
     glosa_realizada = forms.TypedChoiceField(
         label="Glosa realizada?",
         coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
         choices=[('sim', 'Sim'), ('nao', 'Não')],
         widget=forms.RadioSelect,
-        initial='nao',
-        required=False
+        required=True
+    )
+    ocorrencias_ativas_empresa = forms.ChoiceField(
+        label="Ocorrências ativas reincidentes?",
+        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        widget=forms.RadioSelect,
+        required=True
+    )
+    necessidade_paai = forms.ChoiceField(
+        label="Necessidade de PAAI?",
+        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        widget=forms.RadioSelect,
+        required=True
     )
 
     class Meta:
@@ -480,16 +511,6 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         widgets = {
             'mes_referencia': forms.HiddenInput(),
             'ano_referencia': forms.HiddenInput(),
-            'possibilidade_aditivo': forms.RadioSelect(),
-            'confirmacao_siloms_execucao': forms.RadioSelect(),
-            'garantia_vigente': forms.RadioSelect(),
-            'tratativas_120_dias': forms.RadioSelect(),
-            'coordenacao_doc_scon': forms.RadioSelect(),
-            'cronograma_fisico_financeiro': forms.RadioSelect(),
-            'imr_aplicado': forms.RadioSelect(),
-            'necessidade_paai': forms.RadioSelect(),
-            'substituicao_entrega_formal': forms.RadioSelect(),
-            'ocorrencias_ativas_empresa': forms.RadioSelect(),
             'garantia_providencias': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Relatar providências adotadas quanto à renovação ou execução da garantia...'}),
             'notas_empenho': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Ex: 2026NE000123, 2026NE000456'}),
             'obs_sem_empenho': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Detalhar gestões providenciadas no SILOMS...'}),
@@ -520,25 +541,23 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
 
         if self.instance and self.instance.pk:
             self.initial['houve_substituicao'] = 'sim' if self.instance.houve_substituicao else 'nao'
+            self.initial['substituicao_entrega_formal'] = self.instance.substituicao_entrega_formal or ''
             self.initial['confirmacao_siloms_assinatura'] = 'sim' if self.instance.confirmacao_siloms_assinatura else 'nao'
             self.initial['confirmacao_siloms_vigencia'] = 'sim' if self.instance.confirmacao_siloms_vigencia else 'nao'
-            self.initial['confirmacao_siloms_execucao'] = self.instance.confirmacao_siloms_execucao or 'na'
+            self.initial['confirmacao_siloms_execucao'] = self.instance.confirmacao_siloms_execucao or ''
+            self.initial['possibilidade_aditivo'] = self.instance.possibilidade_aditivo or ''
+            self.initial['tratativas_120_dias'] = self.instance.tratativas_120_dias or ''
+            self.initial['coordenacao_doc_scon'] = self.instance.coordenacao_doc_scon or ''
+            self.initial['garantia_vigente'] = self.instance.garantia_vigente or ''
+            self.initial['cronograma_fisico_financeiro'] = self.instance.cronograma_fisico_financeiro or ''
             self.initial['alteracao_cronograma'] = 'sim' if self.instance.alteracao_cronograma else 'nao'
             self.initial['atraso_entrega'] = 'sim' if self.instance.atraso_entrega else 'nao'
             self.initial['impossibilidade_recebimento'] = 'sim' if self.instance.impossibilidade_recebimento else 'nao'
             self.initial['diligencia_visita'] = 'sim' if self.instance.diligencia_visita else 'nao'
+            self.initial['imr_aplicado'] = self.instance.imr_aplicado or ''
             self.initial['glosa_realizada'] = 'sim' if self.instance.glosa_realizada else 'nao'
-            self.initial['garantia_vigente'] = self.instance.garantia_vigente or 'na'
-
-        # Campos booleanos (checkboxes) não devem ser obrigatórios
-        bool_fields = [
-            'houve_substituicao', 'confirmacao_siloms_assinatura', 'confirmacao_siloms_vigencia',
-            'alteracao_cronograma', 'atraso_entrega',
-            'impossibilidade_recebimento', 'diligencia_visita', 'glosa_realizada'
-        ]
-        for bf in bool_fields:
-            if bf in self.fields:
-                self.fields[bf].required = False
+            self.initial['ocorrencias_ativas_empresa'] = self.instance.ocorrencias_ativas_empresa or ''
+            self.initial['necessidade_paai'] = self.instance.necessidade_paai or ''
 
         if contrato:
             agentes_ids = Integrante.objects.filter(
@@ -554,11 +573,16 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         cleaned_data = super().clean()
         siloms_exec = cleaned_data.get('confirmacao_siloms_execucao')
         dt_exec = cleaned_data.get('data_execucao_fisico_financeira')
+        houve_sub = cleaned_data.get('houve_substituicao')
+        sub_entrega = cleaned_data.get('substituicao_entrega_formal')
 
         if siloms_exec == 'sim' and not dt_exec:
             self.add_error('data_execucao_fisico_financeira', 'Informe a data do término da execução físico-financeira ao marcar Sim.')
         elif siloms_exec != 'sim':
             cleaned_data['data_execucao_fisico_financeira'] = None
+
+        if houve_sub and not sub_entrega:
+            self.add_error('substituicao_entrega_formal', 'Informe se houve entrega formal dos registros pelo substituto.')
 
         return cleaned_data
 

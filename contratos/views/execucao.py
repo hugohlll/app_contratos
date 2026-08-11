@@ -768,12 +768,6 @@ def gerar_livro_fiscal_pdf(request, pk):
     else:
         sec5_flowables.append(make_kv_table([["Ocorrências Registradas:", "Nenhuma ocorrência registrada no período."]]))
 
-    if controle.relatorio_ocorrencias:
-        sec5_flowables.extend([
-            Spacer(1, 4),
-            make_kv_table([["Relatório Consolidado:", controle.relatorio_ocorrencias]])
-        ])
-
     if len(ocorrencias) <= 8:
         story.append(KeepTogether(sec5_flowables))
     else:
