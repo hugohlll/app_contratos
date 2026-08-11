@@ -277,7 +277,8 @@ body {
                 <div class="col-md-8"><label class="read-only-label d-block mb-1">Empresa</label><div class="read-only-value fs-6">{{ contrato.empresa.razao_social|default:"Não informada" }}</div></div>
                 <div class="col-12"><label class="read-only-label d-block mb-1">Objeto</label><div class="small text-secondary">{{ contrato.objeto }}</div></div>
                 <div class="col-md-6"><label class="read-only-label d-block mb-1">Vigência</label><div class="read-only-value small">{{ contrato.vigencia_inicio|date:"d/m/Y" }} até {{ contrato.vigencia_fim|date:"d/m/Y" }}</div></div>
-                <div class="col-md-6"><label class="read-only-label d-block mb-1">Comissão Ativa</label><div class="read-only-value small">{% if comissao %}{{ comissao.portaria_numero }}{% else %}<span class="text-danger">Sem comissão ativa</span>{% endif %}</div></div>
+                <div class="col-md-6"><label class="read-only-label d-block mb-1">Portaria da Comissão</label><div class="read-only-value small">{% if comissao and comissao.portaria_numero %}{{ comissao.portaria_numero }}{% if comissao.portaria_data %}, de {{ comissao.portaria_data|date:"d/m/Y" }}{% endif %}{% else %}<span class="text-muted">Não informada</span>{% endif %}</div></div>
+                <div class="col-md-6"><label class="read-only-label d-block mb-1">Boletim de Publicação</label><div class="read-only-value small">{% if comissao and comissao.boletim_numero %}{{ comissao.boletim_numero }}{% if comissao.boletim_data %}, de {{ comissao.boletim_data|date:"d/m/Y" }}{% endif %}{% else %}<span class="text-muted">Não informado</span>{% endif %}</div></div>
             </div>
             <div class="row g-3">
                 <div class="col-md-6 field-required"><label for="{{ form.agente.id_for_label }}" class="form-label fw-bold">Fiscal Responsável <span class="text-danger">*</span></label>{{ form.agente }}</div>

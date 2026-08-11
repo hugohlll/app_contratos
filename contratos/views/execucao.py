@@ -519,7 +519,17 @@ def gerar_livro_fiscal_pdf(request, pk):
     if not comissao:
         comissao = Comissao.objects.filter(contrato=controle.contrato, tipo='FISCALIZACAO').order_by('-data_inicio').first()
 
-    portaria_str = comissao.portaria_numero if (comissao and comissao.portaria_numero) else "Não informada"
+    portaria_str = "Não informada"
+    if comissao and comissao.portaria_numero:
+        portaria_str = comissao.portaria_numero
+        if comissao.portaria_data:
+            portaria_str += f", de {comissao.portaria_data.strftime('%d/%m/%Y')}"
+
+    boletim_str = "Não informado"
+    if comissao and comissao.boletim_numero:
+        boletim_str = comissao.boletim_numero
+        if comissao.boletim_data:
+            boletim_str += f", de {comissao.boletim_data.strftime('%d/%m/%Y')}"
     
     sec1_data = [
         ["Contrato Nº:", controle.contrato.numero],
@@ -528,6 +538,7 @@ def gerar_livro_fiscal_pdf(request, pk):
         ["Período de Vigência:", vigencia_str],
         ["Fiscal Responsável (Registro):", fiscal_resp],
         ["Portaria da Comissão:", portaria_str],
+        ["Boletim de Publicação:", boletim_str],
     ]
 
     sec1_flowables = [

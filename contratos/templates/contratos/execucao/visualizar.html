@@ -26,6 +26,8 @@
             <div class="col-md-3"><small class="text-muted">Contrato</small><div class="fw-bold">{{ controle.contrato.numero }}</div></div>
             <div class="col-md-5"><small class="text-muted">Objeto</small><div class="small">{{ controle.contrato.objeto }}</div></div>
             <div class="col-md-4"><small class="text-muted">Empresa</small><div class="small fw-bold">{{ controle.contrato.empresa.razao_social|default:"—" }}</div></div>
+            <div class="col-md-6"><small class="text-muted">Portaria da Comissão</small><div class="fw-bold">{% if comissao and comissao.portaria_numero %}{{ comissao.portaria_numero }}{% if comissao.portaria_data %}, de {{ comissao.portaria_data|date:"d/m/Y" }}{% endif %}{% else %}—{% endif %}</div></div>
+            <div class="col-md-6"><small class="text-muted">Boletim de Publicação</small><div class="fw-bold">{% if comissao and comissao.boletim_numero %}{{ comissao.boletim_numero }}{% if comissao.boletim_data %}, de {{ comissao.boletim_data|date:"d/m/Y" }}{% endif %}{% else %}—{% endif %}</div></div>
         </div>
         {% if controle.houve_substituicao %}
         <div class="alert alert-info mt-3 mb-0 py-2 small">
