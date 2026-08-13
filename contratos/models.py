@@ -608,7 +608,7 @@ class ControleExecucao(models.Model):
         ('nao', 'Não há mais possibilidade/Não se aplica'),
     ]
     possibilidade_aditivo = models.CharField("Contrato admite termo aditivo?", max_length=10, choices=ADMITIR_ADITIVO_CHOICES, default='na')
-    tratativas_120_dias = models.CharField("Iniciadas tratativas 120 dias antes?", max_length=5, choices=SIM_NAO_NA, default='na')
+    tratativas_120_dias = models.CharField("Iniciadas as tratativas para aditivação", max_length=5, choices=SIM_NAO_NA, default='na')
     coordenacao_doc_scon = models.CharField("Coordenada informação com DOC/SCON?", max_length=5, choices=SIM_NAO_NA, default='na')
     GARANTIA_CHOICES = [
         ('sim', 'Sim'),

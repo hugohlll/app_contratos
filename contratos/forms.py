@@ -528,6 +528,8 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         contrato = kwargs.pop('contrato', None)
+        dentro_prazo_aditivo = kwargs.pop('dentro_prazo_aditivo', True)
+        self.dentro_prazo_aditivo = dentro_prazo_aditivo
         super().__init__(*args, **kwargs)
 
         hoje = date.today()
@@ -539,15 +541,23 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         self.fields['mes_referencia'].initial = mes_prev
         self.fields['ano_referencia'].initial = ano_prev
 
+        if not dentro_prazo_aditivo:
+            self.fields['possibilidade_aditivo'].required = False
+            self.fields['tratativas_120_dias'].required = False
+            self.fields['coordenacao_doc_scon'].required = False
+            self.initial['possibilidade_aditivo'] = 'na'
+            self.initial['tratativas_120_dias'] = 'na'
+            self.initial['coordenacao_doc_scon'] = 'na'
+
         if self.instance and self.instance.pk:
             self.initial['houve_substituicao'] = 'sim' if self.instance.houve_substituicao else 'nao'
             self.initial['substituicao_entrega_formal'] = self.instance.substituicao_entrega_formal or ''
             self.initial['confirmacao_siloms_assinatura'] = 'sim' if self.instance.confirmacao_siloms_assinatura else 'nao'
             self.initial['confirmacao_siloms_vigencia'] = 'sim' if self.instance.confirmacao_siloms_vigencia else 'nao'
             self.initial['confirmacao_siloms_execucao'] = self.instance.confirmacao_siloms_execucao or ''
-            self.initial['possibilidade_aditivo'] = self.instance.possibilidade_aditivo or ''
-            self.initial['tratativas_120_dias'] = self.instance.tratativas_120_dias or ''
-            self.initial['coordenacao_doc_scon'] = self.instance.coordenacao_doc_scon or ''
+            self.initial['possibilidade_aditivo'] = self.instance.possibilidade_aditivo or ('na' if not dentro_prazo_aditivo else '')
+            self.initial['tratativas_120_dias'] = self.instance.tratativas_120_dias or ('na' if not dentro_prazo_aditivo else '')
+            self.initial['coordenacao_doc_scon'] = self.instance.coordenacao_doc_scon or ('na' if not dentro_prazo_aditivo else '')
             self.initial['garantia_vigente'] = self.instance.garantia_vigente or ''
             self.initial['cronograma_fisico_financeiro'] = self.instance.cronograma_fisico_financeiro or ''
             self.initial['alteracao_cronograma'] = 'sim' if self.instance.alteracao_cronograma else 'nao'
@@ -571,6 +581,12 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        if not getattr(self, 'dentro_prazo_aditivo', True):
+            cleaned_data['possibilidade_aditivo'] = 'na'
+            cleaned_data['tratativas_120_dias'] = 'na'
+            cleaned_data['coordenacao_doc_scon'] = 'na'
+
         siloms_exec = cleaned_data.get('confirmacao_siloms_execucao')
         dt_exec = cleaned_data.get('data_execucao_fisico_financeira')
         houve_sub = cleaned_data.get('houve_substituicao')

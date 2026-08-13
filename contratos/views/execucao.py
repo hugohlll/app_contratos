@@ -88,8 +88,13 @@ def formulario_execucao(request, contrato_id):
         contrato=contrato, mes_referencia=filtro_mes, ano_referencia=filtro_ano
     ).order_by('-id').first()
 
+    # Verificar se a data atual está a 120 dias ou menos do fim da vigência
+    dentro_prazo_aditivo = False
+    if contrato.data_recomendada_aditivo:
+        dentro_prazo_aditivo = (hoje >= contrato.data_recomendada_aditivo)
+
     if request.method == 'POST':
-        form = ControleExecucaoForm(request.POST, contrato=contrato, instance=controle_existente)
+        form = ControleExecucaoForm(request.POST, contrato=contrato, instance=controle_existente, dentro_prazo_aditivo=dentro_prazo_aditivo)
         if form.is_valid():
             controle = form.save(commit=False)
             controle.contrato = contrato
@@ -159,7 +164,7 @@ def formulario_execucao(request, contrato_id):
         else:
             messages.error(request, "Por favor, corrija os erros apontados no formulário.")
     else:
-        form = ControleExecucaoForm(contrato=contrato, instance=controle_existente)
+        form = ControleExecucaoForm(contrato=contrato, instance=controle_existente, dentro_prazo_aditivo=dentro_prazo_aditivo)
 
     faturas_existentes = []
     ocorrencias_existentes = []
@@ -180,6 +185,7 @@ def formulario_execucao(request, contrato_id):
         'ocorrencias_json': json.dumps(ocorrencias_existentes, default=str),
         'mes_referencia': filtro_mes,
         'ano_referencia': filtro_ano,
+        'dentro_prazo_aditivo': dentro_prazo_aditivo,
     })
 
 

@@ -631,3 +631,220 @@ class ControleExecucaoTests(TestCase):
         ctrl = ControleExecucao.objects.filter(contrato=self.contrato).latest('id')
         self.assertIsNone(ctrl.data_execucao_fisico_financeira)
         self.assertEqual(ctrl.confirmacao_siloms_execucao, 'na')
+
+    def test_campos_aditivo_ocultos_fora_prazo_120_dias(self):
+        """Contrato com vigência em +200 dias (fora dos 120 dias) não deve exibir campos de aditivo."""
+        self.contrato.vigencia_fim = date.today() + timedelta(days=200)
+        self.contrato.save()
+        self.client.login(username='fiscal1', password='password123')
+        resp = self.client.get(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse(resp.context['dentro_prazo_aditivo'])
+        self.assertContains(resp, 'Fora do prazo de 120 dias')
+        self.assertNotContains(resp, 'Contrato admite termo aditivo?')
+
+    def test_campos_aditivo_visiveis_dentro_prazo_120_dias(self):
+        """Contrato com vigência em 90 dias (dentro dos 120 dias) deve exibir campos de aditivo."""
+        self.contrato.vigencia_fim = date.today() + timedelta(days=90)
+        self.contrato.save()
+        self.client.login(username='fiscal1', password='password123')
+        resp = self.client.get(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.context['dentro_prazo_aditivo'])
+        self.assertContains(resp, 'Contrato admite termo aditivo?')
+        self.assertContains(resp, 'Iniciadas as tratativas para aditivação')
+        self.assertContains(resp, 'Coordenada informação com DOC/SCON?')
+
+    def test_submissao_fora_prazo_grava_na_automaticamente(self):
+        """Submissão de contrato fora do prazo grava 'na' automaticamente para os 3 quesitos de aditamento."""
+        self.contrato.vigencia_fim = date.today() + timedelta(days=200)
+        self.contrato.save()
+        self.client.login(username='fiscal1', password='password123')
+        payload = {
+            'mes_referencia': 5,
+            'ano_referencia': 2026,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'confirmacao_siloms_execucao': 'na',
+            'garantia_vigente': 'sim',
+            'cronograma_fisico_financeiro': 'conforme',
+            'alteracao_cronograma': 'nao',
+            'atraso_entrega': 'nao',
+            'impossibilidade_recebimento': 'nao',
+            'diligencia_visita': 'nao',
+            'imr_aplicado': 'nao',
+            'glosa_realizada': 'nao',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'faturas_json': '[]',
+            'ocorrencias_json': '[]'
+        }
+        resp = self.client.post(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}), payload)
+        self.assertEqual(resp.status_code, 302)
+        ctrl = ControleExecucao.objects.filter(contrato=self.contrato).latest('id')
+        self.assertEqual(ctrl.possibilidade_aditivo, 'na')
+        self.assertEqual(ctrl.tratativas_120_dias, 'na')
+        self.assertEqual(ctrl.coordenacao_doc_scon, 'na')
+
+    def test_submissao_dentro_prazo_exige_campos_aditivo(self):
+        """Submissão sem preencher os 3 quesitos dentro do prazo de 120 dias gera erro de validação."""
+        self.contrato.vigencia_fim = date.today() + timedelta(days=60)
+        self.contrato.save()
+        self.client.login(username='fiscal1', password='password123')
+        payload = {
+            'mes_referencia': 5,
+            'ano_referencia': 2026,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'confirmacao_siloms_execucao': 'na',
+            'garantia_vigente': 'sim',
+            'cronograma_fisico_financeiro': 'conforme',
+            'alteracao_cronograma': 'nao',
+            'atraso_entrega': 'nao',
+            'impossibilidade_recebimento': 'nao',
+            'diligencia_visita': 'nao',
+            'imr_aplicado': 'nao',
+            'glosa_realizada': 'nao',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'faturas_json': '[]',
+            'ocorrencias_json': '[]'
+        }
+        resp = self.client.post(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}), payload)
+        self.assertEqual(resp.status_code, 200)
+        form = resp.context['form']
+        self.assertTrue(form.has_error('possibilidade_aditivo'))
+        self.assertTrue(form.has_error('tratativas_120_dias'))
+        self.assertTrue(form.has_error('coordenacao_doc_scon'))
+
+    def test_submissao_dentro_prazo_com_campos_preenchidos(self):
+        """Submissão dentro do prazo de 120 dias com valores preenchidos grava com sucesso."""
+        self.contrato.vigencia_fim = date.today() + timedelta(days=60)
+        self.contrato.save()
+        self.client.login(username='fiscal1', password='password123')
+        payload = {
+            'mes_referencia': 5,
+            'ano_referencia': 2026,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'confirmacao_siloms_execucao': 'na',
+            'possibilidade_aditivo': 'sim',
+            'tratativas_120_dias': 'sim',
+            'coordenacao_doc_scon': 'sim',
+            'garantia_vigente': 'sim',
+            'cronograma_fisico_financeiro': 'conforme',
+            'alteracao_cronograma': 'nao',
+            'atraso_entrega': 'nao',
+            'impossibilidade_recebimento': 'nao',
+            'diligencia_visita': 'nao',
+            'imr_aplicado': 'nao',
+            'glosa_realizada': 'nao',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'faturas_json': '[]',
+            'ocorrencias_json': '[]'
+        }
+        resp = self.client.post(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}), payload)
+        self.assertEqual(resp.status_code, 302)
+        ctrl = ControleExecucao.objects.filter(contrato=self.contrato).latest('id')
+        self.assertEqual(ctrl.possibilidade_aditivo, 'sim')
+        self.assertEqual(ctrl.tratativas_120_dias, 'sim')
+        self.assertEqual(ctrl.coordenacao_doc_scon, 'sim')
+
+    def test_contrato_vencido_exibe_campos_aditivo(self):
+        """Contrato vencido (vigencia_fim no passado) exibe os campos de aditivo."""
+        self.contrato.vigencia_fim = date.today() - timedelta(days=30)
+        self.contrato.save()
+        self.client.login(username='fiscal1', password='password123')
+        resp = self.client.get(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.context['dentro_prazo_aditivo'])
+
+    def test_pdf_exibe_nao_se_aplica_fora_prazo(self):
+        """Geração de PDF do Livro do Fiscal funciona perfeitamente para registros com valores 'na'."""
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            possibilidade_aditivo='na',
+            tratativas_120_dias='na',
+            coordenacao_doc_scon='na',
+            status='entregue'
+        )
+        self.client.login(username='fiscal1', password='password123')
+        resp = self.client.get(reverse('download_livro_fiscal_pdf', kwargs={'pk': ctrl.id}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp['Content-Type'], 'application/pdf')
+
+    def test_formulario_contexto_card_120_dias_verde(self):
+        """Verifica a presença das classes de destaque verde para o card de 120 dias no template."""
+        self.client.login(username='fiscal1', password='password123')
+        resp = self.client.get(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'border-success')
+        self.assertContains(resp, 'bg-success')
+
+    def test_edicao_registro_dentro_para_fora_prazo(self):
+        """Ao re-submeter quando contrato teve vigência prorrogada (>120 dias), atualiza aditivos para 'na'."""
+        self.contrato.vigencia_fim = date.today() + timedelta(days=200)
+        self.contrato.save()
+        
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_ref = ultimo_dia_mes_anterior.month
+        ano_ref = ultimo_dia_mes_anterior.year
+
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=mes_ref,
+            ano_referencia=ano_ref,
+            possibilidade_aditivo='sim',
+            tratativas_120_dias='sim',
+            coordenacao_doc_scon='sim',
+            status='entregue'
+        )
+        self.client.login(username='fiscal1', password='password123')
+        payload = {
+            'mes_referencia': mes_ref,
+            'ano_referencia': ano_ref,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'confirmacao_siloms_execucao': 'na',
+            'garantia_vigente': 'sim',
+            'cronograma_fisico_financeiro': 'conforme',
+            'alteracao_cronograma': 'nao',
+            'atraso_entrega': 'nao',
+            'impossibilidade_recebimento': 'nao',
+            'diligencia_visita': 'nao',
+            'imr_aplicado': 'nao',
+            'glosa_realizada': 'nao',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'faturas_json': '[]',
+            'ocorrencias_json': '[]'
+        }
+        resp = self.client.post(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}), payload)
+        self.assertEqual(resp.status_code, 302)
+        ctrl.refresh_from_db()
+        self.assertEqual(ctrl.possibilidade_aditivo, 'na')
+        self.assertEqual(ctrl.tratativas_120_dias, 'na')
+        self.assertEqual(ctrl.coordenacao_doc_scon, 'na')
+
+    def test_formulario_exibe_tooltip_substituicao(self):
+        """Verifica a renderização do elemento tooltip com ícone [?] no formulário."""
+        self.client.login(username='fiscal1', password='password123')
+        resp = self.client.get(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'btn-help-tooltip')
+        self.assertContains(resp, 'tooltip-box')
