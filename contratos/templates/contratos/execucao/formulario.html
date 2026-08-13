@@ -970,10 +970,20 @@ document.addEventListener('DOMContentLoaded', function() {
         container.appendChild(span);
     }
 
+    function isElementVisible(el) {
+        if (!el) return false;
+        const condField = el.closest('.conditional-field');
+        if (condField && !condField.classList.contains('visible')) {
+            return false;
+        }
+        return el.offsetParent !== null;
+    }
+
     // Blur listeners em selects/inputs de texto obrigatórios
     const textInputs = form.querySelectorAll('input[required], select[required], textarea[required]');
     textInputs.forEach(input => {
         input.addEventListener('blur', function() {
+            if (!isElementVisible(input)) return;
             const parent = input.closest('.field-required') || input.parentElement;
             if (!input.value || !input.value.trim()) {
                 addInlineError(parent, 'Este campo é obrigatório.');
@@ -1006,11 +1016,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let hasErrors = false;
         let firstErrorEl = null;
 
+        // Limpa erros prévios para re-avaliar
+        form.querySelectorAll('.field-error').forEach(el => removeInlineError(el));
+
         // Validação de grupos radio obrigatórios visíveis
         const requiredRadioWrappers = form.querySelectorAll('.field-required .checkbox-control');
         requiredRadioWrappers.forEach(wrapper => {
             const parentCol = wrapper.closest('.field-required');
-            if (parentCol && parentCol.offsetParent !== null) { // visível
+            if (isElementVisible(wrapper)) {
                 const checked = wrapper.querySelector('input[type="radio"]:checked');
                 if (!checked) {
                     hasErrors = true;
@@ -1020,11 +1033,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Validação de inputs normais visíveis
-        const requiredInputs = form.querySelectorAll('.field-required input:not([type="radio"]), .field-required select, .field-required textarea');
+        // Validação de inputs normais visíveis (apenas os explicitamente obrigatórios)
+        const requiredInputs = form.querySelectorAll('.field-required input[required], .field-required select[required], .field-required textarea[required]');
         requiredInputs.forEach(input => {
-            const parentCol = input.closest('.field-required');
-            if (parentCol && parentCol.offsetParent !== null) {
+            if (isElementVisible(input)) {
+                const parentCol = input.closest('.field-required');
                 if (!input.value || !input.value.trim()) {
                     hasErrors = true;
                     addInlineError(parentCol, 'Este campo é obrigatório.');
