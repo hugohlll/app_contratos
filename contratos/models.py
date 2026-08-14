@@ -625,17 +625,17 @@ class ControleExecucao(models.Model):
 
     # === Seção 4: Cronograma e Medição de Resultados ===
     detalhamento_cronograma = models.TextField("Status do Cronograma de Execução", blank=True)
-    alteracao_cronograma = models.BooleanField("Houve alteração em relação ao mês anterior?", default=False)
+    alteracao_cronograma = models.CharField("Houve alteração em relação ao mês anterior?", max_length=5, choices=SIM_NAO_NA, default='nao')
     alteracao_cronograma_desc = models.TextField("Ações do fiscal (Alteração Cronograma)", blank=True)
-    atraso_entrega = models.BooleanField("Atraso na entrega dos produtos/serviços?", default=False)
+    atraso_entrega = models.CharField("Atraso na entrega dos produtos/serviços?", max_length=5, choices=SIM_NAO_NA, default='nao')
     atraso_entrega_desc = models.TextField("Ações do fiscal (Atraso Entrega)", blank=True)
-    impossibilidade_recebimento = models.BooleanField("Impossibilidade de recebimento?", default=False)
+    impossibilidade_recebimento = models.CharField("Impossibilidade de recebimento?", max_length=5, choices=SIM_NAO_NA, default='nao')
     impossibilidade_recebimento_desc = models.TextField("Ações do fiscal (Impossibilidade)", blank=True)
-    diligencia_visita = models.BooleanField("Realização de diligência ou visita técnica?", default=False)
+    diligencia_visita = models.CharField("Realização de diligência ou visita técnica?", max_length=5, choices=SIM_NAO_NA, default='nao')
     diligencia_visita_desc = models.TextField("Resultados obtidos e ações (Diligência)", blank=True)
 
-    imr_aplicado = models.CharField("Aplicado IMR?", max_length=5, choices=SIM_NAO, default='nao')
-    glosa_realizada = models.BooleanField("Realizada glosa no período?", default=False)
+    imr_aplicado = models.CharField("Aplicado IMR?", max_length=5, choices=SIM_NAO_NA, default='nao')
+    glosa_realizada = models.CharField("Realizada glosa no período?", max_length=5, choices=SIM_NAO_NA, default='nao')
     glosa_desc = models.TextField("Detalhamento de glosa e valores", blank=True)
 
     # === Seção 5: Ocorrências (Relatório Consolidado) ===

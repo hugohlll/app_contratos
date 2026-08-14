@@ -848,3 +848,44 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'btn-help-tooltip')
         self.assertContains(resp, 'tooltip-box')
+
+    def test_submissao_secao_4_nao_se_aplica(self):
+        """Valida que todos os quesitos da Seção 4 aceitam a opção 'na' (Não se aplica) perfeitamente."""
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_ref = ultimo_dia_mes_anterior.month
+        ano_ref = ultimo_dia_mes_anterior.year
+
+        self.client.login(username='fiscal1', password='password123')
+        payload = {
+            'mes_referencia': mes_ref,
+            'ano_referencia': ano_ref,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'confirmacao_siloms_execucao': 'na',
+            'garantia_vigente': 'sim',
+            'cronograma_fisico_financeiro': 'conforme',
+            'alteracao_cronograma': 'na',
+            'atraso_entrega': 'na',
+            'impossibilidade_recebimento': 'na',
+            'diligencia_visita': 'na',
+            'imr_aplicado': 'na',
+            'glosa_realizada': 'na',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'faturas_json': '[]',
+            'ocorrencias_json': '[]'
+        }
+        resp = self.client.post(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}), payload)
+        self.assertEqual(resp.status_code, 302)
+        
+        ctrl = ControleExecucao.objects.get(contrato=self.contrato, mes_referencia=mes_ref, ano_referencia=ano_ref)
+        self.assertEqual(ctrl.alteracao_cronograma, 'na')
+        self.assertEqual(ctrl.atraso_entrega, 'na')
+        self.assertEqual(ctrl.impossibilidade_recebimento, 'na')
+        self.assertEqual(ctrl.diligencia_visita, 'na')
+        self.assertEqual(ctrl.imr_aplicado, 'na')
+        self.assertEqual(ctrl.glosa_realizada, 'na')

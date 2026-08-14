@@ -301,7 +301,7 @@ def exportar_execucao_csv(request):
             'Sim' if c.houve_substituicao else 'Não',
             c.get_garantia_vigente_display(),
             c.garantia_providencias or '-',
-            'Sim' if c.glosa_realizada else 'Não',
+            c.get_glosa_realizada_display(),
             c.get_necessidade_paai_display(),
             c.relatorio_ocorrencias[:100]
         ])
@@ -708,11 +708,11 @@ def gerar_livro_fiscal_pdf(request, pk):
     story.append(Spacer(1, 10))
 
     # --- SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS ---
-    alt_desc = f"Sim — {controle.alteracao_cronograma_desc}" if (controle.alteracao_cronograma and controle.alteracao_cronograma_desc) else ("Sim" if controle.alteracao_cronograma else "Não")
-    atr_desc = f"Sim — {controle.atraso_entrega_desc}" if (controle.atraso_entrega and controle.atraso_entrega_desc) else ("Sim" if controle.atraso_entrega else "Não")
-    imp_desc = f"Sim — {controle.impossibilidade_recebimento_desc}" if (controle.impossibilidade_recebimento and controle.impossibilidade_recebimento_desc) else ("Sim" if controle.impossibilidade_recebimento else "Não")
-    dil_desc = f"Sim — {controle.diligencia_visita_desc}" if (controle.diligencia_visita and controle.diligencia_visita_desc) else ("Sim" if controle.diligencia_visita else "Não")
-    glo_desc = f"Sim — {controle.glosa_desc}" if (controle.glosa_realizada and controle.glosa_desc) else ("Sim" if controle.glosa_realizada else "Não")
+    alt_desc = f"Sim — {controle.alteracao_cronograma_desc}" if (controle.alteracao_cronograma == 'sim' and controle.alteracao_cronograma_desc) else controle.get_alteracao_cronograma_display()
+    atr_desc = f"Sim — {controle.atraso_entrega_desc}" if (controle.atraso_entrega == 'sim' and controle.atraso_entrega_desc) else controle.get_atraso_entrega_display()
+    imp_desc = f"Sim — {controle.impossibilidade_recebimento_desc}" if (controle.impossibilidade_recebimento == 'sim' and controle.impossibilidade_recebimento_desc) else controle.get_impossibilidade_recebimento_display()
+    dil_desc = f"Sim — {controle.diligencia_visita_desc}" if (controle.diligencia_visita == 'sim' and controle.diligencia_visita_desc) else controle.get_diligencia_visita_display()
+    glo_desc = f"Sim — {controle.glosa_desc}" if (controle.glosa_realizada == 'sim' and controle.glosa_desc) else controle.get_glosa_realizada_display()
 
     sec4_data = [
         ["Status do Cronograma:", controle.detalhamento_cronograma or "Sem observações específicas"],

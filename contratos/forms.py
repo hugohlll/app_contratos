@@ -430,44 +430,39 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         widget=forms.RadioSelect,
         required=True
     )
-    alteracao_cronograma = forms.TypedChoiceField(
+    alteracao_cronograma = forms.ChoiceField(
         label="Alteração no cronograma?",
-        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
         widget=forms.RadioSelect,
         required=True
     )
-    atraso_entrega = forms.TypedChoiceField(
+    atraso_entrega = forms.ChoiceField(
         label="Atraso na entrega?",
-        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
         widget=forms.RadioSelect,
         required=True
     )
-    impossibilidade_recebimento = forms.TypedChoiceField(
+    impossibilidade_recebimento = forms.ChoiceField(
         label="Impossibilidade de recebimento?",
-        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
         widget=forms.RadioSelect,
         required=True
     )
-    diligencia_visita = forms.TypedChoiceField(
+    diligencia_visita = forms.ChoiceField(
         label="Diligência/visita técnica?",
-        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
         widget=forms.RadioSelect,
         required=True
     )
     imr_aplicado = forms.ChoiceField(
         label="IMR aplicado?",
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
         widget=forms.RadioSelect,
         required=True
     )
-    glosa_realizada = forms.TypedChoiceField(
+    glosa_realizada = forms.ChoiceField(
         label="Glosa realizada?",
-        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
         widget=forms.RadioSelect,
         required=True
     )
@@ -560,12 +555,12 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             self.initial['coordenacao_doc_scon'] = self.instance.coordenacao_doc_scon or ('na' if not dentro_prazo_aditivo else '')
             self.initial['garantia_vigente'] = self.instance.garantia_vigente or ''
             self.initial['cronograma_fisico_financeiro'] = self.instance.cronograma_fisico_financeiro or ''
-            self.initial['alteracao_cronograma'] = 'sim' if self.instance.alteracao_cronograma else 'nao'
-            self.initial['atraso_entrega'] = 'sim' if self.instance.atraso_entrega else 'nao'
-            self.initial['impossibilidade_recebimento'] = 'sim' if self.instance.impossibilidade_recebimento else 'nao'
-            self.initial['diligencia_visita'] = 'sim' if self.instance.diligencia_visita else 'nao'
+            self.initial['alteracao_cronograma'] = self.instance.alteracao_cronograma or ''
+            self.initial['atraso_entrega'] = self.instance.atraso_entrega or ''
+            self.initial['impossibilidade_recebimento'] = self.instance.impossibilidade_recebimento or ''
+            self.initial['diligencia_visita'] = self.instance.diligencia_visita or ''
             self.initial['imr_aplicado'] = self.instance.imr_aplicado or ''
-            self.initial['glosa_realizada'] = 'sim' if self.instance.glosa_realizada else 'nao'
+            self.initial['glosa_realizada'] = self.instance.glosa_realizada or ''
             self.initial['ocorrencias_ativas_empresa'] = self.instance.ocorrencias_ativas_empresa or ''
             self.initial['necessidade_paai'] = self.instance.necessidade_paai or ''
 
