@@ -121,6 +121,7 @@ class ControleExecucaoTests(TestCase):
             'diligencia_visita': 'nao',
             'imr_aplicado': 'nao',
             'glosa_realizada': 'nao',
+            'empresa_sancionada': 'nao',
             'ocorrencias_ativas_empresa': 'nao',
             'necessidade_paai': 'nao',
             'relatorio_ocorrencias': 'Consolidado da reunião mensal.',
@@ -439,6 +440,7 @@ class ControleExecucaoTests(TestCase):
             'diligencia_visita': 'nao',
             'imr_aplicado': 'nao',
             'glosa_realizada': 'nao',
+            'empresa_sancionada': 'nao',
             'ocorrencias_ativas_empresa': 'nao',
             'necessidade_paai': 'nao',
             'observacao': 'Versão atualizada',
@@ -580,6 +582,7 @@ class ControleExecucaoTests(TestCase):
             'diligencia_visita': 'nao',
             'imr_aplicado': 'nao',
             'glosa_realizada': 'nao',
+            'empresa_sancionada': 'nao',
             'ocorrencias_ativas_empresa': 'nao',
             'necessidade_paai': 'nao',
             'relatorio_ocorrencias': 'Ok',
@@ -619,6 +622,7 @@ class ControleExecucaoTests(TestCase):
             'diligencia_visita': 'nao',
             'imr_aplicado': 'nao',
             'glosa_realizada': 'nao',
+            'empresa_sancionada': 'nao',
             'ocorrencias_ativas_empresa': 'nao',
             'necessidade_paai': 'nao',
             'relatorio_ocorrencias': 'Ok',
@@ -676,6 +680,7 @@ class ControleExecucaoTests(TestCase):
             'diligencia_visita': 'nao',
             'imr_aplicado': 'nao',
             'glosa_realizada': 'nao',
+            'empresa_sancionada': 'nao',
             'ocorrencias_ativas_empresa': 'nao',
             'necessidade_paai': 'nao',
             'faturas_json': '[]',
@@ -709,6 +714,7 @@ class ControleExecucaoTests(TestCase):
             'diligencia_visita': 'nao',
             'imr_aplicado': 'nao',
             'glosa_realizada': 'nao',
+            'empresa_sancionada': 'nao',
             'ocorrencias_ativas_empresa': 'nao',
             'necessidade_paai': 'nao',
             'faturas_json': '[]',
@@ -745,6 +751,7 @@ class ControleExecucaoTests(TestCase):
             'diligencia_visita': 'nao',
             'imr_aplicado': 'nao',
             'glosa_realizada': 'nao',
+            'empresa_sancionada': 'nao',
             'ocorrencias_ativas_empresa': 'nao',
             'necessidade_paai': 'nao',
             'faturas_json': '[]',
@@ -829,6 +836,7 @@ class ControleExecucaoTests(TestCase):
             'diligencia_visita': 'nao',
             'imr_aplicado': 'nao',
             'glosa_realizada': 'nao',
+            'empresa_sancionada': 'nao',
             'ocorrencias_ativas_empresa': 'nao',
             'necessidade_paai': 'nao',
             'faturas_json': '[]',
@@ -874,6 +882,7 @@ class ControleExecucaoTests(TestCase):
             'diligencia_visita': 'na',
             'imr_aplicado': 'na',
             'glosa_realizada': 'na',
+            'empresa_sancionada': 'nao',
             'ocorrencias_ativas_empresa': 'nao',
             'necessidade_paai': 'nao',
             'faturas_json': '[]',
@@ -889,3 +898,141 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(ctrl.diligencia_visita, 'na')
         self.assertEqual(ctrl.imr_aplicado, 'na')
         self.assertEqual(ctrl.glosa_realizada, 'na')
+
+    def test_secao_6_renderizacao_rotulo_e_tooltip(self):
+        """Valida a renderização da Seção 6: Sanções e PAAI e o tooltip [?] com os cadastros."""
+        self.client.login(username='fiscal1', password='password123')
+        resp = self.client.get(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Seção 6: Sanções e PAAI')
+        self.assertContains(resp, 'Empresa sancionada com impedimento de licitar e contratar')
+        self.assertContains(resp, 'CEIS (Cadastro Nacional de Pessoas Inidôneas)')
+
+    def test_submissao_secao_6_empresa_nao_sancionada(self):
+        """Valida envio normal da Seção 6 com empresa_sancionada = 'nao'."""
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_ref = ultimo_dia_mes_anterior.month
+        ano_ref = ultimo_dia_mes_anterior.year
+
+        self.client.login(username='fiscal1', password='password123')
+        payload = {
+            'mes_referencia': mes_ref,
+            'ano_referencia': ano_ref,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'confirmacao_siloms_execucao': 'na',
+            'garantia_vigente': 'sim',
+            'cronograma_fisico_financeiro': 'conforme',
+            'alteracao_cronograma': 'nao',
+            'atraso_entrega': 'nao',
+            'impossibilidade_recebimento': 'nao',
+            'diligencia_visita': 'nao',
+            'imr_aplicado': 'nao',
+            'glosa_realizada': 'nao',
+            'empresa_sancionada': 'nao',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'faturas_json': '[]',
+            'ocorrencias_json': '[]'
+        }
+        resp = self.client.post(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}), payload)
+        self.assertEqual(resp.status_code, 302)
+        ctrl = ControleExecucao.objects.get(contrato=self.contrato, mes_referencia=mes_ref, ano_referencia=ano_ref)
+        self.assertEqual(ctrl.empresa_sancionada, 'nao')
+
+    def test_submissao_secao_6_empresa_sancionada_sucesso(self):
+        """Valida envio da Seção 6 marcando empresa_sancionada='sim', doc_sancao_siloms='sim' e observação."""
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_ref = ultimo_dia_mes_anterior.month
+        ano_ref = ultimo_dia_mes_anterior.year
+
+        self.client.login(username='fiscal1', password='password123')
+        payload = {
+            'mes_referencia': mes_ref,
+            'ano_referencia': ano_ref,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'confirmacao_siloms_execucao': 'na',
+            'garantia_vigente': 'sim',
+            'cronograma_fisico_financeiro': 'conforme',
+            'alteracao_cronograma': 'nao',
+            'atraso_entrega': 'nao',
+            'impossibilidade_recebimento': 'nao',
+            'diligencia_visita': 'nao',
+            'imr_aplicado': 'nao',
+            'glosa_realizada': 'nao',
+            'empresa_sancionada': 'sim',
+            'doc_sancao_siloms': 'sim',
+            'sancao_observacao': 'Empresa declarada inidônea no CEIS.',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'faturas_json': '[]',
+            'ocorrencias_json': '[]'
+        }
+        resp = self.client.post(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}), payload)
+        self.assertEqual(resp.status_code, 302)
+        ctrl = ControleExecucao.objects.get(contrato=self.contrato, mes_referencia=mes_ref, ano_referencia=ano_ref)
+        self.assertEqual(ctrl.empresa_sancionada, 'sim')
+        self.assertEqual(ctrl.doc_sancao_siloms, 'sim')
+        self.assertEqual(ctrl.sancao_observacao, 'Empresa declarada inidônea no CEIS.')
+
+    def test_submissao_secao_6_empresa_sancionada_validacao_siloms_obrigatorio(self):
+        """Valida que ao marcar empresa_sancionada='sim', a falta de doc_sancao_siloms gera erro de validação."""
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_ref = ultimo_dia_mes_anterior.month
+        ano_ref = ultimo_dia_mes_anterior.year
+
+        self.client.login(username='fiscal1', password='password123')
+        payload = {
+            'mes_referencia': mes_ref,
+            'ano_referencia': ano_ref,
+            'agente': self.agente.id,
+            'houve_substituicao': 'nao',
+            'confirmacao_siloms_assinatura': 'sim',
+            'confirmacao_siloms_vigencia': 'sim',
+            'confirmacao_siloms_execucao': 'na',
+            'garantia_vigente': 'sim',
+            'cronograma_fisico_financeiro': 'conforme',
+            'alteracao_cronograma': 'nao',
+            'atraso_entrega': 'nao',
+            'impossibilidade_recebimento': 'nao',
+            'diligencia_visita': 'nao',
+            'imr_aplicado': 'nao',
+            'glosa_realizada': 'nao',
+            'empresa_sancionada': 'sim',
+            'doc_sancao_siloms': '',
+            'ocorrencias_ativas_empresa': 'nao',
+            'necessidade_paai': 'nao',
+            'faturas_json': '[]',
+            'ocorrencias_json': '[]'
+        }
+        resp = self.client.post(reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}), payload)
+        self.assertEqual(resp.status_code, 200)
+        self.assertFormError(resp.context['form'], 'doc_sancao_siloms', 'Este campo é obrigatório.')
+
+    def test_geracao_pdf_secao_6_sancoes(self):
+        """Valida se o PDF do Livro do Fiscal reflete os dados da Seção 6: Sanções e PAAI."""
+        controle = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            mes_referencia=1,
+            ano_referencia=2026,
+            agente=self.agente,
+            empresa_sancionada='sim',
+            doc_sancao_siloms='sim',
+            sancao_observacao='Empresa inclusa no CNEP.',
+            status='FINALIZADO'
+        )
+        self.client.login(username='fiscal1', password='password123')
+        resp = self.client.get(reverse('download_livro_fiscal_pdf', kwargs={'pk': controle.id}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp['Content-Type'], 'application/pdf')

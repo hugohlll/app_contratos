@@ -363,7 +363,7 @@ body {
         5 <span class="sidebar-tooltip">Seção 5: Ocorrências</span>
     </a>
     <a href="javascript:void(0)" onclick="scrollToSection('secao-6')" class="sidebar-nav-btn" data-section="6">
-        6 <span class="sidebar-tooltip">Seção 6: PAAI</span>
+        6 <span class="sidebar-tooltip">Seção 6: Sanções e PAAI</span>
     </a>
 </div>
 
@@ -775,8 +775,46 @@ body {
 
         <!-- SEÇÃO 6 -->
         <div class="card card-livro-fiscal secao-card mb-4" id="secao-6"><div class="card-body p-4">
-            <div class="section-header"><i class="bi bi-shield-exclamation me-2"></i>Seção 6: PAAI</div>
+            <div class="section-header"><i class="bi bi-shield-slash me-2"></i>Seção 6: Sanções e PAAI</div>
             <div class="row g-3">
+                <div class="col-12 field-required mb-2">
+                    <label class="form-label fw-bold d-block">Empresa sancionada com impedimento de licitar e contratar e/ou declaração de inidoneidade para licitar ou contratar? <span class="text-danger">*</span></label>
+                    <div class="checkbox-control mt-1">
+                        {% for radio in form.empresa_sancionada %}
+                        <div class="form-check">
+                            {{ radio.tag }}
+                            <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-12 conditional-field div-sancao mb-2">
+                    <div class="row g-3 p-3 bg-light rounded border">
+                        <div class="col-md-6 field-required">
+                            <label class="form-label fw-bold d-block">
+                                Documentação comprobatória foi inserida no SILOMS? <span class="text-danger">*</span>
+                                <span class="btn-help-tooltip ms-1">
+                                    [?]
+                                    <span class="tooltip-box">Ex: Portal da Transparência - CEIS (Cadastro Nacional de Pessoas Inidôneas), CNEP (Cadastro Nacional de Empresas Punidas) e CEPIM (Cadastro de Entidades Privadas Sem Fins Lucrativos); SICAF.</span>
+                                </span>
+                            </label>
+                            <div class="checkbox-control mt-1">
+                                {% for radio in form.doc_sancao_siloms %}
+                                <div class="form-check">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.sancao_observacao.id_for_label }}" class="form-label fw-bold">Observações / Detalhamento da Sanção</label>
+                            {{ form.sancao_observacao }}
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-md-6 field-required">
                     <label class="form-label fw-bold d-block">Ocorrências ativas reincidentes? <span class="text-danger">*</span></label>
                     <div class="checkbox-control mt-1">
@@ -886,6 +924,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupRadioConditional('impossibilidade_recebimento', 'div-impossibilidade');
     setupRadioConditional('diligencia_visita', 'div-diligencia');
     setupRadioConditional('glosa_realizada', 'div-glosa');
+    setupRadioConditional('empresa_sancionada', 'div-sancao');
 
     function setupRadioValueConditional(fieldName, cls, targetVal) {
         const radios = document.querySelectorAll(`input[name="${fieldName}"]`);

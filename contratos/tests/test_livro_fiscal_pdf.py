@@ -203,7 +203,7 @@ class LivroFiscalPDFTestCase(TestCase):
             'SEÇÃO 3: EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA',
             'SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS',
             'SEÇÃO 5: OCORRÊNCIAS E TRATATIVAS',
-            'SEÇÃO 6: APURAÇÃO DE IRREGULARIDADES (PAAI)',
+            'SEÇÃO 6: SANÇÕES E PAAI',
         ]
         for secao in secoes_esperadas:
             self.assertIn(secao, full_text)

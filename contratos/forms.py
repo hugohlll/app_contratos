@@ -466,6 +466,18 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         widget=forms.RadioSelect,
         required=True
     )
+    empresa_sancionada = forms.ChoiceField(
+        label="Empresa sancionada com impedimento de licitar e contratar e/ou declaração de inidoneidade para licitar ou contratar?",
+        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        widget=forms.RadioSelect,
+        required=True
+    )
+    doc_sancao_siloms = forms.ChoiceField(
+        label="Documentação comprobatória foi inserida no SILOMS?",
+        choices=[('sim', 'Sim'), ('nao', 'Não')],
+        widget=forms.RadioSelect,
+        required=False
+    )
     ocorrencias_ativas_empresa = forms.ChoiceField(
         label="Ocorrências ativas reincidentes?",
         choices=[('sim', 'Sim'), ('nao', 'Não')],
@@ -499,6 +511,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             # Seção 5
             'relatorio_ocorrencias',
             # Seção 6
+            'empresa_sancionada', 'doc_sancao_siloms', 'sancao_observacao',
             'ocorrencias_ativas_empresa', 'necessidade_paai', 'paai_justificativa',
             # Geral
             'observacao',
@@ -516,9 +529,10 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             'diligencia_visita_desc': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Detalhar resultados obtidos e ações...'}),
             'glosa_desc': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Detalhar ações fiscais e valores glosados...'}),
             'relatorio_ocorrencias': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Será preenchido pelo assistente de ocorrências...'}),
+            'sancao_observacao': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Observações / Detalhamento da Sanção...'}),
             'paai_justificativa': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Detalhar infrações e ofício ao Ordenador de Despesas...'}),
             'substituicao_obs': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Observações sobre a transição de fiscal...'}),
-            'observacao': forms.Textarea(attrs={'rows': 2}),
+            'observacao': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Observações gerais...'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -561,6 +575,8 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             self.initial['diligencia_visita'] = self.instance.diligencia_visita or ''
             self.initial['imr_aplicado'] = self.instance.imr_aplicado or ''
             self.initial['glosa_realizada'] = self.instance.glosa_realizada or ''
+            self.initial['empresa_sancionada'] = self.instance.empresa_sancionada or ''
+            self.initial['doc_sancao_siloms'] = self.instance.doc_sancao_siloms or ''
             self.initial['ocorrencias_ativas_empresa'] = self.instance.ocorrencias_ativas_empresa or ''
             self.initial['necessidade_paai'] = self.instance.necessidade_paai or ''
 
@@ -586,6 +602,8 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         dt_exec = cleaned_data.get('data_execucao_fisico_financeira')
         houve_sub = cleaned_data.get('houve_substituicao')
         sub_entrega = cleaned_data.get('substituicao_entrega_formal')
+        emp_sancionada = cleaned_data.get('empresa_sancionada')
+        doc_siloms = cleaned_data.get('doc_sancao_siloms')
 
         if siloms_exec == 'sim' and not dt_exec:
             self.add_error('data_execucao_fisico_financeira', 'Informe a data do término da execução físico-financeira ao marcar Sim.')
@@ -594,6 +612,12 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
 
         if houve_sub and not sub_entrega:
             self.add_error('substituicao_entrega_formal', 'Informe se houve entrega formal dos registros pelo substituto.')
+
+        if emp_sancionada == 'sim' and not doc_siloms:
+            self.add_error('doc_sancao_siloms', 'Este campo é obrigatório.')
+        elif emp_sancionada != 'sim':
+            cleaned_data['doc_sancao_siloms'] = None
+            cleaned_data['sancao_observacao'] = ''
 
         return cleaned_data
 

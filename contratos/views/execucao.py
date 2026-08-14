@@ -281,7 +281,7 @@ def exportar_execucao_csv(request):
         'Contrato', 'Objeto', 'Fiscal Responsável', 'Mês Ref.', 'Ano Ref.',
         'Data Envio', 'Status', 'Substituição Fiscal',
         'Garantia Vigente', 'Providências Garantia',
-        'Glosa Realizada', 'Necessidade PAAI', 'Relatório Ocorrências'
+        'Glosa Realizada', 'Empresa Sancionada', 'Doc. Sanção SILOMS', 'Necessidade PAAI', 'Relatório Ocorrências'
     ])
 
     controles = ControleExecucao.objects.filter(
@@ -302,6 +302,8 @@ def exportar_execucao_csv(request):
             c.get_garantia_vigente_display(),
             c.garantia_providencias or '-',
             c.get_glosa_realizada_display(),
+            c.get_empresa_sancionada_display() if c.empresa_sancionada else 'Não informado',
+            c.get_doc_sancao_siloms_display() if c.doc_sancao_siloms else 'Não informado',
             c.get_necessidade_paai_display(),
             c.relatorio_ocorrencias[:100]
         ])
@@ -780,16 +782,24 @@ def gerar_livro_fiscal_pdf(request, pk):
         story.extend(sec5_flowables)
     story.append(Spacer(1, 10))
 
-    # --- SEÇÃO 6: APURAÇÃO DE IRREGULARIDADES (PAAI) ---
+    # --- SEÇÃO 6: SANÇÕES E PAAI ---
     sec6_data = [
+        ["Empresa Sancionada (Impedimento/Inidoneidade):", controle.get_empresa_sancionada_display() if controle.empresa_sancionada else "Não informado"],
+    ]
+    if controle.empresa_sancionada == 'sim':
+        sec6_data.append(["Doc. Comprobatória no SILOMS:", controle.get_doc_sancao_siloms_display() if controle.doc_sancao_siloms else "Não informado"])
+        if controle.sancao_observacao:
+            sec6_data.append(["Obs. Sanção:", controle.sancao_observacao])
+
+    sec6_data.extend([
         ["Ocorrências Ativas/Reincidentes:", controle.get_ocorrencias_ativas_empresa_display()],
         ["Necessidade de PAAI?", controle.get_necessidade_paai_display()],
-    ]
+    ])
     if controle.paai_justificativa:
         sec6_data.append(["Justificativa PAAI:", controle.paai_justificativa])
 
     sec6_flowables = [
-        make_section_header("SEÇÃO 6: APURAÇÃO DE IRREGULARIDADES (PAAI)"),
+        make_section_header("SEÇÃO 6: SANÇÕES E PAAI"),
         Spacer(1, 4),
         make_kv_table(sec6_data)
     ]

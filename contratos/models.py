@@ -641,7 +641,25 @@ class ControleExecucao(models.Model):
     # === Seção 5: Ocorrências (Relatório Consolidado) ===
     relatorio_ocorrencias = models.TextField("Relatório de Ocorrências e Tratativas", blank=True)
 
-    # === Seção 6: Apuração de Irregularidades (PAAI) ===
+    # === Seção 6: Apuração de Irregularidades (PAAI) e Sanções ===
+    empresa_sancionada = models.CharField(
+        "Empresa sancionada com impedimento de licitar e contratar e/ou declaração de inidoneidade para licitar ou contratar?",
+        max_length=5,
+        choices=SIM_NAO,
+        blank=True,
+        null=True
+    )
+    doc_sancao_siloms = models.CharField(
+        "Documentação comprobatória inserida no SILOMS?",
+        max_length=5,
+        choices=SIM_NAO,
+        blank=True,
+        null=True
+    )
+    sancao_observacao = models.TextField(
+        "Observações / Detalhamento da Sanção",
+        blank=True
+    )
     ocorrencias_ativas_empresa = models.CharField("Ocorrências ativas por atraso/descumprimento reincidente?", max_length=5, choices=SIM_NAO, default='nao')
     necessidade_paai = models.CharField("Necessária solicitação de abertura de PAAI neste mês?", max_length=5, choices=SIM_NAO, default='nao')
     paai_justificativa = models.TextField("Detalhamento de infrações / Justificativa PAAI", blank=True)
