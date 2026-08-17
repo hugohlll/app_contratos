@@ -515,6 +515,69 @@ class TextoApontamentosTests(BaseSetorTestSetup):
         response_s = self.client.get(url_setor)
         self.assertContains(response_s, "Apontamentos da ACI:")
 
+    def test_chat_layout_fiscal_esquerda_aci_direita(self):
+        """Verifica alinhamento de balões do chat: Fiscal à esquerda e ACI à direita."""
+        from contratos.models import ControleExecucao, ApontamentoCorrecaoExecucao
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        m_ref = ultimo_dia_mes_anterior.month
+        a_ref = ultimo_dia_mes_anterior.year
+
+        # 1. Criar Livro do Fiscal com observação
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=m_ref,
+            ano_referencia=a_ref,
+            status='correcao',
+            observacao="Dúvida referente ao item 4 do cronograma."
+        )
+
+        # 2. Criar Apontamento da ACI
+        ApontamentoCorrecaoExecucao.objects.create(
+            controle=ctrl,
+            autor=self.admin_user,
+            descricao="Solicitamos adequação das datas conforme termo aditivo."
+        )
+
+        url = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, 200)
+        # Deve ter container do chat
+        self.assertContains(res, "dialogo-chat")
+        # Balão do Fiscal à esquerda
+        self.assertContains(res, "justify-content-start")
+        self.assertContains(res, "Dúvida referente ao item 4 do cronograma.")
+        # Balão da ACI à direita
+        self.assertContains(res, "justify-content-end")
+        self.assertContains(res, "Solicitamos adequação das datas conforme termo aditivo.")
+
+    def test_envio_sem_observacao_nao_gera_balao_vazio(self):
+        """Verifica que envios sem observações não geram balões vazios no chat."""
+        from contratos.models import ControleExecucao
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        m_ref = ultimo_dia_mes_anterior.month
+        a_ref = ultimo_dia_mes_anterior.year
+
+        ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=m_ref,
+            ano_referencia=a_ref,
+            status='entregue',
+            observacao=""  # Sem observações
+        )
+
+        url = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertNotContains(res, "dialogo-chat")
+
 
 # ===================================================================
 # 10. FILTROS DE BUSCA E STATUS NA MATRIZ DO DASHBOARD

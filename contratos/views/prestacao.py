@@ -219,14 +219,63 @@ def upload_prestacao(request, contrato_id):
             if len(historico_filtrado) >= 6:
                 break
 
-    controles_past = ControleExecucao.objects.filter(
-        contrato=contrato
-    ).prefetch_related('apontamentos')
-    controles_past_map = {(c.mes_referencia, c.ano_referencia): c for c in controles_past}
+    # Timeline de Diálogo (Livro do Fiscal)
+    dialogo_execucao = []
+    if controle_execucao:
+        for apt in controle_execucao.apontamentos.select_related('autor').all():
+            autor_nome = "ACI"
+            dialogo_execucao.append({
+                'tipo': 'aci',
+                'autor': autor_nome,
+                'data': apt.data_registro,
+                'texto': apt.descricao,
+            })
+        if controle_execucao.observacao and controle_execucao.observacao.strip():
+            ag = controle_execucao.agente
+            if ag and hasattr(ag, 'posto') and ag.posto:
+                fiscal_nome = f"{ag.posto.sigla} {ag.nome_de_guerra}"
+            elif ag:
+                fiscal_nome = ag.nome_de_guerra or ag.nome_completo
+            else:
+                fiscal_nome = "Fiscal Responsável"
+            dialogo_execucao.append({
+                'tipo': 'fiscal',
+                'autor': fiscal_nome,
+                'data': controle_execucao.data_envio,
+                'texto': controle_execucao.observacao.strip(),
+            })
+        dialogo_execucao.sort(key=lambda x: x['data'])
 
-    for p in historico_filtrado:
-        ctrl = controles_past_map.get((p.mes_referencia, p.ano_referencia))
-        p.controle_execucao = ctrl
+    # Timeline de Diálogo (Slides da Prestação)
+    dialogo_slides = []
+    prestacoes_mes = PrestacaoContas.objects.filter(
+        contrato=contrato, mes_referencia=mes_ref, ano_referencia=ano_ref
+    ).select_related('agente', 'agente__posto').prefetch_related('apontamentos', 'apontamentos__autor').order_by('id')
+
+    for p in prestacoes_mes:
+        if p.observacao and p.observacao.strip():
+            ag = p.agente
+            if ag and hasattr(ag, 'posto') and ag.posto:
+                fiscal_nome = f"{ag.posto.sigla} {ag.nome_de_guerra}"
+            elif ag:
+                fiscal_nome = ag.nome_de_guerra or ag.nome_completo
+            else:
+                fiscal_nome = "Fiscal Responsável"
+            dialogo_slides.append({
+                'tipo': 'fiscal',
+                'autor': fiscal_nome,
+                'data': p.data_envio,
+                'texto': p.observacao.strip(),
+            })
+        for apt in p.apontamentos.all():
+            autor_nome = "ACI"
+            dialogo_slides.append({
+                'tipo': 'aci',
+                'autor': autor_nome,
+                'data': apt.data_registro,
+                'texto': apt.descricao,
+            })
+    dialogo_slides.sort(key=lambda x: x['data'])
 
     context = {
         'contrato': contrato,
@@ -238,6 +287,8 @@ def upload_prestacao(request, contrato_id):
         'execucao_preenchida': execucao_preenchida,
         'ultimo_apontamento_execucao': ultimo_apontamento_execucao,
         'data_limite_execucao': data_limite_execucao,
+        'dialogo_execucao': dialogo_execucao,
+        'dialogo_slides': dialogo_slides,
         'mes_ref': f"{mes_ref:02d}",
         'ano_ref': str(ano_ref),
     }

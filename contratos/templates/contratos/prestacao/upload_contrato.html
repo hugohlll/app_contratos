@@ -264,16 +264,40 @@
                         </div>
 
                         {% if controle_execucao %}
-                            <div class="small text-muted mb-1">
+                            <div class="small text-muted mb-2">
                                 <i class="bi bi-person me-1"></i>Responsável: {{ controle_execucao.agente.posto.sigla|default:'' }} {{ controle_execucao.agente.nome_de_guerra|default:controle_execucao.agente.nome_completo }}
+                                <span class="ms-2"><i class="bi bi-clock me-1"></i>Envio: {{ controle_execucao.data_envio|date:"d/m/Y H:i" }}</span>
                             </div>
-                            <div class="small text-muted mb-1">
-                                <i class="bi bi-clock me-1"></i>Data do Envio: {{ controle_execucao.data_envio|date:"d/m/Y H:i" }}
-                            </div>
-                            {% if ultimo_apontamento_execucao %}
-                            <div class="alert alert-danger py-2 px-3 mt-2 mb-0 small border-danger">
-                                <strong><i class="bi bi-exclamation-circle-fill"></i> Apontamentos da ACI (Livro do Fiscal):</strong><br>
-                                {{ ultimo_apontamento_execucao.descricao|linebreaksbr }}
+
+                            {% if dialogo_execucao %}
+                            <div class="dialogo-chat mt-3 pt-2 border-top">
+                                {% for msg in dialogo_execucao %}
+                                    {% if msg.tipo == 'fiscal' %}
+                                        <div class="d-flex justify-content-start mb-2">
+                                            <div class="card border-primary border-opacity-25 bg-white shadow-xs rounded-3 w-100" style="max-width: 85%;">
+                                                <div class="card-header bg-primary bg-opacity-10 py-1 px-3 border-0 rounded-top-3 d-flex justify-content-between align-items-center">
+                                                    <span class="fw-bold text-primary small"><i class="bi bi-person-fill me-1"></i>{{ msg.autor }}</span>
+                                                    <span class="text-muted" style="font-size: 0.75rem;">{{ msg.data|date:"d/m/Y H:i" }}</span>
+                                                </div>
+                                                <div class="card-body py-2 px-3 small text-dark">
+                                                    {{ msg.texto|linebreaksbr }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="d-flex justify-content-end mb-2">
+                                            <div class="card border-danger border-opacity-25 bg-danger-subtle shadow-xs rounded-3 w-100" style="max-width: 85%;">
+                                                <div class="card-header bg-danger bg-opacity-10 py-1 px-3 border-0 rounded-top-3 d-flex justify-content-between align-items-center">
+                                                    <strong class="text-danger small"><i class="bi bi-shield-exclamation me-1"></i>ACI (Apontamentos da ACI)</strong>
+                                                    <span class="text-muted" style="font-size: 0.75rem;">{{ msg.data|date:"d/m/Y H:i" }}</span>
+                                                </div>
+                                                <div class="card-body py-2 px-3 small text-dark">
+                                                    {{ msg.texto|linebreaksbr }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
                             </div>
                             {% endif %}
                         {% else %}
@@ -297,16 +321,40 @@
                         </div>
 
                         {% if prestacao_atual and prestacao_atual.status != 'pendente' %}
-                            <div class="small text-muted mb-1">
+                            <div class="small text-muted mb-2">
                                 <i class="bi bi-person me-1"></i>Responsável: {{ prestacao_atual.agente.posto.sigla|default:'' }} {{ prestacao_atual.agente.nome_de_guerra|default:prestacao_atual.agente.nome_completo }}
+                                <span class="ms-2"><i class="bi bi-clock me-1"></i>Envio: {{ prestacao_atual.data_envio|date:"d/m/Y H:i" }}</span>
                             </div>
-                            <div class="small text-muted mb-1">
-                                <i class="bi bi-clock me-1"></i>Data do Envio: {{ prestacao_atual.data_envio|date:"d/m/Y H:i" }}
-                            </div>
-                            {% if ultimo_apontamento_slides %}
-                            <div class="alert alert-warning py-2 px-3 mt-2 mb-0 small border-warning">
-                                <strong><i class="bi bi-exclamation-triangle-fill"></i> Apontamentos da ACI (Slides):</strong><br>
-                                {{ ultimo_apontamento_slides.descricao|linebreaksbr }}
+
+                            {% if dialogo_slides %}
+                            <div class="dialogo-chat mt-3 pt-2 border-top">
+                                {% for msg in dialogo_slides %}
+                                    {% if msg.tipo == 'fiscal' %}
+                                        <div class="d-flex justify-content-start mb-2">
+                                            <div class="card border-primary border-opacity-25 bg-white shadow-xs rounded-3 w-100" style="max-width: 85%;">
+                                                <div class="card-header bg-primary bg-opacity-10 py-1 px-3 border-0 rounded-top-3 d-flex justify-content-between align-items-center">
+                                                    <span class="fw-bold text-primary small"><i class="bi bi-person-fill me-1"></i>{{ msg.autor }}</span>
+                                                    <span class="text-muted" style="font-size: 0.75rem;">{{ msg.data|date:"d/m/Y H:i" }}</span>
+                                                </div>
+                                                <div class="card-body py-2 px-3 small text-dark">
+                                                    {{ msg.texto|linebreaksbr }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="d-flex justify-content-end mb-2">
+                                            <div class="card border-warning border-opacity-25 bg-warning-subtle shadow-xs rounded-3 w-100" style="max-width: 85%;">
+                                                <div class="card-header bg-warning bg-opacity-10 py-1 px-3 border-0 rounded-top-3 d-flex justify-content-between align-items-center">
+                                                    <strong class="text-dark small"><i class="bi bi-exclamation-triangle-fill me-1"></i>ACI (Apontamentos da ACI)</strong>
+                                                    <span class="text-muted" style="font-size: 0.75rem;">{{ msg.data|date:"d/m/Y H:i" }}</span>
+                                                </div>
+                                                <div class="card-body py-2 px-3 small text-dark">
+                                                    {{ msg.texto|linebreaksbr }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
                             </div>
                             {% endif %}
                         {% else %}
