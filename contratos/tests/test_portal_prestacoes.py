@@ -294,17 +294,21 @@ class AnoInteiroTests(BaseSetorTestSetup):
         self.assertNotContains(response, "2.026")
 
     def test_ano_inteiro_no_historico_upload_contrato(self):
-        """Cria prestação e verifica se o ano no histórico não tem ponto."""
+        """Cria prestação e verifica se o ano no painel do contrato não tem ponto."""
+        hoje = date.today()
+        ultimo_dia_mes_ant = hoje.replace(day=1) - timedelta(days=1)
+        mes = ultimo_dia_mes_ant.month
+        ano = ultimo_dia_mes_ant.year
         pdf = self._make_pdf("c.pdf")
         PrestacaoContas.objects.create(
             contrato=self.contrato, agente=self.agente,
-            mes_referencia=3, ano_referencia=2026,
+            mes_referencia=mes, ano_referencia=ano,
             arquivo=pdf, status='entregue'
         )
         url = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
         response = self.client.get(url)
-        self.assertContains(response, "03/2026")
-        self.assertNotContains(response, "2.026")
+        self.assertContains(response, f"{mes:02d}/{ano}")
+        self.assertNotContains(response, f"{ano // 1000}.{ano % 1000:03d}")
 
     def test_ano_inteiro_no_historico_upload_setor(self):
         self._criar_prestacao_setor(3, 2026)
@@ -498,7 +502,7 @@ class TextoApontamentosTests(BaseSetorTestSetup):
         ApontamentoCorrecao.objects.create(
             prestacao=p_contrato, autor=self.admin_user, descricao="Erro"
         )
-        url_contrato = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        url_contrato = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id}) + "?mes=3&ano=2026"
         response_c = self.client.get(url_contrato)
         self.assertContains(response_c, "Apontamentos da ACI")
 

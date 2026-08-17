@@ -88,6 +88,9 @@ def formulario_execucao(request, contrato_id):
         contrato=contrato, mes_referencia=filtro_mes, ano_referencia=filtro_ano
     ).order_by('-id').first()
 
+    if controle_existente and controle_existente.status == 'ok':
+        return redirect('visualizar_controle_execucao', pk=controle_existente.pk)
+
     # Verificar se a data atual está a 120 dias ou menos do fim da vigência
     dentro_prazo_aditivo = False
     if contrato.data_recomendada_aditivo:

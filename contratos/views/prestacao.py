@@ -187,8 +187,8 @@ def upload_prestacao(request, contrato_id):
     else:
         form = PrestacaoContasUploadForm(contrato=contrato)
         
-    mes_ref = form.initial.get('mes_referencia', mes_ref_padrao)
-    ano_ref = form.initial.get('ano_referencia', ano_ref_padrao)
+    mes_ref = int(request.POST.get('mes_referencia') or request.GET.get('mes') or form.initial.get('mes_referencia', mes_ref_padrao))
+    ano_ref = int(request.POST.get('ano_referencia') or request.GET.get('ano') or form.initial.get('ano_referencia', ano_ref_padrao))
 
     controle_execucao = ControleExecucao.objects.filter(
         contrato=contrato, mes_referencia=mes_ref, ano_referencia=ano_ref
@@ -199,6 +199,11 @@ def upload_prestacao(request, contrato_id):
 
     cal = CalendarioPrestacao.objects.filter(mes=mes_ref, ano=ano_ref).first()
     data_limite_execucao = cal.data_entrega_execucao if (cal and cal.data_entrega_execucao) else None
+
+    prestacao_atual = PrestacaoContas.objects.filter(
+        contrato=contrato, mes_referencia=mes_ref, ano_referencia=ano_ref
+    ).order_by('-data_envio').first()
+    ultimo_apontamento_slides = prestacao_atual.apontamentos.first() if (prestacao_atual and prestacao_atual.apontamentos.exists()) else None
 
     historico = PrestacaoContas.objects.filter(
         contrato=contrato
@@ -227,6 +232,8 @@ def upload_prestacao(request, contrato_id):
         'contrato': contrato,
         'form': form,
         'historico': historico_filtrado,
+        'prestacao_atual': prestacao_atual,
+        'ultimo_apontamento_slides': ultimo_apontamento_slides,
         'controle_execucao': controle_execucao,
         'execucao_preenchida': execucao_preenchida,
         'ultimo_apontamento_execucao': ultimo_apontamento_execucao,
