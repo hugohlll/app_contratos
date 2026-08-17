@@ -197,6 +197,13 @@
                         </tr>
                         {% endfor %}
                     </tbody>
+                    <tfoot class="table-light small fw-bold">
+                        <tr>
+                            <td>TOTAL REGISTRADO:</td>
+                            <td class="text-success fs-6">R$ {{ controle.total_faturas|floatformat:2 }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
             {% else %}

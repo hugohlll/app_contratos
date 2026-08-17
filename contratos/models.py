@@ -677,6 +677,10 @@ class ControleExecucao(models.Model):
         verbose_name_plural = "Controles de Execução Contratual"
         ordering = ['-ano_referencia', '-mes_referencia']
 
+    @property
+    def total_faturas(self):
+        return sum(f.valor for f in self.faturas.all())
+
     def __str__(self):
         return f"Controle Execução {self.contrato.numero} - {self.mes_referencia:02d}/{self.ano_referencia}"
 

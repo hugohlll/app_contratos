@@ -588,6 +588,13 @@ body {
                     <table class="table table-bordered align-middle mb-0" id="tabelaFaturas">
                         <thead class="table-light"><tr><th>Nº Fatura/NF</th><th>Valor (R$)</th><th>Nº OB</th><th style="width:80px;text-align:center">Ação</th></tr></thead>
                         <tbody id="tbodyFaturas"></tbody>
+                        <tfoot id="tfootFaturas" class="table-light fw-bold" style="display: none;">
+                            <tr>
+                                <td>TOTAL REGISTRADO:</td>
+                                <td id="totalFaturasValor" class="text-success fs-6">R$ 0,00</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
                 <button type="button" class="btn btn-outline-primary btn-sm fw-bold" id="btnAdicionarFatura"><i class="bi bi-plus-circle me-1"></i> Adicionar Fatura</button>
@@ -1079,6 +1086,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // FATURAS
     const tbodyFat = document.getElementById('tbodyFaturas');
+    const tfootFat = document.getElementById('tfootFaturas');
+    const totalFatVal = document.getElementById('totalFaturasValor');
     const inputFat = document.getElementById('faturas_json_input');
     let faturas = []; try { faturas = JSON.parse(inputFat.value || '[]'); } catch(e) {}
 
@@ -1089,9 +1098,24 @@ document.addEventListener('DOMContentLoaded', function() {
         return (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    function updateTotalFat() {
+        if (!tfootFat || !totalFatVal) return;
+        if (faturas.length > 0) {
+            let sum = faturas.reduce((acc, f) => acc + (parseFloat(f.valor) || 0), 0);
+            tfootFat.style.display = '';
+            totalFatVal.textContent = 'R$ ' + sum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } else {
+            tfootFat.style.display = 'none';
+        }
+    }
+
     function renderFat() {
         tbodyFat.innerHTML = '';
-        if (!faturas.length) { tbodyFat.innerHTML = '<tr><td colspan="4" class="text-center text-muted small">Nenhuma fatura cadastrada. Clique no botão "Adicionar Fatura" abaixo.</td></tr>'; return; }
+        if (!faturas.length) {
+            tbodyFat.innerHTML = '<tr><td colspan="4" class="text-center text-muted small">Nenhuma fatura cadastrada. Clique no botão "Adicionar Fatura" abaixo.</td></tr>';
+            updateTotalFat();
+            return;
+        }
         faturas.forEach((f,i) => {
             const tr = document.createElement('tr');
             let valFormatted = applyCurrencyMask(Math.round((parseFloat(f.valor) || 0) * 100));
@@ -1102,6 +1126,7 @@ document.addEventListener('DOMContentLoaded', function() {
             tbodyFat.appendChild(tr);
         });
         inputFat.value = JSON.stringify(faturas);
+        updateTotalFat();
     }
     document.getElementById('btnAdicionarFatura').addEventListener('click', () => { faturas.push({numero_nf:'',valor:0,numero_ob:''}); renderFat(); });
 
@@ -1114,6 +1139,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let digits = e.target.value.replace(/\D/g, '');
             faturas[i].valor = (parseInt(digits, 10) || 0) / 100;
             inputFat.value = JSON.stringify(faturas);
+            updateTotalFat();
         } else if (e.target.classList.contains('fn')) {
             faturas[i].numero_nf = e.target.value;
             inputFat.value = JSON.stringify(faturas);
