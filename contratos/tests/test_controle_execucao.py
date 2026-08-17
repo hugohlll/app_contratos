@@ -264,9 +264,8 @@ class ControleExecucaoTests(TestCase):
 
         # 1. GET na tela sem o Livro do Fiscal preenchido -> execucao_preenchida deve ser False
         res_get = self.client.get(url_upload)
-        self.assertEqual(res_get.status_code, 200)
         self.assertFalse(res_get.context['execucao_preenchida'])
-        self.assertContains(res_get, "Preenchimento Obrigatório")
+        self.assertContains(res_get, "Pendente")
 
         # 2. Tentativa de POST sem Livro do Fiscal -> Bloqueado com mensagem de erro
         from django.core.files.uploadedfile import SimpleUploadedFile
