@@ -159,9 +159,9 @@
                                     <p class="small text-dark mb-2">
                                         O Controle de Execução Contratual do período foi analisado e aprovado.
                                     </p>
-                                    <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-outline-success fw-bold w-100 mb-2">
-                                        <i class="bi bi-eye me-1"></i> Visualizar Livro do Fiscal
-                                    </a>
+                                    <p class="small fw-semibold text-dark mb-3">
+                                        <i class="bi bi-info-circle me-1 text-success"></i>Insira o documento gerado no SILOMS
+                                    </p>
                                     <a href="{% url 'download_livro_fiscal_pdf' pk=controle_execucao.id %}?v={% now 'U' %}" class="btn btn-success fw-bold w-100 shadow-sm" download>
                                         <i class="bi bi-file-earmark-pdf me-1"></i> Baixar Livro do Fiscal (PDF)
                                     </a>
