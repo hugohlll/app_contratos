@@ -243,9 +243,9 @@
                 </div>
                 <div class="card-body p-4">
                     <!-- STATUS DO LIVRO DO FISCAL -->
-                    <div class="mb-4 p-3 rounded-3 border {% if not execucao_preenchida %}border-danger border-opacity-25 bg-danger bg-opacity-10{% elif controle_execucao and controle_execucao.status == 'correcao' %}border-warning border-opacity-50 bg-warning bg-opacity-10{% else %}bg-light{% endif %}">
+                    <div class="mb-4 p-3 rounded-3 border {% if not execucao_preenchida %}border-danger border-opacity-25 bg-danger bg-opacity-10{% else %}bg-light{% endif %}">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-text me-2 {% if not execucao_preenchida %}text-danger{% elif controle_execucao and controle_execucao.status == 'correcao' %}text-warning{% endif %}"></i>Livro do Fiscal</h6>
+                            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-text me-2 {% if not execucao_preenchida %}text-danger{% endif %}"></i>Livro do Fiscal</h6>
                             {% if not execucao_preenchida %}
                                 <span class="badge bg-danger text-white fw-bold">Pendente</span>
                             {% elif controle_execucao.status == 'correcao' %}
