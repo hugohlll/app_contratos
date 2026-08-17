@@ -502,6 +502,52 @@ def _get_dashboard_stats(ano, mes):
     }
 
 
+def get_msg_mais_recente(obj, tipo_agente='fiscal'):
+    """
+    Retorna a mensagem mais recente (entre ACI e Fiscal/Gestor) para um objeto de prestação ou controle.
+    Retorna None se não houver nenhuma mensagem registrada.
+    """
+    if not obj:
+        return None
+
+    mensagens = []
+
+    # 1. Apontamentos da ACI
+    if hasattr(obj, 'apontamentos'):
+        for apt in obj.apontamentos.select_related('autor').all():
+            autor_nome = (apt.autor.get_full_name() or apt.autor.username) if apt.autor else 'ACI'
+            mensagens.append({
+                'tipo': 'aci',
+                'autor': autor_nome,
+                'data': apt.data_registro,
+                'texto': apt.descricao.strip(),
+            })
+
+    # 2. Observações do Fiscal / Gestor
+    if hasattr(obj, 'historico_observacoes') and obj.historico_observacoes.all():
+        for obs in obj.historico_observacoes.all():
+            if obs.observacao and obs.observacao.strip():
+                mensagens.append({
+                    'tipo': tipo_agente,
+                    'autor': 'Fiscal Responsável' if tipo_agente == 'fiscal' else 'Gestor do Setor',
+                    'data': obs.data_envio,
+                    'texto': obs.observacao.strip(),
+                })
+    elif getattr(obj, 'observacao', None) and obj.observacao.strip():
+        mensagens.append({
+            'tipo': tipo_agente,
+            'autor': 'Fiscal Responsável' if tipo_agente == 'fiscal' else 'Gestor do Setor',
+            'data': obj.data_envio,
+            'texto': obj.observacao.strip(),
+        })
+
+    if not mensagens:
+        return None
+
+    mensagens.sort(key=lambda m: m['data'])
+    return mensagens[-1]
+
+
 @login_required
 @ensure_csrf_cookie
 def dashboard_prestacao(request):
@@ -640,16 +686,8 @@ def dashboard_prestacao(request):
         prestacao = prestacoes_map.get(c.id, {}).get((filtro_ano, filtro_mes))
         controle = execucoes_map.get(c.id, {}).get((filtro_ano, filtro_mes))
         
-        apontamentos_slides = list(prestacao.apontamentos.select_related('autor').all()) if prestacao else []
-        apontamentos_controle = list(controle.apontamentos.select_related('autor').all()) if controle else []
-        
-        obs_controle = ''
-        if controle:
-            historico_ctrl = list(controle.historico_observacoes.all())
-            if historico_ctrl:
-                obs_controle = historico_ctrl[-1].observacao
-            elif controle.observacao:
-                obs_controle = controle.observacao.strip()
+        msg_slides = get_msg_mais_recente(prestacao, 'fiscal')
+        msg_controle = get_msg_mais_recente(controle, 'fiscal')
 
         entregas_mes_selecionado.append({
             'contrato': c,
@@ -657,23 +695,20 @@ def dashboard_prestacao(request):
             'controle': controle,
             'status_prestacao': prestacao.status if prestacao else 'pendente',
             'status_controle': controle.status if controle else 'pendente',
-            'observacao_fiscal': prestacao.observacao if (prestacao and prestacao.observacao) else '',
-            'observacao_controle': obs_controle,
-            'apontamentos_slides': apontamentos_slides,
-            'apontamentos_controle': apontamentos_controle,
+            'msg_slides': msg_slides,
+            'msg_controle': msg_controle,
         })
 
     # Monta visão detalhada para o mês selecionado (Setores: Slides + Apontamentos ACI)
     entregas_setor_mes_selecionado = []
     for s in setores:
         prestacao = prestacoes_setor_map.get(s.id, {}).get((filtro_ano, filtro_mes))
-        apontamentos_setor = list(prestacao.apontamentos.select_related('autor').all()) if prestacao else []
+        msg_setor = get_msg_mais_recente(prestacao, 'gestor')
         entregas_setor_mes_selecionado.append({
             'setor': s,
             'prestacao': prestacao,
             'status': prestacao.status if prestacao else 'pendente',
-            'observacao_gestor': prestacao.observacao if (prestacao and prestacao.observacao) else '',
-            'apontamentos': apontamentos_setor,
+            'msg_setor': msg_setor,
         })
 
     meses_nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]

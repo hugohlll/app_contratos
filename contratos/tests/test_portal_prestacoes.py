@@ -821,9 +821,8 @@ class DashboardReengenhariaSubAbasTests(BaseSetorTestSetup):
         self.assertEqual(dados_contrato['controle'], controle)
         self.assertEqual(dados_contrato['status_prestacao'], 'entregue')
         self.assertEqual(dados_contrato['status_controle'], 'ok')
-        self.assertEqual(dados_contrato['observacao_fiscal'], 'Relatorio de teste')
-        self.assertEqual(len(dados_contrato['apontamentos_slides']), 1)
-        self.assertEqual(dados_contrato['apontamentos_slides'][0].descricao, "Corrigir slides")
+        self.assertIsNotNone(dados_contrato['msg_slides'])
+        self.assertEqual(dados_contrato['msg_slides']['texto'], "Corrigir slides")
 
     def test_dashboard_3_colunas_layout_e_switch(self):
         self.client.force_login(self.admin_user)
@@ -909,5 +908,44 @@ class DashboardReengenhariaSubAbasTests(BaseSetorTestSetup):
         self.assertEqual(res_vis.status_code, 200)
         self.assertContains(res_vis, "OBSERVAÇÕES E RESPOSTAS DO FISCAL")
         self.assertContains(res_vis, "Resposta Detalhada do Fiscal do Livro")
+
+    def test_apenas_mensagem_mais_recente_exibida_no_acompanhamento_detalhado(self):
+        """Verifica se apenas a mensagem mais recente (entre ACI e Fiscal/Gestor) é exibida no Acompanhamento Detalhado."""
+        import time
+        from contratos.models import ControleExecucao, HistoricoObservacaoExecucao, ApontamentoCorrecaoExecucao
+
+        self.client.force_login(self.admin_user)
+
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=4,
+            ano_referencia=2026,
+            status='correcao',
+            observacao="Primeira observacao fiscal antiga"
+        )
+        time.sleep(0.01)
+        apt1 = ApontamentoCorrecaoExecucao.objects.create(
+            controle=ctrl,
+            autor=self.admin_user,
+            descricao="Apontamento ACI intermediario"
+        )
+        time.sleep(0.01)
+        obs_rec = HistoricoObservacaoExecucao.objects.create(
+            controle=ctrl,
+            agente=self.agente,
+            observacao="Resposta mais recente do fiscal 123"
+        )
+
+        url_dash = reverse('dashboard_prestacao') + "?mes=4&ano=2026"
+        res_dash = self.client.get(url_dash)
+        self.assertEqual(res_dash.status_code, 200)
+
+        # Deve conter a resposta mais recente do fiscal
+        self.assertContains(res_dash, "Resposta mais recente do fiscal 123")
+
+        # Não deve conter o apontamento ACI antigo nem a primeira obs antiga
+        self.assertNotContains(res_dash, "Apontamento ACI intermediario")
+        self.assertNotContains(res_dash, "Primeira observacao fiscal antiga")
 
 
