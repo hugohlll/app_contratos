@@ -196,19 +196,34 @@ def formulario_execucao(request, contrato_id):
 def visualizar_controle_execucao(request, pk):
     """Visualização em formato somente leitura do Livro do Fiscal (ACI / Admin)."""
     controle = get_object_or_404(
-        ControleExecucao.objects.select_related('contrato', 'agente', 'agente__posto'), pk=pk
+        ControleExecucao.objects.select_related('contrato', 'contrato__empresa', 'agente', 'agente__posto'), pk=pk
     )
 
     comissao = Comissao.objects.filter(
         contrato=controle.contrato, ativa=True, tipo='FISCALIZACAO'
     ).first()
+    if not comissao:
+        comissao = Comissao.objects.filter(
+            contrato=controle.contrato, tipo='FISCALIZACAO'
+        ).order_by('-data_inicio').first()
+
+    integrantes = []
+    if comissao:
+        integrantes = list(
+            comissao.integrantes.filter(data_desligamento__isnull=True).select_related(
+                'agente', 'agente__posto', 'posto_graduacao', 'funcao'
+            ).order_by('ordem', 'funcao__ordem', 'id')
+        )
 
     apontamentos = controle.apontamentos.select_related('autor').all()
+    ocorrencias_estruturadas = controle.ocorrencias.all()
 
     return render(request, 'contratos/execucao/visualizar.html', {
         'controle': controle,
         'comissao': comissao,
+        'integrantes': integrantes,
         'apontamentos': apontamentos,
+        'ocorrencias_estruturadas': ocorrencias_estruturadas,
         'is_admin': is_admin(request.user),
         'is_auditor': is_auditor(request.user),
     })

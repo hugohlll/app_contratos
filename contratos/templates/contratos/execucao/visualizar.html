@@ -2,12 +2,17 @@
 {% block title %}Visualizar Livro do Fiscal - {{ controle.contrato.numero }} - SISCONT{% endblock %}
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <!-- Cabeçalho Principal -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
         <div class="d-flex align-items-center">
             <a href="{% url 'dashboard_prestacao' %}" class="btn btn-outline-secondary btn-sm me-3"><i class="bi bi-arrow-left"></i> Dashboard</a>
             <div>
-                <h2 class="h4 mb-0 fw-bold">Livro do Fiscal — {{ controle.contrato.numero }}</h2>
-                <p class="text-muted mb-0 small">Ref. {{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia }} | Fiscal: {{ controle.agente.posto.sigla }} {{ controle.agente.nome_de_guerra }}</p>
+                <h2 class="h4 mb-0 fw-bold">Livro do Fiscal — Contrato {{ controle.contrato.numero }}</h2>
+                <p class="text-muted mb-0 small">
+                    Referência: <strong>{{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia }}</strong> | 
+                    Registrado em {{ controle.data_envio|date:"d/m/Y às H:i" }} | 
+                    Fiscal Responsável: <strong>{% if controle.agente %}{{ controle.agente.posto.sigla|default:"" }} {{ controle.agente.nome_de_guerra|default:controle.agente.nome_completo }}{% else %}Não informado{% endif %}</strong>
+                </p>
             </div>
         </div>
         <div class="d-flex align-items-center gap-2">
@@ -17,99 +22,425 @@
             <span class="badge fs-6 {% if controle.status == 'ok' %}bg-success{% elif controle.status == 'correcao' %}bg-warning text-dark{% else %}bg-primary{% endif %}">{{ controle.get_status_display }}</span>
         </div>
     </div>
-    {% if messages %}{% for m in messages %}<div class="alert alert-{{ m.tags }} alert-dismissible fade show">{{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
 
-    <!-- Dados do Contrato -->
-    <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
-        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-info-circle me-1"></i> Dados do Contrato</h5>
-        <div class="row g-2">
-            <div class="col-md-3"><small class="text-muted">Contrato</small><div class="fw-bold">{{ controle.contrato.numero }}</div></div>
-            <div class="col-md-5"><small class="text-muted">Objeto</small><div class="small">{{ controle.contrato.objeto }}</div></div>
-            <div class="col-md-4"><small class="text-muted">Empresa</small><div class="small fw-bold">{{ controle.contrato.empresa.razao_social|default:"—" }}</div></div>
-            <div class="col-md-6"><small class="text-muted">Portaria da Comissão</small><div class="fw-bold">{% if comissao and comissao.portaria_numero %}{{ comissao.portaria_numero }}{% if comissao.portaria_data %}, de {{ comissao.portaria_data|date:"d/m/Y" }}{% endif %}{% else %}—{% endif %}</div></div>
-            <div class="col-md-6"><small class="text-muted">Boletim de Publicação</small><div class="fw-bold">{% if comissao and comissao.boletim_numero %}{{ comissao.boletim_numero }}{% if comissao.boletim_data %}, de {{ comissao.boletim_data|date:"d/m/Y" }}{% endif %}{% else %}—{% endif %}</div></div>
-        </div>
-        {% if controle.houve_substituicao %}
-        <div class="alert alert-info mt-3 mb-0 py-2 small">
-            <i class="bi bi-person-exclamation me-1"></i><strong>Substituição de Fiscal no Período:</strong>
-            Entrega formal dos registros pelo antecessor/substituto: <strong>{{ controle.get_substituicao_entrega_formal_display }}</strong>
-            {% if controle.substituicao_obs %}<div class="mt-1 text-secondary"><em>Obs: {{ controle.substituicao_obs }}</em></div>{% endif %}
-        </div>
-        {% endif %}
-    </div></div>
-
-    <!-- Seção 2: Prazos -->
-    <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
-        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-clock me-1"></i> Controle de Prazos</h5>
-        <div class="row g-3">
-            <div class="col-md-4"><small class="text-muted">SILOMS Assinatura</small><div>{% if controle.confirmacao_siloms_assinatura %}<i class="bi bi-check-circle-fill text-success"></i> Conferido{% else %}<i class="bi bi-x-circle text-danger"></i> Não conferido{% endif %}</div></div>
-            <div class="col-md-4"><small class="text-muted">SILOMS Vigência</small><div>{% if controle.confirmacao_siloms_vigencia %}<i class="bi bi-check-circle-fill text-success"></i> Conferido{% else %}<i class="bi bi-x-circle text-danger"></i> Não conferido{% endif %}</div></div>
-            <div class="col-md-4"><small class="text-muted">SILOMS Exec. Físico-Financeira</small><div>{% if controle.confirmacao_siloms_execucao == 'sim' %}<i class="bi bi-check-circle-fill text-success"></i> Conferido (Data: {{ controle.data_execucao_fisico_financeira|date:"d/m/Y"|default:"—" }}){% else %}<span class="text-muted">N/A</span>{% endif %}</div></div>
-            <div class="col-md-4"><small class="text-muted">Admite Termo Aditivo</small><div class="fw-bold">{{ controle.get_possibilidade_aditivo_display }}</div></div>
-            <div class="col-md-4"><small class="text-muted">Tratativas 120d</small><div class="fw-bold">{{ controle.get_tratativas_120_dias_display }}</div></div>
-            <div class="col-md-4"><small class="text-muted">Coord. DOC/SCON</small><div class="fw-bold">{{ controle.get_coordenacao_doc_scon_display }}</div></div>
-            <div class="col-md-6"><small class="text-muted">Data Recomendada p/ Tratativas (120d antes)</small><div class="fw-bold text-primary">{{ controle.contrato.data_recomendada_aditivo|date:"d/m/Y"|default:"—" }}</div></div>
-            <div class="col-md-6"><small class="text-muted">Data Limite p/ Tratativas (90d antes)</small><div class="fw-bold text-warning text-dark">{{ controle.contrato.data_limite_aditivo|date:"d/m/Y"|default:"—" }}</div></div>
-            <div class="col-md-12 mt-2"><small class="text-muted">Garantia Contratual Vigente</small><div class="fw-bold {% if controle.garantia_vigente == 'nao' %}text-danger{% endif %}">{{ controle.get_garantia_vigente_display }}</div>{% if controle.garantia_vigente == 'nao' and controle.garantia_providencias %}<div class="alert alert-danger p-2 mt-2 mb-0 small"><strong class="d-block mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Providências Adotadas (Garantia Vencida):</strong>{{ controle.garantia_providencias }}</div>{% endif %}</div>
-        </div>
-    </div></div>
-
-    <!-- Seção 3: Orçamentária -->
-    <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
-        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-cash me-1"></i> Execução Orçamentária</h5>
-        <p><strong>NEs:</strong> {{ controle.notas_empenho|default:"—" }}</p>
-        <p><strong>Cronograma:</strong> {{ controle.get_cronograma_fisico_financeiro_display }}</p>
-        {% if controle.faturas.exists %}
-        <h6 class="fw-bold mt-3 mb-2">Faturas do Período</h6>
-        <table class="table table-sm table-bordered"><thead class="table-light"><tr><th>NF</th><th>Valor</th><th>OB</th></tr></thead><tbody>
-            {% for f in controle.faturas.all %}<tr><td>{{ f.numero_nf }}</td><td>R$ {{ f.valor|floatformat:2 }}</td><td>{{ f.numero_ob|default:"—" }}</td></tr>{% endfor %}
-        </tbody></table>
-        {% endif %}
-    </div></div>
-
-    <!-- Seção 5: Ocorrências -->
-    <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
-        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-exclamation-triangle me-1"></i> Ocorrências e Tratativas</h5>
-        <pre class="bg-light p-3 rounded small" style="white-space: pre-wrap;">{{ controle.relatorio_ocorrencias|default:"Sem ocorrências registradas." }}</pre>
-    </div></div>
-
-    <!-- Seção 6: PAAI -->
-    <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body">
-        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-shield me-1"></i> PAAI</h5>
-        <p><strong>Ocorrências ativas reincidentes:</strong> {{ controle.get_ocorrencias_ativas_empresa_display }}</p>
-        <p><strong>Necessidade PAAI:</strong> {{ controle.get_necessidade_paai_display }}</p>
-        {% if controle.paai_justificativa %}<p class="bg-danger bg-opacity-10 p-2 rounded"><strong>Justificativa:</strong> {{ controle.paai_justificativa }}</p>{% endif %}
-    </div></div>
-
-    <!-- Apontamentos ACI -->
-    {% if apontamentos %}
-    <div class="card shadow-sm border-0 rounded-3 border-warning mb-4"><div class="card-body">
-        <h5 class="fw-bold text-warning mb-3"><i class="bi bi-chat-left-text me-1"></i> Apontamentos da ACI</h5>
-        {% for a in apontamentos %}
-        <div class="alert alert-warning mb-2">
-            <small class="text-muted d-block">{{ a.data_registro|date:"d/m/Y H:i" }} — {{ a.autor.username }}</small>
-            {{ a.descricao }}
+    {% if messages %}
+    <div class="mb-4">
+        {% for m in messages %}
+        <div class="alert alert-{{ m.tags }} alert-dismissible fade show shadow-sm">
+            {{ m }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         {% endfor %}
-    </div></div>
+    </div>
     {% endif %}
 
-    <!-- AÇÕES ACI -->
+    <!-- SEÇÃO 1: DADOS DO CONTRATO E DA EQUIPE -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-primary text-white py-2 px-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2"></i>SEÇÃO 1: IDENTIFICAÇÃO DO CONTRATO E DA EQUIPE</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3"><small class="text-muted">Nº do Contrato</small><div class="fw-bold fs-6">{{ controle.contrato.numero }}</div></div>
+                <div class="col-md-5"><small class="text-muted">Objeto Contratual</small><div class="small fw-semibold">{{ controle.contrato.objeto }}</div></div>
+                <div class="col-md-4"><small class="text-muted">Empresa Contratada</small><div class="small fw-bold">{{ controle.contrato.empresa.razao_social|default:"—" }} {% if controle.contrato.empresa.cnpj %}<span class="text-muted font-monospace">({{ controle.contrato.empresa.cnpj }})</span>{% endif %}</div></div>
+                
+                <div class="col-md-3"><small class="text-muted">Vigência Contratual</small><div class="small fw-semibold">{% if controle.contrato.vigencia_inicio %}{{ controle.contrato.vigencia_inicio|date:"d/m/Y" }} a {{ controle.contrato.vigencia_fim|date:"d/m/Y" }}{% else %}—{% endif %}</div></div>
+                <div class="col-md-4"><small class="text-muted">Portaria da Comissão</small><div class="fw-bold small">{% if comissao and comissao.portaria_numero %}{{ comissao.portaria_numero }}{% if comissao.portaria_data %}, de {{ comissao.portaria_data|date:"d/m/Y" }}{% endif %}{% else %}—{% endif %}</div></div>
+                <div class="col-md-5"><small class="text-muted">Boletim de Publicação</small><div class="fw-bold small">{% if comissao and comissao.boletim_numero %}{{ comissao.boletim_numero }}{% if comissao.boletim_data %}, de {{ comissao.boletim_data|date:"d/m/Y" }}{% endif %}{% else %}—{% endif %}</div></div>
+            </div>
+
+            {% if integrantes %}
+            <div class="mt-3">
+                <small class="text-muted fw-bold d-block mb-1"><i class="bi bi-people me-1"></i>Integrantes da Comissão de Fiscalização:</small>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>Posto/Graduação</th>
+                                <th>Nome Completo / Guerra</th>
+                                <th>Função na Comissão</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            {% for ing in integrantes %}
+                            <tr>
+                                <td class="fw-bold">{{ ing.posto_graduacao.sigla|default:ing.agente.posto.sigla|default:"" }}</td>
+                                <td>{{ ing.agente.nome_de_guerra|default:"-" }} <span class="text-muted">({{ ing.agente.nome_completo|default:"-" }})</span></td>
+                                <td><span class="badge bg-secondary">{{ ing.funcao.titulo|default:"Integrante" }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-3 pt-2 border-top">
+                <small class="text-muted fw-bold"><i class="bi bi-person-exclamation me-1"></i>Controle de Substituição na Fiscalização:</small>
+                <div class="d-flex align-items-center gap-3 mt-1 small">
+                    <div>Substituição no Período: <strong>{% if controle.houve_substituicao %}<span class="badge bg-warning text-dark">Sim</span>{% else %}<span class="badge bg-light text-dark border">Não</span>{% endif %}</strong></div>
+                    <div>Entrega Formal pelo Substituto: <strong>{{ controle.get_substituicao_entrega_formal_display }}</strong></div>
+                </div>
+                {% if controle.houve_substituicao and controle.substituicao_obs %}
+                <div class="alert alert-info py-2 px-3 mt-2 mb-0 small border-info">
+                    <strong>Obs. sobre Transição:</strong> {{ controle.substituicao_obs }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 2: CONTROLE DE PRAZOS E SILOMS -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-primary text-white py-2 px-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-clock me-2"></i>SEÇÃO 2: CONTROLE DE PRAZOS E SILOMS</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <small class="text-muted d-block">SILOMS — Assinatura/Início</small>
+                    <div>{% if controle.confirmacao_siloms_assinatura %}<i class="bi bi-check-circle-fill text-success"></i> Conferido{% else %}<i class="bi bi-x-circle-fill text-danger"></i> Não conferido{% endif %}</div>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">SILOMS — Vigência/Aditivos</small>
+                    <div>{% if controle.confirmacao_siloms_vigencia %}<i class="bi bi-check-circle-fill text-success"></i> Conferido{% else %}<i class="bi bi-x-circle-fill text-danger"></i> Não conferido{% endif %}</div>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Término Exec. Físico-Financeira</small>
+                    <div>
+                        {% if controle.confirmacao_siloms_execucao == 'sim' %}
+                            <i class="bi bi-check-circle-fill text-success"></i> Conferido {% if controle.data_execucao_fisico_financeira %}({{ controle.data_execucao_fisico_financeira|date:"d/m/Y" }}){% endif %}
+                        {% else %}
+                            <span class="text-muted">N/A / Não se aplica</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Admite Termo Aditivo?</small>
+                    <div class="fw-bold">{{ controle.get_possibilidade_aditivo_display }}</div>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Tratativas 120 dias antes</small>
+                    <div class="fw-bold">{{ controle.get_tratativas_120_dias_display }}</div>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">Coordenação DOC/SCON</small>
+                    <div class="fw-bold">{{ controle.get_coordenacao_doc_scon_display }}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Data Recomendada para Tratativas (120d antes)</small>
+                    <div class="fw-bold text-primary">{{ controle.contrato.data_recomendada_aditivo|date:"d/m/Y"|default:"—" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Data Limite para Aditivo (90d antes)</small>
+                    <div class="fw-bold text-warning text-dark">{{ controle.contrato.data_limite_aditivo|date:"d/m/Y"|default:"—" }}</div>
+                </div>
+
+                <div class="col-md-12">
+                    <small class="text-muted d-block">Garantia Contratual Vigente</small>
+                    <div class="fw-bold fs-6 {% if controle.garantia_vigente == 'nao' %}text-danger{% else %}text-dark{% endif %}">
+                        {{ controle.get_garantia_vigente_display }}
+                    </div>
+                    {% if controle.garantia_vigente == 'nao' and controle.garantia_providencias %}
+                    <div class="alert alert-danger p-3 mt-2 mb-0 small">
+                        <strong class="d-block mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Providências Adotadas (Garantia Vencida):</strong>
+                        {{ controle.garantia_providencias|linebreaksbr }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 3: EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-primary text-white py-2 px-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-cash-stack me-2"></i>SEÇÃO 3: EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Notas de Empenho (com saldo)</small>
+                    <div class="fw-bold bg-light p-2 rounded border small">{{ controle.notas_empenho|default:"Nenhuma nota de empenho informada." }}</div>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Observações (caso sem empenho)</small>
+                    <div class="small bg-light p-2 rounded border">{{ controle.obs_sem_empenho|default:"N/A" }}</div>
+                </div>
+                <div class="col-md-12">
+                    <small class="text-muted d-block">Cumprimento do Cronograma Físico-Financeiro</small>
+                    <div class="fw-bold">{{ controle.get_cronograma_fisico_financeiro_display }}</div>
+                </div>
+            </div>
+
+            <!-- TABELA DE FATURAS -->
+            <small class="text-muted fw-bold d-block mb-2"><i class="bi bi-receipt me-1"></i>Faturas Registradas no Mês de Referência:</small>
+            {% if controle.faturas.exists %}
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead class="table-light small">
+                        <tr>
+                            <th>Nº Nota Fiscal / Fatura</th>
+                            <th>Valor (R$)</th>
+                            <th>Nº Ordem Bancária (OB)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        {% for f in controle.faturas.all %}
+                        <tr>
+                            <td>{{ f.numero_nf }}</td>
+                            <td class="fw-bold text-success">R$ {{ f.valor|floatformat:2 }}</td>
+                            <td>{{ f.numero_ob|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="small text-muted mb-0 bg-light p-2 rounded border">Nenhuma fatura registrada neste período.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-primary text-white py-2 px-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-kanban me-2"></i>SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <small class="text-muted d-block">Status / Detalhamento do Cronograma de Execução</small>
+                    <div class="small bg-light p-2 rounded border mb-2">{{ controle.detalhamento_cronograma|default:"Sem observações específicas." }}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Alteração no Cronograma em relação ao mês anterior?</small>
+                    <div class="fw-bold">{{ controle.get_alteracao_cronograma_display }}</div>
+                    {% if controle.alteracao_cronograma == 'sim' and controle.alteracao_cronograma_desc %}
+                    <div class="small alert alert-warning p-2 mt-1 mb-0 border-warning"><strong>Ações do Fiscal:</strong> {{ controle.alteracao_cronograma_desc }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Atraso na Entrega dos Produtos/Serviços?</small>
+                    <div class="fw-bold">{{ controle.get_atraso_entrega_display }}</div>
+                    {% if controle.atraso_entrega == 'sim' and controle.atraso_entrega_desc %}
+                    <div class="small alert alert-warning p-2 mt-1 mb-0 border-warning"><strong>Ações do Fiscal:</strong> {{ controle.atraso_entrega_desc }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Impossibilidade de Recebimento?</small>
+                    <div class="fw-bold">{{ controle.get_impossibilidade_recebimento_display }}</div>
+                    {% if controle.impossibilidade_recebimento == 'sim' and controle.impossibilidade_recebimento_desc %}
+                    <div class="small alert alert-warning p-2 mt-1 mb-0 border-warning"><strong>Ações do Fiscal:</strong> {{ controle.impossibilidade_recebimento_desc }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Diligência / Visita Técnica Realizada?</small>
+                    <div class="fw-bold">{{ controle.get_diligencia_visita_display }}</div>
+                    {% if controle.diligencia_visita == 'sim' and controle.diligencia_visita_desc %}
+                    <div class="small alert alert-info p-2 mt-1 mb-0 border-info"><strong>Resultados / Ações:</strong> {{ controle.diligencia_visita_desc }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Aplicado IMR?</small>
+                    <div class="fw-bold">{{ controle.get_imr_aplicado_display }}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Glosa Realizada no Período?</small>
+                    <div class="fw-bold">{{ controle.get_glosa_realizada_display }}</div>
+                    {% if controle.glosa_realizada == 'sim' and controle.glosa_desc %}
+                    <div class="small alert alert-danger p-2 mt-1 mb-0 border-danger"><strong>Detalhamento de Glosa e Valores:</strong> {{ controle.glosa_desc }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 5: OCORRÊNCIAS E TRATATIVAS -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-primary text-white py-2 px-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>SEÇÃO 5: OCORRÊNCIAS E TRATATIVAS</h6>
+        </div>
+        <div class="card-body">
+            {% if ocorrencias_estruturadas %}
+            <small class="text-muted fw-bold d-block mb-2"><i class="bi bi-list-task me-1"></i>Ocorrências Registradas:</small>
+            <div class="table-responsive mb-3">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead class="table-light small">
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Descrição</th>
+                            <th>Ação do Fiscal</th>
+                            <th>Prazo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        {% for o in ocorrencias_estruturadas %}
+                        <tr>
+                            <td>{{ o.data|date:"d/m/Y" }}</td>
+                            <td><span class="badge bg-secondary">{{ o.tipo|upper }}</span></td>
+                            <td>{{ o.descricao }}</td>
+                            <td>{{ o.acao_fiscal|default:"-" }}</td>
+                            <td>{{ o.prazo|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <small class="text-muted fw-bold d-block mb-1">Relatório Consolidado de Ocorrências e Tratativas:</small>
+            <pre class="bg-light p-3 rounded small border mb-0" style="white-space: pre-wrap;">{{ controle.relatorio_ocorrencias|default:"Sem ocorrências registradas." }}</pre>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 6: SANÇÕES E PAAI -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-primary text-white py-2 px-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-shield-exclamation me-2"></i>SEÇÃO 6: SANÇÕES E PAAI</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Empresa Sancionada (Impedimento/Inidoneidade)?</small>
+                    <div class="fw-bold fs-6">
+                        {% if controle.empresa_sancionada == 'sim' %}
+                            <span class="badge bg-danger">Sim</span>
+                        {% elif controle.empresa_sancionada == 'nao' %}
+                            <span class="badge bg-success">Não</span>
+                        {% else %}
+                            <span class="text-muted">Não informado</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if controle.empresa_sancionada == 'sim' %}
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Documentação Comprobatória Inserida no SILOMS?</small>
+                    <div class="fw-bold">
+                        {% if controle.doc_sancao_siloms == 'sim' %}
+                            <i class="bi bi-check-circle-fill text-success"></i> Sim
+                        {% elif controle.doc_sancao_siloms == 'nao' %}
+                            <i class="bi bi-x-circle-fill text-danger"></i> Não
+                        {% else %}
+                            <span class="text-muted">Não informado</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if controle.sancao_observacao %}
+                <div class="col-md-12">
+                    <small class="text-muted d-block">Observações / Detalhamento da Sanção</small>
+                    <div class="alert alert-danger p-2 mb-0 small border-danger">{{ controle.sancao_observacao|linebreaksbr }}</div>
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Ocorrências Ativas Reincidentes por Atraso/Descumprimento?</small>
+                    <div class="fw-bold">{{ controle.get_ocorrencias_ativas_empresa_display }}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Necessária Solicitação de Abertura de PAAI neste mês?</small>
+                    <div class="fw-bold">
+                        {% if controle.necessidade_paai == 'sim' %}
+                            <span class="badge bg-danger fs-6">Sim</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark border">Não</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if controle.paai_justificativa %}
+                <div class="col-md-12">
+                    <small class="text-muted d-block">Detalhamento de Infrações / Justificativa PAAI</small>
+                    <div class="alert alert-danger p-3 mb-0 small border-danger">{{ controle.paai_justificativa|linebreaksbr }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- OBSERVAÇÕES GERAIS -->
+    {% if controle.observacao %}
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-secondary text-white py-2 px-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-card-text me-2"></i>OBSERVAÇÕES GERAIS</h6>
+        </div>
+        <div class="card-body">
+            <div class="bg-light p-3 rounded small border">{{ controle.observacao|linebreaksbr }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- APONTAMENTOS DA ACI -->
+    {% if apontamentos %}
+    <div class="card shadow-sm border-0 rounded-3 border-warning mb-4">
+        <div class="card-header bg-warning bg-opacity-25 py-2 px-3">
+            <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-chat-left-text me-2"></i>Histórico de Apontamentos da ACI</h6>
+        </div>
+        <div class="card-body">
+            {% for a in apontamentos %}
+            <div class="alert alert-warning mb-2 border-warning">
+                <small class="text-muted d-block mb-1">
+                    <i class="bi bi-clock me-1"></i>{{ a.data_registro|date:"d/m/Y H:i" }} — <strong>{{ a.autor.username }}</strong>
+                </small>
+                <div class="small text-dark">{{ a.descricao|linebreaksbr }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- AÇÕES DA ACI AUDITORA -->
     {% if is_auditor %}
-    <div class="card shadow-sm border-0 rounded-3 mb-4"><div class="card-body d-flex gap-2 justify-content-end flex-wrap">
-        {% if controle.status != 'ok' %}
-        <a href="{% url 'alterar_status_execucao' controle.id 'ok' %}" class="btn btn-success"><i class="bi bi-check-circle me-1"></i> Aprovar</a>
-        {% endif %}
-        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalCorrecao"><i class="bi bi-exclamation-triangle me-1"></i> Solicitar Correção</button>
-    </div></div>
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body d-flex gap-2 justify-content-end flex-wrap align-items-center">
+            <span class="me-auto text-muted small"><i class="bi bi-shield-check me-1"></i>Painel de Análise da ACI</span>
+            {% if controle.status != 'ok' %}
+            <a href="{% url 'alterar_status_execucao' controle.id 'ok' %}" class="btn btn-success fw-bold shadow-sm">
+                <i class="bi bi-check-circle me-1"></i> Aprovar Livro do Fiscal (OK)
+            </a>
+            {% endif %}
+            <button type="button" class="btn btn-warning fw-bold shadow-sm text-dark" data-bs-toggle="modal" data-bs-target="#modalCorrecao">
+                <i class="bi bi-exclamation-triangle me-1"></i> Solicitar Correção
+            </button>
+        </div>
+    </div>
+
     <!-- Modal Correção -->
-    <div class="modal fade" id="modalCorrecao" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
-        <form method="post" action="{% url 'alterar_status_execucao' controle.id 'correcao' %}">{% csrf_token %}
-            <div class="modal-header bg-warning"><h5 class="modal-title"><i class="bi bi-exclamation-triangle me-1"></i> Solicitar Correção</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body"><label class="form-label fw-bold">Justificativa <span class="text-danger">*</span></label><textarea name="justificativa" class="form-control" rows="3" required></textarea></div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-warning">Enviar</button></div>
-        </form>
-    </div></div></div>
+    <div class="modal fade" id="modalCorrecao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{% url 'alterar_status_execucao' controle.id 'correcao' %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle me-1"></i> Solicitar Correção</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label fw-bold">Descreva os apontamentos e inconsistências <span class="text-danger">*</span></label>
+                        <textarea name="justificativa" class="form-control" rows="4" placeholder="Descreva os ajustes requeridos ao fiscal..." required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning fw-bold text-dark">Enviar Apontamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

@@ -393,6 +393,46 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(res_ok.context['apontamentos'].count(), 1)
         self.assertContains(res_ok, "Fatura NF-1001 com valor divergente.")
 
+    def test_visualizar_exibe_todas_secoes_e_campos(self):
+        """Verifica que a visualização online exibe todas as 6 seções e campos do Livro do Fiscal para a ACI."""
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=5,
+            ano_referencia=2026,
+            status='entregue',
+            detalhamento_cronograma="Cronograma 100% em dia",
+            alteracao_cronograma="sim",
+            alteracao_cronograma_desc="Ajuste autorizado pelo fiscal",
+            empresa_sancionada="sim",
+            doc_sancao_siloms="sim",
+            sancao_observacao="Sanção aplicada em 2025",
+            necessidade_paai="sim",
+            paai_justificativa="Infração contratual grave",
+            observacao="Observação de teste ACI"
+        )
+
+        url = reverse('visualizar_controle_execucao', kwargs={'pk': ctrl.id})
+        self.client.login(username='auditor1', password='password123')
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, 200)
+        # Seções
+        self.assertContains(res, "SEÇÃO 1: IDENTIFICAÇÃO DO CONTRATO E DA EQUIPE")
+        self.assertContains(res, "SEÇÃO 2: CONTROLE DE PRAZOS E SILOMS")
+        self.assertContains(res, "SEÇÃO 3: EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA")
+        self.assertContains(res, "SEÇÃO 4: CRONOGRAMA E MEDIÇÃO DE RESULTADOS")
+        self.assertContains(res, "SEÇÃO 5: OCORRÊNCIAS E TRATATIVAS")
+        self.assertContains(res, "SEÇÃO 6: SANÇÕES E PAAI")
+        self.assertContains(res, "OBSERVAÇÕES GERAIS")
+
+        # Conteúdo específico dos campos que faltavam
+        self.assertContains(res, "Cronograma 100% em dia")
+        self.assertContains(res, "Ajuste autorizado pelo fiscal")
+        self.assertContains(res, "Sanção aplicada em 2025")
+        self.assertContains(res, "Infração contratual grave")
+        self.assertContains(res, "Observação de teste ACI")
+
     def test_reenvio_formulario_atualiza_sem_duplicar(self):
         """Testa que o reenvio do formulário para o mesmo contrato/mês atualiza o registro existente."""
         hoje = date.today()
