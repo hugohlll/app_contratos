@@ -610,7 +610,7 @@ def dashboard_prestacao(request):
     todos_controles_exec = ControleExecucao.objects.filter(
         ano_referencia__gte=min_ano_6,
         contrato__in=contratos_vigentes
-    ).order_by('id')
+    ).prefetch_related('historico_observacoes').order_by('id')
 
     execucoes_map = {}
     for ex in todos_controles_exec:
@@ -643,6 +643,14 @@ def dashboard_prestacao(request):
         apontamentos_slides = list(prestacao.apontamentos.select_related('autor').all()) if prestacao else []
         apontamentos_controle = list(controle.apontamentos.select_related('autor').all()) if controle else []
         
+        obs_controle = ''
+        if controle:
+            historico_ctrl = list(controle.historico_observacoes.all())
+            if historico_ctrl:
+                obs_controle = historico_ctrl[-1].observacao
+            elif controle.observacao:
+                obs_controle = controle.observacao.strip()
+
         entregas_mes_selecionado.append({
             'contrato': c,
             'prestacao': prestacao,
@@ -650,6 +658,7 @@ def dashboard_prestacao(request):
             'status_prestacao': prestacao.status if prestacao else 'pendente',
             'status_controle': controle.status if controle else 'pendente',
             'observacao_fiscal': prestacao.observacao if (prestacao and prestacao.observacao) else '',
+            'observacao_controle': obs_controle,
             'apontamentos_slides': apontamentos_slides,
             'apontamentos_controle': apontamentos_controle,
         })

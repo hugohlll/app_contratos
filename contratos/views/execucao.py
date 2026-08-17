@@ -227,6 +227,7 @@ def visualizar_controle_execucao(request, pk):
 
     apontamentos = controle.apontamentos.select_related('autor').all()
     ocorrencias_estruturadas = controle.ocorrencias.all()
+    historico_observacoes = controle.historico_observacoes.select_related('agente', 'agente__posto').all()
 
     return render(request, 'contratos/execucao/visualizar.html', {
         'controle': controle,
@@ -234,6 +235,7 @@ def visualizar_controle_execucao(request, pk):
         'integrantes': integrantes,
         'apontamentos': apontamentos,
         'ocorrencias_estruturadas': ocorrencias_estruturadas,
+        'historico_observacoes': historico_observacoes,
         'is_admin': is_admin(request.user),
         'is_auditor': is_auditor(request.user),
     })

@@ -877,4 +877,37 @@ class DashboardReengenhariaSubAbasTests(BaseSetorTestSetup):
         self.assertContains(response, 'bi-journal-arrow-up')
         self.assertContains(response, 'Entregue')
 
+    def test_observacoes_livro_fiscal_exibidas_no_dashboard_e_visualizar(self):
+        """Verifica se observações do Livro do Fiscal aparecem no Acompanhamento Detalhado do Dashboard e na tela Visualizar."""
+        from contratos.models import ControleExecucao, HistoricoObservacaoExecucao
+
+        self.client.force_login(self.admin_user)
+
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=3,
+            ano_referencia=2026,
+            status='entregue',
+            observacao="Obs Inicial Legada"
+        )
+        HistoricoObservacaoExecucao.objects.create(
+            controle=ctrl,
+            agente=self.agente,
+            observacao="Resposta Detalhada do Fiscal do Livro"
+        )
+
+        # 1. Dashboard - Acompanhamento Detalhado
+        url_dash = reverse('dashboard_prestacao') + "?mes=3&ano=2026"
+        res_dash = self.client.get(url_dash)
+        self.assertEqual(res_dash.status_code, 200)
+        self.assertContains(res_dash, "Resposta Detalhada do Fiscal do Livro")
+
+        # 2. Tela Visualizar Livro do Fiscal
+        url_vis = reverse('visualizar_controle_execucao', kwargs={'pk': ctrl.id})
+        res_vis = self.client.get(url_vis)
+        self.assertEqual(res_vis.status_code, 200)
+        self.assertContains(res_vis, "OBSERVAÇÕES E RESPOSTAS DO FISCAL")
+        self.assertContains(res_vis, "Resposta Detalhada do Fiscal do Livro")
+
 
