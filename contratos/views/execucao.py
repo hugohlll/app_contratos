@@ -836,15 +836,6 @@ def gerar_livro_fiscal_pdf(request, pk):
     story.append(KeepTogether(sec6_flowables))
     story.append(Spacer(1, 10))
 
-    if controle.observacao:
-        obs_flowables = [
-            make_section_header("OBSERVAÇÕES GERAIS"),
-            Spacer(1, 4),
-            make_kv_table([["Observações:", controle.observacao]])
-        ]
-        story.append(KeepTogether(obs_flowables))
-        story.append(Spacer(1, 10))
-
     # --- ASSINATURAS DA COMISSÃO DE FISCALIZAÇÃO ---
     MESES_PT = [
         '', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',

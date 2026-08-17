@@ -902,12 +902,11 @@ class DashboardReengenhariaSubAbasTests(BaseSetorTestSetup):
         self.assertEqual(res_dash.status_code, 200)
         self.assertContains(res_dash, "Resposta Detalhada do Fiscal do Livro")
 
-        # 2. Tela Visualizar Livro do Fiscal
+        # 2. Tela Visualizar Livro do Fiscal (não deve conter observações ou histórico)
         url_vis = reverse('visualizar_controle_execucao', kwargs={'pk': ctrl.id})
         res_vis = self.client.get(url_vis)
         self.assertEqual(res_vis.status_code, 200)
-        self.assertContains(res_vis, "OBSERVAÇÕES E RESPOSTAS DO FISCAL")
-        self.assertContains(res_vis, "Resposta Detalhada do Fiscal do Livro")
+        self.assertNotContains(res_vis, "OBSERVAÇÕES E RESPOSTAS DO FISCAL")
 
     def test_apenas_mensagem_mais_recente_exibida_no_acompanhamento_detalhado(self):
         """Verifica se apenas a mensagem mais recente (entre ACI e Fiscal/Gestor) é exibida no Acompanhamento Detalhado."""

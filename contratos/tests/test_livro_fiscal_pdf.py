@@ -216,9 +216,8 @@ class LivroFiscalPDFTestCase(TestCase):
         self.assertIn('Atesto a veracidade das informações prestadas', full_text)
         self.assertIn('MENDES', full_text)
 
-        # Verificar seção de observações (presente pois controle_ok tem observação)
-        self.assertIn('OBSERVAÇÕES GERAIS', full_text)
-        self.assertIn('Tudo ok', full_text)
+        # Verificar que a seção de observações não está mais presente no PDF
+        self.assertNotIn('OBSERVAÇÕES GERAIS', full_text)
 
         # Verificar garantia vencida com providências (presente pois controle_ok tem garantia_vigente='nao')
         self.assertIn('Notificação emitida para renovação da fiança bancária', full_text)
