@@ -24,7 +24,8 @@ from reportlab.platypus import (
 
 from contratos.models import (
     Contrato, Agente, Integrante, Comissao, CalendarioPrestacao,
-    ControleExecucao, RegistroFatura, OcorrenciaContratual, ApontamentoCorrecaoExecucao
+    ControleExecucao, RegistroFatura, OcorrenciaContratual, ApontamentoCorrecaoExecucao,
+    HistoricoObservacaoExecucao
 )
 from contratos.forms import ControleExecucaoForm
 from contratos.utils import is_admin, is_auditor, admin_required, auditor_required
@@ -99,12 +100,21 @@ def formulario_execucao(request, contrato_id):
     if request.method == 'POST':
         form = ControleExecucaoForm(request.POST, contrato=contrato, instance=controle_existente, dentro_prazo_aditivo=dentro_prazo_aditivo)
         if form.is_valid():
+            from django.utils import timezone
             controle = form.save(commit=False)
             controle.contrato = contrato
             controle.mes_referencia = filtro_mes
             controle.ano_referencia = filtro_ano
             controle.status = 'entregue'
+            controle.data_envio = timezone.now()
             controle.save()
+
+            if controle.observacao and controle.observacao.strip():
+                HistoricoObservacaoExecucao.objects.create(
+                    controle=controle,
+                    agente=controle.agente,
+                    observacao=controle.observacao.strip()
+                )
 
             # Processar Faturas (JSON enviado pelo frontend)
             faturas_json_str = request.POST.get('faturas_json', '[]')

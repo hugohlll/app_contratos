@@ -731,3 +731,20 @@ class ApontamentoCorrecaoExecucao(models.Model):
 
     def __str__(self):
         return f"Apontamento #{self.id} - {self.controle}"
+
+
+class HistoricoObservacaoExecucao(models.Model):
+    controle = models.ForeignKey(
+        ControleExecucao, on_delete=models.CASCADE, related_name='historico_observacoes'
+    )
+    agente = models.ForeignKey(Agente, on_delete=models.SET_NULL, null=True, blank=True)
+    observacao = models.TextField("Observação / Resposta do Fiscal")
+    data_envio = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Histórico de Observação (Execução)"
+        verbose_name_plural = "Históricos de Observação (Execução)"
+        ordering = ['data_envio']
+
+    def __str__(self):
+        return f"Observação #{self.id} - {self.controle}"

@@ -578,6 +578,145 @@ class TextoApontamentosTests(BaseSetorTestSetup):
         self.assertEqual(res.status_code, 200)
         self.assertNotContains(res, "dialogo-chat")
 
+    def test_livro_fiscal_multiplas_observacoes_historico_cronologico(self):
+        """Verifica se múltiplas observações do fiscal e apontamentos da ACI são ordenados cronologicamente."""
+        from contratos.models import ControleExecucao, ApontamentoCorrecaoExecucao, HistoricoObservacaoExecucao
+        from django.utils import timezone
+
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        m_ref = ultimo_dia_mes_anterior.month
+        a_ref = ultimo_dia_mes_anterior.year
+
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=m_ref,
+            ano_referencia=a_ref,
+            status='correcao',
+            observacao="Obs 1 inicial"
+        )
+
+        agora = timezone.now()
+        t1 = agora - timedelta(hours=3)
+        t2 = agora - timedelta(hours=2)
+        t3 = agora - timedelta(hours=1)
+
+        # 1. Primeira obs do fiscal at t1
+        obs1 = HistoricoObservacaoExecucao.objects.create(
+            controle=ctrl, agente=self.agente, observacao="Obs 1 inicial"
+        )
+        obs1.data_envio = t1
+        obs1.save()
+
+        # 2. Apontamento ACI at t2
+        apt = ApontamentoCorrecaoExecucao.objects.create(
+            controle=ctrl, autor=self.admin_user, descricao="Apontamento ACI 1"
+        )
+        apt.data_registro = t2
+        apt.save()
+
+        # 3. Segunda obs do fiscal at t3 (resposta ao apontamento)
+        obs2 = HistoricoObservacaoExecucao.objects.create(
+            controle=ctrl, agente=self.agente, observacao="Obs 2 resposta conforme solicitado"
+        )
+        obs2.data_envio = t3
+        obs2.save()
+
+        url = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, 200)
+        content = res.content.decode('utf-8')
+        chat_idx = content.find("dialogo-chat")
+        self.assertNotEqual(chat_idx, -1)
+        chat_content = content[chat_idx:]
+
+        pos_obs1 = chat_content.find("Obs 1 inicial")
+        pos_aci1 = chat_content.find("Apontamento ACI 1")
+        pos_obs2 = chat_content.find("Obs 2 resposta conforme solicitado")
+
+        self.assertNotEqual(pos_obs1, -1)
+        self.assertNotEqual(pos_aci1, -1)
+        self.assertNotEqual(pos_obs2, -1)
+        # Garante ordem cronológica exata: Obs 1 < Apontamento 1 < Obs 2
+        self.assertTrue(pos_obs1 < pos_aci1 < pos_obs2)
+
+    def test_slides_multiplas_observacoes_historico_cronologico(self):
+        """Verifica ordem cronológica para histórico de slides em múltiplas rodadas."""
+        from contratos.models import PrestacaoContas, ApontamentoCorrecao
+        from django.utils import timezone
+
+        agora = timezone.now()
+        t1 = agora - timedelta(hours=3)
+        t2 = agora - timedelta(hours=2)
+        t3 = agora - timedelta(hours=1)
+
+        pdf1 = self._make_pdf("s1.pdf")
+        pdf2 = self._make_pdf("s2.pdf")
+
+        p1 = PrestacaoContas.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=3, ano_referencia=2026,
+            arquivo=pdf1, status='correcao', observacao="Envio de slides v1"
+        )
+        p1.data_envio = t1
+        p1.save()
+
+        apt = ApontamentoCorrecao.objects.create(
+            prestacao=p1, autor=self.admin_user, descricao="Ajustar slide 3"
+        )
+        apt.data_registro = t2
+        apt.save()
+
+        p2 = PrestacaoContas.objects.create(
+            contrato=self.contrato, agente=self.agente,
+            mes_referencia=3, ano_referencia=2026,
+            arquivo=pdf2, status='entregue', observacao="Envio de slides v2 corrigido"
+        )
+        p2.data_envio = t3
+        p2.save()
+
+        url = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id}) + "?mes=3&ano=2026"
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, 200)
+        content = res.content.decode('utf-8')
+
+        pos_v1 = content.find("Envio de slides v1")
+        pos_aci = content.find("Ajustar slide 3")
+        pos_v2 = content.find("Envio de slides v2 corrigido")
+
+        self.assertNotEqual(pos_v1, -1)
+        self.assertNotEqual(pos_aci, -1)
+        self.assertNotEqual(pos_v2, -1)
+        self.assertTrue(pos_v1 < pos_aci < pos_v2)
+
+    def test_fallback_observacao_legado_controle_execucao(self):
+        """Garante fallback para observacao legada se não houver histórico dedicado."""
+        from contratos.models import ControleExecucao
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        m_ref = ultimo_dia_mes_anterior.month
+        a_ref = ultimo_dia_mes_anterior.year
+
+        ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=m_ref,
+            ano_referencia=a_ref,
+            status='entregue',
+            observacao="Observacao legada anterior"
+        )
+
+        url = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Observacao legada anterior")
+
 
 # ===================================================================
 # 10. FILTROS DE BUSCA E STATUS NA MATRIZ DO DASHBOARD

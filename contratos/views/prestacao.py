@@ -223,14 +223,30 @@ def upload_prestacao(request, contrato_id):
     dialogo_execucao = []
     if controle_execucao:
         for apt in controle_execucao.apontamentos.select_related('autor').all():
-            autor_nome = "ACI"
             dialogo_execucao.append({
                 'tipo': 'aci',
-                'autor': autor_nome,
+                'autor': "ACI",
                 'data': apt.data_registro,
                 'texto': apt.descricao,
             })
-        if controle_execucao.observacao and controle_execucao.observacao.strip():
+        
+        obs_historico = controle_execucao.historico_observacoes.select_related('agente', 'agente__posto').all()
+        if obs_historico.exists():
+            for obs in obs_historico:
+                ag = obs.agente or controle_execucao.agente
+                if ag and hasattr(ag, 'posto') and ag.posto:
+                    fiscal_nome = f"{ag.posto.sigla} {ag.nome_de_guerra}"
+                elif ag:
+                    fiscal_nome = ag.nome_de_guerra or ag.nome_completo
+                else:
+                    fiscal_nome = "Fiscal Responsável"
+                dialogo_execucao.append({
+                    'tipo': 'fiscal',
+                    'autor': fiscal_nome,
+                    'data': obs.data_envio,
+                    'texto': obs.observacao.strip(),
+                })
+        elif controle_execucao.observacao and controle_execucao.observacao.strip():
             ag = controle_execucao.agente
             if ag and hasattr(ag, 'posto') and ag.posto:
                 fiscal_nome = f"{ag.posto.sigla} {ag.nome_de_guerra}"
