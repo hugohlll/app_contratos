@@ -96,6 +96,8 @@ urlpatterns = [
     path('portal/prestacao/toggle_apresentacao/', prestacao.toggle_apresentacao_prestacao, name='toggle_apresentacao_prestacao'),
     path('portal/prestacao/consolidar/', prestacao.consolidar_apresentacao, name='consolidar_apresentacao'),
     path('portal/prestacao/gestores/reordenar/', prestacao.reordenar_gestores_prio, name='reordenar_gestores_prio'),
+    path('portal/prestacao/apresentacao/modo/', prestacao.alternar_modo_apresentacao, name='alternar_modo_apresentacao'),
+    path('portal/prestacao/apresentacao/reordenar-livre/', prestacao.reordenar_apresentacao_livre, name='reordenar_apresentacao_livre'),
     path('portal/prestacao/calendario/salvar/', prestacao.salvar_calendario_prestacao, name='salvar_calendario_prestacao'),
 
     # Rotas adicionais para Setores (Dashboard)

@@ -330,6 +330,7 @@ class PrestacaoContas(models.Model):
     compor_apresentacao = models.BooleanField(
         "Compor Apresentação", default=False, help_text="Marque se este slide fará parte da apresentação consolidada"
     )
+    ordem_apresentacao = models.FloatField("Ordem na Apresentação", default=0.0, db_index=True)
     data_envio = models.DateTimeField(auto_now_add=True)
     observacao = models.TextField("Observação", blank=True)
 
@@ -454,6 +455,7 @@ class PrestacaoContasSetor(models.Model):
     compor_apresentacao = models.BooleanField(
         "Compor Apresentação", default=False, help_text="Marque se este slide fará parte da apresentação consolidada"
     )
+    ordem_apresentacao = models.FloatField("Ordem na Apresentação", default=0.0, db_index=True)
     data_envio = models.DateTimeField(auto_now_add=True)
     observacao = models.TextField("Observação", blank=True)
 
@@ -555,3 +557,25 @@ class SlideApresentacao(models.Model):
 
     def __str__(self):
         return f"Slide {self.nome_slide} ({self.get_tipo_apresentacao_display()}) - {self.mes_referencia:02d}/{self.ano_referencia}"
+
+
+class ConfiguracaoApresentacao(models.Model):
+    TIPO_CHOICES = [
+        ('fiscais', 'Fiscais'),
+        ('gestores', 'Gestores'),
+    ]
+    tipo_apresentacao = models.CharField("Tipo de Apresentação", max_length=15, choices=TIPO_CHOICES)
+    ano_referencia = models.IntegerField("Ano de Referência")
+    mes_referencia = models.IntegerField("Mês de Referência")
+    modo_livre = models.BooleanField("Modo Livre de Apresentação", default=False, help_text="Se ativado, permite ordenar livremente a apresentação ignorando restrições de posto/graduação.")
+    data_atualizacao = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Configuração da Apresentação"
+        verbose_name_plural = "Configurações da Apresentação"
+        unique_together = ('tipo_apresentacao', 'ano_referencia', 'mes_referencia')
+
+    def __str__(self):
+        modo = "Livre" if self.modo_livre else "Antiguidade"
+        return f"Config {self.get_tipo_apresentacao_display()} - {self.mes_referencia:02d}/{self.ano_referencia} ({modo})"
+

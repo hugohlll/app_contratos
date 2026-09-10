@@ -75,11 +75,11 @@ class ContratoAdmin(admin.ModelAdmin):
     search_fields = ('numero', 'pag', 'empresa__razao_social')
     autocomplete_fields = ['empresa']
 
-from .models import PrestacaoContas, Setor, CargoRegimental, PrestacaoContasSetor, ApontamentoCorrecaoSetor
+from .models import PrestacaoContas, Setor, CargoRegimental, PrestacaoContasSetor, ApontamentoCorrecaoSetor, SlideApresentacao, ConfiguracaoApresentacao
 
 @admin.register(PrestacaoContas)
 class PrestacaoContasAdmin(admin.ModelAdmin):
-    list_display = ('contrato', 'mes_referencia', 'ano_referencia', 'data_envio', 'agente')
+    list_display = ('contrato', 'mes_referencia', 'ano_referencia', 'data_envio', 'agente', 'compor_apresentacao', 'ordem_apresentacao')
     list_filter = ('ano_referencia', 'mes_referencia')
     search_fields = ('contrato__numero', 'agente__nome_de_guerra')
     readonly_fields = ('data_envio',)
@@ -99,7 +99,7 @@ class CargoRegimentalAdmin(admin.ModelAdmin):
 
 @admin.register(PrestacaoContasSetor)
 class PrestacaoContasSetorAdmin(admin.ModelAdmin):
-    list_display = ('setor', 'mes_referencia', 'ano_referencia', 'data_envio', 'agente')
+    list_display = ('setor', 'mes_referencia', 'ano_referencia', 'data_envio', 'agente', 'compor_apresentacao', 'ordem_apresentacao')
     list_filter = ('ano_referencia', 'mes_referencia', 'status')
     search_fields = ('setor__nome', 'setor__sigla', 'agente__nome_de_guerra')
     readonly_fields = ('data_envio',)
@@ -108,3 +108,14 @@ class PrestacaoContasSetorAdmin(admin.ModelAdmin):
 class ApontamentoCorrecaoSetorAdmin(admin.ModelAdmin):
     list_display = ('prestacao', 'autor', 'data_registro')
     search_fields = ('prestacao__setor__nome', 'autor__username')
+
+@admin.register(SlideApresentacao)
+class SlideApresentacaoAdmin(admin.ModelAdmin):
+    list_display = ('nome_slide', 'tipo_apresentacao', 'ano_referencia', 'mes_referencia', 'indice_posicao', 'data_registro')
+    list_filter = ('tipo_apresentacao', 'ano_referencia', 'mes_referencia')
+    search_fields = ('nome_slide',)
+
+@admin.register(ConfiguracaoApresentacao)
+class ConfiguracaoApresentacaoAdmin(admin.ModelAdmin):
+    list_display = ('tipo_apresentacao', 'ano_referencia', 'mes_referencia', 'modo_livre', 'data_atualizacao')
+    list_filter = ('tipo_apresentacao', 'ano_referencia', 'mes_referencia', 'modo_livre')

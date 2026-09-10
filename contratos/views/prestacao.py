@@ -13,7 +13,7 @@ from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils import timezone
 
-from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao, Setor, PrestacaoContasSetor, ApontamentoCorrecaoSetor, SlideApresentacao
+from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao, Setor, PrestacaoContasSetor, ApontamentoCorrecaoSetor, SlideApresentacao, ConfiguracaoApresentacao
 from contratos.forms import PrestacaoContasUploadForm, PrestacaoContasSetorUploadForm
 from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx, get_filtro_ativos, is_admin, is_auditor
 
@@ -219,22 +219,39 @@ def _get_dashboard_stats(ano, mes):
     prio_correcao = prestacoes_filtradas.filter(status='correcao', compor_apresentacao=True).count()
     prio_pendentes = prestacoes_filtradas.filter(status='pendente', compor_apresentacao=True).count()
     
-    # Lista ordenada de gestores prioritários
-    lista_gestores_prio = prestacoes_filtradas.filter(
-        compor_apresentacao=True
-    ).select_related('agente', 'agente__posto', 'contrato').order_by(
-        'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
-    )
+    # Configuração de Modo Livre (Fiscais)
+    config_fiscais = ConfiguracaoApresentacao.objects.filter(
+        tipo_apresentacao='fiscais',
+        ano_referencia=ano,
+        mes_referencia=mes
+    ).first()
+    modo_livre_fiscais = config_fiscais.modo_livre if config_fiscais else False
+
+    # Lista de gestores prioritários
+    if modo_livre_fiscais:
+        lista_gestores_prio = prestacoes_filtradas.filter(
+            compor_apresentacao=True
+        ).select_related('agente', 'agente__posto', 'contrato').order_by(
+            'ordem_apresentacao', 'agente__posto__senioridade', 'agente__nome_de_guerra'
+        )
+    else:
+        lista_gestores_prio = prestacoes_filtradas.filter(
+            compor_apresentacao=True
+        ).select_related('agente', 'agente__posto', 'contrato').order_by(
+            'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
+        )
     
     gestores_prio = []
     for g in lista_gestores_prio:
         gestores_prio.append({
             'is_slide': False,
+            'prestacao_id': g.id,
             'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
             'agente_id': g.agente.id if g.agente else None,
             'posto_id': g.agente.posto.id if g.agente and g.agente.posto else None,
             'contrato': g.contrato.numero,
-            'status': g.status
+            'status': g.status,
+            'ordem_apresentacao': g.ordem_apresentacao
         })
         
     slides_fiscais = list(SlideApresentacao.objects.filter(
@@ -243,17 +260,31 @@ def _get_dashboard_stats(ano, mes):
         mes_referencia=mes
     ).order_by('indice_posicao', 'data_registro'))
     
-    # Inserir os slides na lista baseado no indice_posicao
-    for s in slides_fiscais:
-        idx = int(s.indice_posicao)
-        if idx > len(gestores_prio):
-            idx = len(gestores_prio)
-        gestores_prio.insert(idx, {
-            'is_slide': True,
-            'id': s.id,
-            'nome_slide': s.nome_slide,
-            'indice_posicao': s.indice_posicao
-        })
+    if modo_livre_fiscais:
+        itens_com_ordem = []
+        for g in gestores_prio:
+            itens_com_ordem.append((g['ordem_apresentacao'], 0, g))
+        for s in slides_fiscais:
+            itens_com_ordem.append((s.indice_posicao, 1, {
+                'is_slide': True,
+                'id': s.id,
+                'nome_slide': s.nome_slide,
+                'indice_posicao': s.indice_posicao
+            }))
+        itens_com_ordem.sort(key=lambda x: (x[0], x[1]))
+        gestores_prio = [x[2] for x in itens_com_ordem]
+    else:
+        # Inserir os slides na lista baseado no indice_posicao
+        for s in slides_fiscais:
+            idx = int(s.indice_posicao)
+            if idx > len(gestores_prio):
+                idx = len(gestores_prio)
+            gestores_prio.insert(idx, {
+                'is_slide': True,
+                'id': s.id,
+                'nome_slide': s.nome_slide,
+                'indice_posicao': s.indice_posicao
+            })
         
     # Estatísticas de Setores
     total_setores = Setor.objects.count()
@@ -274,22 +305,39 @@ def _get_dashboard_stats(ano, mes):
     prio_correcao_setores = prestacoes_setor_filtradas.filter(status='correcao', compor_apresentacao=True).count()
     prio_pendentes_setores = prestacoes_setor_filtradas.filter(status='pendente', compor_apresentacao=True).count()
     
+    # Configuração de Modo Livre (Gestores/Setores)
+    config_gestores = ConfiguracaoApresentacao.objects.filter(
+        tipo_apresentacao='gestores',
+        ano_referencia=ano,
+        mes_referencia=mes
+    ).first()
+    modo_livre_gestores = config_gestores.modo_livre if config_gestores else False
+
     # Lista ordenada de gestores de setores prioritários
-    lista_gestores_setores = prestacoes_setor_filtradas.filter(
-        compor_apresentacao=True
-    ).select_related('agente', 'agente__posto', 'setor').order_by(
-        'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
-    )
+    if modo_livre_gestores:
+        lista_gestores_setores = prestacoes_setor_filtradas.filter(
+            compor_apresentacao=True
+        ).select_related('agente', 'agente__posto', 'setor').order_by(
+            'ordem_apresentacao', 'agente__posto__senioridade', 'agente__nome_de_guerra'
+        )
+    else:
+        lista_gestores_setores = prestacoes_setor_filtradas.filter(
+            compor_apresentacao=True
+        ).select_related('agente', 'agente__posto', 'setor').order_by(
+            'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
+        )
     
     gestores_setores = []
     for g in lista_gestores_setores:
         gestores_setores.append({
             'is_slide': False,
+            'prestacao_id': g.id,
             'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
             'agente_id': g.agente.id if g.agente else None,
             'posto_id': g.agente.posto.id if g.agente and g.agente.posto else None,
             'setor': g.setor.sigla or g.setor.nome,
-            'status': g.status
+            'status': g.status,
+            'ordem_apresentacao': g.ordem_apresentacao
         })
 
     slides_gestores = list(SlideApresentacao.objects.filter(
@@ -298,17 +346,31 @@ def _get_dashboard_stats(ano, mes):
         mes_referencia=mes
     ).order_by('indice_posicao', 'data_registro'))
     
-    # Inserir os slides na lista baseado no indice_posicao
-    for s in slides_gestores:
-        idx = int(s.indice_posicao)
-        if idx > len(gestores_setores):
-            idx = len(gestores_setores)
-        gestores_setores.insert(idx, {
-            'is_slide': True,
-            'id': s.id,
-            'nome_slide': s.nome_slide,
-            'indice_posicao': s.indice_posicao
-        })
+    if modo_livre_gestores:
+        itens_com_ordem = []
+        for g in gestores_setores:
+            itens_com_ordem.append((g['ordem_apresentacao'], 0, g))
+        for s in slides_gestores:
+            itens_com_ordem.append((s.indice_posicao, 1, {
+                'is_slide': True,
+                'id': s.id,
+                'nome_slide': s.nome_slide,
+                'indice_posicao': s.indice_posicao
+            }))
+        itens_com_ordem.sort(key=lambda x: (x[0], x[1]))
+        gestores_setores = [x[2] for x in itens_com_ordem]
+    else:
+        # Inserir os slides na lista baseado no indice_posicao
+        for s in slides_gestores:
+            idx = int(s.indice_posicao)
+            if idx > len(gestores_setores):
+                idx = len(gestores_setores)
+            gestores_setores.insert(idx, {
+                'is_slide': True,
+                'id': s.id,
+                'nome_slide': s.nome_slide,
+                'indice_posicao': s.indice_posicao
+            })
     
     return {
         'total_contratos': total_contratos,
@@ -321,6 +383,7 @@ def _get_dashboard_stats(ano, mes):
         'prio_correcao': prio_correcao,
         'prio_pendentes': prio_pendentes,
         'gestores_prio': gestores_prio,
+        'modo_livre_fiscais': modo_livre_fiscais,
         
         # Setores
         'total_setores': total_setores,
@@ -334,7 +397,8 @@ def _get_dashboard_stats(ano, mes):
         'prio_correcao_setores': prio_correcao_setores,
         'prio_pendentes_setores': prio_pendentes_setores,
         
-        'gestores_setores': gestores_setores
+        'gestores_setores': gestores_setores,
+        'modo_livre_gestores': modo_livre_gestores
     }
 
 
@@ -953,13 +1017,29 @@ def consolidar_apresentacao(request):
         contrato__in=contratos_vigentes
     ).values('contrato_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
 
-    prestacoes = list(PrestacaoContas.objects.filter(
-        id__in=latest_ids,
-        compor_apresentacao=True,
-        status='ok'
-    ).select_related('agente', 'agente__posto', 'contrato').order_by(
-        'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
-    ))
+    config_apres = ConfiguracaoApresentacao.objects.filter(
+        tipo_apresentacao='fiscais',
+        ano_referencia=filtro_ano,
+        mes_referencia=filtro_mes
+    ).first()
+    modo_livre = config_apres.modo_livre if config_apres else False
+
+    if modo_livre:
+        prestacoes = list(PrestacaoContas.objects.filter(
+            id__in=latest_ids,
+            compor_apresentacao=True,
+            status='ok'
+        ).select_related('agente', 'agente__posto', 'contrato').order_by(
+            'ordem_apresentacao', 'agente__posto__senioridade', 'agente__nome_de_guerra'
+        ))
+    else:
+        prestacoes = list(PrestacaoContas.objects.filter(
+            id__in=latest_ids,
+            compor_apresentacao=True,
+            status='ok'
+        ).select_related('agente', 'agente__posto', 'contrato').order_by(
+            'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
+        ))
 
     slides_avulsos = list(SlideApresentacao.objects.filter(
         tipo_apresentacao='fiscais',
@@ -972,13 +1052,22 @@ def consolidar_apresentacao(request):
         qs = urlencode({'mes': filtro_mes, 'ano': filtro_ano})
         return redirect(f"{reverse('dashboard_prestacao')}?{qs}")
 
-    # Mescla as listas usando o indice_posicao
-    itens_consolidados = prestacoes.copy()
-    for s in slides_avulsos:
-        idx = int(s.indice_posicao)
-        if idx > len(itens_consolidados):
-            idx = len(itens_consolidados)
-        itens_consolidados.insert(idx, s)
+    if modo_livre:
+        itens_com_ordem = []
+        for p in prestacoes:
+            itens_com_ordem.append((p.ordem_apresentacao, 0, p))
+        for s in slides_avulsos:
+            itens_com_ordem.append((s.indice_posicao, 1, s))
+        itens_com_ordem.sort(key=lambda x: (x[0], x[1]))
+        itens_consolidados = [x[2] for x in itens_com_ordem]
+    else:
+        # Mescla as listas usando o indice_posicao
+        itens_consolidados = prestacoes.copy()
+        for s in slides_avulsos:
+            idx = int(s.indice_posicao)
+            if idx > len(itens_consolidados):
+                idx = len(itens_consolidados)
+            itens_consolidados.insert(idx, s)
 
     writer = PdfWriter()
     erros = []
@@ -1060,13 +1149,29 @@ def consolidar_apresentacao_setor(request):
         ano_referencia=filtro_ano
     ).values('setor_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
 
-    prestacoes = list(PrestacaoContasSetor.objects.filter(
-        id__in=latest_setor_ids,
-        compor_apresentacao=True,
-        status='ok'
-    ).select_related('agente', 'agente__posto', 'setor').order_by(
-        'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
-    ))
+    config_apres = ConfiguracaoApresentacao.objects.filter(
+        tipo_apresentacao='gestores',
+        ano_referencia=filtro_ano,
+        mes_referencia=filtro_mes
+    ).first()
+    modo_livre = config_apres.modo_livre if config_apres else False
+
+    if modo_livre:
+        prestacoes = list(PrestacaoContasSetor.objects.filter(
+            id__in=latest_setor_ids,
+            compor_apresentacao=True,
+            status='ok'
+        ).select_related('agente', 'agente__posto', 'setor').order_by(
+            'ordem_apresentacao', 'agente__posto__senioridade', 'agente__nome_de_guerra'
+        ))
+    else:
+        prestacoes = list(PrestacaoContasSetor.objects.filter(
+            id__in=latest_setor_ids,
+            compor_apresentacao=True,
+            status='ok'
+        ).select_related('agente', 'agente__posto', 'setor').order_by(
+            'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
+        ))
 
     slides_avulsos = list(SlideApresentacao.objects.filter(
         tipo_apresentacao='gestores',
@@ -1079,13 +1184,22 @@ def consolidar_apresentacao_setor(request):
         qs = urlencode({'mes': filtro_mes, 'ano': filtro_ano})
         return redirect(f"{reverse('dashboard_prestacao')}?{qs}&tab=setores")
 
-    # Mescla as listas usando o indice_posicao
-    itens_consolidados = prestacoes.copy()
-    for s in slides_avulsos:
-        idx = int(s.indice_posicao)
-        if idx > len(itens_consolidados):
-            idx = len(itens_consolidados)
-        itens_consolidados.insert(idx, s)
+    if modo_livre:
+        itens_com_ordem = []
+        for p in prestacoes:
+            itens_com_ordem.append((p.ordem_apresentacao, 0, p))
+        for s in slides_avulsos:
+            itens_com_ordem.append((s.indice_posicao, 1, s))
+        itens_com_ordem.sort(key=lambda x: (x[0], x[1]))
+        itens_consolidados = [x[2] for x in itens_com_ordem]
+    else:
+        # Mescla as listas usando o indice_posicao
+        itens_consolidados = prestacoes.copy()
+        for s in slides_avulsos:
+            idx = int(s.indice_posicao)
+            if idx > len(itens_consolidados):
+                idx = len(itens_consolidados)
+            itens_consolidados.insert(idx, s)
 
     writer = PdfWriter()
     erros = []
@@ -1635,4 +1749,121 @@ def reordenar_slide_avulso(request):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@login_required
+@require_POST
+def alternar_modo_apresentacao(request):
+    """
+    Alterna entre 'modo livre' e 'modo hierárquico por antiguidade' para Fiscais ou Gestores.
+    Recebe: { tipo: 'fiscais'|'gestores', ano: int, mes: int, modo_livre: bool }
+    """
+    if not is_auditor(request.user) and not is_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Acesso não autorizado.'}, status=403)
+        
+    try:
+        data = json.loads(request.body)
+        tipo = data.get('tipo')
+        ano = int(data.get('ano'))
+        mes = int(data.get('mes'))
+        modo_livre = bool(data.get('modo_livre'))
+        
+        if tipo not in ('fiscais', 'gestores'):
+            return JsonResponse({'success': False, 'error': 'Tipo inválido.'}, status=400)
+            
+        config, _ = ConfiguracaoApresentacao.objects.get_or_create(
+            tipo_apresentacao=tipo,
+            ano_referencia=ano,
+            mes_referencia=mes,
+            defaults={'modo_livre': modo_livre}
+        )
+        config.modo_livre = modo_livre
+        config.save()
+        
+        # Se estiver desativando o modo livre, restaura a ordem oficial por antiguidade
+        if not modo_livre:
+            hoje = date.today()
+            if tipo == 'fiscais':
+                contratos_vigentes = Contrato.objects.filter(
+                    vigencia_inicio__lte=hoje,
+                    vigencia_fim__gte=hoje
+                )
+                latest_ids = PrestacaoContas.objects.filter(
+                    mes_referencia=mes,
+                    ano_referencia=ano,
+                    contrato__in=contratos_vigentes
+                ).values('contrato_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
+                
+                prestacoes_hierarquicas = list(PrestacaoContas.objects.filter(
+                    id__in=latest_ids,
+                    compor_apresentacao=True
+                ).select_related('agente', 'agente__posto').order_by(
+                    'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
+                ))
+                for idx, p in enumerate(prestacoes_hierarquicas):
+                    PrestacaoContas.objects.filter(id=p.id).update(ordem_apresentacao=float(idx))
+            else:
+                latest_setor_ids = PrestacaoContasSetor.objects.filter(
+                    mes_referencia=mes,
+                    ano_referencia=ano
+                ).values('setor_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
+                
+                prestacoes_setor_hierarquicas = list(PrestacaoContasSetor.objects.filter(
+                    id__in=latest_setor_ids,
+                    compor_apresentacao=True
+                ).select_related('agente', 'agente__posto').order_by(
+                    'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
+                ))
+                for idx, p in enumerate(prestacoes_setor_hierarquicas):
+                    PrestacaoContasSetor.objects.filter(id=p.id).update(ordem_apresentacao=float(idx))
+        
+        stats = _get_dashboard_stats(ano, mes)
+        return JsonResponse({
+            'success': True,
+            'modo_livre': modo_livre,
+            'stats': stats
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@login_required
+@require_POST
+def reordenar_apresentacao_livre(request):
+    """
+    Recebe o array com todos os itens na nova ordem visual (modo livre):
+    {
+        tipo_apresentacao: 'fiscais' | 'gestores',
+        itens: [
+            { tipo: 'prestacao' | 'slide', id: 123 },
+            ...
+        ]
+    }
+    """
+    if not is_auditor(request.user) and not is_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Acesso não autorizado.'}, status=403)
+        
+    try:
+        data = json.loads(request.body)
+        tipo_apresentacao = data.get('tipo_apresentacao', 'fiscais')
+        itens = data.get('itens', [])
+        
+        for index, item in enumerate(itens):
+            item_tipo = item.get('tipo')
+            item_id = item.get('id')
+            if not item_id:
+                continue
+                
+            if item_tipo == 'slide':
+                SlideApresentacao.objects.filter(id=item_id).update(indice_posicao=float(index))
+            elif item_tipo == 'prestacao':
+                if tipo_apresentacao == 'gestores':
+                    PrestacaoContasSetor.objects.filter(id=item_id).update(ordem_apresentacao=float(index))
+                else:
+                    PrestacaoContas.objects.filter(id=item_id).update(ordem_apresentacao=float(index))
+                    
+        return JsonResponse({'success': True, 'message': 'Ordem atualizada com sucesso.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
 
