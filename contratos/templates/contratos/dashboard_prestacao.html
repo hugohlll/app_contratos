@@ -1764,11 +1764,51 @@
 
     // Lógica para adicionar e excluir Slides Avulsos
     document.addEventListener("DOMContentLoaded", function() {
+        const MAX_SLIDE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+        const slideArquivoInput = document.getElementById('slideArquivo');
+        const slideErrorDiv = document.getElementById('slideArquivo-size-error');
+        const slideErrorMsg = document.getElementById('slideArquivo-size-error-msg');
+
+        function resetSlideArquivoError() {
+            if (slideErrorDiv) slideErrorDiv.classList.add('d-none');
+            if (slideArquivoInput) slideArquivoInput.classList.remove('is-invalid');
+        }
+
+        if (slideArquivoInput) {
+            slideArquivoInput.addEventListener('change', function() {
+                const file = this.files && this.files[0];
+                if (!file) {
+                    resetSlideArquivoError();
+                    return;
+                }
+
+                if (!file.name.toLowerCase().endsWith('.pdf')) {
+                    if (slideErrorMsg) slideErrorMsg.textContent = 'Apenas arquivos no formato PDF são aceitos.';
+                    if (slideErrorDiv) slideErrorDiv.classList.remove('d-none');
+                    this.classList.add('is-invalid');
+                    this.value = '';
+                    return;
+                }
+
+                if (file.size > MAX_SLIDE_SIZE_BYTES) {
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                    if (slideErrorMsg) slideErrorMsg.textContent = `O arquivo selecionado possui ${sizeMB} MB e excede o limite máximo permitido de 10 MB. Otimize ou reduza o tamanho do PDF antes de enviar.`;
+                    if (slideErrorDiv) slideErrorDiv.classList.remove('d-none');
+                    this.classList.add('is-invalid');
+                    this.value = '';
+                    return;
+                }
+
+                resetSlideArquivoError();
+            });
+        }
+
         document.querySelectorAll('.btn-add-slide').forEach(btn => {
             btn.addEventListener('click', function() {
                 const tipo = this.getAttribute('data-tipo');
                 document.getElementById('slideTipoApresentacao').value = tipo;
                 document.getElementById('formSlideAvulso').reset();
+                resetSlideArquivoError();
             });
         });
 
@@ -1777,6 +1817,15 @@
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
+            }
+
+            const file = slideArquivoInput && slideArquivoInput.files && slideArquivoInput.files[0];
+            if (file) {
+                if (file.size > MAX_SLIDE_SIZE_BYTES || !file.name.toLowerCase().endsWith('.pdf')) {
+                    if (slideErrorDiv) slideErrorDiv.classList.remove('d-none');
+                    if (slideArquivoInput) slideArquivoInput.classList.add('is-invalid');
+                    return;
+                }
             }
             
             const formData = new FormData(form);
@@ -1908,6 +1957,10 @@
                     <div class="mb-3">
                         <label for="slideArquivo" class="form-label">Arquivo PDF</label>
                         <input class="form-control" type="file" id="slideArquivo" name="arquivo" accept=".pdf" required>
+                        <div class="form-text">Apenas formato PDF, máx. 10MB.</div>
+                        <div id="slideArquivo-size-error" class="text-danger mt-2 fw-bold d-none" style="font-size: 0.95rem;">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 align-middle me-1"></i> <span id="slideArquivo-size-error-msg"></span>
+                        </div>
                     </div>
                 </form>
             </div>

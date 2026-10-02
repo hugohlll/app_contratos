@@ -1681,6 +1681,9 @@ def upload_slide_avulso(request):
     if not arquivo.name.lower().endswith('.pdf'):
         return JsonResponse({'success': False, 'error': 'Apenas arquivos PDF são permitidos.'}, status=400)
         
+    if arquivo.size > 10 * 1024 * 1024:
+        return JsonResponse({'success': False, 'error': 'O arquivo do slide não pode exceder 10 MB.'}, status=400)
+        
     try:
         ano = int(str(ano).replace('.', ''))
         mes = int(mes)

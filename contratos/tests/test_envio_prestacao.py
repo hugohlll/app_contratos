@@ -146,8 +146,7 @@ class ValidacaoArquivoTests(BaseTestSetup):
             'mes_referencia': 5, 'ano_referencia': 2026,
             'arquivo': arquivo,
         })
-        # Deve redirecionar com erro (form inválido)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
 
     def test_rejeitar_arquivo_txt_renomeado_pdf(self):
@@ -158,8 +157,35 @@ class ValidacaoArquivoTests(BaseTestSetup):
             'mes_referencia': 5, 'ano_referencia': 2026,
             'arquivo': arquivo,
         })
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
+
+    def test_rejeitar_arquivo_maior_que_10mb(self):
+        """Arquivo PDF maior que 10MB deve ser rejeitado pelo formulário de contrato."""
+        big_pdf = self._make_pdf("big.pdf", size_bytes=11 * 1024 * 1024)
+        response = self.client.post(self.url_upload, {
+            'agente': self.agente.id,
+            'mes_referencia': 5, 'ano_referencia': 2026,
+            'arquivo': big_pdf,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(PrestacaoContas.objects.count(), 0)
+
+        # Teste via AJAX para checar retorno estruturado de erro 400
+        big_pdf_ajax = self._make_pdf("big_ajax.pdf", size_bytes=11 * 1024 * 1024)
+        response_ajax = self.client.post(
+            self.url_upload,
+            {
+                'agente': self.agente.id,
+                'mes_referencia': 5, 'ano_referencia': 2026,
+                'arquivo': big_pdf_ajax,
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(response_ajax.status_code, 400)
+        data = response_ajax.json()
+        self.assertIn('arquivo', data['errors'])
+        self.assertIn("10 MB", data['errors']['arquivo'][0])
 
 
 class SubstituicaoEntregaTests(BaseTestSetup):
@@ -213,18 +239,18 @@ class RedirecionamentoTests(BaseTestSetup):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
 
-    def test_envio_invalido_redireciona_com_erro(self):
-        """Formulário inválido redireciona de volta ao detalhe do contrato."""
+    def test_envio_invalido_rejeita_com_erro(self):
+        """Formulário inválido não processa e mantém na tela de upload exibindo erro."""
         response = self.client.post(self.url_upload, {
             'agente': self.agente.id,
             'mes_referencia': 5, 'ano_referencia': 2026,
             # Sem arquivo — campo obrigatório
         })
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
 
-    def test_envio_invalido_exibe_mensagem_no_detalhe(self):
-        """Verifica se mensagens de erro (fallback) são exibidas no template de detalhe do contrato."""
+    def test_envio_invalido_exibe_mensagem_no_formulario(self):
+        """Verifica se mensagens de erro de validação são exibidas no formulário."""
         response = self.client.post(self.url_upload, {
             'agente': self.agente.id,
             'mes_referencia': 5, 'ano_referencia': 2026,
@@ -232,9 +258,7 @@ class RedirecionamentoTests(BaseTestSetup):
         }, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
-        # O Django deve renderizar o bloco de mensagens que inserimos no detalhe.html
         self.assertContains(response, "Este campo é obrigatório")
-        self.assertContains(response, "alert-error")
 
     def test_contrato_inexistente_retorna_404(self):
         """Upload para contrato inexistente retorna 404."""
@@ -263,7 +287,7 @@ class RestricaoAgenteTests(BaseTestSetup):
             'arquivo': self._make_pdf(),
         })
         # Form inválido — agente não está no queryset filtrado
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
 
 

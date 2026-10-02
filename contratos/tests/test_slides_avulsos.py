@@ -135,6 +135,23 @@ class UploadSlideAvulsoTests(SlideAvulsoBaseTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn('PDF', response.json()['error'])
 
+    def test_upload_slide_avulso_rejeita_arquivo_maior_que_10mb(self):
+        """Upload de slide avulso com mais de 10MB deve ser rejeitado com 400."""
+        self._login_auditor()
+        big_pdf = SimpleUploadedFile("big_slide.pdf", b"%" * (11 * 1024 * 1024), content_type="application/pdf")
+        response = self.client.post(reverse('upload_slide_avulso'), {
+            'tipo_apresentacao': 'fiscais',
+            'nome_slide': 'Slide Gigante',
+            'mes_referencia': self.mes_ref,
+            'ano_referencia': self.ano_ref,
+            'arquivo': big_pdf
+        })
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertIn("10 MB", data['error'])
+        self.assertEqual(SlideApresentacao.objects.count(), 0)
+
     def test_upload_campos_obrigatorios(self):
         """Deve retornar erro se faltar algum campo obrigatório."""
         self._login_auditor()

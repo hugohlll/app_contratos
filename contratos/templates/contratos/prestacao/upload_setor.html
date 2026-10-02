@@ -47,8 +47,11 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">Arquivo PDF</label>
-                            <input type="file" name="arquivo" class="form-control" accept="application/pdf" required>
+                            <input type="file" name="arquivo" id="id_arquivo" class="form-control" accept="application/pdf" required>
                             <div class="form-text">Apenas formato PDF, máx. 10MB.</div>
+                            <div id="arquivo-size-error" class="text-danger mt-2 fw-bold d-none" style="font-size: 0.95rem;">
+                                <i class="bi bi-exclamation-triangle-fill fs-5 align-middle me-1"></i> <span id="arquivo-size-error-msg"></span>
+                            </div>
                             {% if form.arquivo.errors %}
                             <div class="text-danger mt-2 fw-bold" style="font-size: 0.95rem;">
                                 <i class="bi bi-exclamation-triangle-fill fs-5 align-middle me-1"></i> {{ form.arquivo.errors.0 }}
@@ -115,5 +118,56 @@
     // Customizar classes dos inputs do form
     $('#id_agente').addClass('form-select');
     $('#id_observacao').addClass('form-control');
+
+    // Validação de tamanho e formato de arquivo no front-end (limite 10 MB)
+    const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+    $('#id_arquivo').on('change', function() {
+        const file = this.files && this.files[0];
+        const errorDiv = $('#arquivo-size-error');
+        const errorMsg = $('#arquivo-size-error-msg');
+
+        if (!file) {
+            errorDiv.addClass('d-none');
+            $(this).removeClass('is-invalid');
+            return;
+        }
+
+        // Validação de extensão
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            errorMsg.text('Apenas arquivos no formato PDF são aceitos.');
+            errorDiv.removeClass('d-none');
+            $(this).addClass('is-invalid');
+            $(this).val('');
+            return;
+        }
+
+        // Validação de tamanho
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+            errorMsg.text(`O arquivo selecionado possui ${sizeMB} MB e excede o limite máximo permitido de 10 MB. Otimize ou reduza o tamanho do PDF antes de enviar.`);
+            errorDiv.removeClass('d-none');
+            $(this).addClass('is-invalid');
+            $(this).val('');
+            return;
+        }
+
+        // Arquivo válido
+        errorDiv.addClass('d-none');
+        $(this).removeClass('is-invalid');
+    });
+
+    $('#form-upload-prestacao').on('submit', function(e) {
+        const input = document.getElementById('id_arquivo');
+        if (input && input.files && input.files[0]) {
+            const file = input.files[0];
+            if (file.size > MAX_FILE_SIZE_BYTES || !file.name.toLowerCase().endsWith('.pdf')) {
+                e.preventDefault();
+                $('#arquivo-size-error').removeClass('d-none');
+                $(input).addClass('is-invalid');
+                return false;
+            }
+        }
+    });
 </script>
 {% endblock %}
