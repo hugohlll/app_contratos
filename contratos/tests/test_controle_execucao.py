@@ -44,8 +44,8 @@ class ControleExecucaoTests(TestCase):
             numero='55/2026',
             objeto='Prestação de serviço de manutenção predial',
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=180),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=100000.00
         )
 
