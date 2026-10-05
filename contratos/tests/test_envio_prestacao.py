@@ -176,6 +176,34 @@ class ValidacaoArquivoTests(BaseTestSetup):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
 
+    def test_rejeitar_arquivo_maior_que_10mb(self):
+        """Arquivo PDF maior que 10MB deve ser rejeitado pelo formulário de contrato."""
+        self._create_controle_execucao(5, 2026)
+        big_pdf = self._make_pdf("big.pdf", size_bytes=11 * 1024 * 1024)
+        response = self.client.post(self.url_upload, {
+            'agente': self.agente.id,
+            'mes_referencia': 5, 'ano_referencia': 2026,
+            'arquivo': big_pdf,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(PrestacaoContas.objects.count(), 0)
+
+        # Teste via AJAX para checar retorno estruturado de erro 400
+        big_pdf_ajax = self._make_pdf("big_ajax.pdf", size_bytes=11 * 1024 * 1024)
+        response_ajax = self.client.post(
+            self.url_upload,
+            {
+                'agente': self.agente.id,
+                'mes_referencia': 5, 'ano_referencia': 2026,
+                'arquivo': big_pdf_ajax,
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(response_ajax.status_code, 400)
+        data = response_ajax.json()
+        self.assertIn('arquivo', data['errors'])
+        self.assertIn("10 MB", data['errors']['arquivo'][0])
+
 
 class SubstituicaoEntregaTests(BaseTestSetup):
     """Testes de substituição de entrega no mesmo mês/ano."""

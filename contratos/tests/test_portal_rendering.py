@@ -39,3 +39,34 @@ class PortalRenderingTest(TestCase):
         # para o path real. Por isso verificamos o path resolvido, não o nome da URL.
         url_reordenar = reverse('reordenar_integrantes')
         self.assertContains(response, url_reordenar)
+
+    def test_templates_renderizam_elementos_validacao_upload_10mb(self):
+        """Verifica se os templates de upload renderizam os contêineres e scripts de validação de 10 MB."""
+        from contratos.models import Setor
+        setor = Setor.objects.create(nome="Setor Teste", sigla="ST", ordem=1)
+
+        # 1. Tela de upload de contratos
+        url_contrato = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        res_contrato = self.client.get(url_contrato)
+        self.assertEqual(res_contrato.status_code, 200)
+        self.assertContains(res_contrato, 'id="id_arquivo"')
+        self.assertContains(res_contrato, 'id="arquivo-size-error"')
+        self.assertContains(res_contrato, 'MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024')
+        self.assertContains(res_contrato, 'máx. 10MB.')
+
+        # 2. Tela de upload de setores
+        url_setor = reverse('upload_prestacao_setor', kwargs={'setor_id': setor.id})
+        res_setor = self.client.get(url_setor)
+        self.assertEqual(res_setor.status_code, 200)
+        self.assertContains(res_setor, 'id="id_arquivo"')
+        self.assertContains(res_setor, 'id="arquivo-size-error"')
+        self.assertContains(res_setor, 'MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024')
+        self.assertContains(res_setor, 'máx. 10MB.')
+
+        # 3. Dashboard de prestação (modal de slides avulsos)
+        url_dashboard = reverse('dashboard_prestacao')
+        res_dashboard = self.client.get(url_dashboard)
+        self.assertEqual(res_dashboard.status_code, 200)
+        self.assertContains(res_dashboard, 'id="slideArquivo"')
+        self.assertContains(res_dashboard, 'id="slideArquivo-size-error"')
+        self.assertContains(res_dashboard, 'MAX_SLIDE_SIZE_BYTES = 10 * 1024 * 1024')

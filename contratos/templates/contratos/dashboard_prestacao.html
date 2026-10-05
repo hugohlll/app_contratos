@@ -140,14 +140,31 @@
 
                 <div class="col-lg-4 col-md-12">
                     <div class="card shadow-sm h-100">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                            <h6 class="m-0 fw-bold text-secondary">
-                                <i class="bi bi-person-lines-fill me-2 text-primary"></i>Fiscais (Apresentação)
-                            </h6>
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="m-0 fw-bold text-secondary">
+                                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>Fiscais (Apresentação)
+                                </h6>
+                                {% if modo_livre_fiscais %}
+                                <span class="badge bg-warning text-dark border" id="badgeModoLivreFiscais" style="font-size: 0.7rem;" title="Apresentação em ordem livre (sem restrições de hierarquia)">
+                                    <i class="bi bi-unlock-fill me-1"></i>Ordem Livre
+                                </span>
+                                {% else %}
+                                <span class="badge bg-light text-secondary border" id="badgeModoLivreFiscais" style="font-size: 0.7rem;" title="Apresentação seguindo regras de antiguidade (hierarquia)">
+                                    <i class="bi bi-shield-lock me-1"></i>Antiguidade
+                                </span>
+                                {% endif %}
+                            </div>
                             {% if is_admin or is_auditor %}
-                            <button class="btn btn-sm btn-outline-primary btn-add-slide" data-tipo="fiscais" data-bs-toggle="modal" data-bs-target="#modalSlideAvulso" title="Inserir Slide Avulso">
-                                <i class="bi bi-plus-circle"></i> Slide
-                            </button>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="form-check form-switch m-0 d-flex align-items-center gap-1" title="Ative para permitir ordenar livremente sem restrições de posto ou graduação">
+                                    <input class="form-check-input switch-modo-livre" type="checkbox" role="switch" id="switchModoLivreFiscais" data-tipo="fiscais" {% if modo_livre_fiscais %}checked{% endif %} style="cursor: pointer;">
+                                    <label class="form-check-label small text-muted user-select-none" for="switchModoLivreFiscais" style="font-size: 0.78rem; cursor: pointer;">Ordem Livre</label>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary btn-add-slide" data-tipo="fiscais" data-bs-toggle="modal" data-bs-target="#modalSlideAvulso" title="Inserir Slide Avulso">
+                                    <i class="bi bi-plus-circle"></i> Slide
+                                </button>
+                            </div>
                             {% endif %}
                         </div>
                         <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
@@ -176,7 +193,7 @@
                                         </td>
                                     </tr>
                                     {% else %}
-                                    <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" style="cursor: grab;">
+                                    <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" data-prestacao-id="{{ gestor.prestacao_id }}" style="cursor: grab;">
                                         <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
                                         <td>{{ gestor.contrato }}</td>
                                         <td class="text-center">
@@ -703,14 +720,31 @@
                 <!-- Lista de Apresentação dos Gestores Setores -->
                 <div class="col-lg-6 col-md-12">
                     <div class="card shadow-sm h-100">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                            <h6 class="m-0 fw-bold text-secondary">
-                                <i class="bi bi-person-lines-fill me-2 text-primary"></i>Gestores (Apresentação)
-                            </h6>
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="m-0 fw-bold text-secondary">
+                                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>Gestores (Apresentação)
+                                </h6>
+                                {% if modo_livre_gestores %}
+                                <span class="badge bg-warning text-dark border" id="badgeModoLivreGestores" style="font-size: 0.7rem;" title="Apresentação em ordem livre (sem restrições de hierarquia)">
+                                    <i class="bi bi-unlock-fill me-1"></i>Ordem Livre
+                                </span>
+                                {% else %}
+                                <span class="badge bg-light text-secondary border" id="badgeModoLivreGestores" style="font-size: 0.7rem;" title="Apresentação seguindo regras de antiguidade (hierarquia)">
+                                    <i class="bi bi-shield-lock me-1"></i>Antiguidade
+                                </span>
+                                {% endif %}
+                            </div>
                             {% if is_admin or is_auditor %}
-                            <button class="btn btn-sm btn-outline-primary btn-add-slide" data-tipo="gestores" data-bs-toggle="modal" data-bs-target="#modalSlideAvulso" title="Inserir Slide Avulso">
-                                <i class="bi bi-plus-circle"></i> Slide
-                            </button>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="form-check form-switch m-0 d-flex align-items-center gap-1" title="Ative para permitir ordenar livremente sem restrições de posto ou graduação">
+                                    <input class="form-check-input switch-modo-livre" type="checkbox" role="switch" id="switchModoLivreGestores" data-tipo="gestores" {% if modo_livre_gestores %}checked{% endif %} style="cursor: pointer;">
+                                    <label class="form-check-label small text-muted user-select-none" for="switchModoLivreGestores" style="font-size: 0.78rem; cursor: pointer;">Ordem Livre</label>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary btn-add-slide" data-tipo="gestores" data-bs-toggle="modal" data-bs-target="#modalSlideAvulso" title="Inserir Slide Avulso">
+                                    <i class="bi bi-plus-circle"></i> Slide
+                                </button>
+                            </div>
                             {% endif %}
                         </div>
                         <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
@@ -739,7 +773,7 @@
                                         </td>
                                     </tr>
                                     {% else %}
-                                    <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" style="cursor: grab;">
+                                    <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" data-prestacao-id="{{ gestor.prestacao_id }}" style="cursor: grab;">
                                         <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
                                         <td>{{ gestor.setor }}</td>
                                         <td class="text-center">
@@ -919,6 +953,7 @@
                             </tbody>
                         </table>
                     </div>
+
                 </div>
             </div>
         </div><!-- /subpane mes setores -->
@@ -1458,7 +1493,7 @@
                     }
                     
                     html += `
-                        <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" style="cursor: grab;">
+                        <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" data-prestacao-id="${g.prestacao_id || ''}" style="cursor: grab;">
                             <td class="ps-3"><strong>${g.gestor}</strong></td>
                             <td>${g.contrato}</td>
                             <td class="text-center">${statusBadge}</td>
@@ -1511,7 +1546,7 @@
                     }
                     
                     html += `
-                        <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" style="cursor: grab;">
+                        <tr class="gestor-row" data-agente-id="${g.agente_id}" data-posto-id="${g.posto_id}" data-prestacao-id="${g.prestacao_id || ''}" style="cursor: grab;">
                             <td class="ps-3"><strong>${g.gestor}</strong></td>
                             <td>${g.setor}</td>
                             <td class="text-center">${statusBadge}</td>
@@ -1521,6 +1556,9 @@
             });
             tbody.innerHTML = html;
         }
+
+        window.atualizarTabelaPrioritarios = atualizarTabelaPrioritarios;
+        window.atualizarTabelaGestoresSetores = atualizarTabelaGestoresSetores;
 
         // URLs base para o Javascript (evita problemas com subdiretórios no servidor)
         const URL_DOWNLOAD_BASE = "{% url 'download_prestacao' 999999 %}";
@@ -2057,11 +2095,16 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const tbodyPrioritarios = document.getElementById('tabelaGestoresPrioritarios');
+        const switchModoLivreFiscais = document.getElementById('switchModoLivreFiscais');
+
         if (tbodyPrioritarios) {
             Sortable.create(tbodyPrioritarios, {
                 animation: 150,
                 handle: 'tr',
                 onMove: function (evt) {
+                    if (switchModoLivreFiscais && switchModoLivreFiscais.checked) {
+                        return true;
+                    }
                     const isSlide = evt.dragged.classList.contains('slide-avulso-row') || evt.related.classList.contains('slide-avulso-row');
                     if (isSlide) return true;
                     
@@ -2073,6 +2116,28 @@
                     }
                 },
                 onEnd: function (evt) {
+                    if (switchModoLivreFiscais && switchModoLivreFiscais.checked) {
+                        const rows = Array.from(tbodyPrioritarios.children);
+                        const itens = rows.map(r => {
+                            if (r.classList.contains('slide-avulso-row')) {
+                                return { tipo: 'slide', id: r.getAttribute('data-slide-id') };
+                            } else if (r.classList.contains('gestor-row')) {
+                                return { tipo: 'prestacao', id: r.getAttribute('data-prestacao-id') };
+                            }
+                            return null;
+                        }).filter(Boolean);
+
+                        fetch("{% url 'reordenar_apresentacao_livre' %}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ tipo_apresentacao: 'fiscais', itens: itens })
+                        }).catch(err => console.error('Erro ao reordenar livremente:', err));
+                        return;
+                    }
+
                     if (evt.item.classList.contains('slide-avulso-row')) {
                         const slideId = evt.item.getAttribute('data-slide-id');
                         const newIndex = evt.newIndex;
@@ -2115,11 +2180,16 @@
         }
 
         const tbodySetores = document.getElementById('tabelaGestoresSetores');
+        const switchModoLivreGestores = document.getElementById('switchModoLivreGestores');
+
         if (tbodySetores) {
             Sortable.create(tbodySetores, {
                 animation: 150,
                 handle: 'tr',
                 onMove: function (evt) {
+                    if (switchModoLivreGestores && switchModoLivreGestores.checked) {
+                        return true;
+                    }
                     const isSlide = evt.dragged.classList.contains('slide-avulso-row') || evt.related.classList.contains('slide-avulso-row');
                     if (isSlide) return true;
                     
@@ -2130,6 +2200,28 @@
                     }
                 },
                 onEnd: function (evt) {
+                    if (switchModoLivreGestores && switchModoLivreGestores.checked) {
+                        const rows = Array.from(tbodySetores.children);
+                        const itens = rows.map(r => {
+                            if (r.classList.contains('slide-avulso-row')) {
+                                return { tipo: 'slide', id: r.getAttribute('data-slide-id') };
+                            } else if (r.classList.contains('gestor-row')) {
+                                return { tipo: 'prestacao', id: r.getAttribute('data-prestacao-id') };
+                            }
+                            return null;
+                        }).filter(Boolean);
+
+                        fetch("{% url 'reordenar_apresentacao_livre' %}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ tipo_apresentacao: 'gestores', itens: itens })
+                        }).catch(err => console.error('Erro ao reordenar livremente setores:', err));
+                        return;
+                    }
+
                     if (evt.item.classList.contains('slide-avulso-row')) {
                         const slideId = evt.item.getAttribute('data-slide-id');
                         const newIndex = evt.newIndex;
@@ -2170,15 +2262,127 @@
                 }
             });
         }
+
+        // Listener dos Switches de Modo Livre
+        document.querySelectorAll('.switch-modo-livre').forEach(switchEl => {
+            switchEl.addEventListener('change', function(e) {
+                const tipo = this.getAttribute('data-tipo');
+                const isLivre = this.checked;
+                const mes = parseInt(document.querySelector('select[name="mes"]')?.value || '{{ filtro_mes }}');
+                const ano = parseInt(document.querySelector('select[name="ano"]')?.value || '{{ filtro_ano|stringformat:"d" }}');
+                
+                if (!isLivre) {
+                    const confirmar = confirm("Deseja restaurar a ordem oficial por antiguidade?\n\nA ordenação livre personalizada será substituída pela hierarquia regulamentar (postos e graduações).");
+                    if (!confirmar) {
+                        this.checked = true;
+                        return;
+                    }
+                }
+                
+                fetch("{% url 'alternar_modo_apresentacao' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        tipo: tipo,
+                        ano: ano,
+                        mes: mes,
+                        modo_livre: isLivre
+                    })
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(errData => {
+                            throw new Error(errData.error || ('HTTP ' + res.status));
+                        });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const badgeId = tipo === 'fiscais' ? 'badgeModoLivreFiscais' : 'badgeModoLivreGestores';
+                        const badgeEl = document.getElementById(badgeId);
+                        if (badgeEl) {
+                            if (isLivre) {
+                                badgeEl.className = 'badge bg-warning text-dark border';
+                                badgeEl.innerHTML = '<i class="bi bi-unlock-fill me-1"></i>Ordem Livre';
+                                badgeEl.title = 'Apresentação em ordem livre (sem restrições de hierarquia)';
+                            } else {
+                                badgeEl.className = 'badge bg-light text-secondary border';
+                                badgeEl.innerHTML = '<i class="bi bi-shield-lock me-1"></i>Antiguidade';
+                                badgeEl.title = 'Apresentação seguindo regras de antiguidade (hierarquia)';
+                            }
+                        }
+                        if (data.stats) {
+                            if (tipo === 'fiscais' && data.stats.gestores_prio && typeof window.atualizarTabelaPrioritarios === 'function') {
+                                window.atualizarTabelaPrioritarios(data.stats.gestores_prio);
+                            } else if (tipo === 'gestores' && data.stats.gestores_setores && typeof window.atualizarTabelaGestoresSetores === 'function') {
+                                window.atualizarTabelaGestoresSetores(data.stats.gestores_setores);
+                            }
+                        }
+                    } else {
+                        alert('Erro ao alterar modo: ' + (data.error || 'Erro desconhecido'));
+                        this.checked = !isLivre;
+                    }
+                })
+                .catch(err => {
+                    console.error('Erro ao alterar modo:', err);
+                    alert('Erro ao processar alteração de modo: ' + (err.message || 'Erro de comunicação'));
+                    this.checked = !isLivre;
+                });
+            });
+        });
     });
 
     // Lógica para adicionar e excluir Slides Avulsos
     document.addEventListener("DOMContentLoaded", function() {
+        const MAX_SLIDE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+        const slideArquivoInput = document.getElementById('slideArquivo');
+        const slideErrorDiv = document.getElementById('slideArquivo-size-error');
+        const slideErrorMsg = document.getElementById('slideArquivo-size-error-msg');
+
+        function resetSlideArquivoError() {
+            if (slideErrorDiv) slideErrorDiv.classList.add('d-none');
+            if (slideArquivoInput) slideArquivoInput.classList.remove('is-invalid');
+        }
+
+        if (slideArquivoInput) {
+            slideArquivoInput.addEventListener('change', function() {
+                const file = this.files && this.files[0];
+                if (!file) {
+                    resetSlideArquivoError();
+                    return;
+                }
+
+                if (!file.name.toLowerCase().endsWith('.pdf')) {
+                    if (slideErrorMsg) slideErrorMsg.textContent = 'Apenas arquivos no formato PDF são aceitos.';
+                    if (slideErrorDiv) slideErrorDiv.classList.remove('d-none');
+                    this.classList.add('is-invalid');
+                    this.value = '';
+                    return;
+                }
+
+                if (file.size > MAX_SLIDE_SIZE_BYTES) {
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                    if (slideErrorMsg) slideErrorMsg.textContent = `O arquivo selecionado possui ${sizeMB} MB e excede o limite máximo permitido de 10 MB. Otimize ou reduza o tamanho do PDF antes de enviar.`;
+                    if (slideErrorDiv) slideErrorDiv.classList.remove('d-none');
+                    this.classList.add('is-invalid');
+                    this.value = '';
+                    return;
+                }
+
+                resetSlideArquivoError();
+            });
+        }
+
         document.querySelectorAll('.btn-add-slide').forEach(btn => {
             btn.addEventListener('click', function() {
                 const tipo = this.getAttribute('data-tipo');
                 document.getElementById('slideTipoApresentacao').value = tipo;
                 document.getElementById('formSlideAvulso').reset();
+                resetSlideArquivoError();
             });
         });
 
@@ -2187,6 +2391,15 @@
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
+            }
+
+            const file = slideArquivoInput && slideArquivoInput.files && slideArquivoInput.files[0];
+            if (file) {
+                if (file.size > MAX_SLIDE_SIZE_BYTES || !file.name.toLowerCase().endsWith('.pdf')) {
+                    if (slideErrorDiv) slideErrorDiv.classList.remove('d-none');
+                    if (slideArquivoInput) slideArquivoInput.classList.add('is-invalid');
+                    return;
+                }
             }
             
             const formData = new FormData(form);
@@ -2318,6 +2531,10 @@
                     <div class="mb-3">
                         <label for="slideArquivo" class="form-label">Arquivo PDF</label>
                         <input class="form-control" type="file" id="slideArquivo" name="arquivo" accept=".pdf" required>
+                        <div class="form-text">Apenas formato PDF, máx. 10MB.</div>
+                        <div id="slideArquivo-size-error" class="text-danger mt-2 fw-bold d-none" style="font-size: 0.95rem;">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 align-middle me-1"></i> <span id="slideArquivo-size-error-msg"></span>
+                        </div>
                     </div>
                 </form>
             </div>

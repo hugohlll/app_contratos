@@ -249,7 +249,7 @@
             <h3 id="matriz-acompanhamento">📋 Matriz de Acompanhamento</h3>
             <p>Ao abrir a página de prestação de contas no portal logado, o sistema exibirá <strong>por padrão as informações do mês anterior ao atual</strong>. A Matriz de Acompanhamento (dividida nas abas Fiscais e Setores) exibe uma tabela dinâmica com as entregas de cada responsável no <strong>histórico dos últimos 6 meses</strong>. Os gráficos de estatísticas (Slides e Fiscais) também são sincronizados dinamicamente com o mês e ano selecionados no filtro. Status possíveis:</p>
             <ul>
-                <li><i class="bi bi-file-earmark-arrow-up text-primary"></i> <strong>Aguardando Análise (Entregue):</strong> O fiscal/gestor enviou o PDF (limitado a 20MB), mas o Auditor ainda não analisou.</li>
+                <li><i class="bi bi-file-earmark-arrow-up text-primary"></i> <strong>Aguardando Análise (Entregue):</strong> O fiscal/gestor enviou o PDF (limitado a 10MB), mas o Auditor ainda não analisou.</li>
                 <li><i class="bi bi-check-circle-fill text-success"></i> <strong>Conformidade (OK!):</strong> O PDF foi aprovado e está pronto. Auditores podem reabrir uma prestação aprovada e retorná-la para "Correção" se encontrarem inconsistências posteriores.</li>
                 <li><i class="bi bi-exclamation-triangle-fill text-warning"></i> <strong>Ajustes Necessários (Correção):</strong> O auditor encontrou inconsistências. O usuário é notificado no portal e o histórico de apontamentos fica gravado.</li>
                 <li><i class="bi bi-dash-circle text-muted"></i> <strong>Pendente:</strong> Nenhuma entrega foi realizada para o mês em questão.</li>
@@ -285,8 +285,9 @@
                 <li>Preencha o <strong>Nome do Slide</strong> (ex: "Capa", "Encerramento") e selecione o arquivo PDF.</li>
                 <li>Clique em <strong>Salvar Slide</strong>. O slide será inserido automaticamente no final da lista.</li>
             </ol>
-            <h4>Ordenação livre por arraste</h4>
-            <p>Diferente dos militares (que só podem ser reordenados entre pares de mesma patente), os slides avulsos podem ser <strong>arrastados livremente para qualquer posição</strong> da lista: no topo (antes de todos os militares), no meio (entre dois gestores de patentes diferentes) ou no final. A posição é salva automaticamente.</p>
+            <h4>Ordenação da Apresentação: Antiguidade vs Ordem Livre</h4>
+            <p>Por padrão (modo <strong>Antiguidade</strong>), o sistema segue estritamente a hierarquia militar oficial: militares de maior patente precedem os de menor patente, permitindo o reordenamento por arrasto apenas entre pares de mesmo posto/graduação. Os slides avulsos podem ser posicionados livremente em qualquer lugar.</p>
+            <p>Caso seja necessário abrir uma exceção e posicionar militares de postos inferiores antes de superiores (ou criar uma sequência de apresentação customizada), auditores e administradores podem ativar o interruptor <strong>"Ordem Livre"</strong> no cabeçalho do quadro. Nesse modo, qualquer item pode ser arrastado para qualquer posição. Ao desativar o modo livre, uma confirmação é solicitada e a lista é restaurada automaticamente para a ordem hierárquica oficial.</p>
             <h4>Exclusão</h4>
             <p>Para remover um slide avulso, clique no ícone <i class="bi bi-trash text-danger"></i> ao lado do nome do slide na lista de apresentação. A exclusão é imediata e recarrega a página.</p>
             <div class="alert alert-info py-2">
