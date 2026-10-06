@@ -122,6 +122,7 @@ class LivroFiscalPDFTestCase(TestCase):
         self.assertIn('art. 117, § 1º da Lei nº 14.133/2021', clean_text)
         self.assertIn('NPA 009/SCON/2025 do GAP-BR', clean_text)
         self.assertIn('MENDES', clean_text)
+        self.assertIn('(datado e assinado eletronicamente)', clean_text)
 
     def test_gerar_pdf_declaracao_conformidade_sem_ocorrencias(self):
         """Verifica que o PDF exibe a declaração de conformidade quando não houver ocorrências."""

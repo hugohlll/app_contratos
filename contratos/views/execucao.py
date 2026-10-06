@@ -768,10 +768,7 @@ def gerar_livro_fiscal_pdf(request, pk):
     ]))
 
     # Bloco de Assinatura
-    MESES_PT = ['', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-                'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
     dt_env = controle.data_envio
-    data_extenso = f"Brasília-DF, {dt_env.day:02d} de {MESES_PT[dt_env.month]} de {dt_env.year}."
 
     p_sigla = controle.agente.posto.sigla if (controle.agente and controle.agente.posto) else ""
     n_guerra = controle.agente.nome_de_guerra.upper() if controle.agente else "FISCAL"
@@ -798,7 +795,7 @@ def gerar_livro_fiscal_pdf(request, pk):
         Spacer(1, 4),
         decl_t,
         Spacer(1, 8),
-        Paragraph(f"<b>{data_extenso}</b>", ParagraphStyle('Dt', parent=styles['Normal'], alignment=2, fontSize=8, textColor=colors.HexColor('#0F172A'))),
+        Paragraph("(datado e assinado eletronicamente)", ParagraphStyle('Dt', parent=styles['Normal'], alignment=2, fontSize=8, textColor=colors.HexColor('#0F172A'))),
         Spacer(1, 4),
         sig_t
     ]))
