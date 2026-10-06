@@ -701,9 +701,8 @@ class OcorrenciaContratual(models.Model):
     prazo_dias_uteis = models.IntegerField("Prazo para Regularização (dias úteis)", default=5)
     ciencia_preposto = models.CharField("Ciência / Recusa do Preposto", max_length=20, choices=CIENCIA_CHOICES, default='na')
 
-    # Trâmite ARC / PAAI e Sistemas
+    # Trâmite ARC / PAAI
     tramite_arc = models.BooleanField("Encaminhado à ARC para PAAI?", default=False)
-    registros_sistemas = models.CharField("Registros nos Sistemas (SILOMS / SIGADAER)", max_length=150, blank=True)
     status_ocorrencia = models.CharField("Situação Atual", max_length=20, choices=STATUS_OCORRENCIA_CHOICES, default='aberto')
     acao_fiscal = models.TextField("Providência / Determinação do Fiscal", blank=True)
 

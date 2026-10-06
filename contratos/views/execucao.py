@@ -121,7 +121,7 @@ def formulario_execucao(request, contrato_id):
                     observacao=controle.observacao.strip()
                 )
 
-            # Processar Ocorrências (JSON enviado pelo frontend com 11 campos da NPA 009)
+            # Processar Ocorrências (JSON enviado pelo frontend com 10 campos da NPA 009)
             ocorrencias_json_str = request.POST.get('ocorrencias_json', '[]')
             relatorio_text_lines = []
 
@@ -151,7 +151,6 @@ def formulario_execucao(request, contrato_id):
                         prazo = int(oc.get('prazo_dias_uteis') or 5)
                         ciencia = oc.get('ciencia_preposto', 'na')
                         tramite = bool(oc.get('tramite_arc'))
-                        reg_sist = oc.get('registros_sistemas', '').strip()
                         status_oc = oc.get('status_ocorrencia', 'aberto')
                         acao_fiscal = oc.get('acao_fiscal', '').strip()
 
@@ -169,7 +168,6 @@ def formulario_execucao(request, contrato_id):
                                 prazo_dias_uteis=prazo,
                                 ciencia_preposto=ciencia,
                                 tramite_arc=tramite,
-                                registros_sistemas=reg_sist,
                                 status_ocorrencia=status_oc,
                                 acao_fiscal=acao_fiscal,
                             )
@@ -224,7 +222,6 @@ def formulario_execucao(request, contrato_id):
                 'ciencia_preposto': oc.ciencia_preposto,
                 'ciencia_preposto_display': oc.get_ciencia_preposto_display(),
                 'tramite_arc': oc.tramite_arc,
-                'registros_sistemas': oc.registros_sistemas,
                 'status_ocorrencia': oc.status_ocorrencia,
                 'status_ocorrencia_display': oc.get_status_ocorrencia_display(),
                 'acao_fiscal': oc.acao_fiscal,
@@ -289,7 +286,6 @@ def salvar_ocorrencia_tempestiva(request):
         oc.prazo_dias_uteis = int(data.get('prazo_dias_uteis') or 5)
         oc.ciencia_preposto = data.get('ciencia_preposto', 'na')
         oc.tramite_arc = bool(data.get('tramite_arc'))
-        oc.registros_sistemas = data.get('registros_sistemas', '').strip()
         oc.status_ocorrencia = data.get('status_ocorrencia', 'aberto')
         oc.acao_fiscal = data.get('acao_fiscal', '').strip()
         oc.save()
@@ -318,7 +314,6 @@ def salvar_ocorrencia_tempestiva(request):
                 'ciencia_preposto': oc.ciencia_preposto,
                 'ciencia_preposto_display': oc.get_ciencia_preposto_display(),
                 'tramite_arc': oc.tramite_arc,
-                'registros_sistemas': oc.registros_sistemas,
                 'status_ocorrencia': oc.status_ocorrencia,
                 'status_ocorrencia_display': oc.get_status_ocorrencia_display(),
                 'acao_fiscal': oc.acao_fiscal,
@@ -697,7 +692,7 @@ def gerar_livro_fiscal_pdf(request, pk):
         ]))
         story.append(Spacer(1, 8))
 
-    # 3. Registro de Ocorrências Contratuais (11 Campos)
+    # 3. Registro de Ocorrências Contratuais (10 Campos)
     story.append(make_sec_header("3. REGISTRO DE OCORRÊNCIAS DA FISCALIZAÇÃO"))
     story.append(Spacer(1, 3))
 
@@ -737,7 +732,6 @@ def gerar_livro_fiscal_pdf(request, pk):
                 ["Notificação e Prazo (Anexo D):", notif_s],
                 ["Ciência / Recusa do Preposto:", oc.get_ciencia_preposto_display()],
                 ["Trâmite à ARC / SCON:", tramite_s],
-                ["Registros nos Sistemas:", oc.registros_sistemas or "SILOMS / SIGADAER"],
                 ["Situação Atual:", f"<b>{oc.get_status_ocorrencia_display().upper()}</b>"],
                 ["Determinação do Fiscal:", oc.acao_fiscal or "Determinado o saneamento tempestivo."],
             ]

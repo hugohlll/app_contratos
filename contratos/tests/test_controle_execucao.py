@@ -126,7 +126,6 @@ class ControleExecucaoTests(TestCase):
                 'prazo_dias_uteis': 5,
                 'ciencia_preposto': 'assinado',
                 'tramite_arc': False,
-                'registros_sistemas': 'SILOMS Medição 05/2026',
                 'status_ocorrencia': 'saneamento',
                 'acao_fiscal': 'Paralisação imediata dos serviços até adequação.'
             }
@@ -170,7 +169,7 @@ class ControleExecucaoTests(TestCase):
         self.assertTrue(ctrl.eh_obra_engenharia)
         self.assertEqual(ctrl.art_rrt, 'ART 2026/001 CREA-DF')
 
-        # Verificar ocorrência salva com 11 campos
+        # Verificar ocorrência salva com 10 campos
         self.assertEqual(ctrl.ocorrencias.count(), 1)
         oc1 = ctrl.ocorrencias.first()
         self.assertEqual(oc1.tipo, 'OBRAS')

@@ -454,7 +454,7 @@ class OcorrenciaContratualForm(EstiloFormMixin, forms.ModelForm):
             'data_hora', 'local', 'tipo', 'descricao', 'dispositivo_violado',
             'evidencias', 'notificacao_emitida', 'notificacao_numero',
             'prazo_dias_uteis', 'ciencia_preposto', 'tramite_arc',
-            'registros_sistemas', 'status_ocorrencia', 'acao_fiscal'
+            'status_ocorrencia', 'acao_fiscal'
         ]
         widgets = {
             'data_hora': forms.DateTimeInput(format='%Y-%m-%dT%H:%M', attrs={'type': 'datetime-local', 'class': 'form-control'}),
@@ -466,7 +466,6 @@ class OcorrenciaContratualForm(EstiloFormMixin, forms.ModelForm):
             'notificacao_numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 001/GAP-BR/2026'}),
             'prazo_dias_uteis': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
             'ciencia_preposto': forms.Select(attrs={'class': 'form-select'}),
-            'registros_sistemas': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Medição SILOMS / Doc SIGADAER'}),
             'status_ocorrencia': forms.Select(attrs={'class': 'form-select'}),
             'acao_fiscal': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Providência / determinação imediata do fiscal'}),
         }

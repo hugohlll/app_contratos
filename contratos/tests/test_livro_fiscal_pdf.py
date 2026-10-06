@@ -76,7 +76,6 @@ class LivroFiscalPDFTestCase(TestCase):
             prazo_dias_uteis=5,
             ciencia_preposto='assinado',
             tramite_arc=False,
-            registros_sistemas='SILOMS Medição 07/2026',
             status_ocorrencia='saneamento',
             acao_fiscal='Notificada a empresa para saneamento em 5 dias úteis.'
         )

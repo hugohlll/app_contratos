@@ -284,10 +284,10 @@
             </div>
         </div>
 
-        <!-- 4. REGISTRO DE OCORRÊNCIAS DA FISCALIZAÇÃO (11 CAMPOS) -->
+        <!-- 4. REGISTRO DE OCORRÊNCIAS DA FISCALIZAÇÃO (10 CAMPOS) -->
         <div class="secao-card border-primary">
             <div class="section-header bg-primary">
-                <span><i class="bi bi-card-checklist me-2"></i>4. Registro de Ocorrências da Fiscalização (11 Campos NPA 009)</span>
+                <span><i class="bi bi-card-checklist me-2"></i>4. Registro de Ocorrências da Fiscalização (10 Campos NPA 009)</span>
                 <div class="d-flex align-items-center gap-2">
                     <button type="button" class="btn btn-light btn-sm fw-bold text-primary shadow-sm" id="btnNovaOcorrencia">
                         <i class="bi bi-plus-circle me-1"></i> Adicionar Ocorrência
@@ -395,7 +395,7 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL DE CADASTRO / EDIÇÃO DE OCORRÊNCIA (11 CAMPOS DA NPA 009) -->
+<!-- MODAL DE CADASTRO / EDIÇÃO DE OCORRÊNCIA (10 CAMPOS DA NPA 009) -->
 <!-- ========================================================================= -->
 <div class="modal fade" id="modalOcorrencia" tabindex="-1" aria-labelledby="modalOcorrenciaLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -485,11 +485,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small">10. Registros nos Sistemas (SILOMS / SIGADAER)</label>
-                            <input type="text" class="form-control" id="modal_registros_sistemas" placeholder="Nº da medição SILOMS ou documento SIGADAER">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">11. Situação Atual <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold small">10. Situação Atual <span class="text-danger">*</span></label>
                             <select class="form-select" id="modal_status" required>
                                 <option value="aberto">Em Aberto</option>
                                 <option value="saneamento">Em Saneamento (Prazo 5d úteis)</option>
@@ -658,7 +654,6 @@ $(document).ready(function() {
         $('#modal_prazo').val(oc.prazo_dias_uteis || 5);
         $('#modal_ciencia').val(oc.ciencia_preposto || 'na');
         $('#modal_tramite_arc').prop('checked', !!oc.tramite_arc);
-        $('#modal_registros_sistemas').val(oc.registros_sistemas || '');
         $('#modal_status').val(oc.status_ocorrencia || 'aberto');
         $('#modal_acao_fiscal').val(oc.acao_fiscal || '');
 
@@ -691,7 +686,6 @@ $(document).ready(function() {
             ciencia_preposto: $('#modal_ciencia').val(),
             ciencia_preposto_display: $('#modal_ciencia option:selected').text(),
             tramite_arc: $('#modal_tramite_arc').is(':checked'),
-            registros_sistemas: $('#modal_registros_sistemas').val().trim(),
             status_ocorrencia: $('#modal_status').val(),
             status_ocorrencia_display: $('#modal_status option:selected').text(),
             acao_fiscal: $('#modal_acao_fiscal').val().trim(),
