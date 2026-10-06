@@ -208,15 +208,17 @@ class HistoricoUltimosEnviosTests(TestCase):
     # ---------------------------------------------------------------
     def test_referencia_renderizada_no_html(self):
         """O badge de referência deve exibir o formato MM/AAAA correto no HTML."""
-        self._criar_prestacao(3, 2026)
-        self._criar_prestacao(11, 2025)
+        from datetime import timedelta
+        hoje = date.today()
+        ultimo_dia_mes_ant = hoje.replace(day=1) - timedelta(days=1)
+        mes = ultimo_dia_mes_ant.month
+        ano = ultimo_dia_mes_ant.year
+
+        self._criar_prestacao(mes, ano)
 
         response = self.client.get(self.url_upload)
-        self.assertContains(response, "03/2026")
-        self.assertContains(response, "11/2025")
-        # Não deve conter formato com ponto de milhar (ex: 2.026)
-        self.assertNotContains(response, "2.026")
-        self.assertNotContains(response, "2.025")
+        self.assertContains(response, f"{mes:02d}/{ano}")
+        self.assertNotContains(response, f"{ano // 1000}.{ano % 1000:03d}")
 
     # ---------------------------------------------------------------
     # 10. Isolamento entre contratos

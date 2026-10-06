@@ -80,532 +80,1014 @@
 <!-- ABA 1: FISCAIS -->
 <div class="tab-pane fade show active" id="fiscais-pane" role="tabpanel" aria-labelledby="fiscais-tab">
 
-<!-- GRÁFICOS (Mês Filtrado) -->
-<div class="row mb-4 align-items-stretch">
-    <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                <h6 class="m-0 fw-bold text-secondary">
-                    <i class="bi bi-pie-chart-fill me-2 text-info"></i>Situação das Entregas
-                </h6>
-                <span class="badge bg-primary rounded-pill px-3 py-2">Total: {{ total_contratos }} Contrato{{ total_contratos|pluralize }}</span>
-            </div>
-            <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
-                    <canvas id="prestacoesPieChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                <h6 class="m-0 fw-bold text-secondary">
-                    <i class="bi bi-pie-chart-fill me-2 text-warning"></i>Slides da Apresentação
-                </h6>
-            </div>
-            <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
-                    <canvas id="prioritariosBarChart"></canvas>
-                </div>
-            </div>
-        </div>
+    <!-- SUB-ABAS INTERNAS DA ABA FISCAIS -->
+    <div class="mb-4">
+        <ul class="nav nav-pills bg-light p-1 rounded-3 d-inline-flex border m-0" id="fiscaisSubTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active px-3 py-1-5 fw-semibold" id="fiscais-mes-subtab" data-bs-toggle="pill" data-bs-target="#fiscais-mes-subpane" type="button" role="tab" aria-controls="fiscais-mes-subpane" aria-selected="true">
+                    <i class="bi bi-calendar-check me-1"></i>Acompanhamento do Mês
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-3 py-1-5 fw-semibold" id="fiscais-slides-subtab" data-bs-toggle="pill" data-bs-target="#fiscais-slides-subpane" type="button" role="tab" aria-controls="fiscais-slides-subpane" aria-selected="false">
+                    <i class="bi bi-easel me-1"></i>Matriz de Slides (6 meses)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-3 py-1-5 fw-semibold" id="fiscais-execucao-subtab" data-bs-toggle="pill" data-bs-target="#execucao-pane" type="button" role="tab" aria-controls="execucao-pane" aria-selected="false">
+                    <i class="bi bi-journal-check me-1"></i>Matriz do Livro do Fiscal (6 meses)
+                </button>
+            </li>
+        </ul>
     </div>
 
-    <div class="col-lg-4 col-md-12">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2">
-                    <h6 class="m-0 fw-bold text-secondary">
-                        <i class="bi bi-person-lines-fill me-2 text-primary"></i>Fiscais (Apresentação)
-                    </h6>
-                    {% if modo_livre_fiscais %}
-                    <span class="badge bg-warning text-dark border" id="badgeModoLivreFiscais" style="font-size: 0.7rem;" title="Apresentação em ordem livre (sem restrições de hierarquia)">
-                        <i class="bi bi-unlock-fill me-1"></i>Ordem Livre
-                    </span>
-                    {% else %}
-                    <span class="badge bg-light text-secondary border" id="badgeModoLivreFiscais" style="font-size: 0.7rem;" title="Apresentação seguindo regras de antiguidade (hierarquia)">
-                        <i class="bi bi-shield-lock me-1"></i>Antiguidade
-                    </span>
-                    {% endif %}
-                </div>
-                {% if is_admin or is_auditor %}
-                <div class="d-flex align-items-center gap-2">
-                    <div class="form-check form-switch m-0 d-flex align-items-center gap-1" title="Ative para permitir ordenar livremente sem restrições de posto ou graduação">
-                        <input class="form-check-input switch-modo-livre" type="checkbox" role="switch" id="switchModoLivreFiscais" data-tipo="fiscais" {% if modo_livre_fiscais %}checked{% endif %} style="cursor: pointer;">
-                        <label class="form-check-label small text-muted user-select-none" for="switchModoLivreFiscais" style="font-size: 0.78rem; cursor: pointer;">Ordem Livre</label>
+    <div class="tab-content" id="fiscaisSubTabContent">
+        <!-- SUB-ABA 1: ACOMPANHAMENTO DO MÊS SELECIONADO -->
+        <div class="tab-pane fade show active" id="fiscais-mes-subpane" role="tabpanel" aria-labelledby="fiscais-mes-subtab">
+            
+            <!-- GRÁFICOS (Mês Filtrado) -->
+            <div class="row mb-4 align-items-stretch">
+                <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                            <h6 class="m-0 fw-bold text-secondary">
+                                <i class="bi bi-pie-chart-fill me-2 text-info"></i>Situação das Entregas
+                            </h6>
+                            <span class="badge bg-primary rounded-pill px-3 py-2">Total: {{ total_contratos }} Contrato{{ total_contratos|pluralize }}</span>
+                        </div>
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                            <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
+                                <canvas id="prestacoesPieChart"></canvas>
+                            </div>
+                        </div>
                     </div>
-                    <button class="btn btn-sm btn-outline-primary btn-add-slide" data-tipo="fiscais" data-bs-toggle="modal" data-bs-target="#modalSlideAvulso" title="Inserir Slide Avulso">
-                        <i class="bi bi-plus-circle"></i> Slide
-                    </button>
                 </div>
-                {% endif %}
-            </div>
-            <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
-                <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem;">
-                    <thead class="table-light position-sticky top-0" style="z-index: 1;">
-                        <tr>
-                            <th class="ps-3">Gestor</th>
-                            <th>Contrato</th>
-                            <th class="text-center">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabelaGestoresPrioritarios">
-                        {% for gestor in gestores_prio %}
-                        {% if gestor.is_slide %}
-                        <tr class="slide-avulso-row" data-slide-id="{{ gestor.id }}" style="cursor: grab; background-color: #f8f9fa;">
-                            <td colspan="2" class="ps-3 text-secondary">
-                                <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
-                                <strong>{{ gestor.nome_slide }}</strong> (Slide Avulso)
-                            </td>
-                            <td class="text-center">
-                                {% if is_admin or is_auditor %}
-                                <button type="button" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-slide" data-id="{{ gestor.id }}" title="Excluir Slide">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" data-prestacao-id="{{ gestor.prestacao_id }}" style="cursor: grab;">
-                            <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
-                            <td>{{ gestor.contrato }}</td>
-                            <td class="text-center">
-                                {% if gestor.status == 'ok' %}
-                                    <span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>
-                                {% elif gestor.status == 'entregue' %}
-                                    <span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>
-                                {% elif gestor.status == 'correcao' %}
-                                    <span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>
-                                {% else %}
-                                    <span class="badge bg-secondary" title="Pendente"><i class="bi bi-dash-circle"></i></span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endif %}
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center text-muted py-4">Nenhuma entrega prioritária.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% if is_auditor %}
-            <div class="card-footer bg-white text-center py-2">
-                <a href="{% url 'consolidar_apresentacao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" 
-                   class="btn btn-sm btn-outline-primary w-100" 
-                   title="Consolidar e baixar todos os slides prioritários em conformidade">
-                    <i class="bi bi-file-earmark-pdf-fill me-1"></i>Consolidar PDF
-                </a>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
+                
+                <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                            <h6 class="m-0 fw-bold text-secondary">
+                                <i class="bi bi-pie-chart-fill me-2" style="color: #d97706;"></i>Slides da Apresentação
+                            </h6>
+                        </div>
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                            <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
+                                <canvas id="prioritariosBarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-<!-- MATRIZ DE PRESTAÇÕES -->
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5 class="m-0 text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento (Últimos 3 meses)</h5>
-        <div class="input-group input-group-sm" style="width: 250px;">
-            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-            <input type="text" id="filtroMatrizFiscais" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
-        </div>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-start" style="min-width: 200px;">Contrato / Empresa</th>
-                        {% for a, m in ultimos_3_meses_tuplas %}
-                        <th style="min-width: 120px;">{{ m|stringformat:"02d" }}/{{ a|stringformat:"d" }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c_data in matriz_contratos %}
-                    <tr>
-                        <td class="text-start">
-                             <div class="fw-bold text-primary">{{ c_data.contrato.numero }}</div>
-                             <div class="small text-muted text-truncate" style="max-width: 250px;" title="{% if c_data.contrato.empresa.nome_fantasia %}{{ c_data.contrato.empresa.razao_social }}{% endif %}">{{ c_data.contrato.empresa.nome_exibicao }}</div>
-                             <div class="small text-muted text-truncate" style="max-width: 250px;" title="{{ c_data.contrato.objeto }}">{{ c_data.contrato.objeto }}</div>
-                        </td>
-                        {% for entrega in c_data.entregas %}
-                        <td class="p-2">
-                            {% if entrega.status == 'entregue' %}
-                                <div class="d-flex flex-column align-items-center">
-                                    <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
-                                        <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
-                                        <span style="font-size: 0.75rem;">Entregue</span>
-                                    </a>
-                                    {% if entrega.prestacao.observacao %}
-                                    <div class="mt-1">
-                                        <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
-                                            <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
-                                        </span>
-                                    </div>
-                                    {% endif %}
-                                    {% if is_auditor %}
-                                    <div class="d-flex gap-1 mt-1">
-                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
-                                            <i class="bi bi-check-lg"></i>
-                                        </a>
-                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
-                                            <i class="bi bi-exclamation-triangle"></i>
-                                        </a>
-                                        {% if is_admin %}
-                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                    {% endif %}
-                                    
-                                    <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                        <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
-                                    </div>
+                <div class="col-lg-4 col-md-12">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="m-0 fw-bold text-secondary">
+                                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>Fiscais (Apresentação)
+                                </h6>
+                                {% if modo_livre_fiscais %}
+                                <span class="badge bg-warning text-dark border" id="badgeModoLivreFiscais" style="font-size: 0.7rem;" title="Apresentação em ordem livre (sem restrições de hierarquia)">
+                                    <i class="bi bi-unlock-fill me-1"></i>Ordem Livre
+                                </span>
+                                {% else %}
+                                <span class="badge bg-light text-secondary border" id="badgeModoLivreFiscais" style="font-size: 0.7rem;" title="Apresentação seguindo regras de antiguidade (hierarquia)">
+                                    <i class="bi bi-shield-lock me-1"></i>Antiguidade
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% if is_admin or is_auditor %}
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="form-check form-switch m-0 d-flex align-items-center gap-1" title="Ative para permitir ordenar livremente sem restrições de posto ou graduação">
+                                    <input class="form-check-input switch-modo-livre" type="checkbox" role="switch" id="switchModoLivreFiscais" data-tipo="fiscais" {% if modo_livre_fiscais %}checked{% endif %} style="cursor: pointer;">
+                                    <label class="form-check-label small text-muted user-select-none" for="switchModoLivreFiscais" style="font-size: 0.78rem; cursor: pointer;">Ordem Livre</label>
                                 </div>
-                            {% elif entrega.status == 'correcao' %}
-                                <div class="d-flex flex-column align-items-center">
-                                    <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="text-warning text-decoration-none fw-bold p-1" title="Baixar PDF">
-                                        <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
-                                        <span style="font-size: 0.75rem;">Corrigir</span>
-                                    </a>
-                                    {% if entrega.prestacao.observacao %}
-                                    <div class="mt-1">
-                                        <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
-                                            <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
-                                        </span>
-                                    </div>
-                                    {% endif %}
-                                    {% if is_auditor %}
-                                    <div class="d-flex gap-1 mt-1">
-                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
-                                            <i class="bi bi-check-lg"></i>
-                                        </a>
-                                        {% if is_admin %}
-                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                    {% endif %}
-                                    
-                                    <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                        <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
-                                    </div>
-                                </div>
-                            {% elif entrega.status == 'ok' %}
-                                <div class="d-flex flex-column align-items-center">
-                                    <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
-                                        <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
-                                        <span style="font-size: 0.75rem;">Conformidade</span>
-                                    </a>
-                                    {% if entrega.prestacao.observacao %}
-                                    <div class="mt-1">
-                                        <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
-                                            <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
-                                        </span>
-                                    </div>
-                                    {% endif %}
-                                    {% if is_auditor %}
-                                    <div class="d-flex gap-1 mt-1">
-                                        <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
-                                            <i class="bi bi-exclamation-triangle"></i>
-                                        </a>
-                                        {% if is_admin %}
-                                        <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                    {% endif %}
-                                    
-                                    <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                        <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
-                                    </div>
-                                </div>
-                            {% else %}
-                                <div class="d-flex flex-column align-items-center">
-                                    <div class="text-muted opacity-50 py-2">
-                                        <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
-                                        <span style="font-size: 0.75rem;">Pendente</span>
-                                    </div>
-                                    <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                        <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                        <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
-                                    </div>
-                                </div>
+                                <button class="btn btn-sm btn-outline-primary btn-add-slide" data-tipo="fiscais" data-bs-toggle="modal" data-bs-target="#modalSlideAvulso" title="Inserir Slide Avulso">
+                                    <i class="bi bi-plus-circle"></i> Slide
+                                </button>
+                            </div>
                             {% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">Nenhum contrato ativo no momento.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+                        </div>
+                        <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
+                            <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem;">
+                                <thead class="table-light position-sticky top-0" style="z-index: 1;">
+                                    <tr>
+                                        <th class="ps-3">Gestor</th>
+                                        <th>Contrato</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaGestoresPrioritarios">
+                                    {% for gestor in gestores_prio %}
+                                    {% if gestor.is_slide %}
+                                    <tr class="slide-avulso-row" data-slide-id="{{ gestor.id }}" style="cursor: grab; background-color: #f8f9fa;">
+                                        <td colspan="2" class="ps-3 text-secondary">
+                                            <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
+                                            <strong>{{ gestor.nome_slide }}</strong> (Slide Avulso)
+                                        </td>
+                                        <td class="text-center">
+                                            {% if is_admin or is_auditor %}
+                                            <button type="button" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-slide" data-id="{{ gestor.id }}" title="Excluir Slide">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" data-prestacao-id="{{ gestor.prestacao_id }}" style="cursor: grab;">
+                                        <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
+                                        <td>{{ gestor.contrato }}</td>
+                                        <td class="text-center">
+                                            {% if gestor.status == 'ok' %}
+                                                <span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>
+                                            {% elif gestor.status == 'entregue' %}
+                                                <span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>
+                                            {% elif gestor.status == 'correcao' %}
+                                                <span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>
+                                            {% else %}
+                                                <span class="badge bg-secondary" title="Pendente"><i class="bi bi-dash-circle"></i></span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-4">Nenhuma entrega prioritária.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if is_auditor %}
+                        <div class="card-footer bg-white text-center py-2">
+                            <a href="{% url 'consolidar_apresentacao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" 
+                               class="btn btn-sm btn-outline-primary w-100" 
+                               title="Consolidar e baixar todos os slides prioritários em conformidade">
+                                <i class="bi bi-file-earmark-pdf-fill me-1"></i>Consolidar PDF
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABELA DO MÊS SELECIONADO (UNIFICADA) -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+                    <h6 class="m-0 fw-bold text-dark">
+                        <i class="bi bi-list-check me-2 text-primary"></i>Acompanhamento Detalhado - Mês {{ filtro_mes|stringformat:"02d" }}/{{ filtro_ano|stringformat:"d" }}
+                    </h6>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="input-group input-group-sm" style="width: 230px;">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="filtroTabelaMesFiscais" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
+                        </div>
+                        <select id="filtroTabelaMesFiscaisStatus" class="form-select form-select-sm no-tomselect" style="width: 170px; height: 31px;">
+                            <option value="">Todos os status</option>
+                            <option value="correcao">Correção</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="entregue">Entregue</option>
+                            <option value="ok">Conformidade (OK)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 20%;">Contrato / Empresa</th>
+                                    <th class="text-center" style="width: 40%;">Slides</th>
+                                    <th class="text-center" style="width: 40%;">Livro do Fiscal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in entregas_mes_selecionado %}
+                                <tr class="linha-tabela-mes-fiscais" data-statuses="{{ item.status_prestacao }} {{ item.status_controle }}">
+                                    <td class="align-top">
+                                        <div class="fw-bold text-primary">{{ item.contrato.numero }}</div>
+                                        {% if item.contrato.empresa %}
+                                        <div class="small text-muted text-truncate" style="max-width: 260px;" title="{% if item.contrato.empresa.nome_fantasia %}{{ item.contrato.empresa.razao_social }}{% endif %}">{{ item.contrato.empresa.nome_exibicao }}</div>
+                                        {% endif %}
+                                        <small class="text-muted text-truncate d-block" style="max-width: 260px;" title="{{ item.contrato.objeto }}">{{ item.contrato.objeto }}</small>
+                                    </td>
+                                    
+                                    <!-- SLIDES -->
+                                    <td class="p-3 text-center align-top">
+                                        {% if item.status_prestacao == 'entregue' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao' item.prestacao.id %}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                                    <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Entregue</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao' item.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </a>
+                                                    <a href="{% url 'alterar_status_prestacao' item.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao' item.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-{{ item.contrato.id }}" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-{{ item.contrato.id }}">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% elif item.status_prestacao == 'correcao' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao' item.prestacao.id %}" target="_blank" class="text-decoration-none fw-bold p-1" style="color: #d97706;" title="Baixar PDF">
+                                                    <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Corrigir</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao' item.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao' item.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-{{ item.contrato.id }}" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-{{ item.contrato.id }}">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% elif item.status_prestacao == 'ok' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao' item.prestacao.id %}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                                    <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Conformidade</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao' item.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao' item.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-{{ item.contrato.id }}" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-{{ item.contrato.id }}">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="text-muted opacity-50 py-2">
+                                                    <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
+                                                    <span style="font-size: 0.75rem;">Pendente</span>
+                                                </div>
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-{{ item.contrato.id }}" data-contrato-id="{{ item.contrato.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao and item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-{{ item.contrato.id }}">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if item.msg_slides %}
+                                            {% if item.msg_slides.tipo == 'fiscal' %}
+                                            <div class="mt-3 text-start p-2 rounded bg-light border w-100 mx-auto" style="max-width: 320px;">
+                                                <strong class="text-secondary small d-block mb-1"><i class="bi bi-chat-left-text me-1"></i>Obs. do Fiscal:</strong>
+                                                <span class="small text-dark text-break" style="font-size: 0.8rem;">{{ item.msg_slides.texto }}</span>
+                                            </div>
+                                            {% elif item.msg_slides.tipo == 'aci' %}
+                                            <div class="mt-3 text-start w-100 mx-auto" style="max-width: 320px;">
+                                                <strong class="small d-block mb-1" style="color: #d97706;"><i class="bi bi-exclamation-triangle me-1"></i>Apontamentos ACI:</strong>
+                                                <div class="alert alert-warning py-1 px-2 mb-1 small border-warning" style="font-size: 0.75rem;">
+                                                    <div class="fw-semibold text-dark mb-1">{{ item.msg_slides.texto }}</div>
+                                                    <div class="text-muted text-end" style="font-size: 0.7rem;">por {{ item.msg_slides.autor }} em {{ item.msg_slides.data|date:"d/m/Y H:i" }}</div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- LIVRO DO FISCAL -->
+                                    <td class="p-3 text-center align-top">
+                                        {% if item.controle %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                {% if item.controle.status == 'ok' %}
+                                                    <a href="{% url 'visualizar_controle_execucao' item.controle.id %}" class="text-success text-decoration-none fw-bold p-1" title="Visualizar Livro">
+                                                        <i class="bi bi-journal-check fs-5 mb-1 d-block"></i>
+                                                        <span style="font-size: 0.75rem;">Conformidade</span>
+                                                    </a>
+                                                {% elif item.controle.status == 'correcao' %}
+                                                    <a href="{% url 'visualizar_controle_execucao' item.controle.id %}" class="text-decoration-none fw-bold p-1" style="color: #d97706;" title="Visualizar Livro">
+                                                        <div class="position-relative d-inline-block">
+                                                            <i class="bi bi-journal fs-5 mb-1 d-block"></i>
+                                                            <i class="bi bi-exclamation-triangle-fill position-absolute" style="color: #d97706; font-size: 0.7rem; bottom: 2px; right: -5px; background: white; border-radius: 50%; padding: 1px;"></i>
+                                                        </div>
+                                                        <span style="font-size: 0.75rem;">Corrigir</span>
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'visualizar_controle_execucao' item.controle.id %}" class="text-primary text-decoration-none fw-bold p-1" title="Visualizar Livro">
+                                                        <i class="bi bi-journal-arrow-up fs-5 mb-1 d-block"></i>
+                                                        <span style="font-size: 0.75rem;">Entregue</span>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="text-muted opacity-50 py-2">
+                                                    <i class="bi bi-journal fs-5 d-block mb-1"></i>
+                                                    <span style="font-size: 0.75rem;">Pendente</span>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if item.msg_controle %}
+                                            {% if item.msg_controle.tipo == 'fiscal' %}
+                                            <div class="mt-3 text-start p-2 rounded bg-light border w-100 mx-auto" style="max-width: 320px;">
+                                                <strong class="text-secondary small d-block mb-1"><i class="bi bi-chat-left-text me-1"></i>Obs. do Fiscal:</strong>
+                                                <span class="small text-dark text-break" style="font-size: 0.8rem;">{{ item.msg_controle.texto }}</span>
+                                            </div>
+                                            {% elif item.msg_controle.tipo == 'aci' %}
+                                            <div class="mt-3 text-start w-100 mx-auto" style="max-width: 320px;">
+                                                <strong class="small d-block mb-1" style="color: #d97706;"><i class="bi bi-exclamation-triangle me-1"></i>Apontamentos ACI:</strong>
+                                                <div class="alert alert-warning py-1 px-2 mb-1 small border-warning" style="font-size: 0.75rem;">
+                                                    <div class="fw-semibold text-dark mb-1">{{ item.msg_controle.texto }}</div>
+                                                    <div class="text-muted text-end" style="font-size: 0.7rem;">por {{ item.msg_controle.autor }} em {{ item.msg_controle.data|date:"d/m/Y H:i" }}</div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">Nenhum contrato ativo cadastrado.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /subpane mes fiscais -->
+
+        <!-- SUB-ABA 2: MATRIZ DE SLIDES (ÚLTIMOS 6 MESES) -->
+        <div class="tab-pane fade" id="fiscais-slides-subpane" role="tabpanel" aria-labelledby="fiscais-slides-subtab">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+                    <h6 class="m-0 fw-bold text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento - Slides (Últimos 6 meses)</h6>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="input-group input-group-sm" style="width: 220px;">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="filtroMatrizFiscais" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
+                        </div>
+                        <select id="filtroMatrizFiscaisStatus" class="form-select form-select-sm no-tomselect" style="width: 165px; height: 31px;">
+                            <option value="">Todos os status</option>
+                            <option value="correcao">Correção</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="entregue">Entregue</option>
+                            <option value="ok">Conformidade (OK)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-start" style="min-width: 200px;">Contrato / Empresa</th>
+                                    {% for a, m in ultimos_6_meses_tuplas %}
+                                    <th style="min-width: 110px;">{{ m|stringformat:"02d" }}/{{ a|stringformat:"d" }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c_data in matriz_contratos %}
+                                <tr class="linha-matriz-fiscais" data-statuses="{% for e in c_data.entregas %}{{ e.status }} {% endfor %}">
+                                    <td class="text-start">
+                                         <div class="fw-bold text-primary">{{ c_data.contrato.numero }}</div>
+                                         <div class="small text-muted text-truncate" style="max-width: 250px;" title="{% if c_data.contrato.empresa.nome_fantasia %}{{ c_data.contrato.empresa.razao_social }}{% endif %}">{{ c_data.contrato.empresa.nome_exibicao }}</div>
+                                         <div class="small text-muted text-truncate" style="max-width: 250px;" title="{{ c_data.contrato.objeto }}">{{ c_data.contrato.objeto }}</div>
+                                    </td>
+                                    {% for entrega in c_data.entregas %}
+                                    <td class="p-2">
+                                        {% if entrega.status == 'entregue' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                                    <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Entregue</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </a>
+                                                    <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% elif entrega.status == 'correcao' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="text-decoration-none fw-bold p-1" style="color: #d97706;" title="Baixar PDF">
+                                                    <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Corrigir</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'ok' %}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% elif entrega.status == 'ok' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao' entrega.prestacao.id %}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                                    <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Conformidade</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao' entrega.prestacao.id 'correcao' %}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao' entrega.prestacao.id %}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="text-muted opacity-50 py-2">
+                                                    <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
+                                                    <span style="font-size: 0.75rem;">Pendente</span>
+                                                </div>
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="{{ c_data.contrato.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">Nenhum contrato ativo no momento.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /subpane slides -->
+
+        <!-- SUB-ABA 3: MATRIZ DO LIVRO DO FISCAL (ÚLTIMOS 6 MESES) -->
+        <div class="tab-pane fade" id="execucao-pane" role="tabpanel" aria-labelledby="fiscais-execucao-subtab">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+                    <h6 class="m-0 fw-bold text-dark">
+                        <i class="bi bi-journal-check me-2 text-primary"></i>Acompanhamento do Livro do Fiscal (Últimos 6 Meses)
+                    </h6>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="input-group input-group-sm" style="width: 220px;">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="filtroMatrizExecucao" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar contrato ou empresa...">
+                        </div>
+                        <select id="filtroMatrizExecucaoStatus" class="form-select form-select-sm no-tomselect" style="width: 165px; height: 31px;">
+                            <option value="">Todos os status</option>
+                            <option value="correcao">Correção</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="entregue">Entregue</option>
+                            <option value="ok">Conformidade (OK)</option>
+                        </select>
+                        <a href="{% url 'exportar_execucao_csv' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:'d' }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                            <i class="bi bi-download me-1"></i> Exportar Execução (CSV)
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-start" style="min-width: 200px;">Contrato / Empresa</th>
+                                    {% for ano, mes in ultimos_6_meses_tuplas %}
+                                    <th class="text-center" style="min-width: 110px;">
+                                        {% if mes == 1 %}Jan{% elif mes == 2 %}Fev{% elif mes == 3 %}Mar{% elif mes == 4 %}Abr{% elif mes == 5 %}Mai{% elif mes == 6 %}Jun{% elif mes == 7 %}Jul{% elif mes == 8 %}Ago{% elif mes == 9 %}Set{% elif mes == 10 %}Out{% elif mes == 11 %}Nov{% else %}Dez{% endif %}/{{ ano|stringformat:"d" }}
+                                    </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in matriz_execucao %}
+                                <tr class="linha-matriz-execucao" data-statuses="{% for e in item.entregas %}{{ e.status }} {% endfor %}">
+                                    <td class="text-start">
+                                        <div class="fw-bold text-primary">{{ item.contrato.numero }}</div>
+                                        {% if item.contrato.empresa %}
+                                        <div class="small text-muted text-truncate" style="max-width: 250px;" title="{% if item.contrato.empresa.nome_fantasia %}{{ item.contrato.empresa.razao_social }}{% endif %}">{{ item.contrato.empresa.nome_exibicao }}</div>
+                                        {% endif %}
+                                        <small class="text-muted text-truncate d-block" style="max-width: 250px;" title="{{ item.contrato.objeto }}">{{ item.contrato.objeto }}</small>
+                                    </td>
+                                    {% for entrega in item.entregas %}
+                                    <td class="text-center p-2">
+                                        {% if entrega.controle %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                {% if entrega.controle.status == 'ok' %}
+                                                    <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="text-success text-decoration-none fw-bold p-1" title="Visualizar Livro">
+                                                        <i class="bi bi-journal-check fs-5 mb-1 d-block"></i>
+                                                        <span style="font-size: 0.75rem;">Conformidade</span>
+                                                    </a>
+                                                {% elif entrega.controle.status == 'correcao' %}
+                                                    <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="text-decoration-none fw-bold p-1" style="color: #d97706;" title="Visualizar Livro">
+                                                        <div class="position-relative d-inline-block">
+                                                            <i class="bi bi-journal fs-5 mb-1 d-block"></i>
+                                                            <i class="bi bi-exclamation-triangle-fill position-absolute" style="color: #d97706; font-size: 0.7rem; bottom: 2px; right: -5px; background: white; border-radius: 50%; padding: 1px;"></i>
+                                                        </div>
+                                                        <span style="font-size: 0.75rem;">Corrigir</span>
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="text-primary text-decoration-none fw-bold p-1" title="Visualizar Livro">
+                                                        <i class="bi bi-journal-arrow-up fs-5 mb-1 d-block"></i>
+                                                        <span style="font-size: 0.75rem;">Entregue</span>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="text-muted opacity-50 py-2">
+                                                    <i class="bi bi-journal fs-5 d-block mb-1"></i>
+                                                    <span style="font-size: 0.75rem;">Pendente</span>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">Nenhum contrato ativo cadastrado.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /subpane execucao -->
+    </div><!-- /fiscaisSubTabContent -->
 
 </div><!-- /tab-pane fiscais -->
 
 <!-- ABA 2: SETORES -->
 <div class="tab-pane fade" id="setores-pane" role="tabpanel" aria-labelledby="setores-tab">
 
-    <!-- GRÁFICOS SETORES (Mês Filtrado) -->
-    <div class="row mb-4 align-items-stretch">
-        <!-- Gráfico de Slides de Apresentação (Setores) -->
-        <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                    <h6 class="m-0 fw-bold text-secondary">
-                        <i class="bi bi-pie-chart-fill me-2 text-warning"></i>Slides da Apresentação (Setores)
-                    </h6>
-                </div>
-                <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                    <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
-                        <canvas id="prioritariosSetoresBarChart"></canvas>
+    <!-- SUB-ABAS INTERNAS DA ABA SETORES -->
+    <div class="mb-4">
+        <ul class="nav nav-pills bg-light p-1 rounded-3 d-inline-flex border m-0" id="setoresSubTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active px-3 py-1-5 fw-semibold" id="setores-mes-subtab" data-bs-toggle="pill" data-bs-target="#setores-mes-subpane" type="button" role="tab" aria-controls="setores-mes-subpane" aria-selected="true">
+                    <i class="bi bi-calendar-check me-1"></i>Acompanhamento do Mês
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-3 py-1-5 fw-semibold" id="setores-matriz-subtab" data-bs-toggle="pill" data-bs-target="#setores-matriz-subpane" type="button" role="tab" aria-controls="setores-matriz-subpane" aria-selected="false">
+                    <i class="bi bi-grid-3x3 me-1"></i>Matriz de Setores (6 meses)
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content" id="setoresSubTabContent">
+        <!-- SUB-ABA 1: ACOMPANHAMENTO DO MÊS SELECIONADO SETORES -->
+        <div class="tab-pane fade show active" id="setores-mes-subpane" role="tabpanel" aria-labelledby="setores-mes-subtab">
+            
+            <!-- GRÁFICOS SETORES (Mês Filtrado) -->
+            <div class="row mb-4 align-items-stretch">
+                <!-- Gráfico de Slides de Apresentação (Setores) -->
+                <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                            <h6 class="m-0 fw-bold text-secondary">
+                                <i class="bi bi-pie-chart-fill me-2" style="color: #d97706;"></i>Slides da Apresentação (Setores)
+                            </h6>
+                        </div>
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                            <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
+                                <canvas id="prioritariosSetoresBarChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Lista de Apresentação dos Gestores Setores -->
-        <div class="col-lg-6 col-md-12">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <h6 class="m-0 fw-bold text-secondary">
-                            <i class="bi bi-person-lines-fill me-2 text-primary"></i>Gestores (Apresentação)
-                        </h6>
-                        {% if modo_livre_gestores %}
-                        <span class="badge bg-warning text-dark border" id="badgeModoLivreGestores" style="font-size: 0.7rem;" title="Apresentação em ordem livre (sem restrições de hierarquia)">
-                            <i class="bi bi-unlock-fill me-1"></i>Ordem Livre
-                        </span>
-                        {% else %}
-                        <span class="badge bg-light text-secondary border" id="badgeModoLivreGestores" style="font-size: 0.7rem;" title="Apresentação seguindo regras de antiguidade (hierarquia)">
-                            <i class="bi bi-shield-lock me-1"></i>Antiguidade
-                        </span>
+                <!-- Lista de Apresentação dos Gestores Setores -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="m-0 fw-bold text-secondary">
+                                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>Gestores (Apresentação)
+                                </h6>
+                                {% if modo_livre_gestores %}
+                                <span class="badge bg-warning text-dark border" id="badgeModoLivreGestores" style="font-size: 0.7rem;" title="Apresentação em ordem livre (sem restrições de hierarquia)">
+                                    <i class="bi bi-unlock-fill me-1"></i>Ordem Livre
+                                </span>
+                                {% else %}
+                                <span class="badge bg-light text-secondary border" id="badgeModoLivreGestores" style="font-size: 0.7rem;" title="Apresentação seguindo regras de antiguidade (hierarquia)">
+                                    <i class="bi bi-shield-lock me-1"></i>Antiguidade
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% if is_admin or is_auditor %}
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="form-check form-switch m-0 d-flex align-items-center gap-1" title="Ative para permitir ordenar livremente sem restrições de posto ou graduação">
+                                    <input class="form-check-input switch-modo-livre" type="checkbox" role="switch" id="switchModoLivreGestores" data-tipo="gestores" {% if modo_livre_gestores %}checked{% endif %} style="cursor: pointer;">
+                                    <label class="form-check-label small text-muted user-select-none" for="switchModoLivreGestores" style="font-size: 0.78rem; cursor: pointer;">Ordem Livre</label>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary btn-add-slide" data-tipo="gestores" data-bs-toggle="modal" data-bs-target="#modalSlideAvulso" title="Inserir Slide Avulso">
+                                    <i class="bi bi-plus-circle"></i> Slide
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
+                            <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem;">
+                                <thead class="table-light position-sticky top-0" style="z-index: 1;">
+                                    <tr>
+                                        <th class="ps-3">Gestor</th>
+                                        <th>Setor</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaGestoresSetores">
+                                    {% for gestor in gestores_setores %}
+                                    {% if gestor.is_slide %}
+                                    <tr class="slide-avulso-row" data-slide-id="{{ gestor.id }}" style="cursor: grab; background-color: #f8f9fa;">
+                                        <td colspan="2" class="ps-3 text-secondary">
+                                            <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
+                                            <strong>{{ gestor.nome_slide }}</strong> (Slide Avulso)
+                                        </td>
+                                        <td class="text-center">
+                                            {% if is_admin or is_auditor %}
+                                            <button type="button" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-slide" data-id="{{ gestor.id }}" title="Excluir Slide">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" data-prestacao-id="{{ gestor.prestacao_id }}" style="cursor: grab;">
+                                        <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
+                                        <td>{{ gestor.setor }}</td>
+                                        <td class="text-center">
+                                            {% if gestor.status == 'ok' %}
+                                                <span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>
+                                            {% elif gestor.status == 'entregue' %}
+                                                <span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>
+                                            {% elif gestor.status == 'correcao' %}
+                                                <span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>
+                                            {% else %}
+                                                <span class="badge bg-secondary" title="Pendente"><i class="bi bi-dash-circle"></i></span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-4">Nenhuma entrega de setor.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if is_auditor %}
+                        <div class="card-footer bg-white text-center py-2">
+                            <a href="{% url 'consolidar_apresentacao_setor' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" 
+                               class="btn btn-sm btn-outline-primary w-100" 
+                               title="Consolidar e baixar todos os slides de setores em conformidade">
+                                <i class="bi bi-file-earmark-pdf-fill me-1"></i>Consolidar PDF
+                            </a>
+                        </div>
                         {% endif %}
                     </div>
-                    {% if is_admin or is_auditor %}
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="form-check form-switch m-0 d-flex align-items-center gap-1" title="Ative para permitir ordenar livremente sem restrições de posto ou graduação">
-                            <input class="form-check-input switch-modo-livre" type="checkbox" role="switch" id="switchModoLivreGestores" data-tipo="gestores" {% if modo_livre_gestores %}checked{% endif %} style="cursor: pointer;">
-                            <label class="form-check-label small text-muted user-select-none" for="switchModoLivreGestores" style="font-size: 0.78rem; cursor: pointer;">Ordem Livre</label>
-                        </div>
-                        <button class="btn btn-sm btn-outline-primary btn-add-slide" data-tipo="gestores" data-bs-toggle="modal" data-bs-target="#modalSlideAvulso" title="Inserir Slide Avulso">
-                            <i class="bi bi-plus-circle"></i> Slide
-                        </button>
-                    </div>
-                    {% endif %}
                 </div>
-                <div class="card-body p-0" style="height: 312px; overflow-y: auto;">
-                    <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem;">
-                        <thead class="table-light position-sticky top-0" style="z-index: 1;">
-                            <tr>
-                                <th class="ps-3">Gestor</th>
-                                <th>Setor</th>
-                                <th class="text-center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaGestoresSetores">
-                            {% for gestor in gestores_setores %}
-                            {% if gestor.is_slide %}
-                            <tr class="slide-avulso-row" data-slide-id="{{ gestor.id }}" style="cursor: grab; background-color: #f8f9fa;">
-                                <td colspan="2" class="ps-3 text-secondary">
-                                    <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
-                                    <strong>{{ gestor.nome_slide }}</strong> (Slide Avulso)
-                                </td>
-                                <td class="text-center">
-                                    {% if is_admin or is_auditor %}
-                                    <button type="button" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-slide" data-id="{{ gestor.id }}" title="Excluir Slide">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr class="gestor-row" data-agente-id="{{ gestor.agente_id }}" data-posto-id="{{ gestor.posto_id }}" data-prestacao-id="{{ gestor.prestacao_id }}" style="cursor: grab;">
-                                <td class="ps-3"><strong>{{ gestor.gestor }}</strong></td>
-                                <td>{{ gestor.setor }}</td>
-                                <td class="text-center">
-                                    {% if gestor.status == 'ok' %}
-                                        <span class="badge bg-success" title="Conformidade (OK!)"><i class="bi bi-check-lg"></i></span>
-                                    {% elif gestor.status == 'entregue' %}
-                                        <span class="badge bg-primary" title="Aguardando Análise"><i class="bi bi-file-earmark-arrow-up"></i></span>
-                                    {% elif gestor.status == 'correcao' %}
-                                        <span class="badge bg-warning text-dark" title="Ajustes Necessários"><i class="bi bi-exclamation-triangle"></i></span>
-                                    {% else %}
-                                        <span class="badge bg-secondary" title="Pendente"><i class="bi bi-dash-circle"></i></span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endif %}
-                            {% empty %}
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-4">Nenhuma entrega de setor.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% if is_auditor %}
-                <div class="card-footer bg-white text-center py-2">
-                    <a href="{% url 'consolidar_apresentacao_setor' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" 
-                       class="btn btn-sm btn-outline-primary w-100" 
-                       title="Consolidar e baixar todos os slides de setores em conformidade">
-                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>Consolidar PDF
-                    </a>
-                </div>
-                {% endif %}
             </div>
-        </div>
-    </div>
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h5 class="m-0 text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento - Setores (Últimos 3 meses)</h5>
-            <div class="input-group input-group-sm" style="width: 250px;">
-                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" id="filtroMatrizSetores" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar setor ou sigla...">
-            </div>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="text-start" style="min-width: 200px;">Setor / Sigla</th>
-                            {% for a, m in ultimos_3_meses_tuplas %}
-                            <th style="min-width: 120px;">{{ m|stringformat:"02d" }}/{{ a|stringformat:"d" }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for s_data in matriz_setores %}
-                        <tr>
-                            <td class="text-start">
-                                 <div class="fw-bold text-primary">{{ s_data.setor.sigla }}</div>
-                                 <div class="small text-muted text-truncate" style="max-width: 250px;" title="{{ s_data.setor.nome }}">{{ s_data.setor.nome }}</div>
-                            </td>
-                            {% for entrega in s_data.entregas %}
-                            <td class="p-2">
-                                {% if entrega.status == 'entregue' %}
-                                    <div class="d-flex flex-column align-items-center">
-                                        <a href="{% url 'download_prestacao_setor' entrega.prestacao.id %}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
-                                            <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
-                                            <span style="font-size: 0.75rem;">Entregue</span>
-                                        </a>
-                                        {% if entrega.prestacao.observacao %}
-                                        <div class="mt-1">
-                                            <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
-                                                <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
-                                            </span>
-                                        </div>
+            <!-- TABELA DO MÊS SELECIONADO SETORES -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+                    <h6 class="m-0 fw-bold text-dark">
+                        <i class="bi bi-list-check me-2 text-primary"></i>Entregas dos Setores - Mês {{ filtro_mes|stringformat:"02d" }}/{{ filtro_ano|stringformat:"d" }}
+                    </h6>
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="filtroTabelaMesSetores" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar setor ou sigla...">
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 30%;">Setor / Sigla</th>
+                                    <th class="text-center" style="width: 25%;">Slides (Apresentação)</th>
+                                    <th style="width: 45%;">Observações do Gestor & Apontamentos da ACI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in entregas_setor_mes_selecionado %}
+                                <tr class="linha-tabela-mes-setores">
+                                    <td>
+                                        <div class="fw-bold text-primary">{{ item.setor.sigla }}</div>
+                                        <div class="small text-muted text-truncate" style="max-width: 280px;" title="{{ item.setor.nome }}">{{ item.setor.nome }}</div>
+                                    </td>
+                                    <td class="text-center p-2">
+                                        {% if item.status == 'entregue' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao_setor' item.prestacao.id %}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                                    <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Entregue</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao_setor' item.prestacao.id 'ok' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status-setor" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-check-lg"></i> Aprovar
+                                                    </a>
+                                                    <a href="{% url 'alterar_status_prestacao_setor' item.prestacao.id 'correcao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status-setor" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-exclamation-triangle"></i> Corrigir
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao_setor' item.prestacao.id %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor cursor-pointer" type="checkbox" role="switch" id="switch-setor-{{ item.setor.id }}" data-setor-id="{{ item.setor.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao and item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-setor-{{ item.setor.id }}">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% elif item.status == 'correcao' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao_setor' item.prestacao.id %}" target="_blank" class="text-decoration-none fw-bold p-1" style="color: #d97706;" title="Baixar PDF">
+                                                    <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Corrigir</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao_setor' item.prestacao.id 'ok' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status-setor" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-check-lg"></i> Aprovar
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao_setor' item.prestacao.id %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor cursor-pointer" type="checkbox" role="switch" id="switch-setor-{{ item.setor.id }}" data-setor-id="{{ item.setor.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao and item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-setor-{{ item.setor.id }}">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% elif item.status == 'ok' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao_setor' item.prestacao.id %}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                                    <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Conformidade</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao_setor' item.prestacao.id 'correcao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status-setor" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-exclamation-triangle"></i> Corrigir
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao_setor' item.prestacao.id %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor cursor-pointer" type="checkbox" role="switch" id="switch-setor-{{ item.setor.id }}" data-setor-id="{{ item.setor.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao and item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-setor-{{ item.setor.id }}">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="text-muted opacity-50 py-2">
+                                                    <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
+                                                    <span style="font-size: 0.75rem;">Pendente</span>
+                                                </div>
+                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor cursor-pointer" type="checkbox" role="switch" id="switch-setor-{{ item.setor.id }}" data-setor-id="{{ item.setor.id|stringformat:'d' }}" data-mes="{{ filtro_mes|stringformat:'d' }}" data-ano="{{ filtro_ano|stringformat:'d' }}" {% if item.prestacao and item.prestacao.compor_apresentacao %}checked{% endif %}>
+                                                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-setor-{{ item.setor.id }}">Prioritário</label>
+                                                </div>
+                                            </div>
                                         {% endif %}
-                                        {% if is_auditor %}
-                                        <div class="d-flex gap-1 mt-1">
-                                            <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'ok' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status-setor" title="Aprovar (OK!)" style="font-size: 0.7rem;">
-                                                <i class="bi bi-check-lg"></i>
-                                            </a>
-                                            <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'correcao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status-setor" title="Solicitar Correção" style="font-size: 0.7rem;">
-                                                <i class="bi bi-exclamation-triangle"></i>
-                                            </a>
-                                            {% if is_admin %}
-                                            <a href="{% url 'excluir_prestacao_setor' entrega.prestacao.id %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
+                                    </td>
+                                    <td class="text-start p-3 align-top">
+                                        {% if item.msg_setor %}
+                                            {% if item.msg_setor.tipo == 'gestor' %}
+                                            <div class="mb-2 p-2 rounded bg-light border">
+                                                <strong class="text-secondary small d-block mb-1"><i class="bi bi-chat-left-text me-1"></i>Obs. do Gestor:</strong>
+                                                <span class="small text-dark text-break">{{ item.msg_setor.texto }}</span>
+                                            </div>
+                                            {% elif item.msg_setor.tipo == 'aci' %}
+                                            <div>
+                                                <strong class="small d-block mb-1" style="color: #d97706;"><i class="bi bi-exclamation-triangle me-1"></i>Apontamentos ACI:</strong>
+                                                <div class="alert alert-warning py-1 px-2 mb-1 small border-warning" style="font-size: 0.8rem;">
+                                                    <div class="fw-semibold text-dark mb-1">{{ item.msg_setor.texto }}</div>
+                                                    <div class="text-muted text-end" style="font-size: 0.72rem;">por {{ item.msg_setor.autor }} em {{ item.msg_setor.data|date:"d/m/Y H:i" }}</div>
+                                                </div>
+                                            </div>
                                             {% endif %}
-                                        </div>
+                                        {% else %}
+                                            <span class="text-muted small fst-italic opacity-75">Nenhuma observação registrada.</span>
                                         {% endif %}
-                                        
-                                        <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                            <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                            <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
-                                        </div>
-                                    </div>
-                                {% elif entrega.status == 'correcao' %}
-                                    <div class="d-flex flex-column align-items-center">
-                                        <a href="{% url 'download_prestacao_setor' entrega.prestacao.id %}" target="_blank" class="text-warning text-decoration-none fw-bold p-1" title="Baixar PDF">
-                                            <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
-                                            <span style="font-size: 0.75rem;">Corrigir</span>
-                                        </a>
-                                        {% if entrega.prestacao.observacao %}
-                                        <div class="mt-1">
-                                            <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
-                                                <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
-                                            </span>
-                                        </div>
-                                        {% endif %}
-                                        
-                                        <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                            <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                            <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
-                                        </div>
-                                    </div>
-                                {% elif entrega.status == 'ok' %}
-                                    <div class="d-flex flex-column align-items-center">
-                                        <a href="{% url 'download_prestacao_setor' entrega.prestacao.id %}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
-                                            <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
-                                            <span style="font-size: 0.75rem;">OK</span>
-                                        </a>
-                                        {% if entrega.prestacao.observacao %}
-                                        <div class="mt-1">
-                                            <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="{{ entrega.prestacao.observacao }}">
-                                                <i class="bi bi-chat-left-text-fill me-1"></i>Obs: {{ entrega.prestacao.observacao|truncatechars:20 }}
-                                            </span>
-                                        </div>
-                                        {% endif %}
-                                        {% if is_auditor %}
-                                        <div class="d-flex gap-1 mt-1">
-                                            <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'correcao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status-setor" title="Solicitar Correção" style="font-size: 0.7rem;">
-                                                <i class="bi bi-exclamation-triangle"></i>
-                                            </a>
-                                            {% if is_admin %}
-                                            <a href="{% url 'excluir_prestacao_setor' entrega.prestacao.id %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-danger p-1 py-0" title="Excluir" style="font-size: 0.7rem;">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                            {% endif %}
-                                        </div>
-                                        {% endif %}
-                                        
-                                        <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                            <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                            <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="d-flex flex-column align-items-center">
-                                        <div class="text-muted opacity-50 py-2">
-                                            <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
-                                            <span style="font-size: 0.75rem;">Pendente</span>
-                                        </div>
-                                        <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                                            <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
-                                            <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            </td>
-                            {% endfor %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">Nenhum setor cadastrado.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
             </div>
-        </div>
-    </div>
+        </div><!-- /subpane mes setores -->
+
+        <!-- SUB-ABA 2: MATRIZ DE SETORES (ÚLTIMOS 6 MESES) -->
+        <div class="tab-pane fade" id="setores-matriz-subpane" role="tabpanel" aria-labelledby="setores-matriz-subtab">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+                    <h6 class="m-0 fw-bold text-dark"><i class="bi bi-grid-3x3 me-2"></i>Matriz de Acompanhamento - Setores (Últimos 6 meses)</h6>
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="filtroMatrizSetores" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar setor ou sigla...">
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-start" style="min-width: 200px;">Setor / Sigla</th>
+                                    {% for a, m in ultimos_6_meses_tuplas %}
+                                    <th style="min-width: 110px;">{{ m|stringformat:"02d" }}/{{ a|stringformat:"d" }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s_data in matriz_setores %}
+                                <tr class="linha-matriz-setores">
+                                    <td class="text-start">
+                                         <div class="fw-bold text-primary">{{ s_data.setor.sigla }}</div>
+                                         <div class="small text-muted text-truncate" style="max-width: 250px;" title="{{ s_data.setor.nome }}">{{ s_data.setor.nome }}</div>
+                                    </td>
+                                    {% for entrega in s_data.entregas %}
+                                    <td class="p-2">
+                                        {% if entrega.status == 'entregue' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao_setor' entrega.prestacao.id %}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                                    <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Entregue</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'ok' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status-setor" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </a>
+                                                    <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'correcao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status-setor" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao_setor' entrega.prestacao.id %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% elif entrega.status == 'correcao' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao_setor' entrega.prestacao.id %}" target="_blank" class="text-decoration-none fw-bold p-1" style="color: #d97706;" title="Baixar PDF">
+                                                    <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Corrigir</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'ok' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status-setor" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao_setor' entrega.prestacao.id %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% elif entrega.status == 'ok' %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <a href="{% url 'download_prestacao_setor' entrega.prestacao.id %}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
+                                                    <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                                                    <span style="font-size: 0.75rem;">Conformidade</span>
+                                                </a>
+                                                {% if is_auditor %}
+                                                <div class="d-flex gap-1 mt-1">
+                                                    <a href="{% url 'alterar_status_prestacao_setor' entrega.prestacao.id 'correcao' %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status-setor" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                    </a>
+                                                    {% if is_admin %}
+                                                    <a href="{% url 'excluir_prestacao_setor' entrega.prestacao.id %}?mes={{ filtro_mes }}&ano={{ filtro_ano|stringformat:"d" }}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="text-muted opacity-50 py-2">
+                                                    <i class="bi bi-dash-circle fs-5 d-block mb-1"></i>
+                                                    <span style="font-size: 0.75rem;">Pendente</span>
+                                                </div>
+                                                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
+                                                    <input class="form-check-input checkbox-apresentacao-setor m-0" type="checkbox" data-setor-id="{{ s_data.setor.id|stringformat:'d' }}" data-mes="{{ entrega.mes|stringformat:'d' }}" data-ano="{{ entrega.ano|stringformat:'d' }}" {% if entrega.prestacao and entrega.prestacao.compor_apresentacao %}checked{% endif %} title="Marcar como prioritário na apresentação">
+                                                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="Marcar como prioritário na apresentação">Prioritário</label>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">Nenhum setor cadastrado.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /subpane setores-matriz -->
+    </div><!-- /setoresSubTabContent -->
+
 </div><!-- /tab-pane setores -->
 
 <!-- ABA 3: CALENDÁRIO -->
@@ -621,10 +1103,11 @@
             <table class="table table-bordered table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 25%;">Mês de Referência</th>
-                        <th style="width: 25%;">Entrega dos Slides</th>
-                        <th style="width: 25%;">Apresentação Fiscais</th>
-                        <th style="width: 25%;">Apresentação Gestores</th>
+                        <th style="width: 20%;">Mês de Referência</th>
+                        <th style="width: 20%;">Entrega dos Slides</th>
+                        <th style="width: 20%;">Livro do Fiscal</th>
+                        <th style="width: 20%;">Apresentação Fiscais</th>
+                        <th style="width: 20%;">Apresentação Gestores</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -632,13 +1115,16 @@
                     <tr>
                         <td class="fw-bold">{{ cal.nome_mes }}</td>
                         <td>
-                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_entrega" value="{{ cal.data_entrega }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_entrega" value="{{ cal.data_entrega }}" style="max-width: 140px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
                         </td>
                         <td>
-                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao_fiscais" value="{{ cal.data_apresentacao_fiscais }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_entrega_execucao" value="{{ cal.data_entrega_execucao }}" style="max-width: 140px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
                         </td>
                         <td>
-                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao_gestores" value="{{ cal.data_apresentacao_gestores }}" style="max-width: 150px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao_fiscais" value="{{ cal.data_apresentacao_fiscais }}" style="max-width: 140px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
+                        </td>
+                        <td>
+                            <input type="date" class="form-control form-control-sm text-center mx-auto cal-input" data-mes="{{ cal.mes }}" data-campo="data_apresentacao_gestores" value="{{ cal.data_apresentacao_gestores }}" style="max-width: 140px;" {% if not is_admin and not is_auditor %}disabled{% endif %}>
                         </td>
                     </tr>
                     {% endfor %}
@@ -777,7 +1263,7 @@
             });
         }
 
-        // Ativa a aba Setores se estiver na URL
+        // Ativa a aba Setores ou Execução se estiver na URL
         const urlParams = new URLSearchParams(window.location.search);
         const tabParam = urlParams.get('tab');
         if (tabParam === 'setores') {
@@ -785,6 +1271,15 @@
             if (tabEl) {
                 const tabInstance = bootstrap.Tab.getInstance(tabEl) || new bootstrap.Tab(tabEl);
                 tabInstance.show();
+            }
+        } else if (tabParam === 'execucao' || tabParam === 'execucao-pane') {
+            const tabFiscais = document.getElementById('fiscais-tab');
+            if (tabFiscais) {
+                (bootstrap.Tab.getInstance(tabFiscais) || new bootstrap.Tab(tabFiscais)).show();
+            }
+            const subTabExec = document.getElementById('fiscais-execucao-subtab');
+            if (subTabExec) {
+                (bootstrap.Tab.getInstance(subTabExec) || new bootstrap.Tab(subTabExec)).show();
             }
         }
 
@@ -818,30 +1313,94 @@
 
         // Filtro Matriz Fiscais
         const inputFiltroFiscais = document.getElementById('filtroMatrizFiscais');
-        if (inputFiltroFiscais) {
-            inputFiltroFiscais.addEventListener('keyup', function() {
-                const termo = this.value.toLowerCase();
-                const linhas = document.querySelectorAll('#fiscais-pane .table-responsive tbody tr');
-                
-                linhas.forEach(linha => {
-                    if (linha.cells.length === 1) return; // ignora linha de fallback
-                    const textoLinha = linha.cells[0].textContent.toLowerCase();
-                    linha.style.display = textoLinha.includes(termo) ? '' : 'none';
-                });
+        const selectFiltroFiscaisStatus = document.getElementById('filtroMatrizFiscaisStatus');
+
+        function aplicarFiltroFiscais() {
+            const termo = (inputFiltroFiscais ? inputFiltroFiscais.value : '').toLowerCase().trim();
+            const statusFiltro = (selectFiltroFiscaisStatus ? selectFiltroFiscaisStatus.value : '').toLowerCase().trim();
+            const linhas = document.querySelectorAll('#fiscais-pane .table-responsive tbody tr.linha-matriz-fiscais');
+
+            linhas.forEach(linha => {
+                const textoLinha = linha.cells[0].textContent.toLowerCase();
+                const matchesTexto = !termo || textoLinha.includes(termo);
+                const statuses = (linha.dataset.statuses || '').toLowerCase();
+                const matchesStatus = !statusFiltro || statuses.includes(statusFiltro);
+
+                linha.style.display = (matchesTexto && matchesStatus) ? '' : 'none';
             });
         }
+
+        if (inputFiltroFiscais) inputFiltroFiscais.addEventListener('input', aplicarFiltroFiscais);
+        if (selectFiltroFiscaisStatus) selectFiltroFiscaisStatus.addEventListener('change', aplicarFiltroFiscais);
+
+        // Filtro Matriz Execução (Livro do Fiscal)
+        const inputFiltroExecucao = document.getElementById('filtroMatrizExecucao');
+        const selectFiltroExecucaoStatus = document.getElementById('filtroMatrizExecucaoStatus');
+
+        function aplicarFiltroExecucao() {
+            const termo = (inputFiltroExecucao ? inputFiltroExecucao.value : '').toLowerCase().trim();
+            const statusFiltro = (selectFiltroExecucaoStatus ? selectFiltroExecucaoStatus.value : '').toLowerCase().trim();
+            const linhas = document.querySelectorAll('#execucao-pane .table-responsive tbody tr.linha-matriz-execucao');
+
+            linhas.forEach(linha => {
+                const textoLinha = linha.cells[0].textContent.toLowerCase();
+                const matchesTexto = !termo || textoLinha.includes(termo);
+                const statuses = (linha.dataset.statuses || '').toLowerCase();
+                const matchesStatus = !statusFiltro || statuses.includes(statusFiltro);
+
+                linha.style.display = (matchesTexto && matchesStatus) ? '' : 'none';
+            });
+        }
+
+        if (inputFiltroExecucao) inputFiltroExecucao.addEventListener('input', aplicarFiltroExecucao);
+        if (selectFiltroExecucaoStatus) selectFiltroExecucaoStatus.addEventListener('change', aplicarFiltroExecucao);
 
         // Filtro Matriz Setores
         const inputFiltroSetores = document.getElementById('filtroMatrizSetores');
         if (inputFiltroSetores) {
             inputFiltroSetores.addEventListener('keyup', function() {
                 const termo = this.value.toLowerCase();
-                const linhas = document.querySelectorAll('#setores-pane .table-responsive tbody tr');
+                const linhas = document.querySelectorAll('#setores-matriz-subpane .table-responsive tbody tr.linha-matriz-setores');
                 
                 linhas.forEach(linha => {
-                    if (linha.cells.length === 1) return; // ignora linha de fallback
                     const textoLinha = linha.cells[0].textContent.toLowerCase();
                     linha.style.display = textoLinha.includes(termo) ? '' : 'none';
+                });
+            });
+        }
+
+        // Filtro Tabela Mês Selecionado (Fiscais)
+        const inputFiltroTabelaMesFiscais = document.getElementById('filtroTabelaMesFiscais');
+        const selectFiltroTabelaMesFiscaisStatus = document.getElementById('filtroTabelaMesFiscaisStatus');
+
+        function aplicarFiltroTabelaMesFiscais() {
+            const termo = (inputFiltroTabelaMesFiscais ? inputFiltroTabelaMesFiscais.value : '').toLowerCase().trim();
+            const statusFiltro = (selectFiltroTabelaMesFiscaisStatus ? selectFiltroTabelaMesFiscaisStatus.value : '').toLowerCase().trim();
+            const linhas = document.querySelectorAll('#fiscais-mes-subpane .table-responsive tbody tr.linha-tabela-mes-fiscais');
+
+            linhas.forEach(linha => {
+                const textoLinha = linha.cells[0].textContent.toLowerCase();
+                const matchesTexto = !termo || textoLinha.includes(termo);
+                const statuses = (linha.dataset.statuses || '').toLowerCase();
+                const matchesStatus = !statusFiltro || statuses.includes(statusFiltro);
+
+                linha.style.display = (matchesTexto && matchesStatus) ? '' : 'none';
+            });
+        }
+
+        if (inputFiltroTabelaMesFiscais) inputFiltroTabelaMesFiscais.addEventListener('input', aplicarFiltroTabelaMesFiscais);
+        if (selectFiltroTabelaMesFiscaisStatus) selectFiltroTabelaMesFiscaisStatus.addEventListener('change', aplicarFiltroTabelaMesFiscais);
+
+        // Filtro Tabela Mês Selecionado (Setores)
+        const inputFiltroTabelaMesSetores = document.getElementById('filtroTabelaMesSetores');
+        if (inputFiltroTabelaMesSetores) {
+            inputFiltroTabelaMesSetores.addEventListener('input', function() {
+                const termo = this.value.toLowerCase().trim();
+                const linhas = document.querySelectorAll('#setores-mes-subpane .table-responsive tbody tr.linha-tabela-mes-setores');
+                
+                linhas.forEach(linha => {
+                    const textoLinha = linha.cells[0].textContent.toLowerCase();
+                    linha.style.display = (!termo || textoLinha.includes(termo)) ? '' : 'none';
                 });
             });
         }
@@ -1007,20 +1566,9 @@
         const URL_EXCLUIR_BASE = "{% url 'excluir_prestacao' 999999 %}";
 
         // Função para gerar o HTML da célula baseado no novo status
-        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor, comporApresentacao, contratoId, mes, ano, observacao) {
+        function renderCellHtml(prestacaoId, status, isAdmin, isAuditor, comporApresentacao, contratoId, mes, ano, observacao, apontamentosSlides) {
             let html = '<div class="d-flex flex-column align-items-center">';
-            
-            let obsHtml = '';
-            if (observacao) {
-                const truncated = observacao.length > 20 ? observacao.substring(0, 17) + '...' : observacao;
-                obsHtml = `
-                    <div class="mt-1">
-                        <span class="badge bg-secondary text-wrap" style="max-width: 150px; font-size: 0.7rem; cursor: help;" title="${observacao}">
-                            <i class="bi bi-chat-left-text-fill me-1"></i>Obs: ${truncated}
-                        </span>
-                    </div>
-                `;
-            }
+            let checkboxState = comporApresentacao ? 'checked' : '';
             
             if (status === 'pendente') {
                 html += `
@@ -1030,100 +1578,120 @@
                     </div>
                 `;
             } else {
-            
-            const urlDownload = URL_DOWNLOAD_BASE.replace('999999', prestacaoId);
-            const urlOk = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'ok');
-            const urlCorrecao = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'correcao');
-            const urlExcluir = URL_EXCLUIR_BASE.replace('999999', prestacaoId);
-            
-            if (status === 'entregue') {
-                html += `
-                    <a href="${urlDownload}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
-                        <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
-                        <span style="font-size: 0.75rem;">Entregue</span>
-                    </a>
-                    ${obsHtml}
-                `;
-                if (isAuditor) {
+                const urlDownload = URL_DOWNLOAD_BASE.replace('999999', prestacaoId);
+                const urlOk = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'ok');
+                const urlCorrecao = URL_STATUS_BASE.replace('999999', prestacaoId).replace('STATUS_PLACEHOLDER', 'correcao');
+                const urlExcluir = URL_EXCLUIR_BASE.replace('999999', prestacaoId);
+                
+                if (status === 'entregue') {
                     html += `
-                        <div class="d-flex gap-1 mt-1">
-                            <a href="${urlOk}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
-                                <i class="bi bi-check-lg"></i>
-                            </a>
-                            <a href="${urlCorrecao}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
-                                <i class="bi bi-exclamation-triangle"></i>
-                            </a>
+                        <a href="${urlDownload}" target="_blank" class="text-primary text-decoration-none fw-bold p-1" title="Baixar PDF">
+                            <i class="bi bi-file-earmark-arrow-up fs-5 mb-1 d-block"></i>
+                            <span style="font-size: 0.75rem;">Entregue</span>
+                        </a>
                     `;
-                    if (isAdmin) {
+                    if (isAuditor) {
                         html += `
-                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                            <div class="d-flex gap-1 mt-1">
+                                <a href="${urlOk}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
+                                <a href="${urlCorrecao}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </a>
                         `;
+                        if (isAdmin) {
+                            html += `
+                                <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            `;
+                        }
+                        html += '</div>';
                     }
-                    html += '</div>';
-                }
-            } else if (status === 'correcao') {
-                html += `
-                    <a href="${urlDownload}" target="_blank" class="text-warning text-decoration-none fw-bold p-1" title="Baixar PDF">
-                        <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
-                        <span style="font-size: 0.75rem;">Corrigir</span>
-                    </a>
-                    ${obsHtml}
-                `;
-                if (isAuditor) {
+                } else if (status === 'correcao') {
                     html += `
-                        <div class="d-flex gap-1 mt-1">
-                            <a href="${urlOk}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
-                                <i class="bi bi-check-lg"></i>
-                            </a>
+                        <a href="${urlDownload}" target="_blank" class="text-decoration-none fw-bold p-1" style="color: #d97706;" title="Baixar PDF">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 mb-1 d-block"></i>
+                            <span style="font-size: 0.75rem;">Corrigir</span>
+                        </a>
                     `;
-                    if (isAdmin) {
+                    if (isAuditor) {
                         html += `
-                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                            <div class="d-flex gap-1 mt-1">
+                                <a href="${urlOk}" class="btn btn-xs btn-outline-success p-1 py-0 btn-alterar-status" title="Aprovar (OK!)" style="font-size: 0.7rem;">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
                         `;
+                        if (isAdmin) {
+                            html += `
+                                <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            `;
+                        }
+                        html += '</div>';
                     }
-                    html += '</div>';
-                }
-            } else if (status === 'ok') {
-                html += `
-                    <a href="${urlDownload}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
-                        <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
-                        <span style="font-size: 0.75rem;">Conformidade</span>
-                    </a>
-                    ${obsHtml}
-                `;
-                if (isAuditor) {
+                } else if (status === 'ok') {
                     html += `
-                        <div class="d-flex gap-1 mt-1">
-                            <a href="${urlCorrecao}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
-                                <i class="bi bi-exclamation-triangle"></i>
-                            </a>
+                        <a href="${urlDownload}" target="_blank" class="text-success text-decoration-none fw-bold p-1" title="Baixar PDF">
+                            <i class="bi bi-check-circle-fill fs-5 mb-1 d-block"></i>
+                            <span style="font-size: 0.75rem;">Conformidade</span>
+                        </a>
                     `;
-                    if (isAdmin) {
+                    if (isAuditor) {
                         html += `
-                            <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                            <div class="d-flex gap-1 mt-1">
+                                <a href="${urlCorrecao}" class="btn btn-xs btn-outline-warning p-1 py-0 btn-alterar-status" title="Solicitar Correção" style="font-size: 0.7rem;">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </a>
                         `;
+                        if (isAdmin) {
+                            html += `
+                                <a href="${urlExcluir}" class="btn btn-xs btn-outline-danger p-1 py-0 btn-excluir-ajax" title="Excluir" style="font-size: 0.7rem;">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            `;
+                        }
+                        html += '</div>';
                     }
-                    html += '</div>';
                 }
             }
-            }
-            
-            // Adiciona o checkbox de prioritário
-            let checkboxState = comporApresentacao ? 'checked' : '';
-            let tooltipText = 'Marcar como prioritário na apresentação';
-            
+
+            // Switch Toggle
             html += `
-                <div class="mt-2 form-check d-flex justify-content-center align-items-center gap-1" style="font-size: 0.7rem; margin-bottom: 0;">
-                    <input class="form-check-input checkbox-apresentacao m-0" type="checkbox" data-contrato-id="${contratoId}" data-mes="${mes}" data-ano="${ano}" ${checkboxState} title="${tooltipText}">
-                    <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" title="${tooltipText}">Prioritário</label>
+                <div class="form-check form-switch d-inline-flex align-items-center gap-2 mt-2" style="font-size: 0.75rem;">
+                    <input class="form-check-input checkbox-apresentacao cursor-pointer" type="checkbox" role="switch" id="switch-${contratoId}" data-contrato-id="${contratoId}" data-mes="${mes}" data-ano="${ano}" ${checkboxState}>
+                    <label class="form-check-label text-muted fw-bold cursor-pointer" for="switch-${contratoId}">Prioritário</label>
                 </div>
             `;
+            
+            // Obs do Fiscal
+            if (observacao) {
+                html += `
+                    <div class="mt-3 text-start p-2 rounded bg-light border w-100 mx-auto" style="max-width: 320px;">
+                        <strong class="text-secondary small d-block mb-1"><i class="bi bi-chat-left-text me-1"></i>Obs. do Fiscal:</strong>
+                        <span class="small text-dark text-break" style="font-size: 0.8rem;">${observacao}</span>
+                    </div>
+                `;
+            }
+
+            // Apontamentos Slides
+            if (apontamentosSlides && apontamentosSlides.length > 0) {
+                html += `
+                    <div class="mt-3 text-start w-100 mx-auto" style="max-width: 320px;">
+                        <strong class="small d-block mb-1" style="color: #d97706;"><i class="bi bi-exclamation-triangle me-1"></i>Apontamentos ACI:</strong>
+                `;
+                apontamentosSlides.forEach(ap => {
+                    html += `
+                        <div class="alert alert-warning py-1 px-2 mb-1 small border-warning" style="font-size: 0.75rem;">
+                            <div class="fw-semibold text-dark mb-1">${ap.descricao}</div>
+                            <div class="text-muted text-end" style="font-size: 0.7rem;">por ${ap.autor} em ${ap.data_registro}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
             
             html += '</div>';
             return html;
@@ -1211,7 +1779,7 @@
                                 const m = checkboxDentro ? checkboxDentro.getAttribute('data-mes') : null;
                                 const a = checkboxDentro ? checkboxDentro.getAttribute('data-ano') : null;
                                 
-                                td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao);
+                                td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao, data.apontamentos_slides);
                                 
                                 if (window.myChart && data.stats) {
                                     window.myChart.data.datasets[0].data = [
@@ -1310,7 +1878,7 @@
                         const a = checkboxDentro ? checkboxDentro.getAttribute('data-ano') : null;
                         
                         // Atualiza o conteúdo da célula
-                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao);
+                        td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao, data.apontamentos_slides);
                         
                         // Atualiza os gráficos se os dados de estatística estiverem disponíveis
                         if (window.myChart && data.stats) {
@@ -1450,6 +2018,10 @@
                     checkbox.checked = !isChecked;
                     alert('Erro: ' + (data.error || 'Não foi possível alterar a seleção do slide.'));
                 } else {
+                    document.querySelectorAll(`.checkbox-apresentacao-setor[data-setor-id="${setorId}"][data-mes="${mes}"][data-ano="${ano}"]`).forEach(cb => {
+                        cb.checked = isChecked;
+                    });
+
                     if (window.mySetoresBarChart && data.stats) {
                         window.mySetoresBarChart.data.datasets[0].data = [
                             data.stats.prio_ok_setores,
@@ -1483,6 +2055,7 @@
             
             const row = input.closest('tr');
             const data_entrega = row.querySelector('[data-campo="data_entrega"]').value;
+            const data_entrega_execucao = row.querySelector('[data-campo="data_entrega_execucao"]').value;
             const data_apresentacao_fiscais = row.querySelector('[data-campo="data_apresentacao_fiscais"]').value;
             const data_apresentacao_gestores = row.querySelector('[data-campo="data_apresentacao_gestores"]').value;
             
@@ -1497,6 +2070,7 @@
                     ano: ano,
                     mes: mes,
                     data_entrega: data_entrega,
+                    data_entrega_execucao: data_entrega_execucao,
                     data_apresentacao_fiscais: data_apresentacao_fiscais,
                     data_apresentacao_gestores: data_apresentacao_gestores
                 })
@@ -1907,8 +2481,8 @@
             }
         }
 
-        // Atualiza o hidden input ao trocar de aba
-        document.querySelectorAll('#dashboardTabs button[data-bs-toggle="tab"]').forEach(btn => {
+        // Atualiza o hidden input ao trocar de aba (principal ou sub-abas de Fiscais)
+        document.querySelectorAll('#dashboardTabs button[data-bs-toggle="tab"], #fiscaisSubTabs button[data-bs-toggle="pill"]').forEach(btn => {
             btn.addEventListener('shown.bs.tab', function(e) {
                 const paneId = e.target.getAttribute('data-bs-target').replace('#', '');
                 const hiddenInput = document.getElementById('hiddenTabInput');

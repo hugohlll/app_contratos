@@ -100,6 +100,8 @@ Os 3 testes devem passar, confirmando que:
 | Parar e remover containers (mantém dados) | `docker compose down` |
 | Parar e **apagar tudo** (inclusive banco de dev) | `docker compose down -v` |
 | Ver logs em tempo real | `docker compose logs -f` |
+| Executar suíte de testes completa | `docker compose exec web python manage.py test` |
+| Executar testes do Livro do Fiscal | `docker compose exec web python manage.py test contratos.tests.test_controle_execucao` |
 
 > **Nota:** O comando `docker compose down -v` no ambiente de desenvolvimento apaga **apenas** o volume `siscont_pg_data_dev`. O banco de produção (`siscont_pg_data_prod`) **não é afetado**.
 

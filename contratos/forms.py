@@ -13,7 +13,9 @@ class EstiloFormMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            if isinstance(field.widget, forms.CheckboxInput):
+            if isinstance(field.widget, forms.RadioSelect):
+                field.widget.attrs['class'] = 'form-check-input'
+            elif isinstance(field.widget, forms.CheckboxInput):
                 field.widget.attrs['class'] = 'form-check-input'
             elif isinstance(field.widget, forms.Select):
                 field.widget.attrs['class'] = 'form-select'
@@ -355,3 +357,118 @@ class ConfiguracaoSistemaForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = ConfiguracaoSistema
         fields = ('backup_periodicidade',)
+
+
+from .models import ControleExecucao, RegistroFatura, OcorrenciaContratual
+
+class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
+    class Meta:
+        model = ControleExecucao
+        fields = [
+            'agente', 'mes_referencia', 'ano_referencia', 'status',
+            'omap', 'unidade_gestora',
+            # Preposto da Contratada
+            'preposto_nome', 'preposto_cargo', 'preposto_cpf', 'preposto_telefone', 'preposto_email',
+            # Obras e Serviços de Engenharia (Anexo B)
+            'eh_obra_engenharia', 'condicoes_climaticas', 'efetivo_trabalhadores', 'maquinario_equipamentos',
+            'art_rrt', 'matricula_cei_cno', 'seguranca_trabalho_cat',
+            # Ocorrências e Encerramento
+            'sem_ocorrencias_periodo', 'relatorio_ocorrencias', 'observacao',
+        ]
+        widgets = {
+            'mes_referencia': forms.HiddenInput(),
+            'ano_referencia': forms.HiddenInput(),
+            'status': forms.HiddenInput(),
+            'omap': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'unidade_gestora': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'preposto_nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome completo do preposto'}),
+            'preposto_cargo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cargo / Função na contratada'}),
+            'preposto_cpf': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '000.000.000-00 ou RG'}),
+            'preposto_telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(61) 99999-9999'}),
+            'preposto_email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'preposto@empresa.com.br'}),
+            'condicoes_climaticas': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Registro de chuvas, mau tempo e paralisações para fins de abono de dias...'}),
+            'efetivo_trabalhadores': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Contagem de trabalhadores por função (pedreiros, serventes, engenheiros)...'}),
+            'maquinario_equipamentos': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Relação de máquinas e equipamentos no canteiro e estado operacional...'}),
+            'art_rrt': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nº da ART/RRT quitada no CREA/CAU'}),
+            'matricula_cei_cno': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nº do CEI / CNO no INSS'}),
+            'seguranca_trabalho_cat': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Uso de EPIs, registro de acidentes e comunicações (CAT)...'}),
+            'relatorio_ocorrencias': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Resumo consolidado das ocorrências do período (opcional)...'}),
+            'observacao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Observações gerais, esclarecimentos ou apontamentos complementares...'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        contrato = kwargs.pop('contrato', None)
+        super().__init__(*args, **kwargs)
+
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_prev = ultimo_dia_mes_anterior.month
+        ano_prev = ultimo_dia_mes_anterior.year
+
+        if not self.initial.get('mes_referencia'):
+            self.fields['mes_referencia'].initial = mes_prev
+        if not self.initial.get('ano_referencia'):
+            self.fields['ano_referencia'].initial = ano_prev
+
+        if 'status' in self.fields:
+            self.fields['status'].required = False
+        if 'omap' in self.fields:
+            self.fields['omap'].required = False
+        if 'unidade_gestora' in self.fields:
+            self.fields['unidade_gestora'].required = False
+
+        if contrato:
+            agentes_ids = Integrante.objects.filter(
+                comissao__contrato=contrato,
+                comissao__ativa=True,
+                comissao__tipo='FISCALIZACAO',
+                data_desligamento__isnull=True
+            ).values_list('agente_id', flat=True).distinct()
+            self.fields['agente'].queryset = Agente.objects.filter(id__in=agentes_ids).select_related('posto')
+            self.fields['agente'].empty_label = "Selecione o Fiscal..."
+
+            # Preenchimento automático inteligente do Preposto a partir do mês anterior se campos vazios
+            if not self.instance.pk or not self.instance.preposto_nome:
+                ultimo_controle = ControleExecucao.objects.filter(
+                    contrato=contrato
+                ).exclude(preposto_nome='').order_by('-ano_referencia', '-mes_referencia').first()
+                if ultimo_controle:
+                    self.initial.setdefault('preposto_nome', ultimo_controle.preposto_nome)
+                    self.initial.setdefault('preposto_cargo', ultimo_controle.preposto_cargo)
+                    self.initial.setdefault('preposto_cpf', ultimo_controle.preposto_cpf)
+                    self.initial.setdefault('preposto_telefone', ultimo_controle.preposto_telefone)
+                    self.initial.setdefault('preposto_email', ultimo_controle.preposto_email)
+
+
+class RegistroFaturaForm(EstiloFormMixin, forms.ModelForm):
+    class Meta:
+        model = RegistroFatura
+        fields = ['numero_nf', 'valor', 'numero_ob']
+
+
+class OcorrenciaContratualForm(EstiloFormMixin, forms.ModelForm):
+    class Meta:
+        model = OcorrenciaContratual
+        fields = [
+            'data_hora', 'local', 'tipo', 'descricao', 'dispositivo_violado',
+            'evidencias', 'notificacao_emitida', 'notificacao_numero',
+            'prazo_dias_uteis', 'ciencia_preposto', 'tramite_arc',
+            'registros_sistemas', 'status_ocorrencia', 'acao_fiscal'
+        ]
+        widgets = {
+            'data_hora': forms.DateTimeInput(format='%Y-%m-%dT%H:%M', attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'local': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Instalações, setor, dependência'}),
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Narrativa detalhada e factual do fato'}),
+            'dispositivo_violado': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cláusula contratual, item do TR ou edital'}),
+            'evidencias': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Relatório fotográfico, documento SIGADAER, etc.'}),
+            'notificacao_numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 001/GAP-BR/2026'}),
+            'prazo_dias_uteis': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'ciencia_preposto': forms.Select(attrs={'class': 'form-select'}),
+            'registros_sistemas': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Medição SILOMS / Doc SIGADAER'}),
+            'status_ocorrencia': forms.Select(attrs={'class': 'form-select'}),
+            'acao_fiscal': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Providência / determinação imediata do fiscal'}),
+        }
+
+

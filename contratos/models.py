@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from django.utils import timezone
 from datetime import date, timedelta
 
 
@@ -96,6 +97,20 @@ class Contrato(models.Model):
     vigencia_inicio = models.DateField("Início da Vigência")
     vigencia_fim = models.DateField("Fim da Vigência")
     valor_total = models.DecimalField("Valor Total", max_digits=12, decimal_places=2)
+
+    @property
+    def data_recomendada_aditivo(self):
+        """Data recomendada para início das tratativas de aditivo (120 dias antes do término da vigência)"""
+        if self.vigencia_fim:
+            return self.vigencia_fim - timedelta(days=120)
+        return None
+
+    @property
+    def data_limite_aditivo(self):
+        """Data limite para o início das tratativas de aditivo (90 dias antes do término da vigência)"""
+        if self.vigencia_fim:
+            return self.vigencia_fim - timedelta(days=90)
+        return None
 
     def __str__(self):
         return f"CT {self.numero} - {self.empresa.razao_social}"
@@ -369,6 +384,7 @@ class CalendarioPrestacao(models.Model):
     ano = models.IntegerField("Ano")
     mes = models.IntegerField("Mês")
     data_entrega = models.DateField("Data de Entrega dos Slides", null=True, blank=True)
+    data_entrega_execucao = models.DateField("Data de Entrega do Livro do Fiscal", null=True, blank=True)
     data_apresentacao_fiscais = models.DateField("Data de Apresentação - Fiscais", null=True, blank=True)
     data_apresentacao_gestores = models.DateField("Data de Apresentação - Gestores", null=True, blank=True)
 
@@ -559,6 +575,182 @@ class SlideApresentacao(models.Model):
         return f"Slide {self.nome_slide} ({self.get_tipo_apresentacao_display()}) - {self.mes_referencia:02d}/{self.ano_referencia}"
 
 
+class ControleExecucao(models.Model):
+    contrato = models.ForeignKey(
+        Contrato, on_delete=models.CASCADE, related_name='controles_execucao'
+    )
+    agente = models.ForeignKey(
+        Agente, on_delete=models.SET_NULL, null=True, verbose_name="Fiscal"
+    )
+    ano_referencia = models.IntegerField("Ano de Referência")
+    mes_referencia = models.IntegerField("Mês de Referência")
+    data_envio = models.DateTimeField(auto_now_add=True)
+
+    STATUS_CHOICES = [
+        ('rascunho', 'Rascunho / Em Andamento'),
+        ('pendente', 'Pendente'),
+        ('entregue', 'Entregue / Atestado'),
+        ('correcao', 'Aguardando Correção'),
+        ('ok', 'Conformidade (OK!)'),
+    ]
+    status = models.CharField(
+        "Status", max_length=15, choices=STATUS_CHOICES, default='rascunho'
+    )
+
+    # === Termo de Abertura / Identificação Institucional (NPA 009/SCON/2025) ===
+    omap = models.CharField("Organização Militar Apoiada (OMAP)", max_length=100, default='GAP-BR')
+    unidade_gestora = models.CharField("Unidade Gestora (UG / Gestão)", max_length=50, default='120006 - GAP-BR')
+
+    # === Preposto Aceito da Contratada (NPA 009) ===
+    preposto_nome = models.CharField("Nome Completo do Preposto", max_length=150, blank=True)
+    preposto_cargo = models.CharField("Cargo do Preposto", max_length=100, blank=True)
+    preposto_cpf = models.CharField("CPF/RG do Preposto", max_length=30, blank=True)
+    preposto_telefone = models.CharField("Telefone do Preposto", max_length=30, blank=True)
+    preposto_email = models.EmailField("E-mail do Preposto", blank=True)
+
+    # === Regime de Obras e Serviços de Engenharia (Anexo B da NPA) ===
+    eh_obra_engenharia = models.BooleanField("Envolve Obras ou Serviços de Engenharia?", default=False)
+    condicoes_climaticas = models.TextField("Condições Climáticas e Paralisações", blank=True)
+    efetivo_trabalhadores = models.TextField("Efetivo de Pessoal no Canteiro", blank=True)
+    maquinario_equipamentos = models.TextField("Equipamentos e Maquinário", blank=True)
+    art_rrt = models.CharField("ART / RRT (CREA/CAU)", max_length=100, blank=True)
+    matricula_cei_cno = models.CharField("Matrícula CEI / CNO (INSS)", max_length=50, blank=True)
+    seguranca_trabalho_cat = models.TextField("Segurança do Trabalho e CAT", blank=True)
+
+    # === Ocorrências e Fechamento do Período ===
+    sem_ocorrencias_periodo = models.BooleanField(
+        "Não houve ocorrências ou desvios no período (Em conformidade)", default=False
+    )
+    relatorio_ocorrencias = models.TextField("Relatório Consolidado de Ocorrências", blank=True)
+
+    # === Observações Gerais e Diálogo ===
+    observacao = models.TextField("Observações Gerais / Justificativas", blank=True)
+
+    class Meta:
+        verbose_name = "Controle de Execução Contratual (Livro do Fiscal)"
+        verbose_name_plural = "Controles de Execução Contratual (Livros do Fiscal)"
+        ordering = ['-ano_referencia', '-mes_referencia']
+
+    @property
+    def numero_livro(self):
+        """Padrão NPA 009: <mês referência>/<ano referência>/<D ou R>/<número do contrato>"""
+        tipo_sigla = 'R' if (self.contrato and self.contrato.tipo == 'RECEITA') else 'D'
+        ct_num = self.contrato.numero if self.contrato else ""
+        return f"{self.mes_referencia:02d}/{self.ano_referencia}/{tipo_sigla}/{ct_num}"
+
+    @property
+    def total_faturas(self):
+        return sum(f.valor for f in self.faturas.all())
+
+    def __str__(self):
+        return f"Livro {self.numero_livro} - {self.get_status_display()}"
+
+
+class RegistroFatura(models.Model):
+    controle = models.ForeignKey(
+        ControleExecucao, on_delete=models.CASCADE, related_name='faturas'
+    )
+    numero_nf = models.CharField("Nº da Nota Fiscal / Fatura", max_length=50)
+    valor = models.DecimalField("Valor (R$)", max_digits=14, decimal_places=2, default=0)
+    numero_ob = models.CharField("Nº da Ordem Bancária (OB)", max_length=50, blank=True)
+
+    class Meta:
+        verbose_name = "Registro de Fatura"
+        verbose_name_plural = "Registros de Faturas"
+
+    def __str__(self):
+        return f"NF {self.numero_nf} - R$ {self.valor}"
+
+
+class OcorrenciaContratual(models.Model):
+    TIPO_CHOICES = [
+        ('TECNICA', 'Fiscalização Técnica'),
+        ('ADMINISTRATIVA', 'Fiscalização Administrativa'),
+        ('SETORIAL', 'Fiscalização Setorial'),
+        ('USUARIO', 'Usuário Público'),
+        ('OBRAS', 'Obras / Engenharia'),
+        ('OUTRO', 'Outro'),
+    ]
+
+    CIENCIA_CHOICES = [
+        ('assinado', 'Ciência assinada pelo Preposto'),
+        ('recusa', 'Recusa de assinatura (Certidão com Testemunhas)'),
+        ('na', 'Não se aplica / Em apuração'),
+    ]
+
+    STATUS_OCORRENCIA_CHOICES = [
+        ('aberto', 'Em Aberto'),
+        ('saneamento', 'Em Saneamento (Prazo 5d úteis)'),
+        ('resolvido', 'Resolvido'),
+        ('paai', 'Encaminhado para PAAI (ARC)'),
+    ]
+
+    controle = models.ForeignKey(
+        ControleExecucao, on_delete=models.CASCADE, related_name='ocorrencias'
+    )
+    data_hora = models.DateTimeField("Data e Horário da Constatação", default=timezone.now)
+    local = models.CharField("Local da Ocorrência", max_length=200, blank=True)
+    tipo = models.CharField("Tipo de Ocorrência", max_length=30, choices=TIPO_CHOICES, default='TECNICA')
+    descricao = models.TextField("Descrição Detalhada e Factual")
+    dispositivo_violado = models.CharField("Dispositivo / Cláusula Violada", max_length=250, blank=True)
+    evidencias = models.TextField("Evidências Anexadas / Documentos", blank=True)
+
+    # Notificação Oficial (Anexo D da NPA 009)
+    notificacao_emitida = models.BooleanField("Emitida Notificação Oficial?", default=False)
+    notificacao_numero = models.CharField("Nº da Notificação", max_length=50, blank=True)
+    prazo_dias_uteis = models.IntegerField("Prazo para Regularização (dias úteis)", default=5)
+    ciencia_preposto = models.CharField("Ciência / Recusa do Preposto", max_length=20, choices=CIENCIA_CHOICES, default='na')
+
+    # Trâmite ARC / PAAI e Sistemas
+    tramite_arc = models.BooleanField("Encaminhado à ARC para PAAI?", default=False)
+    registros_sistemas = models.CharField("Registros nos Sistemas (SILOMS / SIGADAER)", max_length=150, blank=True)
+    status_ocorrencia = models.CharField("Situação Atual", max_length=20, choices=STATUS_OCORRENCIA_CHOICES, default='aberto')
+    acao_fiscal = models.TextField("Providência / Determinação do Fiscal", blank=True)
+
+    class Meta:
+        verbose_name = "Ocorrência Contratual (NPA 009)"
+        verbose_name_plural = "Ocorrências Contratuais (NPA 009)"
+        ordering = ['-data_hora']
+
+    def __str__(self):
+        dt_str = self.data_hora.strftime('%d/%m/%Y %H:%M') if self.data_hora else "S/D"
+        return f"[{dt_str}] {self.get_tipo_display()} - {self.get_status_ocorrencia_display()}"
+
+
+class ApontamentoCorrecaoExecucao(models.Model):
+    controle = models.ForeignKey(
+        ControleExecucao, on_delete=models.CASCADE, related_name='apontamentos'
+    )
+    autor = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True)
+    descricao = models.TextField("Descrição das Inconsistências")
+    data_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Apontamento de Correção (Execução)"
+        verbose_name_plural = "Apontamentos de Correção (Execução)"
+        ordering = ['-data_registro']
+
+    def __str__(self):
+        return f"Apontamento #{self.id} - {self.controle}"
+
+
+class HistoricoObservacaoExecucao(models.Model):
+    controle = models.ForeignKey(
+        ControleExecucao, on_delete=models.CASCADE, related_name='historico_observacoes'
+    )
+    agente = models.ForeignKey(Agente, on_delete=models.SET_NULL, null=True, blank=True)
+    observacao = models.TextField("Observação / Resposta do Fiscal")
+    data_envio = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Histórico de Observação (Execução)"
+        verbose_name_plural = "Históricos de Observação (Execução)"
+        ordering = ['data_envio']
+
+    def __str__(self):
+        return f"Observação #{self.id} - {self.controle}"
+
+
 class ConfiguracaoApresentacao(models.Model):
     TIPO_CHOICES = [
         ('fiscais', 'Fiscais'),
@@ -578,4 +770,3 @@ class ConfiguracaoApresentacao(models.Model):
     def __str__(self):
         modo = "Livre" if self.modo_livre else "Antiguidade"
         return f"Config {self.get_tipo_apresentacao_display()} - {self.mes_referencia:02d}/{self.ano_referencia} ({modo})"
-

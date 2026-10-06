@@ -31,7 +31,7 @@ from django.contrib.auth.models import User, Group
 
 from contratos.models import (
     Contrato, Empresa, PrestacaoContas, Agente,
-    PostoGraduacao, Comissao, Integrante, Funcao
+    PostoGraduacao, Comissao, Integrante, Funcao, ControleExecucao
 )
 
 
@@ -65,6 +65,15 @@ class BaseTestSetup(TestCase):
         self.client = Client()
         self.url_upload = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
 
+    def _create_controle_execucao(self, mes=3, ano=2026, contrato=None, agente=None):
+        return ControleExecucao.objects.create(
+            contrato=contrato or self.contrato,
+            agente=agente or self.agente,
+            mes_referencia=mes,
+            ano_referencia=ano,
+            status='entregue'
+        )
+
     def _make_pdf(self, name="doc.pdf", size_bytes=None):
         content = b"%PDF-1.4 test content"
         if size_bytes:
@@ -81,6 +90,7 @@ class EnvioValidoTests(BaseTestSetup):
 
     def test_envio_pdf_valido_sem_login(self):
         """Fiscal envia PDF válido sem estar logado — deve salvar e redirecionar."""
+        self._create_controle_execucao(3, 2026)
         response = self.client.post(self.url_upload, {
             'agente': self.agente.id,
             'mes_referencia': 3, 'ano_referencia': 2026,
@@ -99,6 +109,7 @@ class EnvioValidoTests(BaseTestSetup):
 
     def test_envio_grava_agente_correto(self):
         """O agente selecionado no formulário deve ser persistido."""
+        self._create_controle_execucao(4, 2026)
         self.client.post(self.url_upload, {
             'agente': self.agente.id,
             'mes_referencia': 4, 'ano_referencia': 2026,
@@ -110,6 +121,7 @@ class EnvioValidoTests(BaseTestSetup):
 
     def test_renomeacao_arquivo(self):
         """O arquivo deve ser renomeado seguindo o padrão do sistema."""
+        self._create_controle_execucao(3, 2026)
         self.client.post(self.url_upload, {
             'agente': self.agente.id,
             'mes_referencia': 3, 'ano_referencia': 2026,
@@ -124,6 +136,7 @@ class EnvioValidoTests(BaseTestSetup):
 
     def test_envio_com_observacao_vazia(self):
         """O campo observação é opcional — envio sem ele deve funcionar."""
+        self._create_controle_execucao(1, 2026)
         response = self.client.post(self.url_upload, {
             'agente': self.agente.id,
             'mes_referencia': 1, 'ano_referencia': 2026,
@@ -140,17 +153,20 @@ class ValidacaoArquivoTests(BaseTestSetup):
 
     def test_rejeitar_arquivo_nao_pdf(self):
         """Arquivos que não são PDF devem ser rejeitados."""
+        self._create_controle_execucao(5, 2026)
         arquivo = SimpleUploadedFile("planilha.xlsx", b"fake", content_type="application/vnd.ms-excel")
         response = self.client.post(self.url_upload, {
             'agente': self.agente.id,
             'mes_referencia': 5, 'ano_referencia': 2026,
             'arquivo': arquivo,
         })
+        # Deve renderizar a página com erro (form inválido)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
 
     def test_rejeitar_arquivo_txt_renomeado_pdf(self):
         """Arquivo .txt renomeado para .xlsx deve ser rejeitado."""
+        self._create_controle_execucao(5, 2026)
         arquivo = SimpleUploadedFile("relatorio.txt", b"texto puro", content_type="text/plain")
         response = self.client.post(self.url_upload, {
             'agente': self.agente.id,
@@ -162,6 +178,7 @@ class ValidacaoArquivoTests(BaseTestSetup):
 
     def test_rejeitar_arquivo_maior_que_10mb(self):
         """Arquivo PDF maior que 10MB deve ser rejeitado pelo formulário de contrato."""
+        self._create_controle_execucao(5, 2026)
         big_pdf = self._make_pdf("big.pdf", size_bytes=11 * 1024 * 1024)
         response = self.client.post(self.url_upload, {
             'agente': self.agente.id,
@@ -193,6 +210,7 @@ class SubstituicaoEntregaTests(BaseTestSetup):
 
     def test_reenvio_cria_novo_registro_e_mantem_anterior(self):
         """Reenviar para o mesmo contrato/mês/ano cria um novo registro mantendo o anterior no histórico."""
+        self._create_controle_execucao(4, 2026)
         # Primeiro envio
         self.client.post(self.url_upload, {
             'agente': self.agente.id,
@@ -215,6 +233,8 @@ class SubstituicaoEntregaTests(BaseTestSetup):
 
     def test_envio_meses_diferentes_nao_substitui(self):
         """Envios em meses diferentes criam registros separados."""
+        self._create_controle_execucao(3, 2026)
+        self._create_controle_execucao(4, 2026)
         self.client.post(self.url_upload, {
             'agente': self.agente.id,
             'mes_referencia': 3, 'ano_referencia': 2026,
@@ -231,16 +251,17 @@ class SubstituicaoEntregaTests(BaseTestSetup):
 
 
 class RedirecionamentoTests(BaseTestSetup):
-    """Testes de redirecionamento correto."""
+    """Testes de validação e renderização da página de upload."""
 
     def test_get_na_url_de_upload_redireciona(self):
-        """GET na URL de upload deve redirecionar (não processar formulário)."""
+        """GET na URL de upload deve carregar formulário normalmente."""
         response = self.client.get(self.url_upload)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
 
-    def test_envio_invalido_rejeita_com_erro(self):
-        """Formulário inválido não processa e mantém na tela de upload exibindo erro."""
+    def test_envio_invalido_redireciona_com_erro(self):
+        """Formulário inválido renderiza a mesma página com código 200 e exibe erros."""
+        self._create_controle_execucao(5, 2026)
         response = self.client.post(self.url_upload, {
             'agente': self.agente.id,
             'mes_referencia': 5, 'ano_referencia': 2026,
@@ -249,13 +270,14 @@ class RedirecionamentoTests(BaseTestSetup):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
 
-    def test_envio_invalido_exibe_mensagem_no_formulario(self):
+    def test_envio_invalido_exibe_mensagem_no_detalhe(self):
         """Verifica se mensagens de erro de validação são exibidas no formulário."""
+        self._create_controle_execucao(5, 2026)
         response = self.client.post(self.url_upload, {
             'agente': self.agente.id,
             'mes_referencia': 5, 'ano_referencia': 2026,
             # Sem arquivo — campo obrigatório
-        }, follow=True)
+        })
         self.assertEqual(response.status_code, 200)
         self.assertEqual(PrestacaoContas.objects.count(), 0)
         self.assertContains(response, "Este campo é obrigatório")
@@ -276,6 +298,7 @@ class RestricaoAgenteTests(BaseTestSetup):
 
     def test_agente_sem_comissao_ativa_e_rejeitado(self):
         """Agente que não pertence a comissão ativa do contrato não pode enviar."""
+        self._create_controle_execucao(4, 2026)
         posto2 = PostoGraduacao.objects.create(sigla="SD", descricao="Soldado", senioridade=10)
         agente_externo = Agente.objects.create(
             nome_completo="Outro Militar", nome_de_guerra="Outro",
@@ -732,6 +755,7 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
 
     def test_upload_sobre_placeholder_preserva_flag(self):
         """Upload de PDF sobre um placeholder pendente deve preservar compor_apresentacao=True."""
+        self._create_controle_execucao(2, 2026)
         self.client.login(username="auditor_pend", password="pass123")
 
         # 1. Cria o placeholder com prioritário marcado
@@ -769,6 +793,7 @@ class TogglePendentePrioritarioTests(BaseTestSetup):
 
     def test_upload_sobre_placeholder_nao_duplica(self):
         """Upload sobre placeholder não deve criar registro duplicado."""
+        self._create_controle_execucao(3, 2026)
         PrestacaoContas.objects.create(
             contrato=self.contrato,
             mes_referencia=3, ano_referencia=2026,

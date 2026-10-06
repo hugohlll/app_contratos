@@ -41,16 +41,23 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
-    $('#setor_select').select2({
-        theme: 'bootstrap-5',
-        width: '100%'
-    }).on('change', function() {
-        if($(this).val()) {
-            $('#btn_prosseguir').prop('disabled', false);
-        } else {
-            $('#btn_prosseguir').prop('disabled', true);
-        }
+    function toggleBtn() {
+        var sid = $('#setor_select').val();
+        $('#btn_prosseguir').prop('disabled', !sid);
+    }
+
+    if ($.fn && $.fn.select2) {
+        $('#setor_select').select2({
+            theme: 'bootstrap-5',
+            width: '100%'
+        });
+    }
+
+    $('#setor_select').on('change select2:select select2:clear input', function() {
+        toggleBtn();
     });
+
+    toggleBtn();
 
     $('#btn_prosseguir').click(function() {
         var sid = $('#setor_select').val();

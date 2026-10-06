@@ -13,7 +13,7 @@ from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils import timezone
 
-from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao, Setor, PrestacaoContasSetor, ApontamentoCorrecaoSetor, SlideApresentacao, ConfiguracaoApresentacao
+from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Agente, CalendarioPrestacao, ApontamentoCorrecao, Setor, PrestacaoContasSetor, ApontamentoCorrecaoSetor, SlideApresentacao, ControleExecucao, ConfiguracaoApresentacao
 from contratos.forms import PrestacaoContasUploadForm, PrestacaoContasSetorUploadForm
 from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx, get_filtro_ativos, is_admin, is_auditor
 
@@ -119,15 +119,45 @@ def upload_prestacao_setor(request, setor_id):
     return render(request, 'contratos/prestacao/upload_setor.html', context)
 
 
+def exigir_livro_para_slides(contrato=None):
+    """
+    Controlador modular de bloqueio: retorna False para não bloquear o envio de slides
+    pelo Livro do Fiscal no momento, permitindo ativação futura simples.
+    """
+    return False
+
+
 def upload_prestacao(request, contrato_id):
     """View pública para envio do PDF de prestação de contas de contratos."""
     contrato = get_object_or_404(Contrato, pk=contrato_id)
     
+    hoje = date.today()
+    primeiro_dia_mes_atual = hoje.replace(day=1)
+    ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+    mes_ref_padrao = ultimo_dia_mes_anterior.month
+    ano_ref_padrao = ultimo_dia_mes_anterior.year
+
     if request.method == 'POST':
         form = PrestacaoContasUploadForm(request.POST, request.FILES, contrato=contrato)
         is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
         
-        if form.is_valid():
+        mes = int(request.POST.get('mes_referencia', mes_ref_padrao))
+        ano = int(request.POST.get('ano_referencia', ano_ref_padrao))
+        
+        # Verificar se o Livro do Fiscal foi preenchido para este contrato e período
+        controle_execucao = ControleExecucao.objects.filter(
+            contrato=contrato, mes_referencia=mes, ano_referencia=ano
+        ).order_by('-data_envio').first()
+        
+        execucao_preenchida = bool(controle_execucao and controle_execucao.status in ['entregue', 'correcao', 'ok'])
+        
+        bloquear_slides = exigir_livro_para_slides(contrato) and not execucao_preenchida
+        if bloquear_slides:
+            msg_erro = "O preenchimento do Livro do Fiscal é obrigatório antes de enviar a prestação de contas mensal."
+            if is_ajax:
+                return JsonResponse({'success': False, 'errors': {'__all__': [msg_erro]}}, status=400)
+            form.add_error(None, msg_erro)
+        elif form.is_valid():
             mes = form.cleaned_data['mes_referencia']
             ano = form.cleaned_data['ano_referencia']
             
@@ -166,6 +196,24 @@ def upload_prestacao(request, contrato_id):
     else:
         form = PrestacaoContasUploadForm(contrato=contrato)
         
+    mes_ref = int(request.POST.get('mes_referencia') or request.GET.get('mes') or form.initial.get('mes_referencia', mes_ref_padrao))
+    ano_ref = int(request.POST.get('ano_referencia') or request.GET.get('ano') or form.initial.get('ano_referencia', ano_ref_padrao))
+
+    controle_execucao = ControleExecucao.objects.filter(
+        contrato=contrato, mes_referencia=mes_ref, ano_referencia=ano_ref
+    ).order_by('-data_envio').first()
+
+    execucao_preenchida = bool(controle_execucao and controle_execucao.status in ['entregue', 'correcao', 'ok'])
+    ultimo_apontamento_execucao = controle_execucao.apontamentos.first() if (controle_execucao and controle_execucao.apontamentos.exists()) else None
+
+    cal = CalendarioPrestacao.objects.filter(mes=mes_ref, ano=ano_ref).first()
+    data_limite_execucao = cal.data_entrega_execucao if (cal and cal.data_entrega_execucao) else None
+
+    prestacao_atual = PrestacaoContas.objects.filter(
+        contrato=contrato, mes_referencia=mes_ref, ano_referencia=ano_ref
+    ).order_by('-data_envio').first()
+    ultimo_apontamento_slides = prestacao_atual.apontamentos.first() if (prestacao_atual and prestacao_atual.apontamentos.exists()) else None
+
     historico = PrestacaoContas.objects.filter(
         contrato=contrato
     ).exclude(status='pendente').order_by('-ano_referencia', '-mes_referencia', '-data_envio')
@@ -179,11 +227,96 @@ def upload_prestacao(request, contrato_id):
             vistos.add(chave)
             if len(historico_filtrado) >= 6:
                 break
-                
+
+    # Timeline de Diálogo (Livro do Fiscal)
+    dialogo_execucao = []
+    if controle_execucao:
+        for apt in controle_execucao.apontamentos.select_related('autor').all():
+            dialogo_execucao.append({
+                'tipo': 'aci',
+                'autor': "ACI",
+                'data': apt.data_registro,
+                'texto': apt.descricao,
+            })
+        
+        obs_historico = controle_execucao.historico_observacoes.select_related('agente', 'agente__posto').all()
+        if obs_historico.exists():
+            for obs in obs_historico:
+                ag = obs.agente or controle_execucao.agente
+                if ag and hasattr(ag, 'posto') and ag.posto:
+                    fiscal_nome = f"{ag.posto.sigla} {ag.nome_de_guerra}"
+                elif ag:
+                    fiscal_nome = ag.nome_de_guerra or ag.nome_completo
+                else:
+                    fiscal_nome = "Fiscal Responsável"
+                dialogo_execucao.append({
+                    'tipo': 'fiscal',
+                    'autor': fiscal_nome,
+                    'data': obs.data_envio,
+                    'texto': obs.observacao.strip(),
+                })
+        elif controle_execucao.observacao and controle_execucao.observacao.strip():
+            ag = controle_execucao.agente
+            if ag and hasattr(ag, 'posto') and ag.posto:
+                fiscal_nome = f"{ag.posto.sigla} {ag.nome_de_guerra}"
+            elif ag:
+                fiscal_nome = ag.nome_de_guerra or ag.nome_completo
+            else:
+                fiscal_nome = "Fiscal Responsável"
+            dialogo_execucao.append({
+                'tipo': 'fiscal',
+                'autor': fiscal_nome,
+                'data': controle_execucao.data_envio,
+                'texto': controle_execucao.observacao.strip(),
+            })
+        dialogo_execucao.sort(key=lambda x: x['data'])
+
+    # Timeline de Diálogo (Slides da Prestação)
+    dialogo_slides = []
+    prestacoes_mes = PrestacaoContas.objects.filter(
+        contrato=contrato, mes_referencia=mes_ref, ano_referencia=ano_ref
+    ).select_related('agente', 'agente__posto').prefetch_related('apontamentos', 'apontamentos__autor').order_by('id')
+
+    for p in prestacoes_mes:
+        if p.observacao and p.observacao.strip():
+            ag = p.agente
+            if ag and hasattr(ag, 'posto') and ag.posto:
+                fiscal_nome = f"{ag.posto.sigla} {ag.nome_de_guerra}"
+            elif ag:
+                fiscal_nome = ag.nome_de_guerra or ag.nome_completo
+            else:
+                fiscal_nome = "Fiscal Responsável"
+            dialogo_slides.append({
+                'tipo': 'fiscal',
+                'autor': fiscal_nome,
+                'data': p.data_envio,
+                'texto': p.observacao.strip(),
+            })
+        for apt in p.apontamentos.all():
+            autor_nome = "ACI"
+            dialogo_slides.append({
+                'tipo': 'aci',
+                'autor': autor_nome,
+                'data': apt.data_registro,
+                'texto': apt.descricao,
+            })
+    dialogo_slides.sort(key=lambda x: x['data'])
+
     context = {
         'contrato': contrato,
         'form': form,
-        'historico': historico_filtrado
+        'historico': historico_filtrado,
+        'prestacao_atual': prestacao_atual,
+        'ultimo_apontamento_slides': ultimo_apontamento_slides,
+        'controle_execucao': controle_execucao,
+        'execucao_preenchida': execucao_preenchida,
+        'execucao_bloqueia_slides': exigir_livro_para_slides(contrato) and not execucao_preenchida,
+        'ultimo_apontamento_execucao': ultimo_apontamento_execucao,
+        'data_limite_execucao': data_limite_execucao,
+        'dialogo_execucao': dialogo_execucao,
+        'dialogo_slides': dialogo_slides,
+        'mes_ref': f"{mes_ref:02d}",
+        'ano_ref': str(ano_ref),
     }
     return render(request, 'contratos/prestacao/upload_contrato.html', context)
 
@@ -231,24 +364,51 @@ def _get_dashboard_stats(ano, mes):
     if modo_livre_fiscais:
         lista_gestores_prio = prestacoes_filtradas.filter(
             compor_apresentacao=True
-        ).select_related('agente', 'agente__posto', 'contrato').order_by(
+        ).select_related('agente', 'agente__posto', 'contrato').prefetch_related(
+            'contrato__comissoes__integrantes__agente__posto',
+            'contrato__comissoes__integrantes__posto_graduacao',
+            'contrato__comissoes__integrantes__funcao'
+        ).order_by(
             'ordem_apresentacao', 'agente__posto__senioridade', 'agente__nome_de_guerra'
         )
     else:
         lista_gestores_prio = prestacoes_filtradas.filter(
             compor_apresentacao=True
-        ).select_related('agente', 'agente__posto', 'contrato').order_by(
+        ).select_related('agente', 'agente__posto', 'contrato').prefetch_related(
+            'contrato__comissoes__integrantes__agente__posto',
+            'contrato__comissoes__integrantes__posto_graduacao',
+            'contrato__comissoes__integrantes__funcao'
+        ).order_by(
             'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
         )
     
     gestores_prio = []
     for g in lista_gestores_prio:
+        gestor_nome = "Não informado"
+        agente_id = None
+        posto_id = None
+        if g.agente:
+            posto_sigla = g.agente.posto.sigla if g.agente.posto else ""
+            gestor_nome = f"{posto_sigla} {g.agente.nome_de_guerra}".strip()
+            agente_id = g.agente.id
+            posto_id = g.agente.posto.id if g.agente.posto else None
+        else:
+            comissao = g.contrato.comissoes.filter(tipo='FISCALIZACAO', ativa=True).first()
+            if comissao:
+                integrantes = [i for i in comissao.integrantes.all() if i.is_ativo]
+                if integrantes:
+                    principal = next((i for i in integrantes if 'presidente' in i.funcao.titulo.lower()), None) or integrantes[0]
+                    posto_sigla = principal.posto_graduacao.sigla if principal.posto_graduacao else (principal.agente.posto.sigla if principal.agente and principal.agente.posto else "")
+                    gestor_nome = f"{posto_sigla} {principal.agente.nome_de_guerra}".strip()
+                    agente_id = principal.agente.id
+                    posto_id = principal.agente.posto.id if principal.agente and principal.agente.posto else None
+
         gestores_prio.append({
             'is_slide': False,
             'prestacao_id': g.id,
-            'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
-            'agente_id': g.agente.id if g.agente else None,
-            'posto_id': g.agente.posto.id if g.agente and g.agente.posto else None,
+            'gestor': gestor_nome,
+            'agente_id': agente_id,
+            'posto_id': posto_id,
             'contrato': g.contrato.numero,
             'status': g.status,
             'ordem_apresentacao': g.ordem_apresentacao
@@ -317,24 +477,44 @@ def _get_dashboard_stats(ano, mes):
     if modo_livre_gestores:
         lista_gestores_setores = prestacoes_setor_filtradas.filter(
             compor_apresentacao=True
-        ).select_related('agente', 'agente__posto', 'setor').order_by(
+        ).select_related('agente', 'agente__posto', 'setor').prefetch_related(
+            'setor__cargos__agente__posto'
+        ).order_by(
             'ordem_apresentacao', 'agente__posto__senioridade', 'agente__nome_de_guerra'
         )
     else:
         lista_gestores_setores = prestacoes_setor_filtradas.filter(
             compor_apresentacao=True
-        ).select_related('agente', 'agente__posto', 'setor').order_by(
+        ).select_related('agente', 'agente__posto', 'setor').prefetch_related(
+            'setor__cargos__agente__posto'
+        ).order_by(
             'agente__posto__senioridade', 'agente__ordem_manual', 'agente__nome_de_guerra'
         )
     
     gestores_setores = []
     for g in lista_gestores_setores:
+        gestor_nome = "Não informado"
+        agente_id = None
+        posto_id = None
+        if g.agente:
+            posto_sigla = g.agente.posto.sigla if g.agente.posto else ""
+            gestor_nome = f"{posto_sigla} {g.agente.nome_de_guerra}".strip()
+            agente_id = g.agente.id
+            posto_id = g.agente.posto.id if g.agente.posto else None
+        else:
+            cargo = g.setor.cargos.filter(ativo=True).first()
+            if cargo and cargo.agente:
+                posto_sigla = cargo.agente.posto.sigla if cargo.agente.posto else ""
+                gestor_nome = f"{posto_sigla} {cargo.agente.nome_de_guerra}".strip()
+                agente_id = cargo.agente.id
+                posto_id = cargo.agente.posto.id if cargo.agente.posto else None
+
         gestores_setores.append({
             'is_slide': False,
             'prestacao_id': g.id,
-            'gestor': f"{g.agente.posto.sigla} {g.agente.nome_de_guerra}" if g.agente else "Não informado",
-            'agente_id': g.agente.id if g.agente else None,
-            'posto_id': g.agente.posto.id if g.agente and g.agente.posto else None,
+            'gestor': gestor_nome,
+            'agente_id': agente_id,
+            'posto_id': posto_id,
             'setor': g.setor.sigla or g.setor.nome,
             'status': g.status,
             'ordem_apresentacao': g.ordem_apresentacao
@@ -402,6 +582,52 @@ def _get_dashboard_stats(ano, mes):
     }
 
 
+def get_msg_mais_recente(obj, tipo_agente='fiscal'):
+    """
+    Retorna a mensagem mais recente (entre ACI e Fiscal/Gestor) para um objeto de prestação ou controle.
+    Retorna None se não houver nenhuma mensagem registrada.
+    """
+    if not obj:
+        return None
+
+    mensagens = []
+
+    # 1. Apontamentos da ACI
+    if hasattr(obj, 'apontamentos'):
+        for apt in obj.apontamentos.select_related('autor').all():
+            autor_nome = (apt.autor.get_full_name() or apt.autor.username) if apt.autor else 'ACI'
+            mensagens.append({
+                'tipo': 'aci',
+                'autor': autor_nome,
+                'data': apt.data_registro,
+                'texto': apt.descricao.strip(),
+            })
+
+    # 2. Observações do Fiscal / Gestor
+    if hasattr(obj, 'historico_observacoes') and obj.historico_observacoes.all():
+        for obs in obj.historico_observacoes.all():
+            if obs.observacao and obs.observacao.strip():
+                mensagens.append({
+                    'tipo': tipo_agente,
+                    'autor': 'Fiscal Responsável' if tipo_agente == 'fiscal' else 'Gestor do Setor',
+                    'data': obs.data_envio,
+                    'texto': obs.observacao.strip(),
+                })
+    elif getattr(obj, 'observacao', None) and obj.observacao.strip():
+        mensagens.append({
+            'tipo': tipo_agente,
+            'autor': 'Fiscal Responsável' if tipo_agente == 'fiscal' else 'Gestor do Setor',
+            'data': obj.data_envio,
+            'texto': obj.observacao.strip(),
+        })
+
+    if not mensagens:
+        return None
+
+    mensagens.sort(key=lambda m: m['data'])
+    return mensagens[-1]
+
+
 @login_required
 @ensure_csrf_cookie
 def dashboard_prestacao(request):
@@ -425,31 +651,32 @@ def dashboard_prestacao(request):
 
     stats = _get_dashboard_stats(filtro_ano, filtro_mes)
     
-    # Construir tabela-matriz (Últimos 3 meses excluindo o atual)
-    # Lista de tuplas (ano, mes) dos últimos 3 meses
-    ultimos_3_meses = []
-    _ano = ano_padrao
-    _mes = mes_padrao
-    for _ in range(3):
-        ultimos_3_meses.append((_ano, _mes))
+    # Construir tabela-matriz (Últimos 6 meses a partir do mês selecionado)
+    # Lista de tuplas (ano, mes) dos últimos 6 meses
+    ultimos_6_meses = []
+    _ano = filtro_ano
+    _mes = filtro_mes
+    for _ in range(6):
+        ultimos_6_meses.append((_ano, _mes))
         _mes -= 1
         if _mes == 0:
             _mes = 12
             _ano -= 1
-    ultimos_3_meses.reverse() # Colocar em ordem cronológica
+    ultimos_6_meses.reverse() # Colocar em ordem cronológica
     
     # Mapear as entregas por contrato para acesso rápido na view
     # estrutura: {contrato_id: {(ano, mes): prestacao_id}}
     prestacoes_map = {}
     
-    # Busca todas as prestações dos últimos 3 meses
     contratos_vigentes = Contrato.objects.filter(
         vigencia_inicio__lte=hoje,
         vigencia_fim__gte=hoje
     ).order_by('numero')
     
+    # Busca todas as prestações dos últimos 6 meses
+    min_ano_6 = ultimos_6_meses[0][0]
     todas_prestacoes = PrestacaoContas.objects.filter(
-        ano_referencia__gte=ultimos_3_meses[0][0],
+        ano_referencia__gte=min_ano_6,
         contrato__in=contratos_vigentes
     ).order_by('id')
     
@@ -458,11 +685,11 @@ def dashboard_prestacao(request):
             prestacoes_map[p.contrato_id] = {}
         prestacoes_map[p.contrato_id][(p.ano_referencia, p.mes_referencia)] = p
 
-    # Monta matriz estruturada para o template
+    # Monta matriz estruturada para o template (6 meses)
     matriz_contratos = []
     for c in contratos_vigentes:
         entregas = []
-        for ano, mes in ultimos_3_meses:
+        for ano, mes in ultimos_6_meses:
             prestacao = prestacoes_map.get(c.id, {}).get((ano, mes))
             entregas.append({
                 'ano': ano,
@@ -476,10 +703,10 @@ def dashboard_prestacao(request):
             'entregas': entregas
         })
 
-    # Busca todas as prestações dos setores dos últimos 3 meses
+    # Busca todas as prestações dos setores dos últimos 6 meses
     setores = Setor.objects.all().order_by('nome')
     todas_prestacoes_setores = PrestacaoContasSetor.objects.filter(
-        ano_referencia__gte=ultimos_3_meses[0][0]
+        ano_referencia__gte=min_ano_6
     ).order_by('id')
     
     prestacoes_setor_map = {}
@@ -491,7 +718,7 @@ def dashboard_prestacao(request):
     matriz_setores = []
     for s in setores:
         entregas = []
-        for ano, mes in ultimos_3_meses:
+        for ano, mes in ultimos_6_meses:
             prestacao = prestacoes_setor_map.get(s.id, {}).get((ano, mes))
             entregas.append({
                 'ano': ano,
@@ -505,22 +732,86 @@ def dashboard_prestacao(request):
             'entregas': entregas
         })
 
+    # Busca todos os registros de Controle de Execução (Livro do Fiscal) dos últimos 6 meses
+    todos_controles_exec = ControleExecucao.objects.filter(
+        ano_referencia__gte=min_ano_6,
+        contrato__in=contratos_vigentes
+    ).prefetch_related('historico_observacoes').order_by('id')
+
+    execucoes_map = {}
+    for ex in todos_controles_exec:
+        if ex.contrato_id not in execucoes_map:
+            execucoes_map[ex.contrato_id] = {}
+        execucoes_map[ex.contrato_id][(ex.ano_referencia, ex.mes_referencia)] = ex
+
+    matriz_execucao = []
+    for c in contratos_vigentes:
+        entregas = []
+        for ano, mes in ultimos_6_meses:
+            controle = execucoes_map.get(c.id, {}).get((ano, mes))
+            entregas.append({
+                'ano': ano,
+                'mes': mes,
+                'controle': controle,
+                'status': controle.status if controle else 'pendente'
+            })
+        matriz_execucao.append({
+            'contrato': c,
+            'entregas': entregas
+        })
+
+    # Monta visão detalhada unificada para o mês selecionado (Fiscais: Slides + Livro do Fiscal + Apontamentos ACI)
+    entregas_mes_selecionado = []
+    for c in contratos_vigentes:
+        prestacao = prestacoes_map.get(c.id, {}).get((filtro_ano, filtro_mes))
+        controle = execucoes_map.get(c.id, {}).get((filtro_ano, filtro_mes))
+        
+        msg_slides = get_msg_mais_recente(prestacao, 'fiscal')
+        msg_controle = get_msg_mais_recente(controle, 'fiscal')
+
+        entregas_mes_selecionado.append({
+            'contrato': c,
+            'prestacao': prestacao,
+            'controle': controle,
+            'status_prestacao': prestacao.status if prestacao else 'pendente',
+            'status_controle': controle.status if controle else 'pendente',
+            'msg_slides': msg_slides,
+            'msg_controle': msg_controle,
+        })
+
+    # Monta visão detalhada para o mês selecionado (Setores: Slides + Apontamentos ACI)
+    entregas_setor_mes_selecionado = []
+    for s in setores:
+        prestacao = prestacoes_setor_map.get(s.id, {}).get((filtro_ano, filtro_mes))
+        msg_setor = get_msg_mais_recente(prestacao, 'gestor')
+        entregas_setor_mes_selecionado.append({
+            'setor': s,
+            'prestacao': prestacao,
+            'status': prestacao.status if prestacao else 'pendente',
+            'msg_setor': msg_setor,
+        })
+
     meses_nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
-    
+
     context = {
         'is_admin': is_admin(request.user),
         'is_auditor': is_auditor(request.user),
         
         'matriz_contratos': matriz_contratos,
         'matriz_setores': matriz_setores,
-        'ultimos_3_meses_tuplas': ultimos_3_meses,
+        'matriz_execucao': matriz_execucao,
+        'ultimos_6_meses_tuplas': ultimos_6_meses,
+        'ultimos_3_meses_tuplas': ultimos_6_meses[-3:], # mantem compatibilidade
+        
+        'entregas_mes_selecionado': entregas_mes_selecionado,
+        'entregas_setor_mes_selecionado': entregas_setor_mes_selecionado,
         
         'filtro_mes': filtro_mes,
         'filtro_ano': filtro_ano,
         'meses_choices': [(i, meses_nomes[i-1]) for i in range(1, 13)],
         'anos_choices': range(hoje.year - 2, hoje.year + 1),
     }
-    
+
     # Busca calendário do ano selecionado
     calendarios = {c.mes: c for c in CalendarioPrestacao.objects.filter(ano=filtro_ano)}
     calendario_anual = []
@@ -530,6 +821,7 @@ def dashboard_prestacao(request):
             'mes': m,
             'nome_mes': meses_nomes[m-1],
             'data_entrega': cal.data_entrega.strftime('%Y-%m-%d') if cal and cal.data_entrega else '',
+            'data_entrega_execucao': cal.data_entrega_execucao.strftime('%Y-%m-%d') if cal and cal.data_entrega_execucao else '',
             'data_apresentacao_fiscais': cal.data_apresentacao_fiscais.strftime('%Y-%m-%d') if cal and cal.data_apresentacao_fiscais else '',
             'data_apresentacao_gestores': cal.data_apresentacao_gestores.strftime('%Y-%m-%d') if cal and cal.data_apresentacao_gestores else ''
         })
@@ -825,6 +1117,14 @@ def alterar_status_prestacao(request, pk, novo_status):
 
         stats = _get_dashboard_stats(filtro_ano, filtro_mes)
 
+        apontamentos_slides_list = []
+        for ap in prestacao.apontamentos.all().order_by('-data_registro'):
+            apontamentos_slides_list.append({
+                'descricao': ap.descricao,
+                'autor': ap.autor.get_full_name() or ap.autor.username,
+                'data_registro': ap.data_registro.strftime("%d/%m/%Y %H:%M")
+            })
+
         return JsonResponse({
             'success': True,
             'status': prestacao.status,
@@ -834,6 +1134,7 @@ def alterar_status_prestacao(request, pk, novo_status):
             'compor_apresentacao': prestacao.compor_apresentacao,
             'is_admin': is_admin(request.user),
             'is_auditor': is_auditor(request.user),
+            'apontamentos_slides': apontamentos_slides_list,
             'stats': stats
         })
 
@@ -1373,11 +1674,13 @@ def salvar_calendario_prestacao(request):
         ano = int(data.get('ano'))
         mes = int(data.get('mes'))
         data_entrega = data.get('data_entrega') or None
+        data_entrega_execucao = data.get('data_entrega_execucao') or None
         data_apresentacao_fiscais = data.get('data_apresentacao_fiscais') or None
         data_apresentacao_gestores = data.get('data_apresentacao_gestores') or None
         
         cal, _ = CalendarioPrestacao.objects.get_or_create(ano=ano, mes=mes)
         cal.data_entrega = data_entrega
+        cal.data_entrega_execucao = data_entrega_execucao
         cal.data_apresentacao_fiscais = data_apresentacao_fiscais
         cal.data_apresentacao_gestores = data_apresentacao_gestores
         cal.save()

@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from contratos.views import public, militar, auditoria, auth, portal, users, prestacao, cargos
+from contratos.views import public, militar, auditoria, auth, portal, users, prestacao, cargos, execucao
 
 urlpatterns = [
     # --- ÁREA PÚBLICA (Módulo public.py) ---
@@ -111,6 +111,22 @@ urlpatterns = [
     path('portal/prestacao/slide/upload/', prestacao.upload_slide_avulso, name='upload_slide_avulso'),
     path('portal/prestacao/slide/excluir/<int:pk>/', prestacao.excluir_slide_avulso, name='excluir_slide_avulso'),
     path('portal/prestacao/slide/reordenar/', prestacao.reordenar_slide_avulso, name='reordenar_slide_avulso'),
+
+    # --- PORTAL PÚBLICO DE EXECUÇÃO CONTRATUAL (LIVRO DO FISCAL) ---
+    path('execucao/', execucao.portal_execucao_index, name='portal_execucao_index'),
+    path('execucao/fiscais/', execucao.portal_execucao_fiscais, name='portal_execucao_fiscais'),
+    path('execucao/fiscais/<int:contrato_id>/', execucao.formulario_execucao, name='formulario_execucao'),
+    path('execucao/fiscais/excluir/<int:contrato_id>/', execucao.excluir_controle_execucao_publico, name='excluir_controle_execucao_publico'),
+    path('execucao/livro-fiscal/<int:pk>/pdf/', execucao.gerar_livro_fiscal_pdf, name='download_livro_fiscal_pdf'),
+    path('execucao/ocorrencia/<int:pk>/notificacao-pdf/', execucao.gerar_notificacao_anexo_d_pdf, name='download_notificacao_anexo_d_pdf'),
+    path('execucao/ocorrencia/salvar-tempestiva/', execucao.salvar_ocorrencia_tempestiva, name='salvar_ocorrencia_tempestiva'),
+    path('execucao/ocorrencia/excluir/<int:pk>/', execucao.excluir_ocorrencia, name='excluir_ocorrencia'),
+
+    # Restrito/Dashboard - Execução Contratual
+    path('portal/execucao/<int:pk>/', execucao.visualizar_controle_execucao, name='visualizar_controle_execucao'),
+    path('portal/execucao/status/<int:pk>/<str:novo_status>/', execucao.alterar_status_execucao, name='alterar_status_execucao'),
+    path('portal/execucao/excluir/<int:pk>/', execucao.excluir_controle_execucao, name='excluir_controle_execucao'),
+    path('portal/execucao/exportar/', execucao.exportar_execucao_csv, name='exportar_execucao_csv'),
 
     # --- CARGOS REGIMENTAIS ---
     path('portal/cargos/', cargos.cargos_regimentais, name='cargos_regimentais'),
