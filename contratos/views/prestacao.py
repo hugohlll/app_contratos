@@ -119,6 +119,14 @@ def upload_prestacao_setor(request, setor_id):
     return render(request, 'contratos/prestacao/upload_setor.html', context)
 
 
+def exigir_livro_para_slides(contrato=None):
+    """
+    Controlador modular de bloqueio: retorna False para não bloquear o envio de slides
+    pelo Livro do Fiscal no momento, permitindo ativação futura simples.
+    """
+    return False
+
+
 def upload_prestacao(request, contrato_id):
     """View pública para envio do PDF de prestação de contas de contratos."""
     contrato = get_object_or_404(Contrato, pk=contrato_id)
@@ -143,7 +151,8 @@ def upload_prestacao(request, contrato_id):
         
         execucao_preenchida = bool(controle_execucao and controle_execucao.status in ['entregue', 'correcao', 'ok'])
         
-        if not execucao_preenchida:
+        bloquear_slides = exigir_livro_para_slides(contrato) and not execucao_preenchida
+        if bloquear_slides:
             msg_erro = "O preenchimento do Livro do Fiscal é obrigatório antes de enviar a prestação de contas mensal."
             if is_ajax:
                 return JsonResponse({'success': False, 'errors': {'__all__': [msg_erro]}}, status=400)
@@ -301,6 +310,7 @@ def upload_prestacao(request, contrato_id):
         'ultimo_apontamento_slides': ultimo_apontamento_slides,
         'controle_execucao': controle_execucao,
         'execucao_preenchida': execucao_preenchida,
+        'execucao_bloqueia_slides': exigir_livro_para_slides(contrato) and not execucao_preenchida,
         'ultimo_apontamento_execucao': ultimo_apontamento_execucao,
         'data_limite_execucao': data_limite_execucao,
         'dialogo_execucao': dialogo_execucao,

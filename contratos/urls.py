@@ -118,6 +118,9 @@ urlpatterns = [
     path('execucao/fiscais/<int:contrato_id>/', execucao.formulario_execucao, name='formulario_execucao'),
     path('execucao/fiscais/excluir/<int:contrato_id>/', execucao.excluir_controle_execucao_publico, name='excluir_controle_execucao_publico'),
     path('execucao/livro-fiscal/<int:pk>/pdf/', execucao.gerar_livro_fiscal_pdf, name='download_livro_fiscal_pdf'),
+    path('execucao/ocorrencia/<int:pk>/notificacao-pdf/', execucao.gerar_notificacao_anexo_d_pdf, name='download_notificacao_anexo_d_pdf'),
+    path('execucao/ocorrencia/salvar-tempestiva/', execucao.salvar_ocorrencia_tempestiva, name='salvar_ocorrencia_tempestiva'),
+    path('execucao/ocorrencia/excluir/<int:pk>/', execucao.excluir_ocorrencia, name='excluir_ocorrencia'),
 
     # Restrito/Dashboard - Execução Contratual
     path('portal/execucao/<int:pk>/', execucao.visualizar_controle_execucao, name='visualizar_controle_execucao'),

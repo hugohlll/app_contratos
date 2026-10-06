@@ -91,7 +91,7 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-item nav-link fw-bold small {% if not execucao_preenchida %}disabled{% endif %}" id="pills-slides-tab" data-bs-toggle="pill" data-bs-target="#pills-slides" type="button" role="tab">
+                            <button class="nav-item nav-link fw-bold small {% if execucao_bloqueia_slides %}disabled{% endif %}" id="pills-slides-tab" data-bs-toggle="pill" data-bs-target="#pills-slides" type="button" role="tab">
                                 <i class="bi bi-file-earmark-pdf me-1"></i> 2. Envio de Slides
                             </button>
                         </li>
@@ -199,7 +199,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label fw-bold small">Arquivo PDF dos Slides</label>
-                                    <input type="file" name="arquivo" id="id_arquivo" class="form-control form-control-sm" accept="application/pdf" required {% if not execucao_preenchida %}disabled{% endif %}>
+                                    <input type="file" name="arquivo" id="id_arquivo" class="form-control form-control-sm" accept="application/pdf" required {% if execucao_bloqueia_slides %}disabled{% endif %}>
                                     <div class="form-text small">Apenas formato PDF, máx. 10MB.</div>
                                     <div id="arquivo-size-error" class="text-danger mt-2 fw-bold d-none" style="font-size: 0.95rem;">
                                         <i class="bi bi-exclamation-triangle-fill fs-5 align-middle me-1"></i> <span id="arquivo-size-error-msg"></span>
@@ -217,7 +217,7 @@
                                     {% if form.observacao.errors %}<div class="text-danger small">{{ form.observacao.errors }}</div>{% endif %}
                                 </div>
 
-                                {% if execucao_preenchida %}
+                                {% if not execucao_bloqueia_slides %}
                                 <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">
                                     <i class="bi bi-cloud-arrow-up me-1"></i> Enviar Prestação de Contas (Slides)
                                 </button>
@@ -384,7 +384,7 @@
 <script>
     // Customizar classes dos inputs do form
     $('#id_agente').addClass('form-select form-select-sm');
-    if (!{{ execucao_preenchida|yesno:"true,false" }}) {
+    if ({{ execucao_bloqueia_slides|yesno:"true,false" }}) {
         $('#id_agente').prop('disabled', true);
         $('#id_observacao').prop('disabled', true);
     }

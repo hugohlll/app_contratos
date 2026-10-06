@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from django.utils import timezone
 from datetime import date, timedelta
 
 
@@ -586,105 +587,63 @@ class ControleExecucao(models.Model):
     data_envio = models.DateTimeField(auto_now_add=True)
 
     STATUS_CHOICES = [
+        ('rascunho', 'Rascunho / Em Andamento'),
         ('pendente', 'Pendente'),
-        ('entregue', 'Entregue'),
+        ('entregue', 'Entregue / Atestado'),
         ('correcao', 'Aguardando Correção'),
         ('ok', 'Conformidade (OK!)'),
     ]
     status = models.CharField(
-        "Status", max_length=15, choices=STATUS_CHOICES, default='entregue'
+        "Status", max_length=15, choices=STATUS_CHOICES, default='rascunho'
     )
 
-    SIM_NAO_NA = [('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')]
-    SIM_NAO = [('sim', 'Sim'), ('nao', 'Não')]
-    CONFORME_ATRASADO = [('conforme', 'Conforme o previsto'), ('atrasado', 'Atrasado')]
+    # === Termo de Abertura / Identificação Institucional (NPA 009/SCON/2025) ===
+    omap = models.CharField("Organização Militar Apoiada (OMAP)", max_length=100, default='GAP-BR')
+    unidade_gestora = models.CharField("Unidade Gestora (UG / Gestão)", max_length=50, default='120006 - GAP-BR')
 
-    # === Seção 2: Controle de Prazos e Marcos ===
-    confirmacao_siloms_assinatura = models.BooleanField("Conferido com SILOMS (Assinatura)", default=False)
-    confirmacao_siloms_vigencia = models.BooleanField("Conferido com SILOMS/Aditivo (Vigência)", default=False)
-    confirmacao_siloms_execucao = models.CharField("Conferido com Cronograma/OS (Execução)", max_length=10, choices=SIM_NAO_NA, default='na')
-    data_execucao_fisico_financeira = models.DateField("Data término da execução físico-financeira", null=True, blank=True)
-    ADMITIR_ADITIVO_CHOICES = [
-        ('sim', 'Sim'),
-        ('na', 'Não há mais possibilidade/Não se aplica'),
-        ('nao', 'Não há mais possibilidade/Não se aplica'),
-    ]
-    possibilidade_aditivo = models.CharField("Contrato admite termo aditivo?", max_length=10, choices=ADMITIR_ADITIVO_CHOICES, default='na')
-    tratativas_120_dias = models.CharField("Iniciadas as tratativas para aditivação", max_length=5, choices=SIM_NAO_NA, default='na')
-    coordenacao_doc_scon = models.CharField("Coordenada informação com DOC/SCON?", max_length=5, choices=SIM_NAO_NA, default='na')
-    GARANTIA_CHOICES = [
-        ('sim', 'Sim'),
-        ('nao', 'Não (Vencida)'),
-        ('na', 'Não se aplica / Sem garantia'),
-    ]
-    garantia_vigente = models.CharField("Garantia contratual dentro da vigência?", max_length=10, choices=GARANTIA_CHOICES, default='na')
-    garantia_providencias = models.TextField("Providências adotadas (Garantia Vencida)", blank=True)
+    # === Preposto Aceito da Contratada (NPA 009) ===
+    preposto_nome = models.CharField("Nome Completo do Preposto", max_length=150, blank=True)
+    preposto_cargo = models.CharField("Cargo do Preposto", max_length=100, blank=True)
+    preposto_cpf = models.CharField("CPF/RG do Preposto", max_length=30, blank=True)
+    preposto_telefone = models.CharField("Telefone do Preposto", max_length=30, blank=True)
+    preposto_email = models.EmailField("E-mail do Preposto", blank=True)
 
-    # === Seção 3: Execução Orçamentária e Financeira ===
-    notas_empenho = models.TextField("Notas de Empenho (com saldo)", blank=True)
-    obs_sem_empenho = models.TextField("Obs. caso não haja empenho", blank=True)
-    cronograma_fisico_financeiro = models.CharField("Cumprimento do Cronograma Físico-Financeiro", max_length=10, choices=CONFORME_ATRASADO, default='conforme')
+    # === Regime de Obras e Serviços de Engenharia (Anexo B da NPA) ===
+    eh_obra_engenharia = models.BooleanField("Envolve Obras ou Serviços de Engenharia?", default=False)
+    condicoes_climaticas = models.TextField("Condições Climáticas e Paralisações", blank=True)
+    efetivo_trabalhadores = models.TextField("Efetivo de Pessoal no Canteiro", blank=True)
+    maquinario_equipamentos = models.TextField("Equipamentos e Maquinário", blank=True)
+    art_rrt = models.CharField("ART / RRT (CREA/CAU)", max_length=100, blank=True)
+    matricula_cei_cno = models.CharField("Matrícula CEI / CNO (INSS)", max_length=50, blank=True)
+    seguranca_trabalho_cat = models.TextField("Segurança do Trabalho e CAT", blank=True)
 
-    # === Seção 4: Cronograma e Medição de Resultados ===
-    detalhamento_cronograma = models.TextField("Status do Cronograma de Execução", blank=True)
-    alteracao_cronograma = models.CharField("Houve alteração em relação ao mês anterior?", max_length=5, choices=SIM_NAO_NA, default='nao')
-    alteracao_cronograma_desc = models.TextField("Ações do fiscal (Alteração Cronograma)", blank=True)
-    atraso_entrega = models.CharField("Atraso na entrega dos produtos/serviços?", max_length=5, choices=SIM_NAO_NA, default='nao')
-    atraso_entrega_desc = models.TextField("Ações do fiscal (Atraso Entrega)", blank=True)
-    impossibilidade_recebimento = models.CharField("Impossibilidade de recebimento?", max_length=5, choices=SIM_NAO_NA, default='nao')
-    impossibilidade_recebimento_desc = models.TextField("Ações do fiscal (Impossibilidade)", blank=True)
-    diligencia_visita = models.CharField("Realização de diligência ou visita técnica?", max_length=5, choices=SIM_NAO_NA, default='nao')
-    diligencia_visita_desc = models.TextField("Resultados obtidos e ações (Diligência)", blank=True)
-
-    imr_aplicado = models.CharField("Aplicado IMR?", max_length=5, choices=SIM_NAO_NA, default='nao')
-    glosa_realizada = models.CharField("Realizada glosa no período?", max_length=5, choices=SIM_NAO_NA, default='nao')
-    glosa_desc = models.TextField("Detalhamento de glosa e valores", blank=True)
-
-    # === Seção 5: Ocorrências (Relatório Consolidado) ===
-    relatorio_ocorrencias = models.TextField("Relatório de Ocorrências e Tratativas", blank=True)
-
-    # === Seção 6: Apuração de Irregularidades (PAAI) e Sanções ===
-    empresa_sancionada = models.CharField(
-        "Empresa sancionada com impedimento de licitar e contratar e/ou declaração de inidoneidade para licitar ou contratar?",
-        max_length=5,
-        choices=SIM_NAO,
-        blank=True,
-        null=True
+    # === Ocorrências e Fechamento do Período ===
+    sem_ocorrencias_periodo = models.BooleanField(
+        "Não houve ocorrências ou desvios no período (Em conformidade)", default=False
     )
-    doc_sancao_siloms = models.CharField(
-        "Documentação comprobatória inserida no SILOMS?",
-        max_length=5,
-        choices=SIM_NAO,
-        blank=True,
-        null=True
-    )
-    sancao_observacao = models.TextField(
-        "Observações / Detalhamento da Sanção",
-        blank=True
-    )
-    ocorrencias_ativas_empresa = models.CharField("Ocorrências ativas por atraso/descumprimento reincidente?", max_length=5, choices=SIM_NAO, default='nao')
-    necessidade_paai = models.CharField("Necessária solicitação de abertura de PAAI neste mês?", max_length=5, choices=SIM_NAO, default='nao')
-    paai_justificativa = models.TextField("Detalhamento de infrações / Justificativa PAAI", blank=True)
+    relatorio_ocorrencias = models.TextField("Relatório Consolidado de Ocorrências", blank=True)
 
-    # === Controle de Substituição ===
-    houve_substituicao = models.BooleanField("Houve substituição do fiscal/membro no período?", default=False)
-    substituicao_entrega_formal = models.CharField("Entrega formal dos registros realizada pelo substituto?", max_length=5, choices=SIM_NAO_NA, default='na')
-    substituicao_obs = models.TextField("Observações sobre a substituição", blank=True)
-
-    # === Observações Gerais ===
-    observacao = models.TextField("Observações Gerais", blank=True)
+    # === Observações Gerais e Diálogo ===
+    observacao = models.TextField("Observações Gerais / Justificativas", blank=True)
 
     class Meta:
-        verbose_name = "Controle de Execução Contratual"
-        verbose_name_plural = "Controles de Execução Contratual"
+        verbose_name = "Controle de Execução Contratual (Livro do Fiscal)"
+        verbose_name_plural = "Controles de Execução Contratual (Livros do Fiscal)"
         ordering = ['-ano_referencia', '-mes_referencia']
+
+    @property
+    def numero_livro(self):
+        """Padrão NPA 009: <mês referência>/<ano referência>/<D ou R>/<número do contrato>"""
+        tipo_sigla = 'R' if (self.contrato and self.contrato.tipo == 'RECEITA') else 'D'
+        ct_num = self.contrato.numero if self.contrato else ""
+        return f"{self.mes_referencia:02d}/{self.ano_referencia}/{tipo_sigla}/{ct_num}"
 
     @property
     def total_faturas(self):
         return sum(f.valor for f in self.faturas.all())
 
     def __str__(self):
-        return f"Controle Execução {self.contrato.numero} - {self.mes_referencia:02d}/{self.ano_referencia}"
+        return f"Livro {self.numero_livro} - {self.get_status_display()}"
 
 
 class RegistroFatura(models.Model):
@@ -704,22 +663,58 @@ class RegistroFatura(models.Model):
 
 
 class OcorrenciaContratual(models.Model):
+    TIPO_CHOICES = [
+        ('TECNICA', 'Fiscalização Técnica'),
+        ('ADMINISTRATIVA', 'Fiscalização Administrativa'),
+        ('SETORIAL', 'Fiscalização Setorial'),
+        ('USUARIO', 'Usuário Público'),
+        ('OBRAS', 'Obras / Engenharia'),
+        ('OUTRO', 'Outro'),
+    ]
+
+    CIENCIA_CHOICES = [
+        ('assinado', 'Ciência assinada pelo Preposto'),
+        ('recusa', 'Recusa de assinatura (Certidão com Testemunhas)'),
+        ('na', 'Não se aplica / Em apuração'),
+    ]
+
+    STATUS_OCORRENCIA_CHOICES = [
+        ('aberto', 'Em Aberto'),
+        ('saneamento', 'Em Saneamento (Prazo 5d úteis)'),
+        ('resolvido', 'Resolvido'),
+        ('paai', 'Encaminhado para PAAI (ARC)'),
+    ]
+
     controle = models.ForeignKey(
         ControleExecucao, on_delete=models.CASCADE, related_name='ocorrencias'
     )
-    data = models.DateField("Data da Ocorrência")
-    tipo = models.CharField("Tipo de Ocorrência", max_length=30, default='outro')
-    descricao = models.TextField("Descrição da Ocorrência")
-    acao_fiscal = models.TextField("Ação do Fiscal / Providência", blank=True)
-    prazo = models.CharField("Prazo para Resolução", max_length=50, blank=True)
+    data_hora = models.DateTimeField("Data e Horário da Constatação", default=timezone.now)
+    local = models.CharField("Local da Ocorrência", max_length=200, blank=True)
+    tipo = models.CharField("Tipo de Ocorrência", max_length=30, choices=TIPO_CHOICES, default='TECNICA')
+    descricao = models.TextField("Descrição Detalhada e Factual")
+    dispositivo_violado = models.CharField("Dispositivo / Cláusula Violada", max_length=250, blank=True)
+    evidencias = models.TextField("Evidências Anexadas / Documentos", blank=True)
+
+    # Notificação Oficial (Anexo D da NPA 009)
+    notificacao_emitida = models.BooleanField("Emitida Notificação Oficial?", default=False)
+    notificacao_numero = models.CharField("Nº da Notificação", max_length=50, blank=True)
+    prazo_dias_uteis = models.IntegerField("Prazo para Regularização (dias úteis)", default=5)
+    ciencia_preposto = models.CharField("Ciência / Recusa do Preposto", max_length=20, choices=CIENCIA_CHOICES, default='na')
+
+    # Trâmite ARC / PAAI e Sistemas
+    tramite_arc = models.BooleanField("Encaminhado à ARC para PAAI?", default=False)
+    registros_sistemas = models.CharField("Registros nos Sistemas (SILOMS / SIGADAER)", max_length=150, blank=True)
+    status_ocorrencia = models.CharField("Situação Atual", max_length=20, choices=STATUS_OCORRENCIA_CHOICES, default='aberto')
+    acao_fiscal = models.TextField("Providência / Determinação do Fiscal", blank=True)
 
     class Meta:
-        verbose_name = "Ocorrência Contratual"
-        verbose_name_plural = "Ocorrências Contratuais"
-        ordering = ['data']
+        verbose_name = "Ocorrência Contratual (NPA 009)"
+        verbose_name_plural = "Ocorrências Contratuais (NPA 009)"
+        ordering = ['-data_hora']
 
     def __str__(self):
-        return f"Ocorrência {self.tipo} - {self.data}"
+        dt_str = self.data_hora.strftime('%d/%m/%Y %H:%M') if self.data_hora else "S/D"
+        return f"[{dt_str}] {self.get_tipo_display()} - {self.get_status_ocorrencia_display()}"
 
 
 class ApontamentoCorrecaoExecucao(models.Model):

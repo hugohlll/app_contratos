@@ -362,183 +362,42 @@ class ConfiguracaoSistemaForm(EstiloFormMixin, forms.ModelForm):
 from .models import ControleExecucao, RegistroFatura, OcorrenciaContratual
 
 class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
-    houve_substituicao = forms.TypedChoiceField(
-        label="Houve substituição de fiscal?",
-        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    substituicao_entrega_formal = forms.ChoiceField(
-        label="Entrega formal dos registros pelo substituto?",
-        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
-        widget=forms.RadioSelect,
-        required=False
-    )
-    confirmacao_siloms_assinatura = forms.TypedChoiceField(
-        label="Prazos de assinatura/início atualizados no SILOMS?",
-        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    confirmacao_siloms_vigencia = forms.TypedChoiceField(
-        label="Vigência (incluindo aditivos) correta no SILOMS?",
-        coerce=lambda x: str(x).lower() in ['sim', 'true', 'on', '1'],
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    confirmacao_siloms_execucao = forms.ChoiceField(
-        label="Data término da execução físico-financeira conferida no SILOMS?",
-        choices=[('sim', 'Sim'), ('na', 'N/A')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    data_execucao_fisico_financeira = forms.DateField(
-        label="Data do término da execução físico-financeira",
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'id': 'id_data_execucao_fisico_financeira'}),
-        required=False
-    )
-    possibilidade_aditivo = forms.ChoiceField(
-        label="Contrato admite termo aditivo?",
-        choices=[('sim', 'Sim'), ('na', 'Não há mais possibilidade/Não se aplica')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    tratativas_120_dias = forms.ChoiceField(
-        label="Iniciadas tratativas 120 dias antes?",
-        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    coordenacao_doc_scon = forms.ChoiceField(
-        label="Coordenada informação com DOC/SCON?",
-        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    garantia_vigente = forms.ChoiceField(
-        label="Garantia contratual dentro da vigência?",
-        choices=[('sim', 'Sim'), ('nao', 'Não (Vencida)'), ('na', 'Não se aplica / Sem garantia')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    cronograma_fisico_financeiro = forms.ChoiceField(
-        label="Cumprimento do Cronograma Físico-Financeiro",
-        choices=[('conforme', 'Conforme o previsto'), ('atrasado', 'Atrasado')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    alteracao_cronograma = forms.ChoiceField(
-        label="Alteração no cronograma?",
-        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    atraso_entrega = forms.ChoiceField(
-        label="Atraso na entrega?",
-        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    impossibilidade_recebimento = forms.ChoiceField(
-        label="Impossibilidade de recebimento?",
-        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    diligencia_visita = forms.ChoiceField(
-        label="Diligência/visita técnica?",
-        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    imr_aplicado = forms.ChoiceField(
-        label="IMR aplicado?",
-        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    glosa_realizada = forms.ChoiceField(
-        label="Glosa realizada?",
-        choices=[('sim', 'Sim'), ('nao', 'Não'), ('na', 'Não se aplica')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    empresa_sancionada = forms.ChoiceField(
-        label="Empresa sancionada com impedimento de licitar e contratar e/ou declaração de inidoneidade para licitar ou contratar?",
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    doc_sancao_siloms = forms.ChoiceField(
-        label="Documentação comprobatória foi inserida no SILOMS?",
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
-        widget=forms.RadioSelect,
-        required=False
-    )
-    ocorrencias_ativas_empresa = forms.ChoiceField(
-        label="Ocorrências ativas reincidentes?",
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-    necessidade_paai = forms.ChoiceField(
-        label="Necessidade de PAAI?",
-        choices=[('sim', 'Sim'), ('nao', 'Não')],
-        widget=forms.RadioSelect,
-        required=True
-    )
-
     class Meta:
         model = ControleExecucao
         fields = [
-            'agente', 'mes_referencia', 'ano_referencia',
-            # Seção 1
-            'houve_substituicao', 'substituicao_entrega_formal', 'substituicao_obs',
-            # Seção 2
-            'confirmacao_siloms_assinatura', 'confirmacao_siloms_vigencia', 'confirmacao_siloms_execucao',
-            'data_execucao_fisico_financeira',
-            'possibilidade_aditivo', 'tratativas_120_dias', 'coordenacao_doc_scon',
-            'garantia_vigente', 'garantia_providencias',
-            # Seção 3
-            'notas_empenho', 'obs_sem_empenho', 'cronograma_fisico_financeiro',
-            # Seção 4
-            'detalhamento_cronograma', 'alteracao_cronograma', 'alteracao_cronograma_desc',
-            'atraso_entrega', 'atraso_entrega_desc', 'impossibilidade_recebimento', 'impossibilidade_recebimento_desc',
-            'diligencia_visita', 'diligencia_visita_desc', 'imr_aplicado', 'glosa_realizada', 'glosa_desc',
-            # Seção 5
-            'relatorio_ocorrencias',
-            # Seção 6
-            'empresa_sancionada', 'doc_sancao_siloms', 'sancao_observacao',
-            'ocorrencias_ativas_empresa', 'necessidade_paai', 'paai_justificativa',
-            # Geral
-            'observacao',
+            'agente', 'mes_referencia', 'ano_referencia', 'status',
+            'omap', 'unidade_gestora',
+            # Preposto da Contratada
+            'preposto_nome', 'preposto_cargo', 'preposto_cpf', 'preposto_telefone', 'preposto_email',
+            # Obras e Serviços de Engenharia (Anexo B)
+            'eh_obra_engenharia', 'condicoes_climaticas', 'efetivo_trabalhadores', 'maquinario_equipamentos',
+            'art_rrt', 'matricula_cei_cno', 'seguranca_trabalho_cat',
+            # Ocorrências e Encerramento
+            'sem_ocorrencias_periodo', 'relatorio_ocorrencias', 'observacao',
         ]
         widgets = {
             'mes_referencia': forms.HiddenInput(),
             'ano_referencia': forms.HiddenInput(),
-            'garantia_providencias': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Relatar providências adotadas quanto à renovação ou execução da garantia...'}),
-            'notas_empenho': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Ex: 2026NE000123, 2026NE000456'}),
-            'obs_sem_empenho': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Detalhar gestões providenciadas no SILOMS...'}),
-            'detalhamento_cronograma': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Descreva brevemente o status da execução...'}),
-            'alteracao_cronograma_desc': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Descrever ações do fiscal...'}),
-            'atraso_entrega_desc': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Descrever ações do fiscal...'}),
-            'impossibilidade_recebimento_desc': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Descrever ações do fiscal...'}),
-            'diligencia_visita_desc': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Detalhar resultados obtidos e ações...'}),
-            'glosa_desc': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Detalhar ações fiscais e valores glosados...'}),
-            'relatorio_ocorrencias': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Será preenchido pelo assistente de ocorrências...'}),
-            'sancao_observacao': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Observações / Detalhamento da Sanção...'}),
-            'paai_justificativa': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Detalhar infrações e ofício ao Ordenador de Despesas...'}),
-            'substituicao_obs': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Observações sobre a transição de fiscal...'}),
-            'observacao': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Observações gerais...'}),
+            'status': forms.HiddenInput(),
+            'omap': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'unidade_gestora': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'preposto_nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome completo do preposto'}),
+            'preposto_cargo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cargo / Função na contratada'}),
+            'preposto_cpf': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '000.000.000-00 ou RG'}),
+            'preposto_telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(61) 99999-9999'}),
+            'preposto_email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'preposto@empresa.com.br'}),
+            'condicoes_climaticas': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Registro de chuvas, mau tempo e paralisações para fins de abono de dias...'}),
+            'efetivo_trabalhadores': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Contagem de trabalhadores por função (pedreiros, serventes, engenheiros)...'}),
+            'maquinario_equipamentos': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Relação de máquinas e equipamentos no canteiro e estado operacional...'}),
+            'art_rrt': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nº da ART/RRT quitada no CREA/CAU'}),
+            'matricula_cei_cno': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nº do CEI / CNO no INSS'}),
+            'seguranca_trabalho_cat': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Uso de EPIs, registro de acidentes e comunicações (CAT)...'}),
+            'relatorio_ocorrencias': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Resumo consolidado das ocorrências do período (opcional)...'}),
+            'observacao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Observações gerais, esclarecimentos ou apontamentos complementares...'}),
         }
 
     def __init__(self, *args, **kwargs):
         contrato = kwargs.pop('contrato', None)
-        dentro_prazo_aditivo = kwargs.pop('dentro_prazo_aditivo', True)
-        self.dentro_prazo_aditivo = dentro_prazo_aditivo
         super().__init__(*args, **kwargs)
 
         hoje = date.today()
@@ -547,38 +406,17 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         mes_prev = ultimo_dia_mes_anterior.month
         ano_prev = ultimo_dia_mes_anterior.year
 
-        self.fields['mes_referencia'].initial = mes_prev
-        self.fields['ano_referencia'].initial = ano_prev
+        if not self.initial.get('mes_referencia'):
+            self.fields['mes_referencia'].initial = mes_prev
+        if not self.initial.get('ano_referencia'):
+            self.fields['ano_referencia'].initial = ano_prev
 
-        if not dentro_prazo_aditivo:
-            self.fields['possibilidade_aditivo'].required = False
-            self.fields['tratativas_120_dias'].required = False
-            self.fields['coordenacao_doc_scon'].required = False
-            self.initial['possibilidade_aditivo'] = 'na'
-            self.initial['tratativas_120_dias'] = 'na'
-            self.initial['coordenacao_doc_scon'] = 'na'
-
-        if self.instance and self.instance.pk:
-            self.initial['houve_substituicao'] = 'sim' if self.instance.houve_substituicao else 'nao'
-            self.initial['substituicao_entrega_formal'] = self.instance.substituicao_entrega_formal or ''
-            self.initial['confirmacao_siloms_assinatura'] = 'sim' if self.instance.confirmacao_siloms_assinatura else 'nao'
-            self.initial['confirmacao_siloms_vigencia'] = 'sim' if self.instance.confirmacao_siloms_vigencia else 'nao'
-            self.initial['confirmacao_siloms_execucao'] = self.instance.confirmacao_siloms_execucao or ''
-            self.initial['possibilidade_aditivo'] = self.instance.possibilidade_aditivo or ('na' if not dentro_prazo_aditivo else '')
-            self.initial['tratativas_120_dias'] = self.instance.tratativas_120_dias or ('na' if not dentro_prazo_aditivo else '')
-            self.initial['coordenacao_doc_scon'] = self.instance.coordenacao_doc_scon or ('na' if not dentro_prazo_aditivo else '')
-            self.initial['garantia_vigente'] = self.instance.garantia_vigente or ''
-            self.initial['cronograma_fisico_financeiro'] = self.instance.cronograma_fisico_financeiro or ''
-            self.initial['alteracao_cronograma'] = self.instance.alteracao_cronograma or ''
-            self.initial['atraso_entrega'] = self.instance.atraso_entrega or ''
-            self.initial['impossibilidade_recebimento'] = self.instance.impossibilidade_recebimento or ''
-            self.initial['diligencia_visita'] = self.instance.diligencia_visita or ''
-            self.initial['imr_aplicado'] = self.instance.imr_aplicado or ''
-            self.initial['glosa_realizada'] = self.instance.glosa_realizada or ''
-            self.initial['empresa_sancionada'] = self.instance.empresa_sancionada or ''
-            self.initial['doc_sancao_siloms'] = self.instance.doc_sancao_siloms or ''
-            self.initial['ocorrencias_ativas_empresa'] = self.instance.ocorrencias_ativas_empresa or ''
-            self.initial['necessidade_paai'] = self.instance.necessidade_paai or ''
+        if 'status' in self.fields:
+            self.fields['status'].required = False
+        if 'omap' in self.fields:
+            self.fields['omap'].required = False
+        if 'unidade_gestora' in self.fields:
+            self.fields['unidade_gestora'].required = False
 
         if contrato:
             agentes_ids = Integrante.objects.filter(
@@ -590,36 +428,17 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             self.fields['agente'].queryset = Agente.objects.filter(id__in=agentes_ids).select_related('posto')
             self.fields['agente'].empty_label = "Selecione o Fiscal..."
 
-    def clean(self):
-        cleaned_data = super().clean()
-
-        if not getattr(self, 'dentro_prazo_aditivo', True):
-            cleaned_data['possibilidade_aditivo'] = 'na'
-            cleaned_data['tratativas_120_dias'] = 'na'
-            cleaned_data['coordenacao_doc_scon'] = 'na'
-
-        siloms_exec = cleaned_data.get('confirmacao_siloms_execucao')
-        dt_exec = cleaned_data.get('data_execucao_fisico_financeira')
-        houve_sub = cleaned_data.get('houve_substituicao')
-        sub_entrega = cleaned_data.get('substituicao_entrega_formal')
-        emp_sancionada = cleaned_data.get('empresa_sancionada')
-        doc_siloms = cleaned_data.get('doc_sancao_siloms')
-
-        if siloms_exec == 'sim' and not dt_exec:
-            self.add_error('data_execucao_fisico_financeira', 'Informe a data do término da execução físico-financeira ao marcar Sim.')
-        elif siloms_exec != 'sim':
-            cleaned_data['data_execucao_fisico_financeira'] = None
-
-        if houve_sub and not sub_entrega:
-            self.add_error('substituicao_entrega_formal', 'Informe se houve entrega formal dos registros pelo substituto.')
-
-        if emp_sancionada == 'sim' and not doc_siloms:
-            self.add_error('doc_sancao_siloms', 'Este campo é obrigatório.')
-        elif emp_sancionada != 'sim':
-            cleaned_data['doc_sancao_siloms'] = None
-            cleaned_data['sancao_observacao'] = ''
-
-        return cleaned_data
+            # Preenchimento automático inteligente do Preposto a partir do mês anterior se campos vazios
+            if not self.instance.pk or not self.instance.preposto_nome:
+                ultimo_controle = ControleExecucao.objects.filter(
+                    contrato=contrato
+                ).exclude(preposto_nome='').order_by('-ano_referencia', '-mes_referencia').first()
+                if ultimo_controle:
+                    self.initial.setdefault('preposto_nome', ultimo_controle.preposto_nome)
+                    self.initial.setdefault('preposto_cargo', ultimo_controle.preposto_cargo)
+                    self.initial.setdefault('preposto_cpf', ultimo_controle.preposto_cpf)
+                    self.initial.setdefault('preposto_telefone', ultimo_controle.preposto_telefone)
+                    self.initial.setdefault('preposto_email', ultimo_controle.preposto_email)
 
 
 class RegistroFaturaForm(EstiloFormMixin, forms.ModelForm):
@@ -631,10 +450,25 @@ class RegistroFaturaForm(EstiloFormMixin, forms.ModelForm):
 class OcorrenciaContratualForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = OcorrenciaContratual
-        fields = ['data', 'tipo', 'descricao', 'acao_fiscal', 'prazo']
+        fields = [
+            'data_hora', 'local', 'tipo', 'descricao', 'dispositivo_violado',
+            'evidencias', 'notificacao_emitida', 'notificacao_numero',
+            'prazo_dias_uteis', 'ciencia_preposto', 'tramite_arc',
+            'registros_sistemas', 'status_ocorrencia', 'acao_fiscal'
+        ]
         widgets = {
-            'data': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
-            'descricao': forms.Textarea(attrs={'rows': 2}),
-            'acao_fiscal': forms.Textarea(attrs={'rows': 2}),
+            'data_hora': forms.DateTimeInput(format='%Y-%m-%dT%H:%M', attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'local': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Instalações, setor, dependência'}),
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'descricao': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Narrativa detalhada e factual do fato'}),
+            'dispositivo_violado': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cláusula contratual, item do TR ou edital'}),
+            'evidencias': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Relatório fotográfico, documento SIGADAER, etc.'}),
+            'notificacao_numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 001/GAP-BR/2026'}),
+            'prazo_dias_uteis': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'ciencia_preposto': forms.Select(attrs={'class': 'form-select'}),
+            'registros_sistemas': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Medição SILOMS / Doc SIGADAER'}),
+            'status_ocorrencia': forms.Select(attrs={'class': 'form-select'}),
+            'acao_fiscal': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Providência / determinação imediata do fiscal'}),
         }
+
 
