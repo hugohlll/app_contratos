@@ -768,8 +768,6 @@ def gerar_livro_fiscal_pdf(request, pk):
     ]))
 
     # Bloco de Assinatura
-    dt_env = controle.data_envio
-
     p_sigla = controle.agente.posto.sigla if (controle.agente and controle.agente.posto) else ""
     n_guerra = controle.agente.nome_de_guerra.upper() if controle.agente else "FISCAL"
     nome_assinante = f"{p_sigla} {n_guerra}".strip()
@@ -779,7 +777,7 @@ def gerar_livro_fiscal_pdf(request, pk):
         Spacer(1, 2),
         Paragraph(f"<b>{nome_assinante}</b>", ParagraphStyle('Name', parent=styles['Normal'], alignment=1, fontSize=8.5, leading=10, textColor=colors.HexColor('#0F172A'))),
         Paragraph("Fiscal Responsável pelo Contrato — GAP-BR", ParagraphStyle('Func', parent=styles['Normal'], alignment=1, fontSize=7.5, leading=9.5, textColor=colors.HexColor('#64748B'))),
-        Paragraph(f"Assinado eletronicamente em {dt_env.strftime('%d/%m/%Y às %H:%M')}", ParagraphStyle('Meta', parent=styles['Normal'], alignment=1, fontSize=7, leading=9, textColor=colors.HexColor('#94A3B8')))
+        Paragraph("(datado e assinado eletronicamente)", ParagraphStyle('Meta', parent=styles['Normal'], alignment=1, fontSize=7.5, leading=9.5, textColor=colors.HexColor('#64748B')))
     ]
 
     sig_t = Table([[sig_content]], colWidths=[printable_width])
@@ -794,9 +792,7 @@ def gerar_livro_fiscal_pdf(request, pk):
         make_sec_header("DECLARAÇÃO DE CONFORMIDADE E FECHAMENTO"),
         Spacer(1, 4),
         decl_t,
-        Spacer(1, 8),
-        Paragraph("(datado e assinado eletronicamente)", ParagraphStyle('Dt', parent=styles['Normal'], alignment=2, fontSize=8, textColor=colors.HexColor('#0F172A'))),
-        Spacer(1, 4),
+        Spacer(1, 6),
         sig_t
     ]))
 
