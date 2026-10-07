@@ -348,12 +348,14 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(response.context['ano_referencia'], hoje.year)
         self.assertTrue(response.context['is_mes_corrente'])
         self.assertTrue(response.context['bloquear_ateste_mes_corrente'])
+        self.assertContains(response, f"Modo Registro Tempestivo — Mês Corrente ({hoje.month:02d}/{hoje.year})")
 
         # Testa também a rota de compatibilidade /contratos/execucao/<id>/?modo=tempestivo
         res_alias = self.client.get(f'/contratos/execucao/{self.contrato.id}/?modo=tempestivo')
         self.assertEqual(res_alias.status_code, 200)
         self.assertEqual(res_alias.context['mes_referencia'], hoje.month)
         self.assertTrue(res_alias.context['is_mes_corrente'])
+        self.assertContains(res_alias, f"Modo Registro Tempestivo — Mês Corrente ({hoje.month:02d}/{hoje.year})")
 
     def test_bloqueio_finalizar_mes_corrente(self):
         """Testa que tentar finalizar e atestar no mês corrente é bloqueado e salvo como rascunho."""

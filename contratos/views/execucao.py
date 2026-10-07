@@ -282,6 +282,7 @@ def formulario_execucao(request, contrato_id):
         'integrantes': integrantes,
         'form': form,
         'controle_existente': controle_existente,
+        'controle': controle_existente,
         'apontamentos': apontamentos,
         'ocorrencias_json': json.dumps(ocorrencias_existentes, default=str),
         'mes_referencia': filtro_mes,

@@ -123,7 +123,7 @@
         <div class="d-flex align-items-center">
             <i class="bi bi-clock-history fs-3 text-info me-3"></i>
             <div>
-                <h6 class="fw-bold mb-1 text-dark">Modo Registro Tempestivo — Mês Corrente ({{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia }})</h6>
+                <h6 class="fw-bold mb-1 text-dark">Modo Registro Tempestivo — Mês Corrente ({{ mes_referencia|stringformat:"02d" }}/{{ ano_referencia|stringformat:"d" }})</h6>
                 <div class="small text-muted">
                     Registre e salve ocorrências em tempo real conforme elas ocorrem. Todas as ocorrências salvas neste mês serão registradas como <strong>Tempestivas</strong>. O ateste e finalização formal serão liberados na virada do mês, durante o período de Prestação de Contas Mensal.
                 </div>
@@ -383,7 +383,7 @@
                         </button>
                         {% if bloquear_ateste_mes_corrente %}
                         <button type="button" class="btn btn-secondary fw-bold px-4 shadow-sm" disabled title="O ateste e finalização do mês corrente são liberados somente na virada do mês, durante o período da Prestação de Contas Mensal. Continue registrando ocorrências tempestivamente como rascunho.">
-                            <i class="bi bi-lock me-1"></i> Finalizar e Atestar Livro (Liberado após {{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia }})
+                            <i class="bi bi-lock me-1"></i> Finalizar e Atestar Livro (Liberado após {{ mes_referencia|stringformat:"02d" }}/{{ ano_referencia|stringformat:"d" }})
                         </button>
                         {% else %}
                         <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" id="btnFinalizarLivro">
