@@ -49,28 +49,15 @@
         </div>
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <small class="text-muted d-block">Número do Livro</small>
                     <div class="fw-bold text-primary">{{ controle.numero_livro }}</div>
                 </div>
-                <div class="col-md-3">
-                    <small class="text-muted d-block">Processo Adm. (e-PAG)</small>
-                    <div class="fw-bold">{{ controle.contrato.processo_sei|default:"—" }}</div>
-                </div>
-                <div class="col-md-3">
-                    <small class="text-muted d-block">Unidade Gestora (UG)</small>
-                    <div class="fw-bold">{{ controle.unidade_gestora }}</div>
-                </div>
-                <div class="col-md-3">
-                    <small class="text-muted d-block">OM Apoiada (OMAP)</small>
-                    <div class="fw-bold">{{ controle.omap }}</div>
-                </div>
-
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <small class="text-muted d-block">Contrato e Objeto</small>
                     <div class="small fw-semibold">Nº {{ controle.contrato.numero }} — {{ controle.contrato.objeto }}</div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <small class="text-muted d-block">Empresa Contratada / CNPJ</small>
                     <div class="small fw-bold">
                         {{ controle.contrato.empresa.razao_social|default:"—" }}

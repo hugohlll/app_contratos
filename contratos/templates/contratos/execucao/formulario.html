@@ -135,38 +135,19 @@
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="read-only-box">
                             <div class="read-only-label">Número do Livro</div>
                             <div class="read-only-value text-primary">{{ controle_existente.numero_livro|default:"Padrão: <mês>/<ano>/<D|R>/<contrato>" }}</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="read-only-box">
-                            <div class="read-only-label">Processo Adm. (e-PAG)</div>
-                            <div class="read-only-value">{{ contrato.processo_sei|default:"Não informado" }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="read-only-box">
-                            <div class="read-only-label">Unidade Gestora (UG)</div>
-                            <div class="read-only-value">120006 - GAP-BR</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="read-only-box">
-                            <div class="read-only-label">OM Apoiada (OMAP)</div>
-                            <div class="read-only-value">{{ controle_existente.omap|default:"GAP-BR" }}</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="read-only-box">
                             <div class="read-only-label">Contrato e Objeto</div>
                             <div class="read-only-value">Nº {{ contrato.numero }} — {{ contrato.objeto }}</div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="read-only-box">
                             <div class="read-only-label">Contratada / CNPJ</div>
                             <div class="read-only-value">
