@@ -116,6 +116,7 @@ urlpatterns = [
     path('execucao/', execucao.portal_execucao_index, name='portal_execucao_index'),
     path('execucao/fiscais/', execucao.portal_execucao_fiscais, name='portal_execucao_fiscais'),
     path('execucao/fiscais/<int:contrato_id>/', execucao.formulario_execucao, name='formulario_execucao'),
+    path('contratos/execucao/<int:contrato_id>/', execucao.formulario_execucao),
     path('execucao/fiscais/excluir/<int:contrato_id>/', execucao.excluir_controle_execucao_publico, name='excluir_controle_execucao_publico'),
     path('execucao/livro-fiscal/<int:pk>/pdf/', execucao.gerar_livro_fiscal_pdf, name='download_livro_fiscal_pdf'),
     path('execucao/ocorrencia/<int:pk>/notificacao-pdf/', execucao.gerar_notificacao_anexo_d_pdf, name='download_notificacao_anexo_d_pdf'),

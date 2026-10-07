@@ -349,6 +349,12 @@ class ControleExecucaoTests(TestCase):
         self.assertTrue(response.context['is_mes_corrente'])
         self.assertTrue(response.context['bloquear_ateste_mes_corrente'])
 
+        # Testa também a rota de compatibilidade /contratos/execucao/<id>/?modo=tempestivo
+        res_alias = self.client.get(f'/contratos/execucao/{self.contrato.id}/?modo=tempestivo')
+        self.assertEqual(res_alias.status_code, 200)
+        self.assertEqual(res_alias.context['mes_referencia'], hoje.month)
+        self.assertTrue(res_alias.context['is_mes_corrente'])
+
     def test_bloqueio_finalizar_mes_corrente(self):
         """Testa que tentar finalizar e atestar no mês corrente é bloqueado e salvo como rascunho."""
         hoje = timezone.localtime(timezone.now()).date()

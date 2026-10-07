@@ -73,7 +73,7 @@ $(document).ready(function() {
             const urlParams = new URLSearchParams(window.location.search);
             const modo = urlParams.get('modo');
             if (modo === 'tempestivo') {
-                window.location.href = '/contratos/execucao/' + cid + '/?modo=tempestivo';
+                window.location.href = '/execucao/fiscais/' + cid + '/?modo=tempestivo';
             } else {
                 window.location.href = '/prestacoes/fiscais/' + cid + '/';
             }
