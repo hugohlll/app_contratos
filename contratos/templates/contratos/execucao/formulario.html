@@ -74,7 +74,7 @@
                 </h4>
                 <div class="small text-muted">
                     Livro nº <strong class="text-primary">{{ controle_existente.numero_livro|default:"Novo Livro" }}</strong> | 
-                    Referência: <strong class="text-dark">{{ mes_referencia|stringformat:"02d" }}/{{ ano_referencia }}</strong> | 
+                    Referência: <strong class="text-dark">{{ mes_referencia|stringformat:"02d" }}/{{ ano_referencia|stringformat:"d" }}</strong> | 
                     UG: <strong>120006 - GAP-BR</strong>
                 </div>
             </div>

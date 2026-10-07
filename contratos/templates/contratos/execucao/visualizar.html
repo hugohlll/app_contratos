@@ -14,7 +14,7 @@
                 </h2>
                 <p class="text-muted mb-0 small">
                     Livro nº <strong class="text-primary">{{ controle.numero_livro }}</strong> | 
-                    Referência: <strong>{{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia }}</strong> | 
+                    Referência: <strong>{{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia|stringformat:"d" }}</strong> | 
                     UG: <strong>120006 - GAP-BR</strong> | 
                     Fiscal: <strong>{% if controle.agente %}{{ controle.agente.posto.sigla|default:"" }} {{ controle.agente.nome_de_guerra|default:controle.agente.nome_completo }}{% else %}Não informado{% endif %}</strong>
                 </p>
