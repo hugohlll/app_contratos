@@ -379,8 +379,8 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             'mes_referencia': forms.HiddenInput(),
             'ano_referencia': forms.HiddenInput(),
             'status': forms.HiddenInput(),
-            'omap': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
-            'unidade_gestora': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'omap': forms.HiddenInput(),
+            'unidade_gestora': forms.HiddenInput(),
             'preposto_nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome completo do preposto'}),
             'preposto_cargo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cargo / Função na contratada'}),
             'preposto_cpf': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '000.000.000-00 ou RG'}),
@@ -410,6 +410,10 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             self.fields['mes_referencia'].initial = mes_prev
         if not self.initial.get('ano_referencia'):
             self.fields['ano_referencia'].initial = ano_prev
+        if not self.initial.get('omap'):
+            self.fields['omap'].initial = 'GAP-BR'
+        if not self.initial.get('unidade_gestora'):
+            self.fields['unidade_gestora'].initial = '120006 - GAP-BR'
 
         if 'status' in self.fields:
             self.fields['status'].required = False
