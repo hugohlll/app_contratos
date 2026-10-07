@@ -117,6 +117,22 @@
     </div>
     {% endif %}
 
+    <!-- Modo Registro Tempestivo (Mês Corrente) -->
+    {% if is_mes_corrente %}
+    <div class="alert alert-info border-info shadow-sm mb-4 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-clock-history fs-3 text-info me-3"></i>
+            <div>
+                <h6 class="fw-bold mb-1 text-dark">Modo Registro Tempestivo — Mês Corrente ({{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia }})</h6>
+                <div class="small text-muted">
+                    Registre e salve ocorrências em tempo real conforme elas ocorrem. Todas as ocorrências salvas neste mês serão registradas como <strong>Tempestivas</strong>. O ateste e finalização formal serão liberados na virada do mês, durante o período de Prestação de Contas Mensal.
+                </div>
+            </div>
+        </div>
+        <span class="badge bg-success px-3 py-2 fs-6">Lançamento em Tempo Real</span>
+    </div>
+    {% endif %}
+
     <form method="post" id="formLivroFiscal">
         {% csrf_token %}
         {{ form.mes_referencia }}
@@ -365,9 +381,15 @@
                         <button type="button" class="btn btn-outline-primary fw-bold" id="btnSalvarRascunho">
                             <i class="bi bi-save me-1"></i> Salvar Rascunho (Tempestivo)
                         </button>
+                        {% if bloquear_ateste_mes_corrente %}
+                        <button type="button" class="btn btn-secondary fw-bold px-4 shadow-sm" disabled title="O ateste e finalização do mês corrente são liberados somente na virada do mês, durante o período da Prestação de Contas Mensal. Continue registrando ocorrências tempestivamente como rascunho.">
+                            <i class="bi bi-lock me-1"></i> Finalizar e Atestar Livro (Liberado após {{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia }})
+                        </button>
+                        {% else %}
                         <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" id="btnFinalizarLivro">
                             <i class="bi bi-check-all me-1"></i> Finalizar e Atestar Livro do Mês
                         </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -560,6 +582,13 @@ $(document).ready(function() {
 
             let dataFmt = oc.data_hora_fmt || (oc.data_hora ? oc.data_hora.replace('T', ' ') : '—');
 
+            let tempBadge = '';
+            if (oc.eh_tempestiva) {
+                tempBadge = '<div class="mt-1"><span class="badge bg-success-subtle text-success border border-success-subtle" title="Lançado no sistema tempestivamente durante o próprio mês de referência"><i class="bi bi-clock-check me-1"></i>Tempestivo</span></div>';
+            } else if (oc.eh_tempestiva === false) {
+                tempBadge = '<div class="mt-1"><span class="badge bg-warning-subtle text-dark border border-warning-subtle" title="Lançado em mês posterior ao da ocorrência (agrupamento extemporâneo)"><i class="bi bi-hourglass-split me-1"></i>Agrupado (Extemporâneo)</span></div>';
+            }
+
             let btnPdf = '';
             if (oc.notificacao_pdf_url) {
                 btnPdf = `<a href="${oc.notificacao_pdf_url}" target="_blank" class="btn btn-outline-danger btn-sm py-0 px-2" title="Baixar Notificação Anexo D (PDF)">
@@ -569,7 +598,10 @@ $(document).ready(function() {
 
             const tr = `
                 <tr>
-                    <td class="small fw-semibold">${dataFmt}</td>
+                    <td class="small fw-semibold">
+                        ${dataFmt}
+                        ${tempBadge}
+                    </td>
                     <td class="small">${oc.local || '—'}</td>
                     <td class="small"><span class="badge bg-light text-dark border">${oc.tipo_display || oc.tipo}</span></td>
                     <td class="small">
@@ -670,7 +702,11 @@ $(document).ready(function() {
             status_ocorrencia: $('#modal_status').val(),
             status_ocorrencia_display: $('#modal_status option:selected').text(),
             acao_fiscal: $('#modal_acao_fiscal').val().trim(),
-            notificacao_pdf_url: (idx >= 0 && ocorrencias[idx]) ? ocorrencias[idx].notificacao_pdf_url : ''
+            notificacao_pdf_url: (idx >= 0 && ocorrencias[idx]) ? ocorrencias[idx].notificacao_pdf_url : '',
+            data_registro: (idx >= 0 && ocorrencias[idx]) ? ocorrencias[idx].data_registro : '',
+            data_registro_fmt: (idx >= 0 && ocorrencias[idx]) ? ocorrencias[idx].data_registro_fmt : '',
+            eh_tempestiva: (idx >= 0 && ocorrencias[idx]) ? ocorrencias[idx].eh_tempestiva : {{ is_mes_corrente|yesno:"true,false" }},
+            classificacao_tempestividade: (idx >= 0 && ocorrencias[idx]) ? ocorrencias[idx].classificacao_tempestividade : ({{ is_mes_corrente|yesno:"true,false" }} ? 'Tempestivo' : 'Agrupado (Extemporâneo)')
         };
 
         if (idx >= 0) {

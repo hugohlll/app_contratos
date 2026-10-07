@@ -337,3 +337,129 @@ class ControleExecucaoTests(TestCase):
         res_adm = self.client.get(url_admin_del)
         self.assertEqual(res_adm.status_code, 302)
         self.assertEqual(ControleExecucao.objects.count(), 0)
+
+    def test_modo_tempestivo_mes_corrente(self):
+        """Testa acesso com ?modo=tempestivo abrindo no mês corrente com trava de finalização."""
+        hoje = timezone.localtime(timezone.now()).date()
+        url = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}) + '?modo=tempestivo'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['mes_referencia'], hoje.month)
+        self.assertEqual(response.context['ano_referencia'], hoje.year)
+        self.assertTrue(response.context['is_mes_corrente'])
+        self.assertTrue(response.context['bloquear_ateste_mes_corrente'])
+
+    def test_bloqueio_finalizar_mes_corrente(self):
+        """Testa que tentar finalizar e atestar no mês corrente é bloqueado e salvo como rascunho."""
+        hoje = timezone.localtime(timezone.now()).date()
+        url = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id})
+        data = {
+            'agente': self.agente.id,
+            'mes_referencia': hoje.month,
+            'ano_referencia': hoje.year,
+            'status': 'rascunho',
+            'acao': 'finalizar',
+            'omap': 'GAP-BR',
+            'unidade_gestora': '120006 - GAP-BR',
+            'sem_ocorrencias_periodo': 'on',
+            'ocorrencias_json': '[]'
+        }
+        response = self.client.post(url, data, follow=True)
+        self.assertEqual(response.status_code, 200)
+
+        # O controle deve ter sido salvo como 'rascunho', NÃO como 'entregue'
+        ctrl = ControleExecucao.objects.get(
+            contrato=self.contrato,
+            mes_referencia=hoje.month,
+            ano_referencia=hoje.year
+        )
+        self.assertEqual(ctrl.status, 'rascunho')
+
+    def test_finalizar_mes_anterior_permitido(self):
+        """Testa que finalizar livro de mês anterior encerra e atesta com status entregue."""
+        hoje = timezone.localtime(timezone.now()).date()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_ant = ultimo_dia_mes_anterior.month
+        ano_ant = ultimo_dia_mes_anterior.year
+
+        url = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}) + f'?mes={mes_ant}&ano={ano_ant}'
+        data = {
+            'agente': self.agente.id,
+            'mes_referencia': mes_ant,
+            'ano_referencia': ano_ant,
+            'status': 'rascunho',
+            'acao': 'finalizar',
+            'omap': 'GAP-BR',
+            'unidade_gestora': '120006 - GAP-BR',
+            'sem_ocorrencias_periodo': 'on',
+            'ocorrencias_json': '[]'
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+
+        ctrl = ControleExecucao.objects.get(
+            contrato=self.contrato,
+            mes_referencia=mes_ant,
+            ano_referencia=ano_ant
+        )
+        self.assertEqual(ctrl.status, 'entregue')
+
+    def test_classificacao_tempestividade_ocorrencia(self):
+        """Testa auto-diferenciação de tempestividade pelo timestamp de inserção."""
+        ctrl = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            mes_referencia=6,
+            ano_referencia=2026,
+            status='rascunho'
+        )
+
+        # Ocorrência 1: inserida dentro do mês de referência (junho/2026) -> Tempestivo
+        dt_reg_temp = timezone.datetime(2026, 6, 15, 10, 0, tzinfo=timezone.get_current_timezone())
+        oc_tempestiva = OcorrenciaContratual.objects.create(
+            controle=ctrl,
+            data_hora=dt_reg_temp,
+            data_registro=dt_reg_temp,
+            descricao='Falta de crachá do funcionário terceirizado.'
+        )
+        self.assertTrue(oc_tempestiva.eh_tempestiva)
+        self.assertEqual(oc_tempestiva.classificacao_tempestividade, 'Tempestivo')
+
+        # Ocorrência 2: inserida no mês seguinte (julho/2026) -> Extemporâneo
+        dt_reg_ext = timezone.datetime(2026, 7, 5, 14, 30, tzinfo=timezone.get_current_timezone())
+        oc_extemporanea = OcorrenciaContratual.objects.create(
+            controle=ctrl,
+            data_hora=timezone.datetime(2026, 6, 20, 10, 0, tzinfo=timezone.get_current_timezone()),
+            data_registro=dt_reg_ext,
+            descricao='Lançada apenas no mês seguinte durante a prestação de contas.'
+        )
+        self.assertFalse(oc_extemporanea.eh_tempestiva)
+        self.assertEqual(oc_extemporanea.classificacao_tempestividade, 'Agrupado / Extemporâneo')
+
+    def test_salvar_ocorrencia_tempestiva_ajax(self):
+        """Testa o endpoint AJAX para salvar ocorrência em tempo real."""
+        hoje = timezone.localtime(timezone.now()).date()
+        url = reverse('salvar_ocorrencia_tempestiva')
+        payload = {
+            'contrato_id': self.contrato.id,
+            'mes_referencia': hoje.month,
+            'ano_referencia': hoje.year,
+            'data_hora': f'{hoje.isoformat()}T10:00',
+            'local': 'Hangar 01',
+            'tipo': 'TECNICA',
+            'descricao': 'Vistoria técnica tempestiva realizada.',
+            'status_ocorrencia': 'aberto'
+        }
+        response = self.client.post(
+            url,
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data.get('success'))
+        self.assertIn('ocorrencia', data)
+        self.assertTrue(data['ocorrencia']['eh_tempestiva'])
+        self.assertEqual(data['ocorrencia']['classificacao_tempestividade'], 'Tempestivo')
+        self.assertIsNotNone(data['ocorrencia']['data_registro'])
+

@@ -74,8 +74,26 @@ def formulario_execucao(request, contrato_id):
     hoje = date.today()
     primeiro_dia_mes_atual = hoje.replace(day=1)
     ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
-    filtro_mes = ultimo_dia_mes_anterior.month
-    filtro_ano = ultimo_dia_mes_anterior.year
+
+    modo = request.GET.get('modo') or request.POST.get('modo')
+    param_mes = request.GET.get('mes') or request.POST.get('mes_referencia')
+    param_ano = request.GET.get('ano') or request.POST.get('ano_referencia')
+
+    if modo == 'tempestivo':
+        filtro_mes = hoje.month
+        filtro_ano = hoje.year
+    elif param_mes and param_ano:
+        try:
+            filtro_mes = int(param_mes)
+            filtro_ano = int(param_ano)
+        except (ValueError, TypeError):
+            filtro_mes = ultimo_dia_mes_anterior.month
+            filtro_ano = ultimo_dia_mes_anterior.year
+    else:
+        filtro_mes = ultimo_dia_mes_anterior.month
+        filtro_ano = ultimo_dia_mes_anterior.year
+
+    is_mes_corrente = (filtro_mes == hoje.month and filtro_ano == hoje.year)
 
     # Buscar comissão de fiscalização ativa
     comissao_ativa = Comissao.objects.filter(
@@ -99,6 +117,14 @@ def formulario_execucao(request, contrato_id):
     if request.method == 'POST':
         form = ControleExecucaoForm(request.POST, contrato=contrato, instance=controle_existente)
         acao = request.POST.get('acao', 'finalizar')
+
+        if is_mes_corrente and acao == 'finalizar':
+            acao = 'rascunho'
+            messages.warning(
+                request,
+                "O mês de referência ainda está em andamento. O Livro do Fiscal foi salvo como rascunho com sucesso. "
+                "O ateste oficial estará disponível na Prestação de Contas a partir do 1º dia do mês subsequente."
+            )
 
         if form.is_valid():
             controle = form.save(commit=False)
@@ -128,6 +154,7 @@ def formulario_execucao(request, contrato_id):
             if not controle.sem_ocorrencias_periodo:
                 try:
                     ocorrencias_data = json.loads(ocorrencias_json_str)
+                    existing_regs = {o.id: o.data_registro for o in controle.ocorrencias.all()}
                     controle.ocorrencias.all().delete()
                     for idx, oc in enumerate(ocorrencias_data, 1):
                         dt_raw = oc.get('data_hora') or oc.get('data')
@@ -154,8 +181,19 @@ def formulario_execucao(request, contrato_id):
                         status_oc = oc.get('status_ocorrencia', 'aberto')
                         acao_fiscal = oc.get('acao_fiscal', '').strip()
 
+                        oc_id = oc.get('id')
+                        dt_registro = None
+                        if oc_id and str(oc_id).isdigit() and int(oc_id) in existing_regs:
+                            dt_registro = existing_regs[int(oc_id)]
+                        elif oc.get('data_registro'):
+                            parsed_reg = parse_datetime(oc.get('data_registro'))
+                            if parsed_reg:
+                                dt_registro = timezone.make_aware(parsed_reg) if timezone.is_naive(parsed_reg) else parsed_reg
+                        if not dt_registro:
+                            dt_registro = timezone.now()
+
                         if desc:
-                            OcorrenciaContratual.objects.create(
+                            nova_oc = OcorrenciaContratual.objects.create(
                                 controle=controle,
                                 data_hora=dt_parsed,
                                 local=local,
@@ -170,12 +208,14 @@ def formulario_execucao(request, contrato_id):
                                 tramite_arc=tramite,
                                 status_ocorrencia=status_oc,
                                 acao_fiscal=acao_fiscal,
+                                data_registro=dt_registro,
                             )
                             relatorio_text_lines.append(
                                 f"[{idx}] {dt_parsed.strftime('%d/%m/%Y %H:%M')} | {tp} | Local: {local or 'N/A'}\n"
                                 f"    Descrição: {desc}\n"
                                 f"    Dispositivo: {disp or 'N/A'} | Notificação: {'Sim (' + notif_num + ')' if notif_emit else 'Não'}\n"
-                                f"    Situação: {status_oc.upper()} | Providência: {acao_fiscal or 'N/A'}"
+                                f"    Situação: {status_oc.upper()} | Registro: {nova_oc.classificacao_tempestividade}\n"
+                                f"    Providência: {acao_fiscal or 'N/A'}"
                             )
                 except Exception:
                     pass
@@ -192,8 +232,12 @@ def formulario_execucao(request, contrato_id):
             controle.save()
 
             if acao == 'rascunho':
-                messages.success(request, f"Rascunho do Livro {controle.numero_livro} salvo com sucesso! O livro permanece em andamento para lançamentos tempestivos.")
-                return redirect('formulario_execucao', contrato_id=contrato.id)
+                if not (is_mes_corrente and request.POST.get('acao') == 'finalizar'):
+                    messages.success(request, f"Rascunho do Livro {controle.numero_livro} salvo com sucesso! O livro permanece em andamento para lançamentos tempestivos.")
+                red_url = reverse('formulario_execucao', kwargs={'contrato_id': contrato.id})
+                if modo == 'tempestivo' or is_mes_corrente:
+                    red_url += '?modo=tempestivo'
+                return redirect(red_url)
             else:
                 messages.success(request, f"Livro do Fiscal {controle.numero_livro} finalizado e atestado com sucesso!")
                 return redirect('upload_prestacao', contrato_id=contrato.id)
@@ -210,6 +254,9 @@ def formulario_execucao(request, contrato_id):
                 'id': oc.id,
                 'data_hora': oc.data_hora.strftime('%Y-%m-%dT%H:%M') if oc.data_hora else '',
                 'data_hora_fmt': oc.data_hora.strftime('%d/%m/%Y %H:%M') if oc.data_hora else '',
+                'data_registro': oc.data_registro.strftime('%d/%m/%Y %H:%M') if oc.data_registro else '',
+                'eh_tempestiva': oc.eh_tempestiva,
+                'classificacao_tempestividade': oc.classificacao_tempestividade,
                 'local': oc.local,
                 'tipo': oc.tipo,
                 'tipo_display': oc.get_tipo_display(),
@@ -239,6 +286,9 @@ def formulario_execucao(request, contrato_id):
         'ocorrencias_json': json.dumps(ocorrencias_existentes, default=str),
         'mes_referencia': filtro_mes,
         'ano_referencia': filtro_ano,
+        'is_mes_corrente': is_mes_corrente,
+        'bloquear_ateste_mes_corrente': is_mes_corrente,
+        'modo': modo or ('tempestivo' if is_mes_corrente else ''),
     })
 
 
@@ -302,6 +352,9 @@ def salvar_ocorrencia_tempestiva(request):
                 'id': oc.id,
                 'data_hora': oc.data_hora.strftime('%Y-%m-%dT%H:%M'),
                 'data_hora_fmt': oc.data_hora.strftime('%d/%m/%Y %H:%M'),
+                'data_registro': oc.data_registro.strftime('%d/%m/%Y %H:%M') if oc.data_registro else '',
+                'eh_tempestiva': oc.eh_tempestiva,
+                'classificacao_tempestividade': oc.classificacao_tempestividade,
                 'local': oc.local,
                 'tipo': oc.tipo,
                 'tipo_display': oc.get_tipo_display(),
@@ -715,11 +768,14 @@ def gerar_livro_fiscal_pdf(request, pk):
     else:
         for idx, oc in enumerate(ocorrencias, 1):
             dt_s = oc.data_hora.strftime('%d/%m/%Y às %H:%M') if oc.data_hora else "S/D"
+            reg_s = oc.data_registro.strftime('%d/%m/%Y às %H:%M') if oc.data_registro else dt_s
+            selo_temp = "Tempestivo (em tempo real)" if oc.eh_tempestiva else "Agrupado (Extemporâneo na Prestação)"
             notif_s = f"Sim (Nº {oc.notificacao_numero}) — Prazo: {oc.prazo_dias_uteis} dias úteis" if oc.notificacao_emitida else "Não emitida"
             tramite_s = "Sim (Encaminhado à ARC para PAAI)" if oc.tramite_arc else "Não (Trâmite ordinário)"
 
             oc_data = [
                 ["Item / Data e Horário:", f"<b>Ocorrência #{idx}</b> — {dt_s}"],
+                ["Tempestividade do Registro:", f"<b>{selo_temp}</b> — lançado no sistema em {reg_s}"],
                 ["Local da Ocorrência:", oc.local or "Dependências da OM"],
                 ["Tipo de Ocorrência:", oc.get_tipo_display()],
                 ["Descrição Detalhada e Factual:", oc.descricao],
