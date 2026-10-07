@@ -656,9 +656,6 @@ def gerar_livro_fiscal_pdf(request, pk):
 
     abertura_data = [
         ["Número do Livro / Ano:", f"<b>{controle.numero_livro}</b>"],
-        ["Processo Adm. de Gestão (PAG / e-PAG):", getattr(contrato, 'pag', None) or "e-PAG"],
-        ["Organização Militar Apoiada (OMAP):", controle.omap],
-        ["Unidade Gestora (UG / Gestão):", controle.unidade_gestora],
         ["Número e Objeto do Contrato:", f"Contrato nº {contrato.numero} — {contrato.objeto}"],
         ["Contratada / CNPJ:", empresa_str],
         ["Período de Vigência Contratual:", vig_str],

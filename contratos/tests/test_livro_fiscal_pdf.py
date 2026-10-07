@@ -107,10 +107,11 @@ class LivroFiscalPDFTestCase(TestCase):
         # Cabeçalho e Identificação
         self.assertIn('GRUPAMENTO DE APOIO DE BRASÍLIA', full_text)
         self.assertIn('LIVRO DE REGISTRO DE OCORRÊNCIAS', full_text)
-        self.assertIn('120006 - GAP-BR', full_text)
         self.assertIn('07/2026/D/001/2025', full_text)
         self.assertIn('Consultoria Nascimento ME', full_text)
         self.assertIn('Carlos Eduardo Preposto', full_text)
+        self.assertNotIn('Unidade Gestora (UG / Gestão):', full_text)
+        self.assertNotIn('Processo Adm. de Gestão (PAG / e-PAG):', full_text)
 
         # Ocorrência registrada
         self.assertIn('Atraso injustificado na entrega do relatório mensal', full_text)
