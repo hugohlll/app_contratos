@@ -111,6 +111,10 @@ class PortalLandingPageTests(BaseSetorTestSetup):
         self.assertContains(response, "Fiscais de Contrato")
         self.assertContains(response, "Chefes de Setor")
         self.assertNotContains(response, "Controle de Execução Contratual (Livro do Fiscal)")
+        hoje = date.today()
+        ano_ref = hoje.year - 1 if hoje.month == 1 else hoje.year
+        mes_ref = 12 if hoje.month == 1 else hoje.month - 1
+        self.assertContains(response, f"Mês de Referência:</strong> {mes_ref:02d}/{ano_ref}")
 
     def test_pagina_fiscais_lista_contratos_vigentes(self):
         response = self.client.get(reverse('portal_prestacao_fiscais'))
