@@ -662,7 +662,6 @@ def gerar_livro_fiscal_pdf(request, pk):
         ["Ato de Designação da Fiscalização:", desig_str],
         ["Fiscal Responsável (Registro):", fiscal_resp],
         ["Preposto Aceito da Contratada:", prep_dados],
-        ["Fundamentação Normativa:", "NPA 009/SCON/2025, Manual de Contratações do COMAER (13/12/2024), Lei nº 14.133/2021 (art. 117, § 1º)"],
     ]
 
     story.append(KeepTogether([

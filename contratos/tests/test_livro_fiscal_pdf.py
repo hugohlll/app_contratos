@@ -112,6 +112,7 @@ class LivroFiscalPDFTestCase(TestCase):
         self.assertIn('Carlos Eduardo Preposto', full_text)
         self.assertNotIn('Unidade Gestora (UG / Gestão):', full_text)
         self.assertNotIn('Processo Adm. de Gestão (PAG / e-PAG):', full_text)
+        self.assertNotIn('Fundamentação Normativa:', full_text)
 
         # Ocorrência registrada
         self.assertIn('Atraso injustificado na entrega do relatório mensal', full_text)
