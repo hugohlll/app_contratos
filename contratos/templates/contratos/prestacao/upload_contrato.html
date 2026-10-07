@@ -100,6 +100,16 @@
                     <div class="tab-content" id="pills-tabContent">
                         <!-- ABA 1: LIVRO DO FISCAL -->
                         <div class="tab-pane fade show active" id="pills-livro" role="tabpanel">
+                            <div class="alert alert-info py-2 px-3 small d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 border-start border-4 border-info shadow-sm">
+                                <div>
+                                    <i class="bi bi-clock-history text-info me-1"></i>
+                                    <span>Deseja registrar ocorrência do mês em andamento (<strong>{{ mes_atual|stringformat:"02d" }}/{{ ano_atual|stringformat:"d" }}</strong>)?</span>
+                                </div>
+                                <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}?modo=tempestivo" class="btn btn-sm btn-info text-white fw-bold shadow-sm">
+                                    <i class="bi bi-journal-plus me-1"></i>Lançar no Mês Atual
+                                </a>
+                            </div>
+
                             {% if not execucao_preenchida %}
                                 <div class="border border-danger border-opacity-25 bg-danger bg-opacity-10 rounded-3 p-3">
                                     <div class="d-flex align-items-center mb-2">

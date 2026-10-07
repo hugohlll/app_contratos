@@ -317,6 +317,8 @@ def upload_prestacao(request, contrato_id):
         'dialogo_slides': dialogo_slides,
         'mes_ref': f"{mes_ref:02d}",
         'ano_ref': str(ano_ref),
+        'mes_atual': hoje.month,
+        'ano_atual': hoje.year,
     }
     return render(request, 'contratos/prestacao/upload_contrato.html', context)
 

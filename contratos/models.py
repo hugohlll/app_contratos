@@ -705,6 +705,19 @@ class OcorrenciaContratual(models.Model):
     tramite_arc = models.BooleanField("Encaminhado à ARC para PAAI?", default=False)
     status_ocorrencia = models.CharField("Situação Atual", max_length=20, choices=STATUS_OCORRENCIA_CHOICES, default='aberto')
     acao_fiscal = models.TextField("Providência / Determinação do Fiscal", blank=True)
+    data_registro = models.DateTimeField("Data do Registro no Sistema", default=timezone.now)
+
+    @property
+    def eh_tempestiva(self):
+        """Verifica se o registro foi inserido no mesmo mês e ano de referência do controle."""
+        if not self.data_registro or not self.controle:
+            return False
+        return (self.data_registro.month == self.controle.mes_referencia and
+                self.data_registro.year == self.controle.ano_referencia)
+
+    @property
+    def classificacao_tempestividade(self):
+        return "Tempestivo" if self.eh_tempestiva else "Agrupado / Extemporâneo"
 
     class Meta:
         verbose_name = "Ocorrência Contratual (NPA 009)"

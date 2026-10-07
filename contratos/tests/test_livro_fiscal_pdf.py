@@ -194,3 +194,17 @@ class LivroFiscalPDFTestCase(TestCase):
         self.assertIn('TERMO DE DECLARAÇÃO E CERTIDÃO DE RECUSA DE ASSINATURA', clean_text)
         self.assertIn('1ª TESTEMUNHA', clean_text)
         self.assertIn('2ª TESTEMUNHA', clean_text)
+
+    def test_pdf_contem_auditoria_tempestividade(self):
+        """Verifica se o PDF do Livro do Fiscal inclui a linha de auditoria de tempestividade."""
+        url = reverse('download_livro_fiscal_pdf', kwargs={'pk': self.controle_ok.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        pdf_bytes = b''.join(response.streaming_content)
+        reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+        full_text = ''.join(page.extract_text() for page in reader.pages)
+
+        self.assertIn('Tempestividade do Registro:', full_text)
+        self.assertIn('lançado no sistema em', full_text)
+

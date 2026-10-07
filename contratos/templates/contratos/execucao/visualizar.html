@@ -229,7 +229,16 @@
                         <tbody>
                             {% for oc in ocorrencias_estruturadas %}
                             <tr>
-                                <td class="fw-semibold">{{ oc.data_hora|date:"d/m/Y H:i"|default:"S/D" }}</td>
+                                <td class="fw-semibold">
+                                    {{ oc.data_hora|date:"d/m/Y H:i"|default:"S/D" }}
+                                    <div class="mt-1">
+                                        {% if oc.eh_tempestiva %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle" title="Lançado no sistema em {{ oc.data_registro|date:'d/m/Y H:i' }} (tempestivo)"><i class="bi bi-clock-check me-1"></i>Tempestivo</span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle" title="Lançado no sistema em {{ oc.data_registro|date:'d/m/Y H:i' }} (agrupado extemporâneo)"><i class="bi bi-hourglass-split me-1"></i>Agrupado (Extemporâneo)</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
                                 <td>{{ oc.local|default:"—" }}</td>
                                 <td><span class="badge bg-light text-dark border">{{ oc.get_tipo_display }}</span></td>
                                 <td>
