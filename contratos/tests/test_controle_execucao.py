@@ -540,3 +540,68 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(widget_attrs.get('maxlength'), '15')
         self.assertEqual(widget_attrs.get('inputmode'), 'numeric')
 
+    def test_validacao_preposto_email(self):
+        """Testa validação do tipo [caracteres]@[caracteres] para preposto_email."""
+        from contratos.forms import ControleExecucaoForm
+
+        base_data = {
+            'mes_referencia': 5,
+            'ano_referencia': 2026,
+            'agente': self.agente.id,
+            'preposto_nome': 'Preposto Teste',
+        }
+
+        # 1. E-mail válido
+        data_valido = base_data.copy()
+        data_valido['preposto_email'] = 'andre@empresa.com.br'
+        form1 = ControleExecucaoForm(data=data_valido, contrato=self.contrato)
+        self.assertTrue(form1.is_valid(), form1.errors)
+        self.assertEqual(form1.cleaned_data['preposto_email'], 'andre@empresa.com.br')
+
+        # 2. Normalização para minúsculo
+        data_upper = base_data.copy()
+        data_upper['preposto_email'] = 'ANDRE.SANTOS@EMPRESA.COM'
+        form2 = ControleExecucaoForm(data=data_upper, contrato=self.contrato)
+        self.assertTrue(form2.is_valid(), form2.errors)
+        self.assertEqual(form2.cleaned_data['preposto_email'], 'andre.santos@empresa.com')
+
+        # 3. Inválido sem @ (apenas caracteres)
+        data_sem_arroba = base_data.copy()
+        data_sem_arroba['preposto_email'] = 'andre'
+        form3 = ControleExecucaoForm(data=data_sem_arroba, contrato=self.contrato)
+        self.assertFalse(form3.is_valid())
+        self.assertIn('preposto_email', form3.errors)
+
+        # 4. Inválido sem domínio após @
+        data_sem_dominio = base_data.copy()
+        data_sem_dominio['preposto_email'] = 'andre@'
+        form4 = ControleExecucaoForm(data=data_sem_dominio, contrato=self.contrato)
+        self.assertFalse(form4.is_valid())
+        self.assertIn('preposto_email', form4.errors)
+
+        # 5. Inválido sem usuário antes do @
+        data_sem_user = base_data.copy()
+        data_sem_user['preposto_email'] = '@empresa.com.br'
+        form5 = ControleExecucaoForm(data=data_sem_user, contrato=self.contrato)
+        self.assertFalse(form5.is_valid())
+        self.assertIn('preposto_email', form5.errors)
+
+        # 6. Inválido sem ponto de domínio
+        data_sem_ponto = base_data.copy()
+        data_sem_ponto['preposto_email'] = 'andre@empresa'
+        form6 = ControleExecucaoForm(data=data_sem_ponto, contrato=self.contrato)
+        self.assertFalse(form6.is_valid())
+        self.assertIn('preposto_email', form6.errors)
+
+        # 7. Vazio -> aceita (opcional)
+        data_vazio = base_data.copy()
+        data_vazio['preposto_email'] = ''
+        form7 = ControleExecucaoForm(data=data_vazio, contrato=self.contrato)
+        self.assertTrue(form7.is_valid(), form7.errors)
+        self.assertEqual(form7.cleaned_data['preposto_email'], '')
+
+        # 8. Widget attributes
+        widget = form1.fields['preposto_email'].widget
+        self.assertEqual(widget.input_type, 'email')
+        self.assertEqual(widget.attrs.get('autocomplete'), 'email')
+

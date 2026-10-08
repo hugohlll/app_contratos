@@ -235,6 +235,8 @@
                     <div class="col-md-3">
                         <label class="form-label fw-bold small">E-mail Oficial</label>
                         {{ form.preposto_email }}
+                        {% if form.preposto_email.errors %}<div class="text-danger small">{{ form.preposto_email.errors }}</div>{% endif %}
+                        <div id="emailPrepostoFeedback" class="invalid-feedback small">Informe um e-mail válido no formato usuario@dominio.com</div>
                     </div>
                 </div>
             </div>
@@ -611,6 +613,47 @@ $(document).ready(function() {
         }
     }
 
+    // Validação dinâmica do E-mail do Preposto ([caracteres]@[caracteres])
+    const $emailPreposto = $('#id_preposto_email');
+    function validarEmailPreposto() {
+        if (!$emailPreposto.length) return true;
+        const val = $emailPreposto.val().trim();
+        if (!val) {
+            $emailPreposto.removeClass('is-invalid');
+            return true;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(val)) {
+            $emailPreposto.addClass('is-invalid');
+            return false;
+        }
+        $emailPreposto.removeClass('is-invalid');
+        return true;
+    }
+
+    if ($emailPreposto.length) {
+        $emailPreposto.on('input blur', function() {
+            validarEmailPreposto();
+        });
+    }
+
+    function validarCamposPreposto() {
+        if ($tel.length && $tel.val()) {
+            const digits = $tel.val().replace(/\D/g, '');
+            if (digits.length !== 11) {
+                alert('O telefone celular do preposto deve conter exatamente 11 dígitos com DDD: (99) 99999-9999.');
+                $tel.focus();
+                return false;
+            }
+        }
+        if (!validarEmailPreposto()) {
+            alert('Por favor, informe um e-mail válido no formato usuario@dominio.com para o preposto.');
+            $emailPreposto.focus();
+            return false;
+        }
+        return true;
+    }
+
     let ocorrencias = [];
     try {
         const rawJson = $('#ocorrencias_json_input').val();
@@ -845,11 +888,13 @@ $(document).ready(function() {
 
     // Ações de Submissão
     $('#btnSalvarRascunho').on('click', function() {
+        if (!validarCamposPreposto()) return;
         $('#acao_submit').val('rascunho');
         $('#formLivroFiscal').submit();
     });
 
     $('#btnFinalizarLivro').on('click', function() {
+        if (!validarCamposPreposto()) return;
         const agente = $('#id_agente').val();
         if (!agente) {
             alert('Por favor, selecione o Fiscal Responsável antes de finalizar.');

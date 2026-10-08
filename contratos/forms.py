@@ -389,7 +389,12 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
                 'maxlength': '15',
                 'inputmode': 'numeric',
             }),
-            'preposto_email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'preposto@empresa.com.br'}),
+            'preposto_email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'preposto@empresa.com.br',
+                'type': 'email',
+                'autocomplete': 'email',
+            }),
             'condicoes_climaticas': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Registro de chuvas, mau tempo e paralisações para fins de abono de dias...'}),
             'efetivo_trabalhadores': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Contagem de trabalhadores por função (pedreiros, serventes, engenheiros)...'}),
             'maquinario_equipamentos': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Relação de máquinas e equipamentos no canteiro e estado operacional...'}),
@@ -459,6 +464,17 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         if len(digits) != 11:
             raise ValidationError('O telefone celular deve conter exatamente 11 dígitos com DDD: (99) 99999-9999.')
         return format_telefone(digits)
+
+    def clean_preposto_email(self):
+        email = self.cleaned_data.get('preposto_email', '')
+        if not email:
+            return ''
+        email = email.strip()
+        import re
+        pattern = r'^[^@\s]+@[^@\s]+\.[^@\s]+$'
+        if not re.match(pattern, email):
+            raise ValidationError('Informe um e-mail válido no formato usuario@dominio.com.')
+        return email.lower()
 
 
 class RegistroFaturaForm(EstiloFormMixin, forms.ModelForm):
