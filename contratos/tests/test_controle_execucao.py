@@ -357,6 +357,23 @@ class ControleExecucaoTests(TestCase):
         self.assertTrue(res_alias.context['is_mes_corrente'])
         self.assertContains(res_alias, f"Modo Registro Tempestivo — Mês Corrente ({hoje.month:02d}/{hoje.year})")
 
+    def test_portal_registro_tempestivo_independente(self):
+        """Testa a nova rota pública dedicada /tempestivo/ sem vínculo com a prestação de contas."""
+        hoje = timezone.localtime(timezone.now()).date()
+        url = reverse('portal_registro_tempestivo')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['mes_corrente'], hoje.month)
+        self.assertEqual(response.context['ano_corrente'], hoje.year)
+        self.assertIn(self.contrato, response.context['contratos'])
+        self.assertContains(response, "Registro Tempestivo do Livro do Fiscal")
+        self.assertContains(response, self.contrato.numero)
+
+        # Testa rota alias /execucao/tempestivo/
+        res_alias = self.client.get('/execucao/tempestivo/')
+        self.assertEqual(res_alias.status_code, 200)
+        self.assertContains(res_alias, "Registro Tempestivo do Livro do Fiscal")
+
     def test_bloqueio_finalizar_mes_corrente(self):
         """Testa que tentar finalizar e atestar no mês corrente é bloqueado e salvo como rascunho."""
         hoje = timezone.localtime(timezone.now()).date()

@@ -110,6 +110,7 @@ class PortalLandingPageTests(BaseSetorTestSetup):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Fiscais de Contrato")
         self.assertContains(response, "Chefes de Setor")
+        self.assertNotContains(response, "Registro Tempestivo")
         self.assertNotContains(response, "Controle de Execução Contratual (Livro do Fiscal)")
         hoje = date.today()
         ano_ref = hoje.year - 1 if hoje.month == 1 else hoje.year

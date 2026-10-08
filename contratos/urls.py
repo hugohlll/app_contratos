@@ -113,6 +113,8 @@ urlpatterns = [
     path('portal/prestacao/slide/reordenar/', prestacao.reordenar_slide_avulso, name='reordenar_slide_avulso'),
 
     # --- PORTAL PÚBLICO DE EXECUÇÃO CONTRATUAL (LIVRO DO FISCAL) ---
+    path('tempestivo/', execucao.portal_registro_tempestivo, name='portal_registro_tempestivo'),
+    path('execucao/tempestivo/', execucao.portal_registro_tempestivo),
     path('execucao/', execucao.portal_execucao_index, name='portal_execucao_index'),
     path('execucao/fiscais/', execucao.portal_execucao_fiscais, name='portal_execucao_fiscais'),
     path('execucao/fiscais/<int:contrato_id>/', execucao.formulario_execucao, name='formulario_execucao'),
