@@ -4,9 +4,10 @@ Testes para geração do PDF do Livro do Fiscal (NPA 009/SCON/2025) e Notificaç
 import io
 import pypdf
 from datetime import date
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from contratos.services.notificacao import NotificacaoService, BaseNotificacaoGenerator
 
 from contratos.models import (
     Contrato, Empresa, Agente, PostoGraduacao, Comissao, Integrante, Funcao,
@@ -173,8 +174,18 @@ class LivroFiscalPDFTestCase(TestCase):
         page2_text = reader.pages[1].extract_text()
         self.assertIn('Livro do Fiscal nº 07/2026/D/001/2025', page2_text)
 
-    def test_gerar_notificacao_anexo_d_pdf(self):
-        """Verifica a geração do PDF da Notificação Oficial (Anexo D da NPA 009) com 2 testemunhas."""
+    def test_gerar_notificacao_anexo_d_pdf_suspensa_por_padrao(self):
+        """Verifica que a emissão automática de Notificação Oficial está desabilitada por padrão."""
+        url = reverse('download_notificacao_anexo_d_pdf', kwargs={'pk': self.ocorrencia1.pk})
+        response = self.client.get(url)
+
+        # Redireciona com aviso informativo quando suspensa
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(f"/execucao/{self.controle_ok.pk}/", response.url)
+
+    @override_settings(NOTIFICACAO_AUTOMATICA_HABILITADA=True)
+    def test_gerar_notificacao_anexo_d_pdf_habilitada(self):
+        """Verifica a geração do PDF da Notificação Oficial quando habilitada no sistema."""
         url = reverse('download_notificacao_anexo_d_pdf', kwargs={'pk': self.ocorrencia1.pk})
         response = self.client.get(url)
 
@@ -190,10 +201,46 @@ class LivroFiscalPDFTestCase(TestCase):
         self.assertIn('NOTIFICAÇÃO DE OCORRÊNCIA', clean_text)
         self.assertIn('001/GAP-BR/2026', clean_text)
         self.assertIn('(CINCO) DIAS ÚTEIS', clean_text)
-        self.assertIn('RECEIBO E CIÊNCIA DO NOTIFICADO', clean_text)
+        self.assertIn('RECIBO E CIÊNCIA DO NOTIFICADO', clean_text)
         self.assertIn('TERMO DE DECLARAÇÃO E CERTIDÃO DE RECUSA DE ASSINATURA', clean_text)
         self.assertIn('1ª TESTEMUNHA', clean_text)
         self.assertIn('2ª TESTEMUNHA', clean_text)
+
+    def test_notificacao_service_modularidade_e_extensibilidade(self):
+        """Testa o serviço desacoplado de notificações e capacidade de plugar novo modelo."""
+        # 1. Por padrão desabilitado
+        self.assertFalse(NotificacaoService.is_habilitada())
+
+        # 2. Obtenção do gerador legado
+        gen_legado = NotificacaoService.get_generator('legado')
+        self.assertEqual(gen_legado.versao, 'anexo_d_npa009')
+
+        # 3. Geração direta permitindo desabilitado
+        buffer, filename = NotificacaoService.gerar_documento(self.ocorrencia1, permitir_desabilitado=True)
+        self.assertTrue(filename.startswith('notificacao_anexo_d_npa009_'))
+        self.assertGreater(buffer.getbuffer().nbytes, 1000)
+
+        # 4. Bloqueio caso tente gerar com serviço desabilitado e sem override
+        with self.assertRaises(PermissionError):
+            NotificacaoService.gerar_documento(self.ocorrencia1, permitir_desabilitado=False)
+
+        # 5. Extensibilidade: plugar um novo modelo de notificação customizado
+        class MockNovoModeloGenerator(BaseNotificacaoGenerator):
+            versao = "novo_modelo_2026"
+            nome_modelo = "Novo Modelo 2026"
+
+            def gerar_pdf(self, oc):
+                buf = io.BytesIO()
+                buf.write(b"%PDF-1.4 Mock Novo Modelo")
+                buf.seek(0)
+                return buf
+
+        NotificacaoService.registrar_generator('novo_modelo_teste', MockNovoModeloGenerator)
+        gen_novo = NotificacaoService.get_generator('novo_modelo_teste')
+        self.assertEqual(gen_novo.versao, 'novo_modelo_2026')
+        buf_novo, fn_novo = NotificacaoService.gerar_documento(self.ocorrencia1, tipo='novo_modelo_teste', permitir_desabilitado=True)
+        self.assertEqual(fn_novo, f"notificacao_novo_modelo_2026_001-gap-br-2026.pdf")
+        self.assertEqual(buf_novo.read(), b"%PDF-1.4 Mock Novo Modelo")
 
     def test_pdf_contem_auditoria_tempestividade(self):
         """Verifica se o PDF do Livro do Fiscal inclui a linha de auditoria de tempestividade."""

@@ -217,7 +217,7 @@
                                 <th style="width: 130px;">Local</th>
                                 <th style="width: 130px;">Tipo</th>
                                 <th>Descrição Factual / Cláusula</th>
-                                <th style="width: 150px;">Notificação (Anexo D)</th>
+                                <th style="width: 150px;">Notificação Oficial</th>
                                 <th style="width: 120px;">Situação</th>
                                 <th style="width: 110px;" class="text-center">Ações</th>
                             </tr>
@@ -269,10 +269,12 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
-                                    {% if oc.notificacao_emitida %}
-                                    <a href="{% url 'download_notificacao_anexo_d_pdf' pk=oc.id %}" target="_blank" class="btn btn-outline-danger btn-sm py-0 px-2 fw-bold" title="Baixar Notificação Oficial (Anexo D da NPA 009)">
-                                        <i class="bi bi-file-earmark-pdf me-1"></i> Anexo D
+                                    {% if oc.notificacao_emitida and notificacao_automatica_habilitada %}
+                                    <a href="{% url 'download_notificacao_anexo_d_pdf' pk=oc.id %}" target="_blank" class="btn btn-outline-danger btn-sm py-0 px-2 fw-bold" title="Baixar Notificação Oficial">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i> Notificação
                                     </a>
+                                    {% elif oc.notificacao_emitida %}
+                                    <span class="badge bg-secondary-subtle text-secondary border small" title="Geração automática de PDF suspensa aguardando revisão do novo modelo">Em Revisão</span>
                                     {% else %}
                                     <span class="text-muted small">—</span>
                                     {% endif %}

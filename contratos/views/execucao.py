@@ -30,6 +30,7 @@ from contratos.models import (
 )
 from contratos.forms import ControleExecucaoForm, OcorrenciaContratualForm
 from contratos.utils import is_admin, is_auditor, admin_required, auditor_required
+from contratos.services.notificacao import NotificacaoService
 
 
 def portal_execucao_index(request):
@@ -291,7 +292,7 @@ def formulario_execucao(request, contrato_id):
                 'status_ocorrencia': oc.status_ocorrencia,
                 'status_ocorrencia_display': oc.get_status_ocorrencia_display(),
                 'acao_fiscal': oc.acao_fiscal,
-                'notificacao_pdf_url': reverse('download_notificacao_anexo_d_pdf', args=[oc.id]) if oc.id else ''
+                'notificacao_pdf_url': reverse('download_notificacao_anexo_d_pdf', args=[oc.id]) if (oc.id and NotificacaoService.is_habilitada()) else ''
             })
         apontamentos = controle_existente.apontamentos.select_related('autor').all()
 
@@ -309,6 +310,7 @@ def formulario_execucao(request, contrato_id):
         'is_mes_corrente': is_mes_corrente,
         'bloquear_ateste_mes_corrente': is_mes_corrente,
         'modo': modo or ('tempestivo' if is_mes_corrente else ''),
+        'notificacao_automatica_habilitada': NotificacaoService.is_habilitada(),
     })
 
 
@@ -364,7 +366,7 @@ def salvar_ocorrencia_tempestiva(request):
         controle.sem_ocorrencias_periodo = False
         controle.save()
 
-        notif_url = reverse('download_notificacao_anexo_d_pdf', args=[oc.id]) if oc.notificacao_emitida else ""
+        notif_url = reverse('download_notificacao_anexo_d_pdf', args=[oc.id]) if (oc.notificacao_emitida and NotificacaoService.is_habilitada()) else ""
 
         return JsonResponse({
             'success': True,
@@ -445,6 +447,7 @@ def visualizar_controle_execucao(request, pk):
         'historico_observacoes': historico_observacoes,
         'is_admin': is_admin(request.user),
         'is_auditor': is_auditor(request.user),
+        'notificacao_automatica_habilitada': NotificacaoService.is_habilitada(),
     })
 
 
@@ -888,12 +891,13 @@ def gerar_livro_fiscal_pdf(request, pk):
 
 
 # =========================================================================
-# Geração de PDF do Anexo D da NPA 009 (Notificação Oficial com Testemunhas)
+# Geração de Notificação Oficial de Ocorrência (Modularizada via NotificacaoService)
 # =========================================================================
 def gerar_notificacao_anexo_d_pdf(request, pk):
     """
-    Gera a Notificação Oficial de Ocorrência com prazo de 5 dias úteis e
-    Certidão de Recusa de Assinatura com 2 testemunhas (Anexo D da NPA 009/SCON/2025).
+    Gera a Notificação Oficial de Ocorrência delegando a lógica ao NotificacaoService.
+    A geração automática padrão está suspensa para revisão de modelo, sendo permitida
+    apenas quando habilitada ou forçada (force=1 para testes/auditoria).
     """
     oc = get_object_or_404(
         OcorrenciaContratual.objects.select_related(
@@ -902,227 +906,27 @@ def gerar_notificacao_anexo_d_pdf(request, pk):
         ),
         pk=pk
     )
-    controle = oc.controle
-    contrato = controle.contrato
-    empresa = contrato.empresa
 
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        leftMargin=1.5 * cm,
-        rightMargin=1.5 * cm,
-        topMargin=1.5 * cm,
-        bottomMargin=1.5 * cm
+    permitir = (
+        NotificacaoService.is_habilitada()
+        or bool(request.GET.get('force'))
+        or (request.user.is_authenticated and request.user.is_superuser)
     )
 
-    styles = getSampleStyleSheet()
-    printable_width = 18.0 * cm
+    if not permitir:
+        messages.info(
+            request,
+            "A emissão automática da Notificação Oficial (Anexo D) está temporariamente suspensa "
+            "aguardando revisão e adaptação do novo modelo padronizado."
+        )
+        return redirect('visualizar_controle_execucao', pk=oc.controle.pk)
 
-    style_title = ParagraphStyle(
-        'DocTitle', fontName='Helvetica-Bold', fontSize=11, leading=13,
-        textColor=colors.HexColor('#0F172A'), alignment=1
-    )
-    style_sub = ParagraphStyle(
-        'DocSub', fontName='Helvetica-Bold', fontSize=10, leading=12,
-        textColor=colors.HexColor('#B91C1C'), alignment=1
-    )
-    style_body = ParagraphStyle(
-        'DocBody', fontName='Helvetica', fontSize=8.5, leading=12,
-        textColor=colors.HexColor('#0F172A')
-    )
-    style_body_bold = ParagraphStyle(
-        'DocBodyB', fontName='Helvetica-Bold', fontSize=8.5, leading=12,
-        textColor=colors.HexColor('#0F172A')
-    )
-    style_label = ParagraphStyle(
-        'Label', fontName='Helvetica-Bold', fontSize=8, leading=10,
-        textColor=colors.HexColor('#475569')
-    )
-    style_val = ParagraphStyle(
-        'Val', fontName='Helvetica', fontSize=8, leading=10,
-        textColor=colors.HexColor('#0F172A')
-    )
-
-    story = []
-
-    # Cabeçalho Oficial
-    logo_path = os.path.join(settings.BASE_DIR, 'contratos', 'static', 'contratos', 'img', 'gap_logo.png')
-    logo_img = None
-    if os.path.exists(logo_path):
-        try:
-            logo_img = Image(logo_path, width=1.5 * cm, height=1.9 * cm)
-        except Exception:
-            logo_img = None
-
-    hdr_text = [
-        Paragraph("MINISTÉRIO DA DEFESA | COMANDO DA AERONÁUTICA", style_title),
-        Paragraph(f"{controle.omap} — GRUPAMENTO DE APOIO DE BRASÍLIA", style_title),
-        Spacer(1, 3),
-        Paragraph(f"<b>NOTIFICAÇÃO DE OCORRÊNCIA Nº {oc.notificacao_numero or f'{oc.id}/{controle.ano_referencia}'}</b>", style_sub),
-        Paragraph("<i>Modelo Padronizado conforme Anexo D da NPA 009/SCON/2025 e Lei nº 14.133/2021</i>", ParagraphStyle('sub2', parent=styles['Normal'], fontSize=7.5, alignment=1, textColor=colors.HexColor('#64748B'))),
-    ]
-
-    if logo_img:
-        t_hdr = Table([[logo_img, hdr_text]], colWidths=[2.0 * cm, 16.0 * cm])
-        t_hdr.setStyle(TableStyle([
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
-        ]))
-        story.append(t_hdr)
-    else:
-        story.extend(hdr_text)
-
-    story.append(Spacer(1, 8))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#DC2626'), spaceAfter=10))
-
-    # Dados do Notificado
-    notif_data = [
-        [Paragraph("Ao(À) Notificado(a):", style_label), Paragraph(f"<b>{empresa.razao_social}</b>", style_val)],
-        [Paragraph("CNPJ / Cadastro:", style_label), Paragraph(f"{empresa.cnpj} | Cadastro SICAF ativo", style_val)],
-        [Paragraph("Representante / Preposto:", style_label), Paragraph(f"{controle.preposto_nome or 'Preposto Credenciado'} ({controle.preposto_cargo or 'Representante'}) — Tel: {controle.preposto_telefone or '-'} | E-mail: {controle.preposto_email or '-'}", style_val)],
-        [Paragraph("Contrato Vinculado:", style_label), Paragraph(f"Contrato nº <b>{contrato.numero}</b> | e-PAG nº <b>{getattr(contrato, 'pag', None) or '—'}</b>", style_val)],
-    ]
-    t_notif = Table(notif_data, colWidths=[4.2 * cm, 13.8 * cm])
-    t_notif.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#F8FAFC')),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E8F0')),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-        ('LEFTPADDING', (0, 0), (-1, -1), 5),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
-    ]))
-    story.append(t_notif)
-    story.append(Spacer(1, 10))
-
-    # Texto Intimatório da NPA
-    p1 = Paragraph(
-        f"<b>1.</b> Em cumprimento ao disposto no <b>Contrato nº {contrato.numero}</b> e nas diretrizes da <b>NPA 009/SCON/2025</b>, "
-        f"fica V. Sa. formalmente notificado(a) a <b>CORRIGIR AS FALHAS/DISCREPÂNCIAS/OCORRÊNCIAS</b> indicadas neste instrumento, "
-        f"no prazo regulamentar de <b>{oc.prazo_dias_uteis} (CINCO) DIAS ÚTEIS</b>, contados do recebimento desta, "
-        "sob pena de aplicação de sanções administrativas com base na Lei nº 14.133/2021 e abertura de PAAI junto à Assessoria de Riscos Contratuais (ARC).",
-        style_body
-    )
-    story.append(p1)
-    story.append(Spacer(1, 8))
-
-    p2 = Paragraph(
-        f"<b>2.</b> A presente Notificação decorre de descumprimento apurado no e-PAG correspondente, especificamente quanto ao seguinte fato:",
-        style_body
-    )
-    story.append(p2)
-    story.append(Spacer(1, 6))
-
-    # Tabela de Detalhes da Ocorrência
-    dt_f = oc.data_hora.strftime('%d/%m/%Y às %H:%M') if oc.data_hora else "Data não informada"
-    oc_detalhes = [
-        [Paragraph("Data e Horário do Fato:", style_label), Paragraph(dt_f, style_val)],
-        [Paragraph("Local da Ocorrência:", style_label), Paragraph(oc.local or "Instalações da OM", style_val)],
-        [Paragraph("Classificação da Ocorrência:", style_label), Paragraph(oc.get_tipo_display(), style_val)],
-        [Paragraph("Descrição Detalhada do Fato:", style_label), Paragraph(oc.descricao, style_val)],
-        [Paragraph("Cláusula / Dispositivo Violado:", style_label), Paragraph(f"<b>{oc.dispositivo_violado or 'Disposições do Contrato e Termo de Referência'}</b>", style_val)],
-        [Paragraph("Evidências / Documentos:", style_label), Paragraph(oc.evidencias or "Relatório fotográfico / Parecer técnico anexo", style_val)],
-        [Paragraph("Determinação / Providência Exigida:", style_label), Paragraph(oc.acao_fiscal or "Cessação imediata do desvio e saneamento completo no prazo concedido.", style_val)],
-    ]
-    t_oc_det = Table(oc_detalhes, colWidths=[4.8 * cm, 13.2 * cm])
-    t_oc_det.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#FEF2F2')),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#FECACA')),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-        ('LEFTPADDING', (0, 0), (-1, -1), 5),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
-    ]))
-    story.append(t_oc_det)
-    story.append(Spacer(1, 10))
-
-    # Local, Data e Assinatura do Fiscal
-    MESES_PT = ['', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-                'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
-    hoje_d = date.today()
-    dt_ext = f"Brasília-DF, {hoje_d.day:02d} de {MESES_PT[hoje_d.month]} de {hoje_d.year}."
-
-    p_sigla = controle.agente.posto.sigla if (controle.agente and controle.agente.posto) else ""
-    n_guerra = controle.agente.nome_de_guerra.upper() if controle.agente else "FISCAL"
-    fiscal_str = f"{p_sigla} {n_guerra}".strip()
-
-    sig_fiscal = [
-        Paragraph(dt_ext, ParagraphStyle('DtF', parent=styles['Normal'], alignment=2, fontSize=8, textColor=colors.HexColor('#0F172A'))),
-        Spacer(1, 14),
-        Paragraph("____________________________________________________________", ParagraphStyle('Line', parent=styles['Normal'], alignment=1, fontSize=8, textColor=colors.HexColor('#94A3B8'))),
-        Spacer(1, 2),
-        Paragraph(f"<b>{fiscal_str}</b>", ParagraphStyle('Name', parent=styles['Normal'], alignment=1, fontSize=8.5, leading=10)),
-        Paragraph("Fiscal do Contrato / Comissão de Fiscalização — GAP-BR", ParagraphStyle('Func', parent=styles['Normal'], alignment=1, fontSize=7.5, leading=9.5, textColor=colors.HexColor('#64748B'))),
-    ]
-    t_sf = Table([[sig_fiscal]], colWidths=[printable_width])
-    t_sf.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('TOPPADDING', (0, 0), (-1, -1), 2),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    story.append(t_sf)
-    story.append(Spacer(1, 8))
-
-    # Linha divisória pontilhada
-    story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor('#94A3B8'), spaceAfter=8))
-
-    # Recibo e Ciência do Notificado
-    recibo_content = [
-        Paragraph("<b>RECEIBO E CIÊNCIA DO NOTIFICADO:</b>", style_label),
-        Spacer(1, 3),
-        Paragraph("Recebi a 1ª via desta Notificação em: _____/_____/_________ às _____:_____ hs.", style_val),
-        Spacer(1, 8),
-        Table([[
-            Paragraph("___________________________________________________<br/><b>Assinatura do Preposto / Representante</b>", ParagraphStyle('RecSig', parent=styles['Normal'], alignment=1, fontSize=7.5, leading=10, textColor=colors.HexColor('#334155')))
-        ]], colWidths=[printable_width]),
-    ]
-    t_rec = Table([[recibo_content]], colWidths=[printable_width])
-    t_rec.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F8FAFC')),
-        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    story.append(t_rec)
-    story.append(Spacer(1, 8))
-
-    story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor('#94A3B8'), spaceAfter=8))
-
-    # Termo de Declaração e Certidão de Recusa com 2 Testemunhas
-    testemunhas_block = [
-        Paragraph("<b>TERMO DE DECLARAÇÃO E CERTIDÃO DE RECUSA DE ASSINATURA (COM TESTEMUNHAS):</b>", style_label),
-        Spacer(1, 2),
-        Paragraph(
-            f"<i>Certificamos que a Notificação de Ocorrência nº {oc.notificacao_numero or oc.id} foi lida em seu inteiro teor na presença do(a) "
-            "Notificado(a) / Preposto acima qualificado, o(a) qual <b>RECUSOU-SE</b> a assinar/receber o comprovante na data e horário indicados.</i>",
-            style_val
-        ),
-        Spacer(1, 6),
-        Table([
-            [
-                Paragraph("<b>1ª TESTEMUNHA:</b><br/>Nome: __________________________________________<br/>Posto/Grad./Cargo: _______________________________<br/>Identidade / Órgão Exp.: ___________________________<br/>Hora da Leitura: _____:_____ hs.<br/>Assinatura: ____________________________________", style_val),
-                Paragraph("<b>2ª TESTEMUNHA:</b><br/>Nome: __________________________________________<br/>Posto/Grad./Cargo: _______________________________<br/>Identidade / Órgão Exp.: ___________________________<br/>Hora da Leitura: _____:_____ hs.<br/>Assinatura: ____________________________________", style_val)
-            ]
-        ], colWidths=[9.0 * cm, 9.0 * cm])
-    ]
-    t_test = Table([[testemunhas_block]], colWidths=[printable_width])
-    t_test.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FFFBEB')),
-        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#FCD34D')),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    story.append(KeepTogether(t_test))
-
-    doc.build(story)
-    buffer.seek(0)
-
-    slug_notif = slugify(oc.notificacao_numero or f"notificacao-{oc.id}")
-    filename = f"notificacao_anexo_d_{slug_notif}.pdf"
-    response = FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    return response
+    try:
+        tipo = request.GET.get('tipo', 'legado')
+        buffer, filename = NotificacaoService.gerar_documento(oc, tipo=tipo, permitir_desabilitado=True)
+        response = FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        return response
+    except Exception as e:
+        messages.error(request, f"Erro ao gerar documento de notificação: {e}")
+        return redirect('visualizar_controle_execucao', pk=oc.controle.pk)
