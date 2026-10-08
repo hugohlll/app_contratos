@@ -368,7 +368,7 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             'agente', 'mes_referencia', 'ano_referencia', 'status',
             'omap', 'unidade_gestora',
             # Preposto da Contratada
-            'preposto_nome', 'preposto_cargo', 'preposto_cpf', 'preposto_telefone', 'preposto_email',
+            'preposto_nome', 'preposto_cargo', 'preposto_telefone', 'preposto_email',
             # Obras e Serviços de Engenharia (Anexo B)
             'eh_obra_engenharia', 'condicoes_climaticas', 'efetivo_trabalhadores', 'maquinario_equipamentos',
             'art_rrt', 'matricula_cei_cno', 'seguranca_trabalho_cat',
@@ -383,7 +383,6 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             'unidade_gestora': forms.HiddenInput(),
             'preposto_nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome completo do preposto'}),
             'preposto_cargo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cargo / Função na contratada'}),
-            'preposto_cpf': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '000.000.000-00 ou RG'}),
             'preposto_telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(61) 99999-9999'}),
             'preposto_email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'preposto@empresa.com.br'}),
             'condicoes_climaticas': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Registro de chuvas, mau tempo e paralisações para fins de abono de dias...'}),
@@ -440,7 +439,6 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
                 if ultimo_controle:
                     self.initial.setdefault('preposto_nome', ultimo_controle.preposto_nome)
                     self.initial.setdefault('preposto_cargo', ultimo_controle.preposto_cargo)
-                    self.initial.setdefault('preposto_cpf', ultimo_controle.preposto_cpf)
                     self.initial.setdefault('preposto_telefone', ultimo_controle.preposto_telefone)
                     self.initial.setdefault('preposto_email', ultimo_controle.preposto_email)
 

@@ -725,7 +725,7 @@ def gerar_livro_fiscal_pdf(request, pk):
         if comissao.portaria_numero:
             desig_str += f" / Portaria nº {comissao.portaria_numero}"
 
-    prep_dados = f"{controle.preposto_nome or 'Não informado'} | Cargo: {controle.preposto_cargo or '-'} | CPF/RG: {controle.preposto_cpf or '-'} | Tel: {controle.preposto_telefone or '-'} | E-mail: {controle.preposto_email or '-'}"
+    prep_dados = f"{controle.preposto_nome or 'Não informado'} | Cargo: {controle.preposto_cargo or '-'} | Tel: {controle.preposto_telefone or '-'} | E-mail: {controle.preposto_email or '-'}"
 
     abertura_data = [
         ["Número do Livro / Ano:", f"<b>{controle.numero_livro}</b>"],
