@@ -605,3 +605,46 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(widget.input_type, 'email')
         self.assertEqual(widget.attrs.get('autocomplete'), 'email')
 
+    def test_salvar_ocorrencia_formato_data_brasileiro(self):
+        """Verifica se datas de ocorrência em formato DD/MM/AAAA HH:MM são parseadas corretamente."""
+        url = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id})
+        ocorrencias_payload = [{
+            'id': None,
+            'data_hora': '08/10/2026 16:30',
+            'data_hora_fmt': '08/10/2026 16:30',
+            'local': 'Corredor principal',
+            'tipo': 'TECNICA',
+            'descricao': 'Luzes estavam apagadas.',
+            'dispositivo_violado': 'Cláusula 3.1',
+            'evidencias': '',
+            'notificacao_emitida': False,
+            'notificacao_numero': '',
+            'prazo_dias_uteis': 5,
+            'ciencia_preposto': 'na',
+            'tramite_arc': False,
+            'status_ocorrencia': 'aberto',
+            'acao_fiscal': '',
+        }]
+        post_data = {
+            'mes_referencia': 10,
+            'ano_referencia': 2026,
+            'agente': self.agente.id,
+            'preposto_nome': 'Fiscal Teste',
+            'sem_ocorrencias_periodo': False,
+            'ocorrencias_json': json.dumps(ocorrencias_payload),
+            'acao': 'rascunho'
+        }
+        response = self.client.post(url, post_data)
+        self.assertEqual(response.status_code, 302)
+
+        ctrl = ControleExecucao.objects.get(contrato=self.contrato, mes_referencia=10, ano_referencia=2026)
+        self.assertEqual(ctrl.ocorrencias.count(), 1)
+        oc = ctrl.ocorrencias.first()
+        dt_local = timezone.localtime(oc.data_hora)
+        self.assertEqual(dt_local.day, 8)
+        self.assertEqual(dt_local.month, 10)
+        self.assertEqual(dt_local.year, 2026)
+        self.assertEqual(dt_local.hour, 16)
+        self.assertEqual(dt_local.minute, 30)
+
+

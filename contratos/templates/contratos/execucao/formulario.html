@@ -693,6 +693,54 @@ $(document).ready(function() {
     $('#id_sem_ocorrencias_periodo').on('change', atualizarSemOcorrencias);
     atualizarSemOcorrencias();
 
+    // Utilitários de Formatação de Data/Hora (Padrão Brasileiro DD/MM/AAAA)
+    function formatarDataHoraBR(val) {
+        if (!val) return '—';
+        val = String(val).trim();
+        // Se já está no formato DD/MM/AAAA ou DD/MM/AAAA HH:MM
+        if (/^\d{2}\/\d{2}\/\d{4}/.test(val)) {
+            return val;
+        }
+        // Se estiver no formato ISO: YYYY-MM-DDTHH:MM(:SS)? ou YYYY-MM-DD HH:MM(:SS)? ou YYYY-MM-DD
+        const m = val.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::\d{2})?)?/);
+        if (m) {
+            const ano = m[1];
+            const mes = m[2];
+            const dia = m[3];
+            const hora = m[4];
+            const min = m[5];
+            if (hora !== undefined && min !== undefined) {
+                return `${dia}/${mes}/${ano} ${hora}:${min}`;
+            }
+            return `${dia}/${mes}/${ano}`;
+        }
+        return val.replace('T', ' ');
+    }
+
+    function formatarParaInputDateTime(val) {
+        if (!val) return '';
+        val = String(val).trim();
+        // Se estiver no formato DD/MM/AAAA HH:MM ou DD/MM/AAAA
+        const mBr = val.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+        if (mBr) {
+            const dia = mBr[1];
+            const mes = mBr[2];
+            const ano = mBr[3];
+            const hora = mBr[4] || '00';
+            const min = mBr[5] || '00';
+            return `${ano}-${mes}-${dia}T${hora}:${min}`;
+        }
+        // Se estiver no formato ISO com T ou espaço
+        const mIso = val.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})/);
+        if (mIso) {
+            return `${mIso[1]}T${mIso[2]}`;
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+            return `${val}T00:00`;
+        }
+        return val;
+    }
+
     // Renderizar Tabela de Ocorrências
     function renderizarTabela() {
         const tbody = $('#tbodyOcorrencias');
@@ -716,7 +764,7 @@ $(document).ready(function() {
                 ? '<span class="badge bg-danger">Sim (' + (oc.notificacao_numero || 'S/N') + ')</span>'
                 : '<span class="badge bg-light text-dark border">Não</span>';
 
-            let dataFmt = oc.data_hora_fmt || (oc.data_hora ? oc.data_hora.replace('T', ' ') : '—');
+            let dataFmt = formatarDataHoraBR(oc.data_hora_fmt || oc.data_hora);
 
             let tempBadge = '';
             if (oc.eh_tempestiva) {
@@ -810,7 +858,7 @@ $(document).ready(function() {
 
         $('#modal_oc_id').val(oc.id || '');
         $('#modal_oc_index').val(idx);
-        $('#modal_data_hora').val(oc.data_hora || '');
+        $('#modal_data_hora').val(formatarParaInputDateTime(oc.data_hora || oc.data_hora_fmt));
         $('#modal_local').val(oc.local || '');
         $('#modal_tipo').val(oc.tipo || 'TECNICA');
         $('#modal_dispositivo').val(oc.dispositivo_violado || '');
@@ -842,7 +890,7 @@ $(document).ready(function() {
         const ocData = {
             id: $('#modal_oc_id').val() || null,
             data_hora: dt,
-            data_hora_fmt: dt.replace('T', ' '),
+            data_hora_fmt: formatarDataHoraBR(dt),
             local: $('#modal_local').val().trim(),
             tipo: $('#modal_tipo').val(),
             tipo_display: $('#modal_tipo option:selected').text(),

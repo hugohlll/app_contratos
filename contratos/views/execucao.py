@@ -177,10 +177,23 @@ def formulario_execucao(request, contrato_id):
                     existing_regs = {o.id: o.data_registro for o in controle.ocorrencias.all()}
                     controle.ocorrencias.all().delete()
                     for idx, oc in enumerate(ocorrencias_data, 1):
-                        dt_raw = oc.get('data_hora') or oc.get('data')
+                        dt_raw = oc.get('data_hora') or oc.get('data') or oc.get('data_hora_fmt')
                         dt_parsed = parse_datetime(dt_raw) if dt_raw else None
+                        if not dt_parsed and dt_raw and '/' in str(dt_raw):
+                            try:
+                                parts = str(dt_raw).strip().split(' ')
+                                d_parts = parts[0].split('/')
+                                if len(d_parts) == 3:
+                                    d_obj = date(int(d_parts[2]), int(d_parts[1]), int(d_parts[0]))
+                                    t_obj = timezone.datetime.min.time()
+                                    if len(parts) > 1 and ':' in parts[1]:
+                                        t_parts = parts[1].split(':')
+                                        t_obj = timezone.datetime.min.time().replace(hour=int(t_parts[0]), minute=int(t_parts[1]))
+                                    dt_parsed = timezone.make_aware(timezone.datetime.combine(d_obj, t_obj))
+                            except Exception:
+                                pass
                         if not dt_parsed and dt_raw:
-                            d_only = parse_date(dt_raw[:10])
+                            d_only = parse_date(str(dt_raw)[:10])
                             if d_only:
                                 dt_parsed = timezone.make_aware(timezone.datetime.combine(d_only, timezone.datetime.min.time()))
                         if not dt_parsed:
@@ -335,8 +348,25 @@ def salvar_ocorrencia_tempestiva(request):
         )
 
         oc_id = data.get('id')
-        dt_raw = data.get('data_hora')
-        dt_parsed = parse_datetime(dt_raw) if dt_raw else timezone.now()
+        dt_raw = data.get('data_hora') or data.get('data_hora_fmt')
+        dt_parsed = parse_datetime(dt_raw) if dt_raw else None
+        if not dt_parsed and dt_raw and '/' in str(dt_raw):
+            try:
+                parts = str(dt_raw).strip().split(' ')
+                d_parts = parts[0].split('/')
+                if len(d_parts) == 3:
+                    d_obj = date(int(d_parts[2]), int(d_parts[1]), int(d_parts[0]))
+                    t_obj = timezone.datetime.min.time()
+                    if len(parts) > 1 and ':' in parts[1]:
+                        t_parts = parts[1].split(':')
+                        t_obj = timezone.datetime.min.time().replace(hour=int(t_parts[0]), minute=int(t_parts[1]))
+                    dt_parsed = timezone.make_aware(timezone.datetime.combine(d_obj, t_obj))
+            except Exception:
+                pass
+        if not dt_parsed and dt_raw:
+            d_only = parse_date(str(dt_raw)[:10])
+            if d_only:
+                dt_parsed = timezone.make_aware(timezone.datetime.combine(d_only, timezone.datetime.min.time()))
         if not dt_parsed:
             dt_parsed = timezone.now()
         elif timezone.is_naive(dt_parsed):
