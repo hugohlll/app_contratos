@@ -695,8 +695,8 @@ class OcorrenciaContratual(models.Model):
     dispositivo_violado = models.CharField("Dispositivo / Cláusula Violada", max_length=250, blank=True)
     evidencias = models.TextField("Evidências Anexadas / Documentos", blank=True)
 
-    # Notificação Oficial (Anexo D da NPA 009)
-    notificacao_emitida = models.BooleanField("Emitida Notificação Oficial?", default=False)
+    # Notificação Oficial
+    notificacao_emitida = models.BooleanField("Notificação Formal expedida?", default=False)
     notificacao_numero = models.CharField("Nº da Notificação", max_length=50, blank=True)
     prazo_dias_uteis = models.IntegerField("Prazo para Regularização (dias úteis)", default=5)
     ciencia_preposto = models.CharField("Ciência / Recusa do Preposto", max_length=20, choices=CIENCIA_CHOICES, default='na')

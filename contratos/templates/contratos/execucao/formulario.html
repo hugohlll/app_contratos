@@ -465,19 +465,18 @@
                             <div class="form-check form-switch mt-4">
                                 <input class="form-check-input" type="checkbox" id="modal_notificacao_emitida">
                                 <label class="form-check-label fw-bold small" for="modal_notificacao_emitida">
-                                    7. Expedir Notificação Formal?
+                                    7. Notificação Formal expedida?
                                 </label>
-                                <div class="form-text text-muted" style="font-size:0.75rem;">(Geração de PDF suspensa para revisão de modelo)</div>
                             </div>
                         </div>
                         <div class="col-md-3" id="campoNotifNumDiv">
                             <label class="form-label fw-bold small">Nº da Notificação</label>
-                            <input type="text" class="form-control" id="modal_notificacao_numero" placeholder="Ex: 005/GAP-BR/2026">
+                            <input type="text" class="form-control" id="modal_notificacao_numero" placeholder="Ex: 005/GAP-BR/2026" disabled>
                         </div>
                         <div class="col-md-3" id="campoPrazoDiv">
                             <label class="form-label fw-bold small">Prazo de Regularização</label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="modal_prazo" value="5" min="1">
+                                <input type="number" class="form-control" id="modal_prazo" value="5" min="1" disabled>
                                 <span class="input-group-text small">dias úteis</span>
                             </div>
                         </div>
@@ -767,6 +766,22 @@ $(document).ready(function() {
     }
     renderizarTabela();
 
+    // Habilitar / Inabilitar campos de Notificação conforme o switch
+    function atualizarCamposNotificacao() {
+        const emitida = $('#modal_notificacao_emitida').is(':checked');
+        if (emitida) {
+            $('#modal_notificacao_numero').prop('disabled', false);
+            $('#modal_prazo').prop('disabled', false);
+            if (!$('#modal_prazo').val()) {
+                $('#modal_prazo').val(5);
+            }
+        } else {
+            $('#modal_notificacao_numero').prop('disabled', true).val('');
+            $('#modal_prazo').prop('disabled', true);
+        }
+    }
+    $('#modal_notificacao_emitida').on('change', atualizarCamposNotificacao);
+
     // Abrir Modal para Nova Ocorrência
     $('#btnNovaOcorrencia').on('click', function() {
         $('#formModalOcorrencia')[0].reset();
@@ -781,6 +796,8 @@ $(document).ready(function() {
         $('#modal_status').val('aberto');
         $('#modal_tipo').val('TECNICA');
         $('#modal_ciencia').val('na');
+        $('#modal_notificacao_emitida').prop('checked', false);
+        atualizarCamposNotificacao();
 
         modalOcorrencia.show();
     });
@@ -802,6 +819,7 @@ $(document).ready(function() {
         $('#modal_notificacao_emitida').prop('checked', !!oc.notificacao_emitida);
         $('#modal_notificacao_numero').val(oc.notificacao_numero || '');
         $('#modal_prazo').val(oc.prazo_dias_uteis || 5);
+        atualizarCamposNotificacao();
         $('#modal_ciencia').val(oc.ciencia_preposto || 'na');
         $('#modal_tramite_arc').prop('checked', !!oc.tramite_arc);
         $('#modal_status').val(oc.status_ocorrencia || 'aberto');
@@ -820,6 +838,7 @@ $(document).ready(function() {
         }
 
         const idx = parseInt($('#modal_oc_index').val());
+        const notifEmitida = $('#modal_notificacao_emitida').is(':checked');
         const ocData = {
             id: $('#modal_oc_id').val() || null,
             data_hora: dt,
@@ -830,11 +849,11 @@ $(document).ready(function() {
             dispositivo_violado: $('#modal_dispositivo').val().trim(),
             descricao: desc,
             evidencias: $('#modal_evidencias').val().trim(),
-            notificacao_emitida: $('#modal_notificacao_emitida').is(':checked'),
-            notificacao_numero: $('#modal_notificacao_numero').val().trim(),
-            prazo_dias_uteis: parseInt($('#modal_prazo').val()) || 5,
-            ciencia_preposto: $('#modal_ciencia').val(),
-            ciencia_preposto_display: $('#modal_ciencia option:selected').text(),
+            notificacao_emitida: notifEmitida,
+            notificacao_numero: notifEmitida ? $('#modal_notificacao_numero').val().trim() : '',
+            prazo_dias_uteis: notifEmitida ? (parseInt($('#modal_prazo').val()) || 5) : 5,
+            ciencia_preposto: notifEmitida ? $('#modal_ciencia').val() : 'na',
+            ciencia_preposto_display: notifEmitida ? $('#modal_ciencia option:selected').text() : 'Não se aplica',
             tramite_arc: $('#modal_tramite_arc').is(':checked'),
             status_ocorrencia: $('#modal_status').val(),
             status_ocorrencia_display: $('#modal_status option:selected').text(),
