@@ -488,3 +488,55 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(data['ocorrencia']['classificacao_tempestividade'], 'Tempestivo')
         self.assertIsNotNone(data['ocorrencia']['data_registro'])
 
+    def test_validacao_formatacao_preposto_telefone(self):
+        """Testa validação de 11 dígitos e formatação padronizada (99) 99999-9999 do preposto."""
+        from contratos.forms import ControleExecucaoForm
+
+        base_data = {
+            'mes_referencia': 5,
+            'ano_referencia': 2026,
+            'agente': self.agente.id,
+            'preposto_nome': 'Preposto Teste',
+        }
+
+        # 1. 11 dígitos puros -> deve formatar para (61) 99252-6351
+        data_puro = base_data.copy()
+        data_puro['preposto_telefone'] = '61992526351'
+        form1 = ControleExecucaoForm(data=data_puro, contrato=self.contrato)
+        self.assertTrue(form1.is_valid(), form1.errors)
+        self.assertEqual(form1.cleaned_data['preposto_telefone'], '(61) 99252-6351')
+
+        # 2. Já formatado com 11 dígitos -> aceita e mantém formato
+        data_fmt = base_data.copy()
+        data_fmt['preposto_telefone'] = '(61) 99252-6351'
+        form2 = ControleExecucaoForm(data=data_fmt, contrato=self.contrato)
+        self.assertTrue(form2.is_valid(), form2.errors)
+        self.assertEqual(form2.cleaned_data['preposto_telefone'], '(61) 99252-6351')
+
+        # 3. Menos de 11 dígitos (ex: 10 dígitos) -> erro de validação
+        data_invalido_curto = base_data.copy()
+        data_invalido_curto['preposto_telefone'] = '6199252635'
+        form3 = ControleExecucaoForm(data=data_invalido_curto, contrato=self.contrato)
+        self.assertFalse(form3.is_valid())
+        self.assertIn('preposto_telefone', form3.errors)
+        self.assertIn('11 dígitos', form3.errors['preposto_telefone'][0])
+
+        # 4. Mais de 11 dígitos (ex: 12 dígitos) -> erro de validação
+        data_invalido_longo = base_data.copy()
+        data_invalido_longo['preposto_telefone'] = '619925263510'
+        form4 = ControleExecucaoForm(data=data_invalido_longo, contrato=self.contrato)
+        self.assertFalse(form4.is_valid())
+        self.assertIn('preposto_telefone', form4.errors)
+
+        # 5. Vazio -> aceita (pois é opcional)
+        data_vazio = base_data.copy()
+        data_vazio['preposto_telefone'] = ''
+        form5 = ControleExecucaoForm(data=data_vazio, contrato=self.contrato)
+        self.assertTrue(form5.is_valid(), form5.errors)
+        self.assertEqual(form5.cleaned_data['preposto_telefone'], '')
+
+        # 6. Atributos do widget
+        widget_attrs = form1.fields['preposto_telefone'].widget.attrs
+        self.assertEqual(widget_attrs.get('maxlength'), '15')
+        self.assertEqual(widget_attrs.get('inputmode'), 'numeric')
+

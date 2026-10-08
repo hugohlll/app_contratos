@@ -62,6 +62,15 @@ def format_cnpj(value):
     if len(v) != 14: return value
     return f"{v[:2]}.{v[2:5]}.{v[5:8]}/{v[8:12]}-{v[12:]}"
 
+def format_telefone(value):
+    """
+    Formata telefone celular para: (00) 00000-0000
+    Espera receber apenas números (11 dígitos).
+    """
+    v = clean_digits(value)
+    if len(v) != 11: return value
+    return f"({v[:2]}) {v[2:7]}-{v[7:]}"
+
 # --- EXPORT HELPERS ---
 import csv
 import urllib.parse

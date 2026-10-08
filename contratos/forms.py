@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
 from django.utils.safestring import mark_safe
 from .models import Empresa, Contrato, Agente, Integrante, Comissao, ConfiguracaoSistema
-from .utils import clean_digits, format_cpf, format_cnpj
+from .utils import clean_digits, format_cpf, format_cnpj, format_telefone
 
 class EstiloFormMixin:
     """Mixin para aplicar estilos Bootstrap aos campos"""
@@ -383,7 +383,12 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             'unidade_gestora': forms.HiddenInput(),
             'preposto_nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome completo do preposto'}),
             'preposto_cargo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cargo / Função na contratada'}),
-            'preposto_telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(61) 99999-9999'}),
+            'preposto_telefone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '(61) 99999-9999',
+                'maxlength': '15',
+                'inputmode': 'numeric',
+            }),
             'preposto_email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'preposto@empresa.com.br'}),
             'condicoes_climaticas': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Registro de chuvas, mau tempo e paralisações para fins de abono de dias...'}),
             'efetivo_trabalhadores': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Contagem de trabalhadores por função (pedreiros, serventes, engenheiros)...'}),
@@ -420,6 +425,8 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
             self.fields['omap'].required = False
         if 'unidade_gestora' in self.fields:
             self.fields['unidade_gestora'].required = False
+        if 'preposto_telefone' in self.fields:
+            self.fields['preposto_telefone'].widget.attrs['maxlength'] = '15'
 
         if contrato:
             agentes_ids = Integrante.objects.filter(
@@ -441,6 +448,17 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
                     self.initial.setdefault('preposto_cargo', ultimo_controle.preposto_cargo)
                     self.initial.setdefault('preposto_telefone', ultimo_controle.preposto_telefone)
                     self.initial.setdefault('preposto_email', ultimo_controle.preposto_email)
+
+    def clean_preposto_telefone(self):
+        telefone = self.cleaned_data.get('preposto_telefone', '')
+        if not telefone:
+            return ''
+        digits = clean_digits(telefone)
+        if not digits:
+            return ''
+        if len(digits) != 11:
+            raise ValidationError('O telefone celular deve conter exatamente 11 dígitos com DDD: (99) 99999-9999.')
+        return format_telefone(digits)
 
 
 class RegistroFaturaForm(EstiloFormMixin, forms.ModelForm):

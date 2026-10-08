@@ -230,6 +230,7 @@
                     <div class="col-md-3">
                         <label class="form-label fw-bold small">Telefone / Celular</label>
                         {{ form.preposto_telefone }}
+                        {% if form.preposto_telefone.errors %}<div class="text-danger small">{{ form.preposto_telefone.errors }}</div>{% endif %}
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-bold small">E-mail Oficial</label>
@@ -526,6 +527,90 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+    // Máscara e formatação dinâmica para Telefone / Celular (11 dígitos: (99) 99999-9999)
+    const $tel = $('#id_preposto_telefone');
+    if ($tel.length) {
+        function formatarTelefone(valor) {
+            const digits = (valor || '').toString().replace(/\D/g, '').slice(0, 11);
+            if (!digits) return '';
+            if (digits.length <= 2) return `(${digits}`;
+            if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+            return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+        }
+
+        function aplicarMascara(el) {
+            const start = el.selectionStart;
+            const oldVal = el.value;
+            const formatted = formatarTelefone(oldVal);
+
+            if (oldVal !== formatted) {
+                const wasAtEnd = start === oldVal.length;
+                el.value = formatted;
+                if (wasAtEnd) {
+                    el.setSelectionRange(formatted.length, formatted.length);
+                }
+            }
+        }
+
+        // Restringe a digitação para apenas números na edição
+        $tel.on('keydown', function(e) {
+            const allowedControlKeys = [
+                'Backspace', 'Tab', 'Enter', 'Escape', 'Delete',
+                'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+                'Home', 'End'
+            ];
+            if (allowedControlKeys.includes(e.key) || e.ctrlKey || e.metaKey) {
+                // Ao apagar com backspace imediatamente após caractere fixo da máscara
+                if (e.key === 'Backspace' && this.selectionStart === this.selectionEnd && this.selectionStart > 0) {
+                    const charBefore = this.value[this.selectionStart - 1];
+                    if (charBefore === ' ' || charBefore === ')' || charBefore === '-') {
+                        e.preventDefault();
+                        const start = this.selectionStart;
+                        const val = this.value;
+                        const before = val.slice(0, start - 1);
+                        const after = val.slice(start);
+                        const newDigits = (before.replace(/\D/g, '').slice(0, -1) + after.replace(/\D/g, '')).slice(0, 11);
+                        this.value = formatarTelefone(newDigits);
+                        const newPos = Math.max(0, start - 2);
+                        this.setSelectionRange(newPos, newPos);
+                    }
+                }
+                return;
+            }
+
+            // Apenas números (0-9)
+            if (!/^\d$/.test(e.key)) {
+                e.preventDefault();
+                return;
+            }
+
+            // Não permite digitar mais que 11 dígitos
+            const currentDigits = this.value.replace(/\D/g, '');
+            if (currentDigits.length >= 11 && this.selectionStart === this.selectionEnd) {
+                e.preventDefault();
+            }
+        });
+
+        // Formatação dinâmica em qualquer evento de input
+        $tel.on('input', function() {
+            aplicarMascara(this);
+        });
+
+        // Colagem (paste): garante apenas números e formatação padronizada
+        $tel.on('paste', function(e) {
+            e.preventDefault();
+            const clipboardData = e.originalEvent.clipboardData || window.clipboardData;
+            const text = clipboardData ? clipboardData.getData('text') : '';
+            const digits = text.replace(/\D/g, '').slice(0, 11);
+            this.value = formatarTelefone(digits);
+        });
+
+        // Formatação inicial caso já venha preenchido do banco ou mês anterior
+        if ($tel.val()) {
+            $tel.val(formatarTelefone($tel.val()));
+        }
+    }
+
     let ocorrencias = [];
     try {
         const rawJson = $('#ocorrencias_json_input').val();
