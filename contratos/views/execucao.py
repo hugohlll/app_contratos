@@ -31,6 +31,7 @@ from contratos.models import (
 from contratos.forms import ControleExecucaoForm, OcorrenciaContratualForm
 from contratos.utils import is_admin, is_auditor, admin_required, auditor_required
 from contratos.services.notificacao import NotificacaoService
+from contratos.services.execucao_modulos import ModulosLivroFiscalService
 
 
 def portal_execucao_index(request):
@@ -324,6 +325,8 @@ def formulario_execucao(request, contrato_id):
         'bloquear_ateste_mes_corrente': is_mes_corrente,
         'modo': modo or ('tempestivo' if is_mes_corrente else ''),
         'notificacao_automatica_habilitada': NotificacaoService.is_habilitada(),
+        'exibir_bloco_preposto': ModulosLivroFiscalService.is_preposto_habilitado(),
+        'exibir_bloco_obras': ModulosLivroFiscalService.is_obras_habilitado(),
     })
 
 

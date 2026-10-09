@@ -1,0 +1,36 @@
+<!-- ========================================================================= -->
+<!-- BLOCO MODULAR: PREPOSTO ACEITO DA CONTRATADA (NPA 009)                     -->
+<!-- Reutilizavel no formulario do Livro do Fiscal                              -->
+<!-- ========================================================================= -->
+<div class="secao-card" id="secaoModularPreposto">
+    <div class="section-header bg-dark">
+        <span><i class="bi bi-person-lines-fill me-2"></i>2. Preposto Aceito da Contratada (NPA 009)</span>
+        <span class="badge bg-secondary">Preenchimento Contínuo</span>
+    </div>
+    <div class="card-body">
+        <p class="small text-muted mb-3">
+            Os dados do preposto aceito são preservados mês a mês. Atualize apenas caso tenha ocorrido substituição formal do representante da contratada.
+        </p>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold small">Nome Completo do Preposto</label>
+                {{ form.preposto_nome }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold small">Cargo / Função</label>
+                {{ form.preposto_cargo }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small">Telefone / Celular</label>
+                {{ form.preposto_telefone }}
+                {% if form.preposto_telefone.errors %}<div class="text-danger small">{{ form.preposto_telefone.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small">E-mail Oficial</label>
+                {{ form.preposto_email }}
+                {% if form.preposto_email.errors %}<div class="text-danger small">{{ form.preposto_email.errors }}</div>{% endif %}
+                <div id="emailPrepostoFeedback" class="invalid-feedback small">Informe um e-mail válido no formato usuario@dominio.com</div>
+            </div>
+        </div>
+    </div>
+</div>

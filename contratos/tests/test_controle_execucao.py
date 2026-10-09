@@ -647,4 +647,58 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(dt_local.hour, 16)
         self.assertEqual(dt_local.minute, 30)
 
+    def test_modularizacao_itens_preposto_e_obras_removidos_do_formulario(self):
+        """Verifica a modularização e remoção padrão dos itens 2 (Preposto) e 3 (Obras)."""
+        from contratos.services.execucao_modulos import ModulosLivroFiscalService
+        
+        # 1. Comportamento padrão (desabilitados)
+        self.assertFalse(ModulosLivroFiscalService.is_preposto_habilitado())
+        self.assertFalse(ModulosLivroFiscalService.is_obras_habilitado())
+
+        url = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['exibir_bloco_preposto'])
+        self.assertFalse(response.context['exibir_bloco_obras'])
+
+        content = response.content.decode('utf-8')
+        self.assertNotIn('secaoModularPreposto', content)
+        self.assertNotIn('secaoModularObras', content)
+        self.assertIn('2. Registro de Ocorrências da Fiscalização', content)
+        self.assertIn('3. Observações Finais e Fechamento', content)
+
+        # 2. Submissão sem campos de preposto e obras salva com sucesso
+        post_data = {
+            'mes_referencia': 7,
+            'ano_referencia': 2026,
+            'agente': self.agente.id,
+            'sem_ocorrencias_periodo': True,
+            'ocorrencias_json': '[]',
+            'acao': 'rascunho'
+        }
+        res_post = self.client.post(url, post_data)
+        self.assertEqual(res_post.status_code, 302)
+        ctrl = ControleExecucao.objects.get(contrato=self.contrato, mes_referencia=7, ano_referencia=2026)
+        self.assertTrue(ctrl.sem_ocorrencias_periodo)
+
+        # 3. Teste de reativação modular
+        try:
+            ModulosLivroFiscalService.BLOCO_PREPOSTO_HABILITADO = True
+            ModulosLivroFiscalService.BLOCO_OBRAS_HABILITADO = True
+
+            res_reativado = self.client.get(url)
+            self.assertEqual(res_reativado.status_code, 200)
+            self.assertTrue(res_reativado.context['exibir_bloco_preposto'])
+            self.assertTrue(res_reativado.context['exibir_bloco_obras'])
+
+            content_reativado = res_reativado.content.decode('utf-8')
+            self.assertIn('secaoModularPreposto', content_reativado)
+            self.assertIn('secaoModularObras', content_reativado)
+            self.assertIn('4. Registro de Ocorrências da Fiscalização', content_reativado)
+            self.assertIn('5. Observações Finais e Fechamento', content_reativado)
+        finally:
+            ModulosLivroFiscalService.BLOCO_PREPOSTO_HABILITADO = False
+            ModulosLivroFiscalService.BLOCO_OBRAS_HABILITADO = False
+
+
 

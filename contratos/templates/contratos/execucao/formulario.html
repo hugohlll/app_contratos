@@ -208,88 +208,20 @@
             </div>
         </div>
 
-        <!-- 2. PREPOSTO ACEITO DA CONTRATADA -->
-        <div class="secao-card">
-            <div class="section-header bg-dark">
-                <span><i class="bi bi-person-lines-fill me-2"></i>2. Preposto Aceito da Contratada (NPA 009)</span>
-                <span class="badge bg-secondary">Preenchimento Contínuo</span>
-            </div>
-            <div class="card-body">
-                <p class="small text-muted mb-3">
-                    Os dados do preposto aceito são preservados mês a mês. Atualize apenas caso tenha ocorrido substituição formal do representante da contratada.
-                </p>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold small">Nome Completo do Preposto</label>
-                        {{ form.preposto_nome }}
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold small">Cargo / Função</label>
-                        {{ form.preposto_cargo }}
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold small">Telefone / Celular</label>
-                        {{ form.preposto_telefone }}
-                        {% if form.preposto_telefone.errors %}<div class="text-danger small">{{ form.preposto_telefone.errors }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold small">E-mail Oficial</label>
-                        {{ form.preposto_email }}
-                        {% if form.preposto_email.errors %}<div class="text-danger small">{{ form.preposto_email.errors }}</div>{% endif %}
-                        <div id="emailPrepostoFeedback" class="invalid-feedback small">Informe um e-mail válido no formato usuario@dominio.com</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- 2. PREPOSTO ACEITO DA CONTRATADA (MODULARIZADO) -->
+        {% if exibir_bloco_preposto %}
+            {% include "contratos/execucao/includes/_bloco_preposto.html" %}
+        {% endif %}
 
-        <!-- 3. DIÁRIO DE OBRAS E ENGENHARIA (ANEXO B DA NPA) - CONDICIONAL -->
-        <div class="secao-card">
-            <div class="section-header bg-secondary">
-                <span><i class="bi bi-tools me-2"></i>3. Regime de Obras e Engenharia (Anexo B da NPA 009)</span>
-                <div class="form-check form-switch m-0 d-inline-block">
-                    {{ form.eh_obra_engenharia }}
-                    <label class="form-check-label text-white fw-bold small ms-1" for="{{ form.eh_obra_engenharia.id_for_label }}">
-                        Envolve Obras / Engenharia?
-                    </label>
-                </div>
-            </div>
-            <div class="card-body" id="secaoObrasContainer" style="display: none;">
-                <p class="small text-muted mb-3">
-                    Para contratos de obras e serviços de engenharia, preencha os apontamentos consolidados do diário de obra (Anexo B da NPA 009/SCON/2025).
-                </p>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold small">Condições Climáticas e Paralisações (Chuvas/Abonos)</label>
-                        {{ form.condicoes_climaticas }}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold small">Efetivo de Pessoal no Canteiro (Trabalhadores)</label>
-                        {{ form.efetivo_trabalhadores }}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold small">Equipamentos e Maquinário no Canteiro</label>
-                        {{ form.maquinario_equipamentos }}
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold small">ART / RRT (CREA / CAU)</label>
-                        {{ form.art_rrt }}
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold small">Matrícula CEI / CNO (INSS)</label>
-                        {{ form.matricula_cei_cno }}
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label fw-bold small">Segurança do Trabalho, EPIs e CAT</label>
-                        {{ form.seguranca_trabalho_cat }}
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- 3. DIÁRIO DE OBRAS E ENGENHARIA (MODULARIZADO) -->
+        {% if exibir_bloco_obras %}
+            {% include "contratos/execucao/includes/_bloco_obras_engenharia.html" %}
+        {% endif %}
 
-        <!-- 4. REGISTRO DE OCORRÊNCIAS DA FISCALIZAÇÃO (10 CAMPOS) -->
+        <!-- REGISTRO DE OCORRÊNCIAS DA FISCALIZAÇÃO (10 CAMPOS) -->
         <div class="secao-card border-primary">
             <div class="section-header bg-primary">
-                <span><i class="bi bi-card-checklist me-2"></i>4. Registro de Ocorrências da Fiscalização (10 Campos NPA 009)</span>
+                <span><i class="bi bi-card-checklist me-2"></i>{% if not exibir_bloco_preposto and not exibir_bloco_obras %}2.{% else %}4.{% endif %} Registro de Ocorrências da Fiscalização (10 Campos NPA 009)</span>
                 <div class="d-flex align-items-center gap-2">
                     <button type="button" class="btn btn-light btn-sm fw-bold text-primary shadow-sm" id="btnNovaOcorrencia">
                         <i class="bi bi-plus-circle me-1"></i> Adicionar Ocorrência
@@ -353,10 +285,10 @@
             </div>
         </div>
 
-        <!-- 5. OBSERVAÇÕES E DECLARAÇÃO DE CONFORMIDADE -->
+        <!-- OBSERVAÇÕES E DECLARAÇÃO DE CONFORMIDADE -->
         <div class="secao-card">
             <div class="section-header bg-dark">
-                <span><i class="bi bi-chat-left-text me-2"></i>5. Observações Finais e Fechamento</span>
+                <span><i class="bi bi-chat-left-text me-2"></i>{% if not exibir_bloco_preposto and not exibir_bloco_obras %}3.{% else %}5.{% endif %} Observações Finais e Fechamento</span>
             </div>
             <div class="card-body">
                 <div class="mb-3">
@@ -666,16 +598,20 @@ $(document).ready(function() {
 
     const modalOcorrencia = new bootstrap.Modal(document.getElementById('modalOcorrencia'));
 
-    // Toggle Diário de Obras
+    // Toggle Diário de Obras (Modular)
     function atualizarVisibilidadeObras() {
-        if ($('#id_eh_obra_engenharia').is(':checked')) {
-            $('#secaoObrasContainer').slideDown(200);
-        } else {
-            $('#secaoObrasContainer').slideUp(200);
+        if ($('#id_eh_obra_engenharia').length) {
+            if ($('#id_eh_obra_engenharia').is(':checked')) {
+                $('#secaoObrasContainer').slideDown(200);
+            } else {
+                $('#secaoObrasContainer').slideUp(200);
+            }
         }
     }
-    $('#id_eh_obra_engenharia').on('change', atualizarVisibilidadeObras);
-    atualizarVisibilidadeObras();
+    if ($('#id_eh_obra_engenharia').length) {
+        $('#id_eh_obra_engenharia').on('change', atualizarVisibilidadeObras);
+        atualizarVisibilidadeObras();
+    }
 
     // Toggle Sem Ocorrências
     function atualizarSemOcorrencias() {

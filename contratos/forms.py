@@ -7,6 +7,7 @@ from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChange
 from django.utils.safestring import mark_safe
 from .models import Empresa, Contrato, Agente, Integrante, Comissao, ConfiguracaoSistema
 from .utils import clean_digits, format_cpf, format_cnpj, format_telefone
+from contratos.services.execucao_modulos import ModulosLivroFiscalService
 
 class EstiloFormMixin:
     """Mixin para aplicar estilos Bootstrap aos campos"""
@@ -454,7 +455,24 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
                     self.initial.setdefault('preposto_telefone', ultimo_controle.preposto_telefone)
                     self.initial.setdefault('preposto_email', ultimo_controle.preposto_email)
 
+    def clean(self):
+        cleaned_data = super().clean()
+        # Se os campos modulares foram omitidos na submissão (bloco desativado no template),
+        # preserva os valores originais da instância caso existam.
+        if self.instance.pk and self.data:
+            campos_modulares = [
+                'preposto_nome', 'preposto_cargo', 'preposto_telefone', 'preposto_email',
+                'eh_obra_engenharia', 'condicoes_climaticas', 'efetivo_trabalhadores',
+                'maquinario_equipamentos', 'art_rrt', 'matricula_cei_cno', 'seguranca_trabalho_cat'
+            ]
+            for campo in campos_modulares:
+                if campo not in self.data:
+                    cleaned_data[campo] = getattr(self.instance, campo)
+        return cleaned_data
+
     def clean_preposto_telefone(self):
+        if self.data and 'preposto_telefone' not in self.data and self.instance.pk:
+            return self.instance.preposto_telefone
         telefone = self.cleaned_data.get('preposto_telefone', '')
         if not telefone:
             return ''
@@ -466,6 +484,8 @@ class ControleExecucaoForm(EstiloFormMixin, forms.ModelForm):
         return format_telefone(digits)
 
     def clean_preposto_email(self):
+        if self.data and 'preposto_email' not in self.data and self.instance.pk:
+            return self.instance.preposto_email
         email = self.cleaned_data.get('preposto_email', '')
         if not email:
             return ''

@@ -1,0 +1,46 @@
+<!-- ========================================================================= -->
+<!-- BLOCO MODULAR: REGIME DE OBRAS E ENGENHARIA (ANEXO B DA NPA 009)          -->
+<!-- Reutilizavel no formulario do Livro do Fiscal                              -->
+<!-- ========================================================================= -->
+<div class="secao-card" id="secaoModularObras">
+    <div class="section-header bg-secondary">
+        <span><i class="bi bi-tools me-2"></i>3. Regime de Obras e Engenharia (Anexo B da NPA 009)</span>
+        <div class="form-check form-switch m-0 d-inline-block">
+            {{ form.eh_obra_engenharia }}
+            <label class="form-check-label text-white fw-bold small ms-1" for="{{ form.eh_obra_engenharia.id_for_label }}">
+                Envolve Obras / Engenharia?
+            </label>
+        </div>
+    </div>
+    <div class="card-body" id="secaoObrasContainer" style="display: none;">
+        <p class="small text-muted mb-3">
+            Para contratos de obras e serviços de engenharia, preencha os apontamentos consolidados do diário de obra (Anexo B da NPA 009/SCON/2025).
+        </p>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold small">Condições Climáticas e Paralisações (Chuvas/Abonos)</label>
+                {{ form.condicoes_climaticas }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold small">Efetivo de Pessoal no Canteiro (Trabalhadores)</label>
+                {{ form.efetivo_trabalhadores }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold small">Equipamentos e Maquinário no Canteiro</label>
+                {{ form.maquinario_equipamentos }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small">ART / RRT (CREA / CAU)</label>
+                {{ form.art_rrt }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small">Matrícula CEI / CNO (INSS)</label>
+                {{ form.matricula_cei_cno }}
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-bold small">Segurança do Trabalho, EPIs e CAT</label>
+                {{ form.seguranca_trabalho_cat }}
+            </div>
+        </div>
+    </div>
+</div>
