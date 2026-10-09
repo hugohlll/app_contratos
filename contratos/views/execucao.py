@@ -774,13 +774,13 @@ def gerar_livro_fiscal_pdf(request, pk):
     ]
 
     story.append(KeepTogether([
-        make_sec_header("1. TERMO DE ABERTURA E IDENTIFICAÇÃO DO CONTRATO"),
+        make_sec_header("TERMO DE ABERTURA E IDENTIFICAÇÃO DO CONTRATO"),
         Spacer(1, 3),
         make_kv(abertura_data)
     ]))
     story.append(Spacer(1, 8))
 
-    # 2. Diário de Obra e Engenharia (Anexo B) - se aplicável
+    # Diário de Obra e Engenharia (Anexo B) - se aplicável
     if controle.eh_obra_engenharia:
         obras_data = [
             ["Condições Climáticas e Paralisações:", controle.condicoes_climaticas or "Sem registro de paralisações por intempéries."],
@@ -791,14 +791,14 @@ def gerar_livro_fiscal_pdf(request, pk):
             ["Segurança do Trabalho e CAT:", controle.seguranca_trabalho_cat or "EPIs em uso regular. Sem registro de acidentes no período."],
         ]
         story.append(KeepTogether([
-            make_sec_header("2. REQUISITOS ESPECÍFICOS PARA DIÁRIO DE OBRA E ENGENHARIA (ANEXO B DA NPA 009)"),
+            make_sec_header("REQUISITOS ESPECÍFICOS PARA DIÁRIO DE OBRA E ENGENHARIA (ANEXO B DA NPA 009)"),
             Spacer(1, 3),
             make_kv(obras_data)
         ]))
         story.append(Spacer(1, 8))
 
-    # 3. Registro de Ocorrências Contratuais (10 Campos)
-    story.append(make_sec_header("3. REGISTRO DE OCORRÊNCIAS DA FISCALIZAÇÃO"))
+    # Registro de Ocorrências Contratuais (10 Campos)
+    story.append(make_sec_header("REGISTRO DE OCORRÊNCIAS DA FISCALIZAÇÃO"))
     story.append(Spacer(1, 3))
 
     ocorrencias = list(controle.ocorrencias.all())
@@ -854,7 +854,7 @@ def gerar_livro_fiscal_pdf(request, pk):
     if controle.observacao:
         obs_table = make_kv([["Observações Gerais / Justificativas:", controle.observacao]])
         story.append(KeepTogether([
-            make_sec_header("4. OBSERVAÇÕES E APONTAMENTOS COMPLEMENTARES"),
+            make_sec_header("OBSERVAÇÕES E APONTAMENTOS COMPLEMENTARES"),
             Spacer(1, 3),
             obs_table,
             Spacer(1, 6)
