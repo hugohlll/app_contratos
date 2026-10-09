@@ -878,8 +878,8 @@ def gerar_livro_fiscal_pdf(request, pk):
 
     # Bloco de Assinatura
     p_sigla = controle.agente.posto.sigla if (controle.agente and controle.agente.posto) else ""
-    n_guerra = controle.agente.nome_de_guerra.upper() if controle.agente else "FISCAL"
-    nome_assinante = f"{p_sigla} {n_guerra}".strip()
+    n_completo = (controle.agente.nome_completo or controle.agente.nome_de_guerra).upper() if controle.agente else "FISCAL"
+    nome_assinante = f"{p_sigla} {n_completo}".strip()
 
     sig_content = [
         Paragraph("____________________________________________________________", ParagraphStyle('Line', parent=styles['Normal'], alignment=1, fontSize=8, textColor=colors.HexColor('#94A3B8'))),
