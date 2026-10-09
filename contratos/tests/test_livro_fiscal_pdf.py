@@ -110,6 +110,8 @@ class LivroFiscalPDFTestCase(TestCase):
         self.assertIn('LIVRO DE REGISTRO DE OCORRÊNCIAS', full_text)
         self.assertIn('07/2026/D/001/2025', full_text)
         self.assertIn('Consultoria Nascimento ME', full_text)
+        self.assertIn('Número do Livro:', full_text)
+        self.assertNotIn('Número do Livro / Ano:', full_text)
         # Cabeçalhos de seção sem numeração
         self.assertIn('TERMO DE ABERTURA E IDENTIFICAÇÃO DO CONTRATO', full_text)
         self.assertNotIn('1. TERMO DE ABERTURA', full_text)

@@ -762,7 +762,7 @@ def gerar_livro_fiscal_pdf(request, pk):
             desig_str += f" / Portaria nº {comissao.portaria_numero}"
 
     abertura_data = [
-        ["Número do Livro / Ano:", f"<b>{controle.numero_livro}</b>"],
+        ["Número do Livro:", f"<b>{controle.numero_livro}</b>"],
         ["Número e Objeto do Contrato:", f"Contrato nº {contrato.numero} — {contrato.objeto}"],
         ["Contratada / CNPJ:", empresa_str],
         ["Período de Vigência Contratual:", vig_str],
