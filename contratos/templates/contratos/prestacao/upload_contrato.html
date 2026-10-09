@@ -118,9 +118,14 @@
                                         <i class="bi bi-calendar-event me-1"></i>Prazo Limite: <strong class="text-danger">{{ data_limite_execucao|date:"d/m/Y" }}</strong>
                                     </div>
                                     {% endif %}
-                                    <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-danger fw-bold w-100 text-white shadow-sm">
-                                        <i class="bi bi-journal-plus me-1"></i> Preencher Livro do Fiscal
-                                    </a>
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-danger fw-bold w-100 text-white shadow-sm">
+                                            <i class="bi bi-journal-check me-1"></i> Atestar e Finalizar Livro do Fiscal
+                                        </a>
+                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}?modo=tempestivo" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Registro Tempestivo de Ocorrência
+                                        </a>
+                                    </div>
                                 </div>
                             {% elif controle_execucao.status == 'correcao' %}
                                 <div class="border border-warning border-opacity-50 bg-warning bg-opacity-10 rounded-3 p-3">
@@ -137,9 +142,14 @@
                                     <p class="small text-dark mb-3">
                                         Foram apontadas inconsistências no Livro do Fiscal pela Assessoria de Controle Interno.
                                     </p>
-                                    <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-warning fw-bold w-100 text-dark shadow-sm">
-                                        <i class="bi bi-pencil-square me-1"></i> Corrigir Livro do Fiscal
-                                    </a>
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-warning fw-bold w-100 text-dark shadow-sm">
+                                            <i class="bi bi-pencil-square me-1"></i> Corrigir Livro do Fiscal
+                                        </a>
+                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}?modo=tempestivo" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Registro Tempestivo de Ocorrência
+                                        </a>
+                                    </div>
                                 </div>
                             {% elif controle_execucao.status == 'ok' %}
                                 <div class="border border-success bg-success bg-opacity-10 rounded-3 p-3">
@@ -156,9 +166,14 @@
                                     <p class="small fw-semibold text-dark mb-3">
                                         <i class="bi bi-info-circle me-1 text-success"></i>Insira o documento gerado no SILOMS
                                     </p>
-                                    <a href="{% url 'download_livro_fiscal_pdf' pk=controle_execucao.id %}?v={% now 'U' %}" class="btn btn-success fw-bold w-100 shadow-sm" download>
-                                        <i class="bi bi-file-earmark-pdf me-1"></i> Baixar Livro do Fiscal (PDF)
-                                    </a>
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'download_livro_fiscal_pdf' pk=controle_execucao.id %}?v={% now 'U' %}" class="btn btn-success fw-bold w-100 shadow-sm" download>
+                                            <i class="bi bi-file-earmark-pdf me-1"></i> Baixar Livro do Fiscal (PDF)
+                                        </a>
+                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}?modo=tempestivo" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Registro Tempestivo de Ocorrência
+                                        </a>
+                                    </div>
                                 </div>
                             {% else %}
                                 <div class="border border-primary bg-primary bg-opacity-10 rounded-3 p-3">
@@ -172,9 +187,14 @@
                                     <p class="small text-dark mb-2">
                                         Livro do Fiscal preenchido com sucesso para este mês de referência.
                                     </p>
-                                    <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-outline-primary fw-bold w-100">
-                                        <i class="bi bi-pencil-square me-1"></i> Editar Livro do Fiscal
-                                    </a>
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-outline-primary fw-bold w-100">
+                                            <i class="bi bi-pencil-square me-1"></i> Editar Livro do Fiscal
+                                        </a>
+                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}?modo=tempestivo" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Registro Tempestivo de Ocorrência
+                                        </a>
+                                    </div>
                                 </div>
                             {% endif %}
                         </div>

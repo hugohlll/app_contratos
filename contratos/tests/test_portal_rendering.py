@@ -70,3 +70,45 @@ class PortalRenderingTest(TestCase):
         self.assertContains(res_dashboard, 'id="slideArquivo"')
         self.assertContains(res_dashboard, 'id="slideArquivo-size-error"')
         self.assertContains(res_dashboard, 'MAX_SLIDE_SIZE_BYTES = 10 * 1024 * 1024')
+
+    def test_botao_registro_tempestivo_ocorrencia_rendering(self):
+        """Verifica se o botão com sinal de alerta para registro tempestivo é renderizado na tela de prestação."""
+        from contratos.models import ControleExecucao
+
+        url_contrato = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        url_tempestivo = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}) + '?modo=tempestivo'
+
+        # 1. Estado sem livro (Pendente)
+        res_pendente = self.client.get(url_contrato)
+        self.assertEqual(res_pendente.status_code, 200)
+        self.assertContains(res_pendente, url_tempestivo)
+        self.assertContains(res_pendente, 'Registro Tempestivo de Ocorrência')
+        self.assertContains(res_pendente, 'bi-exclamation-triangle-fill')
+        self.assertContains(res_pendente, 'Atestar e Finalizar Livro do Fiscal')
+
+        # 2. Estado Preenchido / Entregue
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        controle = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            mes_referencia=mes_anterior.month,
+            ano_referencia=mes_anterior.year,
+            agente=self.agente,
+            status='entregue'
+        )
+        res_entregue = self.client.get(url_contrato)
+        self.assertEqual(res_entregue.status_code, 200)
+        self.assertContains(res_entregue, url_tempestivo)
+        self.assertContains(res_entregue, 'Registro Tempestivo de Ocorrência')
+        self.assertContains(res_entregue, 'Editar Livro do Fiscal')
+
+        # 3. Estado Conformidade (OK)
+        controle.status = 'ok'
+        controle.save()
+        res_ok = self.client.get(url_contrato)
+        self.assertEqual(res_ok.status_code, 200)
+        self.assertContains(res_ok, url_tempestivo)
+        self.assertContains(res_ok, 'Registro Tempestivo de Ocorrência')
+
+

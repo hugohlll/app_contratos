@@ -358,21 +358,21 @@ class ControleExecucaoTests(TestCase):
         self.assertContains(res_alias, f"Modo Registro Tempestivo — Mês Corrente ({hoje.month:02d}/{hoje.year})")
 
     def test_portal_registro_tempestivo_independente(self):
-        """Testa a nova rota pública dedicada /tempestivo/ sem vínculo com a prestação de contas."""
-        hoje = timezone.localtime(timezone.now()).date()
+        """Testa que a rota /tempestivo/ e seu alias redirecionam para o portal da prestação de contas."""
         url = reverse('portal_registro_tempestivo')
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['mes_corrente'], hoje.month)
-        self.assertEqual(response.context['ano_corrente'], hoje.year)
-        self.assertIn(self.contrato, response.context['contratos'])
-        self.assertContains(response, "Registro Tempestivo do Livro do Fiscal")
-        self.assertContains(response, self.contrato.numero)
+        self.assertRedirects(response, reverse('portal_prestacao_fiscais'))
 
         # Testa rota alias /execucao/tempestivo/
         res_alias = self.client.get('/execucao/tempestivo/')
-        self.assertEqual(res_alias.status_code, 200)
-        self.assertContains(res_alias, "Registro Tempestivo do Livro do Fiscal")
+        self.assertRedirects(res_alias, reverse('portal_prestacao_fiscais'))
+
+        # Testa que o formulário tempestivo possui link de voltar à tela de prestação
+        url_form = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}) + '?modo=tempestivo'
+        res_form = self.client.get(url_form)
+        self.assertEqual(res_form.status_code, 200)
+        self.assertContains(res_form, reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id}))
+        self.assertContains(res_form, 'Voltar à Prestação de Contas')
 
     def test_bloqueio_finalizar_mes_corrente(self):
         """Testa que tentar finalizar e atestar no mês corrente é bloqueado e salvo como rascunho."""

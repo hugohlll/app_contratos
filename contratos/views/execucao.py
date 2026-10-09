@@ -46,21 +46,10 @@ def portal_execucao_fiscais(request):
 
 def portal_registro_tempestivo(request):
     """
-    Página pública independente dedicada ao Registro Tempestivo do Livro do Fiscal.
-    Disponibilizada diretamente aos fiscais para lançamento contínuo e tempestivo de
-    ocorrências durante o mês corrente, totalmente separada do Portal de Prestação de Contas.
+    Os lançamentos tempestivos devem ser realizados pelo Portal de Prestação de Contas.
+    Redireciona o acesso de /tempestivo/ para o portal da prestação de contas.
     """
-    hoje = timezone.localtime(timezone.now()).date()
-    contratos = Contrato.objects.filter(
-        vigencia_inicio__lte=hoje,
-        vigencia_fim__gte=hoje
-    ).order_by('numero')
-
-    return render(request, 'contratos/execucao/portal_tempestivo.html', {
-        'contratos': contratos,
-        'mes_corrente': hoje.month,
-        'ano_corrente': hoje.year,
-    })
+    return redirect('portal_prestacao_fiscais')
 
 
 def excluir_controle_execucao_publico(request, contrato_id):

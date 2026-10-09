@@ -65,15 +65,9 @@
     <!-- Barra Superior de Navegação e Status -->
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
         <div class="d-flex align-items-center gap-2">
-            {% if modo == 'tempestivo' or is_mes_corrente %}
-            <a href="{% url 'portal_registro_tempestivo' %}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left"></i> Voltar à Seleção Tempestiva
-            </a>
-            {% else %}
             <a href="{% url 'upload_prestacao' contrato_id=contrato.id %}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left"></i> Voltar ao Envio
+                <i class="bi bi-arrow-left"></i> Voltar à Prestação de Contas
             </a>
-            {% endif %}
             <div>
                 <h4 class="fw-bold mb-0 text-dark">
                     Livro de Registro de Ocorrências — Contrato {{ contrato.numero }}
@@ -311,15 +305,9 @@
 
                 <!-- Botões de Ação Final -->
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-2 border-top">
-                    {% if modo == 'tempestivo' or is_mes_corrente %}
-                    <a href="{% url 'portal_registro_tempestivo' %}" class="btn btn-outline-secondary">
+                    <a href="{% url 'upload_prestacao' contrato_id=contrato.id %}" class="btn btn-outline-secondary">
                         <i class="bi bi-x-circle me-1"></i> Cancelar / Voltar
                     </a>
-                    {% else %}
-                    <a href="{% url 'upload_prestacao' contrato_id=contrato.id %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle me-1"></i> Cancelar
-                    </a>
-                    {% endif %}
                     <div class="d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-outline-primary fw-bold" id="btnSalvarRascunho">
                             <i class="bi bi-save me-1"></i> Salvar Rascunho
