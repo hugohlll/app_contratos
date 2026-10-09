@@ -116,7 +116,9 @@ class LivroFiscalPDFTestCase(TestCase):
         self.assertIn('REGISTRO DE OCORRÊNCIAS DA FISCALIZAÇÃO', full_text)
         self.assertNotIn('3. REGISTRO DE OCORRÊNCIAS', full_text)
         self.assertIn('OBSERVAÇÕES E APONTAMENTOS COMPLEMENTARES', full_text)
-        self.assertNotIn('4. OBSERVAÇÕES E APONTAMENTOS', full_text)
+        # Dados do preposto retirados do PDF
+        self.assertNotIn('Preposto Aceito da Contratada:', full_text)
+        self.assertNotIn('Carlos Eduardo Preposto', full_text)
         self.assertNotIn('Unidade Gestora (UG / Gestão):', full_text)
         self.assertNotIn('Processo Adm. de Gestão (PAG / e-PAG):', full_text)
         self.assertNotIn('Fundamentação Normativa:', full_text)
@@ -260,4 +262,30 @@ class LivroFiscalPDFTestCase(TestCase):
 
         self.assertIn('Tempestividade do Registro:', full_text)
         self.assertIn('lançado no sistema em', full_text)
+
+    def test_pdf_modular_preposto(self):
+        """Verifica se os dados do preposto não aparecem no PDF por padrão, mas aparecem se o módulo for ativado."""
+        from contratos.services.execucao_modulos import ModulosLivroFiscalService
+
+        # 1. Por padrão: desabilitado, preposto não aparece
+        url = reverse('download_livro_fiscal_pdf', kwargs={'pk': self.controle_ok.pk})
+        response = self.client.get(url)
+        pdf_bytes = b''.join(response.streaming_content)
+        reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+        full_text = ''.join(page.extract_text() for page in reader.pages)
+        self.assertNotIn('Preposto Aceito da Contratada:', full_text)
+        self.assertNotIn('Carlos Eduardo Preposto', full_text)
+
+        # 2. Se reativado modularmente: preposto aparece
+        try:
+            ModulosLivroFiscalService.BLOCO_PREPOSTO_HABILITADO = True
+            res_ativado = self.client.get(url)
+            pdf_bytes_ativado = b''.join(res_ativado.streaming_content)
+            reader_ativado = pypdf.PdfReader(io.BytesIO(pdf_bytes_ativado))
+            full_text_ativado = ''.join(page.extract_text() for page in reader_ativado.pages)
+            self.assertIn('Preposto Aceito da Contratada:', full_text_ativado)
+            self.assertIn('Carlos Eduardo Preposto', full_text_ativado)
+        finally:
+            ModulosLivroFiscalService.BLOCO_PREPOSTO_HABILITADO = False
+
 

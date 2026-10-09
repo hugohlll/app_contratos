@@ -761,8 +761,6 @@ def gerar_livro_fiscal_pdf(request, pk):
         if comissao.portaria_numero:
             desig_str += f" / Portaria nº {comissao.portaria_numero}"
 
-    prep_dados = f"{controle.preposto_nome or 'Não informado'} | Cargo: {controle.preposto_cargo or '-'} | Tel: {controle.preposto_telefone or '-'} | E-mail: {controle.preposto_email or '-'}"
-
     abertura_data = [
         ["Número do Livro / Ano:", f"<b>{controle.numero_livro}</b>"],
         ["Número e Objeto do Contrato:", f"Contrato nº {contrato.numero} — {contrato.objeto}"],
@@ -770,8 +768,11 @@ def gerar_livro_fiscal_pdf(request, pk):
         ["Período de Vigência Contratual:", vig_str],
         ["Ato de Designação da Fiscalização:", desig_str],
         ["Fiscal Responsável (Registro):", fiscal_resp],
-        ["Preposto Aceito da Contratada:", prep_dados],
     ]
+
+    if ModulosLivroFiscalService.is_preposto_habilitado():
+        prep_dados = f"{controle.preposto_nome or 'Não informado'} | Cargo: {controle.preposto_cargo or '-'} | Tel: {controle.preposto_telefone or '-'} | E-mail: {controle.preposto_email or '-'}"
+        abertura_data.append(["Preposto Aceito da Contratada:", prep_dados])
 
     story.append(KeepTogether([
         make_sec_header("TERMO DE ABERTURA E IDENTIFICAÇÃO DO CONTRATO"),
@@ -780,8 +781,8 @@ def gerar_livro_fiscal_pdf(request, pk):
     ]))
     story.append(Spacer(1, 8))
 
-    # Diário de Obra e Engenharia (Anexo B) - se aplicável
-    if controle.eh_obra_engenharia:
+    # Diário de Obra e Engenharia (Anexo B) - se aplicável e modularmente habilitado
+    if controle.eh_obra_engenharia and ModulosLivroFiscalService.is_obras_habilitado():
         obras_data = [
             ["Condições Climáticas e Paralisações:", controle.condicoes_climaticas or "Sem registro de paralisações por intempéries."],
             ["Efetivo de Pessoal no Canteiro:", controle.efetivo_trabalhadores or "Conforme equipe padrão informada pela contratada."],
