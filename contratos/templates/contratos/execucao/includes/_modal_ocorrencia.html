@@ -1,0 +1,119 @@
+<div class="modal fade" id="modalOcorrencia" tabindex="-1" aria-labelledby="modalOcorrenciaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white py-2 px-3">
+                <h6 class="modal-title fw-bold" id="modalOcorrenciaLabel">
+                    <i class="bi bi-file-earmark-plus me-1"></i> Registro de Ocorrência — NPA 009/SCON/2025
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formModalOcorrencia">
+                    <input type="hidden" id="modal_oc_id">
+                    <input type="hidden" id="modal_oc_index">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">1. Data e Horário da Constatação <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="modal_data_hora" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">2. Local da Ocorrência</label>
+                            <input type="text" class="form-control" id="modal_local">
+                            <div class="form-text text-muted small"><i class="bi bi-info-circle me-1"></i>Exemplo: Canteiro de obras, Posto 2, Prédio do Comando.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">3. Tipo de Ocorrência <span class="text-danger">*</span></label>
+                            <select class="form-select" id="modal_tipo" required>
+                                <option value="TECNICA">Fiscalização Técnica</option>
+                                <option value="ADMINISTRATIVA">Fiscalização Administrativa</option>
+                                <option value="SETORIAL">Fiscalização Setorial</option>
+                                <option value="USUARIO">Usuário Público</option>
+                                <option value="OBRAS">Obras / Engenharia</option>
+                                <option value="OUTRO">Outro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">5. Dispositivo Contratual Violado</label>
+                            <input type="text" class="form-control" id="modal_dispositivo">
+                            <div class="form-text text-muted small"><i class="bi bi-info-circle me-1"></i>Exemplo: Cláusula 14.2 do Contrato / Item 8.1 do TR.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">4. Descrição Detalhada e Factual <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="modal_descricao" rows="3" required></textarea>
+                            <div class="form-text text-muted small"><i class="bi bi-info-circle me-1"></i>Orientação: Narrativa clara, objetiva e factual da irregularidade constatada.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">6. Evidências Anexadas / Documentos</label>
+                            <input type="text" class="form-control" id="modal_evidencias">
+                            <div class="form-text text-muted small"><i class="bi bi-info-circle me-1"></i>Exemplo: Fotos anexadas no SILOMS.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mt-4">
+                                <input class="form-check-input" type="checkbox" id="modal_notificacao_emitida">
+                                <label class="form-check-label fw-bold small" for="modal_notificacao_emitida">
+                                    7. Notificação Formal expedida?
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3" id="campoNotifNumDiv">
+                            <label class="form-label fw-bold small">Nº da Notificação</label>
+                            <input type="text" class="form-control" id="modal_notificacao_numero" disabled>
+                            <div class="form-text text-muted small"><i class="bi bi-info-circle me-1"></i>Exemplo: 005/GAP-BR/2026.</div>
+                        </div>
+                        <div class="col-md-3" id="campoPrazoDiv">
+                            <label class="form-label fw-bold small">Prazo de Regularização</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="modal_prazo" value="5" min="1" disabled>
+                                <span class="input-group-text small">dias úteis</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">8. Ciência / Recusa do Preposto</label>
+                            <select class="form-select" id="modal_ciencia">
+                                <option value="na">Não se aplica / Em apuração</option>
+                                <option value="assinado">Ciência assinada pelo Preposto</option>
+                                <option value="recusa">Recusa de assinatura (Certidão com 2 Testemunhas)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mt-4">
+                                <input class="form-check-input" type="checkbox" id="modal_tramite_arc">
+                                <label class="form-check-label fw-bold small" for="modal_tramite_arc">
+                                    9. Encaminhar à ARC para abertura de PAAI?
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">10. Situação Atual <span class="text-danger">*</span></label>
+                            <select class="form-select" id="modal_status" required>
+                                <option value="aberto">Em Aberto</option>
+                                <option value="saneamento">Em Saneamento (Prazo 5d úteis)</option>
+                                <option value="resolvido">Resolvido</option>
+                                <option value="paai">Encaminhado para PAAI (ARC)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Determinação / Medida Exigida pelo Fiscal</label>
+                            <textarea class="form-control" id="modal_acao_fiscal" rows="2"></textarea>
+                            <div class="form-text text-muted small"><i class="bi bi-info-circle me-1"></i>Orientação: Providência formal ou corretiva determinada à contratada.</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light py-2 px-3">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm fw-bold" id="btnSalvarModalOcorrencia">
+                    <i class="bi bi-check-circle me-1"></i> Salvar Ocorrência
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

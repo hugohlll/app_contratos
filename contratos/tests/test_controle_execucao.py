@@ -339,23 +339,14 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(ControleExecucao.objects.count(), 0)
 
     def test_modo_tempestivo_mes_corrente(self):
-        """Testa acesso com ?modo=tempestivo abrindo no mês corrente com trava de finalização."""
-        hoje = timezone.localtime(timezone.now()).date()
+        """Testa acesso com ?modo=tempestivo redirecionando para a tela unificada de ocorrências."""
         url = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}) + '?modo=tempestivo'
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['mes_referencia'], hoje.month)
-        self.assertEqual(response.context['ano_referencia'], hoje.year)
-        self.assertTrue(response.context['is_mes_corrente'])
-        self.assertTrue(response.context['bloquear_ateste_mes_corrente'])
-        self.assertContains(response, f"Modo Registro Tempestivo — Mês Corrente ({hoje.month:02d}/{hoje.year})")
+        self.assertRedirects(response, reverse('ocorrencias_contrato', kwargs={'contrato_id': self.contrato.id}))
 
         # Testa também a rota de compatibilidade /contratos/execucao/<id>/?modo=tempestivo
         res_alias = self.client.get(f'/contratos/execucao/{self.contrato.id}/?modo=tempestivo')
-        self.assertEqual(res_alias.status_code, 200)
-        self.assertEqual(res_alias.context['mes_referencia'], hoje.month)
-        self.assertTrue(res_alias.context['is_mes_corrente'])
-        self.assertContains(res_alias, f"Modo Registro Tempestivo — Mês Corrente ({hoje.month:02d}/{hoje.year})")
+        self.assertRedirects(res_alias, reverse('ocorrencias_contrato', kwargs={'contrato_id': self.contrato.id}))
 
     def test_portal_registro_tempestivo_independente(self):
         """Testa que a rota /tempestivo/ e seu alias redirecionam para o portal da prestação de contas."""
@@ -367,12 +358,11 @@ class ControleExecucaoTests(TestCase):
         res_alias = self.client.get('/execucao/tempestivo/')
         self.assertRedirects(res_alias, reverse('portal_prestacao_fiscais'))
 
-        # Testa que o formulário tempestivo possui link de voltar à tela de prestação
-        url_form = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}) + '?modo=tempestivo'
-        res_form = self.client.get(url_form)
-        self.assertEqual(res_form.status_code, 200)
-        self.assertContains(res_form, reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id}))
-        self.assertContains(res_form, 'Voltar à Prestação de Contas')
+        # Testa que a tela de ocorrências possui link de voltar à tela de prestação
+        url_oc = reverse('ocorrencias_contrato', kwargs={'contrato_id': self.contrato.id})
+        res_oc = self.client.get(url_oc)
+        self.assertEqual(res_oc.status_code, 200)
+        self.assertContains(res_oc, reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id}))
 
     def test_bloqueio_finalizar_mes_corrente(self):
         """Testa que tentar finalizar e atestar no mês corrente é bloqueado e salvo como rascunho."""

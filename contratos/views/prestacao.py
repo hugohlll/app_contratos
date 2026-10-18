@@ -208,6 +208,7 @@ def upload_prestacao(request, contrato_id):
 
     cal = CalendarioPrestacao.objects.filter(mes=mes_ref, ano=ano_ref).first()
     data_limite_execucao = cal.data_entrega_execucao if (cal and cal.data_entrega_execucao) else None
+    fora_do_prazo_execucao = (hoje > data_limite_execucao) if data_limite_execucao else False
 
     prestacao_atual = PrestacaoContas.objects.filter(
         contrato=contrato, mes_referencia=mes_ref, ano_referencia=ano_ref
@@ -313,6 +314,7 @@ def upload_prestacao(request, contrato_id):
         'execucao_bloqueia_slides': exigir_livro_para_slides(contrato) and not execucao_preenchida,
         'ultimo_apontamento_execucao': ultimo_apontamento_execucao,
         'data_limite_execucao': data_limite_execucao,
+        'fora_do_prazo_execucao': fora_do_prazo_execucao,
         'dialogo_execucao': dialogo_execucao,
         'dialogo_slides': dialogo_slides,
         'mes_ref': f"{mes_ref:02d}",

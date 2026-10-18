@@ -253,8 +253,8 @@ class LivroFiscalPDFTestCase(TestCase):
         self.assertEqual(fn_novo, f"notificacao_novo_modelo_2026_001-gap-br-2026.pdf")
         self.assertEqual(buf_novo.read(), b"%PDF-1.4 Mock Novo Modelo")
 
-    def test_pdf_contem_auditoria_tempestividade(self):
-        """Verifica se o PDF do Livro do Fiscal inclui a linha de auditoria de tempestividade."""
+    def test_pdf_sem_rotulo_tempestividade(self):
+        """Verifica se o PDF do Livro do Fiscal não expõe a classificação de tempestividade."""
         url = reverse('download_livro_fiscal_pdf', kwargs={'pk': self.controle_ok.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -263,8 +263,7 @@ class LivroFiscalPDFTestCase(TestCase):
         reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
         full_text = ''.join(page.extract_text() for page in reader.pages)
 
-        self.assertIn('Tempestividade do Registro:', full_text)
-        self.assertIn('lançado no sistema em', full_text)
+        self.assertNotIn('Tempestividade do Registro:', full_text)
 
     def test_pdf_modular_preposto(self):
         """Verifica se os dados do preposto não aparecem no PDF por padrão, mas aparecem se o módulo for ativado."""

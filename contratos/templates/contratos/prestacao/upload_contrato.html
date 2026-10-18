@@ -116,14 +116,17 @@
                                     {% if data_limite_execucao %}
                                     <div class="small text-muted mb-2">
                                         <i class="bi bi-calendar-event me-1"></i>Prazo Limite: <strong class="text-danger">{{ data_limite_execucao|date:"d/m/Y" }}</strong>
+                                        {% if fora_do_prazo_execucao %}
+                                            <span class="badge bg-danger ms-1">Fora do prazo</span>
+                                        {% endif %}
                                     </div>
                                     {% endif %}
                                     <div class="d-grid gap-2">
                                         <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-danger fw-bold w-100 text-white shadow-sm">
                                             <i class="bi bi-journal-check me-1"></i> Atestar e Finalizar Livro do Fiscal
                                         </a>
-                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}?modo=tempestivo" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
-                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Registro Tempestivo de Ocorrência
+                                        <a href="{% url 'ocorrencias_contrato' contrato_id=contrato.id %}" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
+                                            <i class="bi bi-journal-plus me-1"></i> Registro / Edição de Ocorrências
                                         </a>
                                     </div>
                                 </div>
@@ -146,8 +149,8 @@
                                         <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-warning fw-bold w-100 text-dark shadow-sm">
                                             <i class="bi bi-pencil-square me-1"></i> Corrigir Livro do Fiscal
                                         </a>
-                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}?modo=tempestivo" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
-                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Registro Tempestivo de Ocorrência
+                                        <a href="{% url 'ocorrencias_contrato' contrato_id=contrato.id %}" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
+                                            <i class="bi bi-journal-plus me-1"></i> Registro / Edição de Ocorrências
                                         </a>
                                     </div>
                                 </div>
@@ -170,8 +173,8 @@
                                         <a href="{% url 'download_livro_fiscal_pdf' pk=controle_execucao.id %}?v={% now 'U' %}" class="btn btn-success fw-bold w-100 shadow-sm" download>
                                             <i class="bi bi-file-earmark-pdf me-1"></i> Baixar Livro do Fiscal (PDF)
                                         </a>
-                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}?modo=tempestivo" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
-                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Registro Tempestivo de Ocorrência
+                                        <a href="{% url 'ocorrencias_contrato' contrato_id=contrato.id %}" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
+                                            <i class="bi bi-journal-plus me-1"></i> Registro / Edição de Ocorrências
                                         </a>
                                     </div>
                                 </div>
@@ -191,8 +194,8 @@
                                         <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}" class="btn btn-outline-primary fw-bold w-100">
                                             <i class="bi bi-pencil-square me-1"></i> Editar Livro do Fiscal
                                         </a>
-                                        <a href="{% url 'formulario_execucao' contrato_id=contrato.id %}?modo=tempestivo" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
-                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Registro Tempestivo de Ocorrência
+                                        <a href="{% url 'ocorrencias_contrato' contrato_id=contrato.id %}" class="btn btn-warning text-dark fw-bold w-100 shadow-sm">
+                                            <i class="bi bi-journal-plus me-1"></i> Registro / Edição de Ocorrências
                                         </a>
                                     </div>
                                 </div>
