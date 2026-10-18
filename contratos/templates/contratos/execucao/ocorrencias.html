@@ -84,7 +84,7 @@
                 <i class="bi bi-calendar3 fs-5 text-primary"></i>
                 <div>
                     <strong class="text-dark fs-6">
-                        Mês de Referência: {{ grupo.mes|stringformat:"02d" }}/{{ grupo.ano }}
+                        Mês de Referência: {{ grupo.mes|stringformat:"02d" }}/{{ grupo.ano|stringformat:"d" }}
                     </strong>
                     {% if grupo.controle %}
                         <span class="text-muted small ms-2">({{ grupo.controle.numero_livro }})</span>

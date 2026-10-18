@@ -25,7 +25,7 @@
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
                 <div class="card-header bg-primary text-white p-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-journal-bookmark me-2"></i>Contrato {{ contrato.numero }}</h5>
-                    <span class="badge bg-white text-primary fs-6 fw-bold shadow-sm">Mês de Referência: {{ mes_ref }}/{{ ano_ref }}</span>
+                    <span class="badge bg-white text-primary fs-6 fw-bold shadow-sm">Mês de Referência: {{ mes_ref }}/{{ ano_ref|stringformat:"d" }}</span>
                 </div>
                 <div class="card-body p-4">
                     <p class="small text-muted mb-3 fw-semibold">{{ contrato.empresa.razao_social }}</p>
@@ -210,7 +210,7 @@
                                 
                                 <div class="mb-3">
                                     <label class="form-label fw-bold small">Mês de Referência</label>
-                                    <input type="text" class="form-control bg-light form-control-sm" value="{{ mes_ref }}/{{ ano_ref }}" readonly>
+                                    <input type="text" class="form-control bg-light form-control-sm" value="{{ mes_ref }}/{{ ano_ref|stringformat:"d" }}" readonly>
                                     {{ form.mes_referencia }}
                                     {{ form.ano_referencia }}
                                 </div>
@@ -272,7 +272,11 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-text me-2 {% if not execucao_preenchida %}text-danger{% endif %}"></i>Livro do Fiscal</h6>
                             {% if not execucao_preenchida %}
-                                <span class="badge bg-danger text-white fw-bold">Pendente</span>
+                                {% if controle_execucao and controle_execucao.status == 'rascunho' %}
+                                    <span class="badge bg-secondary text-white fw-bold">Rascunho</span>
+                                {% else %}
+                                    <span class="badge bg-danger text-white fw-bold">Pendente</span>
+                                {% endif %}
                             {% elif controle_execucao.status == 'correcao' %}
                                 <span class="badge bg-warning text-dark fw-bold">Ajustes Solicitados</span>
                             {% elif controle_execucao.status == 'ok' %}
@@ -284,8 +288,12 @@
 
                         {% if controle_execucao %}
                             <div class="small text-muted mb-2">
-                                <i class="bi bi-person me-1"></i>Responsável: {{ controle_execucao.agente.posto.sigla|default:'' }} {{ controle_execucao.agente.nome_de_guerra|default:controle_execucao.agente.nome_completo }}
-                                <span class="ms-2"><i class="bi bi-clock me-1"></i>Envio: {{ controle_execucao.data_envio|date:"d/m/Y H:i" }}</span>
+                                <i class="bi bi-person me-1"></i>Responsável: {% if controle_execucao.agente %}{{ controle_execucao.fiscal_nome_display }}{% else %}<span class="fst-italic text-muted">A definir na finalização</span>{% endif %}
+                                {% if controle_execucao.status != 'rascunho' and controle_execucao.data_envio %}
+                                    <span class="ms-2"><i class="bi bi-clock me-1"></i>Envio: {{ controle_execucao.data_envio|date:"d/m/Y H:i" }}</span>
+                                {% else %}
+                                    <span class="ms-2 badge bg-secondary">Rascunho</span>
+                                {% endif %}
                             </div>
 
                             {% if dialogo_execucao %}
@@ -341,8 +349,10 @@
 
                         {% if prestacao_atual and prestacao_atual.status != 'pendente' %}
                             <div class="small text-muted mb-2">
-                                <i class="bi bi-person me-1"></i>Responsável: {{ prestacao_atual.agente.posto.sigla|default:'' }} {{ prestacao_atual.agente.nome_de_guerra|default:prestacao_atual.agente.nome_completo }}
-                                <span class="ms-2"><i class="bi bi-clock me-1"></i>Envio: {{ prestacao_atual.data_envio|date:"d/m/Y H:i" }}</span>
+                                <i class="bi bi-person me-1"></i>Responsável: {% if prestacao_atual.agente %}{{ prestacao_atual.fiscal_nome_display }}{% else %}<span class="fst-italic text-muted">A definir</span>{% endif %}
+                                {% if prestacao_atual.data_envio %}
+                                    <span class="ms-2"><i class="bi bi-clock me-1"></i>Envio: {{ prestacao_atual.data_envio|date:"d/m/Y H:i" }}</span>
+                                {% endif %}
                             </div>
 
                             {% if dialogo_slides %}

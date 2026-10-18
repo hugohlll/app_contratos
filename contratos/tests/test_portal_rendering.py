@@ -1,8 +1,9 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from contratos.models import Comissao, Contrato, Agente, PostoGraduacao, Empresa
+from contratos.models import Comissao, Contrato, Agente, PostoGraduacao, Empresa, ControleExecucao
 from datetime import date, timedelta
+from django.utils import timezone
 
 class PortalRenderingTest(TestCase):
     def setUp(self):
@@ -110,5 +111,51 @@ class PortalRenderingTest(TestCase):
         self.assertEqual(res_ok.status_code, 200)
         self.assertContains(res_ok, url_ocorrencias)
         self.assertContains(res_ok, 'Registro / Edição de Ocorrências')
+
+    def test_upload_prestacao_com_livro_rascunho_sem_agente(self):
+        """
+        Regressão: garante que a tela upload_prestacao não quebre (VariableDoesNotExist)
+        quando houver um ControleExecucao em rascunho sem agente definido (ex: criado via ocorrência).
+        """
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+
+        ControleExecucao.objects.create(
+            contrato=self.contrato,
+            mes_referencia=mes_anterior.month,
+            ano_referencia=mes_anterior.year,
+            agente=None,
+            status='rascunho'
+        )
+
+        url_contrato = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        response = self.client.get(url_contrato)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'A definir na finalização')
+        self.assertContains(response, 'Rascunho')
+
+    def test_voltar_de_ocorrencias_para_prestacao_com_rascunho(self):
+        """
+        Testa o fluxo do usuário: registra uma ocorrência (que gera rascunho sem agente)
+        e depois clica em 'Voltar à Prestação de Contas', garantindo renderização com sucesso.
+        """
+        from contratos.services.ocorrencias import OcorrenciasService
+
+        # Simula criação de ocorrência que resolve e cria livro em rascunho
+        dt_agora = timezone.now()
+        controle = OcorrenciasService.resolver_livro_para_data(self.contrato, dt_agora)
+        self.assertIsNone(controle.agente)
+        self.assertEqual(controle.status, 'rascunho')
+
+        # Acessa a tela de prestação (destino do botão 'Voltar à Prestação de Contas')
+        url_prestacao = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        response = self.client.get(url_prestacao)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Livro do Fiscal')
+        self.assertContains(response, 'Registro / Edição de Ocorrências')
+
 
 

@@ -359,6 +359,14 @@ class PrestacaoContas(models.Model):
         if self.ano_referencia > hoje.year or (self.ano_referencia == hoje.year and self.mes_referencia >= hoje.month):
             raise ValidationError("Não é possível enviar uma prestação de contas para o mês atual ou meses futuros.")
 
+    @property
+    def fiscal_nome_display(self):
+        if not self.agente:
+            return "A definir"
+        posto_sigla = f"{self.agente.posto.sigla} " if (hasattr(self.agente, 'posto') and self.agente.posto) else ""
+        nome = self.agente.nome_de_guerra or self.agente.nome_completo
+        return f"{posto_sigla}{nome}".strip()
+
     def __str__(self):
         return f"PC {self.contrato.numero} - {self.mes_referencia:02d}/{self.ano_referencia}"
 
@@ -641,6 +649,14 @@ class ControleExecucao(models.Model):
     @property
     def total_faturas(self):
         return sum(f.valor for f in self.faturas.all())
+
+    @property
+    def fiscal_nome_display(self):
+        if not self.agente:
+            return "A definir"
+        posto_sigla = f"{self.agente.posto.sigla} " if (hasattr(self.agente, 'posto') and self.agente.posto) else ""
+        nome = self.agente.nome_de_guerra or self.agente.nome_completo
+        return f"{posto_sigla}{nome}".strip()
 
     def __str__(self):
         return f"Livro {self.numero_livro} - {self.get_status_display()}"

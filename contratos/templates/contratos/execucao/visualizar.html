@@ -16,7 +16,7 @@
                     Livro nº <strong class="text-primary">{{ controle.numero_livro }}</strong> | 
                     Referência: <strong>{{ controle.mes_referencia|stringformat:"02d" }}/{{ controle.ano_referencia|stringformat:"d" }}</strong> | 
                     UG: <strong>120006 - GAP-BR</strong> | 
-                    Fiscal: <strong>{% if controle.agente %}{{ controle.agente.posto.sigla|default:"" }} {{ controle.agente.nome_de_guerra|default:controle.agente.nome_completo }}{% else %}Não informado{% endif %}</strong>
+                    Fiscal: <strong>{% if controle.agente %}{{ controle.fiscal_nome_display }}{% else %}Não informado{% endif %}</strong>
                 </p>
             </div>
         </div>
@@ -85,7 +85,7 @@
                     <small class="text-muted d-block">Fiscal Responsável (Registro)</small>
                     <div class="small fw-bold text-dark">
                         {% if controle.agente %}
-                            {{ controle.agente.posto.sigla|default:"" }} {{ controle.agente.nome_de_guerra|default:controle.agente.nome_completo }}
+                            {{ controle.fiscal_nome_display }}
                         {% else %}
                             Não informado
                         {% endif %}

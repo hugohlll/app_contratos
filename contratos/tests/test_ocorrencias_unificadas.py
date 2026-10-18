@@ -84,6 +84,9 @@ class OcorrenciasUnificadasTests(TestCase):
         self.assertContains(response, f"{self.mes_x:02d}")
         self.assertContains(response, f"{self.mes_x_plus_1:02d}")
         self.assertContains(response, 'Adicionar Ocorrência')
+        # Garante que o ano é apresentado sem separador de milhar (ex: '2026' e não '2.026')
+        self.assertContains(response, f"Mês de Referência: {self.mes_x:02d}/{self.ano_x}")
+        self.assertContains(response, f"Mês de Referência: {self.mes_x_plus_1:02d}/{self.ano_x_plus_1}")
 
     def test_salvar_ocorrencia_mes_x_plus_1_cria_rascunho(self):
         """Ocorrência com data no mês corrente (X+1) é roteada para rascunho do mês corrente."""
