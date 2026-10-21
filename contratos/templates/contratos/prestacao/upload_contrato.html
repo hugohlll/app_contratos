@@ -25,7 +25,7 @@
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
                 <div class="card-header bg-primary text-white p-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-journal-bookmark me-2"></i>Contrato {{ contrato.numero }}</h5>
-                    <span class="badge bg-white text-primary fs-6 fw-bold shadow-sm">Mês de Referência: {{ mes_ref }}/{{ ano_ref|stringformat:"d" }}</span>
+                    <span class="badge bg-white text-primary fs-6 fw-bold shadow-sm">Mês de Referência: {{ mes_ref }}/{{ ano_ref|stringformat:"s" }}</span>
                 </div>
                 <div class="card-body p-4">
                     <p class="small text-muted mb-3 fw-semibold">{{ contrato.empresa.razao_social }}</p>
@@ -210,7 +210,7 @@
                                 
                                 <div class="mb-3">
                                     <label class="form-label fw-bold small">Mês de Referência</label>
-                                    <input type="text" class="form-control bg-light form-control-sm" value="{{ mes_ref }}/{{ ano_ref|stringformat:"d" }}" readonly>
+                                    <input type="text" class="form-control bg-light form-control-sm" value="{{ mes_ref }}/{{ ano_ref|stringformat:"s" }}" readonly>
                                     {{ form.mes_referencia }}
                                     {{ form.ano_referencia }}
                                 </div>

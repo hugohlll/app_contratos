@@ -23,7 +23,7 @@ from contratos.models import (
     Contrato, Empresa, PrestacaoContas, PrestacaoContasSetor,
     Agente, PostoGraduacao, Comissao, Integrante, Funcao,
     Setor, CargoRegimental, ApontamentoCorrecaoSetor, ApontamentoCorrecao,
-    CalendarioPrestacao, ControleExecucao
+    CalendarioPrestacao, ControleExecucao, HistoricoObservacaoExecucao
 )
 
 
@@ -529,13 +529,18 @@ class TextoApontamentosTests(BaseSetorTestSetup):
         m_ref = ultimo_dia_mes_anterior.month
         a_ref = ultimo_dia_mes_anterior.year
 
-        # 1. Criar Livro do Fiscal com observação
+        # 1. Criar Livro do Fiscal e observação de trâmite
         ctrl = ControleExecucao.objects.create(
             contrato=self.contrato,
             agente=self.agente,
             mes_referencia=m_ref,
             ano_referencia=a_ref,
             status='correcao',
+            observacao="Observações gerais do livro."
+        )
+        HistoricoObservacaoExecucao.objects.create(
+            controle=ctrl,
+            agente=self.agente,
             observacao="Dúvida referente ao item 4 do cronograma."
         )
 
@@ -698,8 +703,8 @@ class TextoApontamentosTests(BaseSetorTestSetup):
         self.assertNotEqual(pos_v2, -1)
         self.assertTrue(pos_v1 < pos_aci < pos_v2)
 
-    def test_fallback_observacao_legado_controle_execucao(self):
-        """Garante fallback para observacao legada se não houver histórico dedicado."""
+    def test_observacao_geral_livro_nao_polui_caixa_tramites(self):
+        """Garante que a observação geral do Livro do Fiscal não é exibida na caixa de trâmites (sem fallback indevido)."""
         from contratos.models import ControleExecucao
         hoje = date.today()
         primeiro_dia_mes_atual = hoje.replace(day=1)
@@ -713,14 +718,14 @@ class TextoApontamentosTests(BaseSetorTestSetup):
             mes_referencia=m_ref,
             ano_referencia=a_ref,
             status='entregue',
-            observacao="Observacao legada anterior"
+            observacao="Observacao interna do livro do fiscal"
         )
 
         url = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
         res = self.client.get(url)
 
         self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "Observacao legada anterior")
+        self.assertNotContains(res, "Observacao interna do livro do fiscal")
 
 
 # ===================================================================

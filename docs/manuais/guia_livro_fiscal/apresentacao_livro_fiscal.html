@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Apresentação Executiva - Livro do Fiscal Digital v2.0</title>
+    <style>
+        @page {
+            size: 16in 9in;
+            margin: 0;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            width: 16in;
+            height: 9in;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #071527;
+            color: #1a2a44;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .slide {
+            width: 16in;
+            height: 9in;
+            max-height: 9in;
+            overflow: hidden;
+            position: relative;
+            page-break-after: always;
+            break-after: page;
+            padding: 0.65in 0.85in 0.45in 0.85in;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Slide Claro */
+        .slide-light {
+            background: linear-gradient(180deg, #F8FAFD 0%, #EEF3F9 100%);
+            border-top: 6px solid #004B87;
+        }
+
+        /* Slide Escuro (Capa e Encerramento) */
+        .slide-dark {
+            background: linear-gradient(135deg, #071527 0%, #0B1E36 50%, #002B49 100%);
+            color: #FFFFFF;
+            border-top: 6px solid #00C2FF;
+        }
+
+        .capa-bg-glow {
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(0, 128, 255, 0.15) 0%, rgba(0, 75, 135, 0) 70%);
+            pointer-events: none;
+        }
+
+        /* Headers */
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.25in;
+        }
+        .header-text {
+            max-width: 85%;
+        }
+        .eyebrow {
+            display: inline-block;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .eyebrow-blue { color: #0066CC; }
+        .eyebrow-red { color: #D9383A; }
+        .slide-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #0B1E36;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+        .slide-subtitle {
+            font-size: 17px;
+            color: #4A607A;
+            line-height: 1.4;
+        }
+        .header-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #FFFFFF;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #004B87;
+            box-shadow: 0 4px 12px rgba(11, 30, 54, 0.06);
+            border: 1px solid rgba(0, 75, 135, 0.1);
+        }
+        .mini-logo {
+            height: 24px;
+            width: auto;
+        }
+
+        /* Footers */
+        .slide-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #7B8FA6;
+            border-top: 1px solid #D6E0EC;
+            padding-top: 12px;
+            margin-top: 0.15in;
+        }
+
+        /* Slide Body Layouts */
+        .slide-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 20px;
+        }
+        .grid-3col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-gap: 22px;
+        }
+        .grid-4col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-gap: 18px;
+        }
+        .grid-split {
+            display: grid;
+            grid-template-columns: 1fr 1.25fr;
+            grid-gap: 30px;
+            align-items: center;
+        }
+
+        /* Cards Base */
+        .card {
+            background: #FFFFFF;
+            border-radius: 14px;
+            padding: 22px 24px;
+            box-shadow: 0 8px 20px rgba(11, 30, 54, 0.05);
+            border: 1px solid rgba(0, 75, 135, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Cards Alert (Slide 2) */
+        .card-alert {
+            flex-direction: row;
+            gap: 18px;
+            align-items: flex-start;
+            border-left: 5px solid #D9383A;
+        }
+        .card-icon {
+            font-size: 32px;
+            line-height: 1;
+            padding: 10px;
+            border-radius: 12px;
+            background: #FFF1F0;
+        }
+        .icon-danger { background: #FFF1F0; color: #D9383A; }
+        .text-danger { color: #C5221F; }
+        .card-title {
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #0B1E36;
+        }
+        .card-desc {
+            font-size: 14.5px;
+            color: #4A607A;
+            line-height: 1.5;
+        }
+
+        /* Callouts */
+        .slide-footer-callout {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-top: 16px;
+            font-size: 14.5px;
+            line-height: 1.4;
+        }
+        .callout-warning {
+            background: #FFFBE6;
+            border: 1px solid #FFE58F;
+            color: #874D00;
+        }
+        .callout-info {
+            background: #E6F7FF;
+            border: 1px solid #91D5FF;
+            color: #0050B3;
+        }
+        .callout-success {
+            background: #F6FFED;
+            border: 1px solid #B7EB8F;
+            color: #237804;
+        }
+        .callout-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        /* Benefit Cards (Slide 3 & 8) */
+        .card-benefit {
+            position: relative;
+            justify-content: flex-start;
+            padding-top: 26px;
+        }
+        .card-pill {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #004B87;
+            color: #FFFFFF;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .pill-gold {
+            background: #D4AF37;
+            color: #0B1E36;
+        }
+        .card-featured {
+            border: 2px solid #0066CC;
+            box-shadow: 0 12px 30px rgba(0, 102, 204, 0.12);
+            background: #FFFFFF;
+        }
+        .icon-primary {
+            background: #EBF3FB;
+            color: #004B87;
+            width: fit-content;
+            margin-bottom: 14px;
+        }
+        .icon-gold {
+            background: #FFF9E6;
+            color: #B8860B;
+            width: fit-content;
+            margin-bottom: 14px;
+        }
+        .benefit-list {
+            list-style: none;
+            margin-top: 16px;
+            border-top: 1px dashed #D6E0EC;
+            padding-top: 14px;
+        }
+        .benefit-list li {
+            font-size: 14px;
+            color: #2E4057;
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+        .benefit-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #0080FF;
+            font-weight: 800;
+        }
+
+        /* Pilar Grid (Slide 4) */
+        .card-pilar {
+            flex-direction: row;
+            gap: 20px;
+            align-items: center;
+            border-left: 6px solid #004B87;
+            padding: 24px 28px;
+        }
+        .pilar-num {
+            font-size: 40px;
+            font-weight: 900;
+            color: #0066CC;
+            opacity: 0.85;
+            line-height: 1;
+            min-width: 55px;
+        }
+        .pilar-title {
+            font-size: 21px;
+            font-weight: 800;
+            color: #0B1E36;
+            margin-bottom: 6px;
+        }
+        .pilar-desc {
+            font-size: 14.5px;
+            color: #4A607A;
+            line-height: 1.5;
+        }
+
+        /* Step Cards (Slide 5) */
+        .card-step {
+            border-top: 4px solid #0066CC;
+            padding-top: 24px;
+        }
+        .step-badge {
+            display: inline-block;
+            background: #EBF3FB;
+            color: #0066CC;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            width: fit-content;
+        }
+        .step-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0B1E36;
+            margin-bottom: 8px;
+        }
+        .step-desc {
+            font-size: 14.5px;
+            color: #4A607A;
+            line-height: 1.5;
+        }
+
+        /* Split Screen (Slides 6, 9, 11) */
+        .split-col-text {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .feature-item {
+            display: flex;
+            gap: 16px;
+            background: #FFFFFF;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 75, 135, 0.08);
+            box-shadow: 0 4px 12px rgba(11, 30, 54, 0.03);
+            align-items: flex-start;
+        }
+        .feature-icon {
+            font-size: 26px;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .feature-desc h4 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0B1E36;
+            margin-bottom: 4px;
+        }
+        .feature-desc p {
+            font-size: 14px;
+            color: #4A607A;
+            line-height: 1.45;
+        }
+
+        .mockup-window {
+            background: #FFFFFF;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(11, 30, 54, 0.15);
+            border: 1px solid #D6E0EC;
+        }
+        .mockup-header {
+            background: #E8EEF5;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid #D6E0EC;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot.red { background: #FF5F56; }
+        .dot.yellow { background: #FFBD2E; }
+        .dot.green { background: #27C93F; }
+        .mockup-title {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #556B82;
+            margin-left: 8px;
+        }
+        .mockup-img {
+            width: 100%;
+            height: 3.8in;
+            object-fit: contain;
+            background: #FFFFFF;
+            display: block;
+            padding: 8px;
+        }
+
+        /* Feature Cards (Slide 7 & 10) */
+        .card-feature {
+            border-top: 4px solid #004B87;
+        }
+        .feature-header-icon {
+            font-size: 32px;
+            margin-bottom: 14px;
+        }
+
+        /* Tabela Comparativa (Slide 12) */
+        .table-comparativo {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #FFFFFF;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(11, 30, 54, 0.05);
+            border: 1px solid #D6E0EC;
+        }
+        .table-comparativo th {
+            padding: 16px 20px;
+            font-size: 15px;
+            font-weight: 800;
+            text-align: left;
+            border-bottom: 2px solid #D6E0EC;
+        }
+        .th-manual {
+            background: #FFF1F0;
+            color: #A8071A;
+            border-left: 1px solid #FFCCC7;
+        }
+        .th-digital {
+            background: #E6F7FF;
+            color: #0050B3;
+            border-left: 1px solid #BAE7FF;
+        }
+        .table-comparativo td {
+            padding: 14px 20px;
+            font-size: 14px;
+            line-height: 1.45;
+            border-bottom: 1px solid #EAEFF5;
+        }
+        .td-crit {
+            background: #F8FAFD;
+            color: #0B1E36;
+            font-weight: 600;
+        }
+        .td-manual {
+            color: #5A6A7E;
+            border-left: 1px solid #F0F0F0;
+            background: #FFFAF9;
+        }
+        .td-digital {
+            color: #0B1E36;
+            border-left: 1px solid #F0F0F0;
+            background: #F6FBFF;
+        }
+
+        /* Actor Cards (Slide 13) */
+        .card-actor {
+            border-top: 5px solid #004B87;
+        }
+        .actor-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #EAEFF5;
+        }
+        .actor-icon {
+            font-size: 28px;
+        }
+        .actor-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0B1E36;
+        }
+        .actor-benefits {
+            list-style: none;
+        }
+        .actor-benefits li {
+            font-size: 14px;
+            color: #3B4D63;
+            margin-bottom: 10px;
+            line-height: 1.45;
+            position: relative;
+            padding-left: 18px;
+        }
+        .actor-benefits li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #0066CC;
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        /* Timeline Cards (Slide 14) */
+        .card-timeline {
+            position: relative;
+            padding-top: 34px;
+            border-top: 4px solid #004B87;
+        }
+        .card-featured-timeline {
+            border-top: 4px solid #0080FF;
+            box-shadow: 0 10px 25px rgba(0, 128, 255, 0.12);
+        }
+        .timeline-step {
+            position: absolute;
+            top: -16px;
+            left: 20px;
+            width: 32px;
+            height: 32px;
+            background: #004B87;
+            color: #FFFFFF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 15px;
+            box-shadow: 0 4px 10px rgba(0, 75, 135, 0.3);
+        }
+        .card-featured-timeline .timeline-step {
+            background: #0080FF;
+        }
+        .timeline-phase {
+            font-size: 11px;
+            font-weight: 800;
+            color: #0066CC;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .timeline-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #0B1E36;
+            margin-bottom: 8px;
+        }
+        .timeline-desc {
+            font-size: 13.5px;
+            color: #4A607A;
+            line-height: 1.5;
+        }
+
+        /* Capa Estilo */
+        .slide-capa {
+            justify-content: space-between;
+        }
+        .capa-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logos-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .logo-fab {
+            height: 52px;
+            width: auto;
+        }
+        .logo-gap {
+            height: 52px;
+            width: auto;
+        }
+        .logo-divider {
+            width: 1px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .capa-meta {
+            display: flex;
+            gap: 10px;
+        }
+        .badge {
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .badge-gold {
+            background: rgba(212, 175, 55, 0.2);
+            color: #F1D77A;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+        .badge-cyan {
+            background: rgba(0, 194, 255, 0.2);
+            color: #5CE1E6;
+            border: 1px solid rgba(0, 194, 255, 0.4);
+        }
+        .eyebrow-accent {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 2.5px;
+            color: #00C2FF;
+            margin-bottom: 14px;
+        }
+        .capa-title {
+            font-size: 54px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+            margin-bottom: 12px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #D4E4F7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .capa-subtitle {
+            font-size: 25px;
+            font-weight: 600;
+            color: #92BCEB;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+        .capa-desc {
+            font-size: 16.5px;
+            color: #C0D6F0;
+            line-height: 1.6;
+            max-width: 80%;
+        }
+        .capa-footer {
+            display: grid;
+            grid-template-columns: 1.5fr 1.5fr 1fr;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 20px;
+        }
+        .footer-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .footer-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #6C8DAE;
+            letter-spacing: 1px;
+        }
+        .footer-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        /* Encerramento Estilo */
+        .slide-encerramento {
+            justify-content: space-between;
+        }
+        .slide-header-dark {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .encerramento-content {
+            text-align: center;
+            max-width: 85%;
+            margin: 0 auto;
+        }
+        .encerramento-title {
+            font-size: 40px;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #FFFFFF;
+        }
+        .encerramento-subtitle {
+            font-size: 19px;
+            color: #A3C5EA;
+            line-height: 1.5;
+            margin-bottom: 34px;
+        }
+        .encerramento-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-gap: 20px;
+            text-align: left;
+        }
+        .contato-card {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 18px 22px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .contato-icon {
+            font-size: 28px;
+        }
+        .contato-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .contato-label {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #00C2FF;
+        }
+        .contato-val {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+        .encerramento-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 14px;
+            font-size: 13px;
+            color: #6C8DAE;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide slide-dark slide-capa">
+        <div class="capa-bg-glow"></div>
+        <div class="capa-header">
+            <div class="logos-group">
+                <img src="img/fab_logo.png" alt="FAB" class="logo-fab">
+                <div class="logo-divider"></div>
+                <img src="img/gap_logo.png" alt="GAP-BR" class="logo-gap">
+            </div>
+            <div class="capa-meta">
+                <span class="badge badge-gold">MÓDULO INTEGRADO SISCONT / GAP-BR</span>
+                <span class="badge badge-cyan">VERSÃO 2.0</span>
+            </div>
+        </div>
+
+        <div class="capa-content">
+            <div class="eyebrow-accent">GESTÃO CONTRATUAL MODERNA &bull; GAP-BR</div>
+            <h1 class="capa-title">LIVRO DO FISCAL DIGITAL</h1>
+            <p class="capa-subtitle">Praticidade, Centralização e Segurança Jurídica na Gestão de Contratos</p>
+            <p class="capa-desc">
+                Conheça a plataforma oficial do GAP-BR para registro, acompanhamento de ocorrências contratuais
+                e prestação de contas mensal, em cumprimento à Lei nº 14.133/2021 e à NPA 009/SCON/2025.
+            </p>
+        </div>
+
+        <div class="capa-footer">
+            <div class="footer-col">
+                <span class="footer-label">ELABORAÇÃO</span>
+                <span class="footer-value">Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            </div>
+            <div class="footer-col">
+                <span class="footer-label">FINALIDADE</span>
+                <span class="footer-value">Divulgação Institucional e Alinhamento Operacional</span>
+            </div>
+            <div class="footer-col">
+                <span class="footer-label">DATA</span>
+                <span class="footer-value">Outubro de 2026</span>
+            </div>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-red">DIAGNÓSTICO INSTITUCIONAL</span>
+                <h2 class="slide-title">Os Riscos Invisíveis do Método "Por Conta Própria"</h2>
+                <p class="slide-subtitle">Anotar ocorrências em planilhas soltas, documentos Word ou papel expõe o fiscal e a Administração a riscos graves.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-2x2">
+            <div class="card card-alert">
+                <div class="card-icon icon-danger">📁</div>
+                <div class="card-content">
+                    <h3 class="card-title text-danger">Arquivos Dispersos e Descentralizados</h3>
+                    <p class="card-desc">Planilhas Excel e arquivos Word salvos em pastas locais ou e-mails pessoais. Sem padronização institucional, com alto risco de perda por falha técnica de hardware ou formatação indevida.</p>
+                </div>
+            </div>
+
+            <div class="card card-alert">
+                <div class="card-icon icon-danger">🔄</div>
+                <div class="card-content">
+                    <h3 class="card-title text-danger">Perda da Memória com a Rotatividade</h3>
+                    <p class="card-desc">Com a transferência ou movimentação de militares e servidores, o histórico das falhas se perde. O novo fiscal assume o contrato sem saber o que já foi notificado ou reiteradamente descumprido.</p>
+                </div>
+            </div>
+
+            <div class="card card-alert">
+                <div class="card-icon icon-danger">⚖️</div>
+                <div class="card-content">
+                    <h3 class="card-title text-danger">Fragilidade Probatória perante o TCU</h3>
+                    <p class="card-desc">Anotações em gaveta ou cadernos não possuem data certa nem contemporaneidade atestada. O TCU não aceita relatórios fabricados retroativamente após a ocorrência de prejuízos ao erário.</p>
+                </div>
+            </div>
+
+            <div class="card card-alert">
+                <div class="card-icon icon-danger">⏳</div>
+                <div class="card-content">
+                    <h3 class="card-title text-danger">Sobrecarga e Retrabalho na Prestação</h3>
+                    <p class="card-desc">Todo fim de mês vira uma corrida contra o tempo: compilar anotações avulsas, diagramar relatórios manualmente e trocar memorandos e ofícios para justificar dados à ACI.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer-callout callout-warning">
+            <span class="callout-icon">⚠️</span>
+            <div class="callout-text"><strong>Atenção:</strong> O método manual parece cômodo no dia a dia, mas quando uma fiscalização do TCU ou CISET é deflagrada, a ausência de registro contemporâneo institucional pode gerar responsabilização pessoal do fiscal.</div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 2 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">TRANSFORMAÇÃO DIGITAL</span>
+                <h2 class="slide-title">A Solução Institucional: Por Que Migrar para o SISCONT?</h2>
+                <p class="slide-subtitle">Da gestão artesanal dispersa para uma plataforma corporativa integrada, moderna e segura.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-3col">
+            <div class="card card-benefit">
+                <div class="card-pill">SEGURANÇA DO FISCAL</div>
+                <div class="card-icon icon-primary">🛡️</div>
+                <h3 class="card-title">Proteção Funcional</h3>
+                <p class="card-desc">O fiscal tem a garantia de que cada fato foi formalmente registrado no banco de dados corporativo com carimbo de tempo, cumprindo integralmente o art. 117 da Lei 14.133/21.</p>
+                <ul class="benefit-list">
+                    <li>Registro imutável e seguro</li>
+                    <li>Blindagem contra omissão culposa</li>
+                    <li>Respaldo perante órgãos de controle</li>
+                </ul>
+            </div>
+
+            <div class="card card-benefit card-featured">
+                <div class="card-pill pill-gold">PRATICIDADE REAL</div>
+                <div class="card-icon icon-gold">⚡</div>
+                <h3 class="card-title">Rotina Sem Complicações</h3>
+                <p class="card-desc">A anotação de ocorrências técnicas e administrativas é feita em formulário guiado de poucos campos. O sistema cuida da ordenação, consolidação e geração de relatórios.</p>
+                <ul class="benefit-list">
+                    <li>Fim da edição manual em Word/Excel</li>
+                    <li>Geração do PDF oficial em 1 clique</li>
+                    <li>Interface limpa e responsiva</li>
+                </ul>
+            </div>
+
+            <div class="card card-benefit">
+                <div class="card-pill">GOVERNANÇA GAP-BR</div>
+                <div class="card-icon icon-primary">🏛️</div>
+                <h3 class="card-title">Inteligência Institucional</h3>
+                <p class="card-desc">A ACI e o Ordenador de Despesas acompanham a saúde dos contratos em tempo real, permitindo ações corretivas imediatas antes do encerramento do contrato.</p>
+                <ul class="benefit-list">
+                    <li>Controle concomitante proativo</li>
+                    <li>Trâmites integrados sem ofícios</li>
+                    <li>Prontidão total para auditorias</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 3 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">ARQUITETURA DA SOLUÇÃO</span>
+                <h2 class="slide-title">Os Quatro Pilares do Livro do Fiscal Digital</h2>
+                <p class="slide-subtitle">Fundamentos estruturantes que transformam a fiscalização em um processo transparente, rápido e auditável.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-2x2">
+            <div class="card card-pilar">
+                <div class="pilar-num">01</div>
+                <div class="pilar-content">
+                    <h3 class="pilar-title">Praticidade Operacional</h3>
+                    <p class="pilar-desc">Lançamento de ocorrências técnicas e administrativas a qualquer momento, de forma contínua e sem necessidade de aguardar o final do mês. Formulário inteligente com orientações normativas.</p>
+                </div>
+            </div>
+
+            <div class="card card-pilar">
+                <div class="pilar-num">02</div>
+                <div class="pilar-content">
+                    <h3 class="pilar-title">Centralização &amp; Memória Viva</h3>
+                    <p class="pilar-desc">Todos os registros são salvos em banco de dados institucional. A troca de fiscais não interrompe nem prejudica o acompanhamento histórico das penalidades e do comportamento do fornecedor.</p>
+                </div>
+            </div>
+
+            <div class="card card-pilar">
+                <div class="pilar-num">03</div>
+                <div class="pilar-content">
+                    <h3 class="pilar-title">Diálogo Concomitante com a ACI</h3>
+                    <p class="pilar-desc">Canal de trâmites exclusivo entre fiscal e equipe de auditoria. Orientações e devoluções para saneamento preventivo trafegam diretamente no sistema, sem burocracia de ofícios paralelos.</p>
+                </div>
+            </div>
+
+            <div class="card card-pilar">
+                <div class="pilar-num">04</div>
+                <div class="pilar-content">
+                    <h3 class="pilar-title">Relatórios &amp; Prontidão para Auditorias</h3>
+                    <p class="pilar-desc">Geração imediata do Livro do Fiscal padronizado em PDF (espelho SILOMS) para anexação ao SEI e extração de dados analíticos para prestação de contas ao TCU e CISET.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 4 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">PILAR 1 &bull; PRATICIDADE OPERACIONAL</span>
+                <h2 class="slide-title">Registro Simples, Rápido e Sem Burocracia</h2>
+                <p class="slide-subtitle">A anotação diária foi simplificada para caber com naturalidade na rotina operacional do fiscal.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-3col">
+            <div class="card card-step">
+                <div class="step-badge">PASSO 1</div>
+                <h3 class="step-title">Aconteceu o Fato? Registre na Hora</h3>
+                <p class="step-desc">Identificou uma falha na execução? Acesse o painel de ocorrências e clique em <strong>+ Nova Ocorrência</strong>. O formulário guiado solicita apenas os dados essenciais (data, tipo, gravidade e ações).</p>
+            </div>
+
+            <div class="card card-step">
+                <div class="step-badge">PASSO 2</div>
+                <h3 class="step-title">Acompanhe a Resolução</h3>
+                <p class="step-desc">A empresa sanou o problema dentro do prazo? Edite o registro para status <strong>"Resolvido"</strong> e documente a ação corretiva adotada. Não há necessidade de criar novos arquivos.</p>
+            </div>
+
+            <div class="card card-step">
+                <div class="step-badge">PASSO 3</div>
+                <h3 class="step-title">Consolidação Automática</h3>
+                <p class="step-desc">Chega de gastar horas compilando dados no final do mês. As ocorrências registradas ao longo do período já estão organizadas cronologicamente e prontas para o ateste mensal.</p>
+            </div>
+        </div>
+
+        <div class="slide-footer-callout callout-info">
+            <span class="callout-icon">💡</span>
+            <div class="callout-text"><strong>Fim dos Rótulos Punitivos:</strong> Na versão atual, o sistema aboliu badges como "Tempestivo" ou "Extemporâneo". O foco total é na qualidade técnica e completude da anotação, garantindo tranquilidade ao fiscal.</div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 5 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">INTERFACE DO SISTEMA</span>
+                <h2 class="slide-title">Painel Central de Ocorrências: Tudo em uma Única Tela</h2>
+                <p class="slide-subtitle">Visão panorâmica de todas as anotações do contrato, com status dinâmico e controles acessíveis.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-desc">
+                        <h4>Visão Cronológica Integrada</h4>
+                        <p>Ocorrências técnicas e administrativas agrupadas pelo mês do fato, permitindo consulta ágil ao histórico de fiscalização.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🟢</div>
+                    <div class="feature-desc">
+                        <h4>Status Imediato de Resolução</h4>
+                        <p>Destaque visual entre ocorrências pendentes de saneamento e falhas regularizadas pela contratada.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">✏️</div>
+                    <div class="feature-desc">
+                        <h4>Ações Diretas em 1 Clique</h4>
+                        <p>Botões intuitivos de edição (lápis) e exclusão rápida para retificar erros de lançamento com total autonomia.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">SISCONT &bull; Gestão de Ocorrências Contratuais</span>
+                    </div>
+                    <img src="img/v2_10_painel_consolidado.png" alt="Painel de Ocorrências" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 6 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">PILAR 2 &bull; CENTRALIZAÇÃO E GOVERNANÇA</span>
+                <h2 class="slide-title">A Memória Contratual Pertence ao GAP-BR, Não à Gaveta</h2>
+                <p class="slide-subtitle">Como o banco de dados corporativo garante a perenidade das informações e protege a gestão pública.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-3col">
+            <div class="card card-feature">
+                <div class="feature-header-icon">🔄</div>
+                <h3 class="card-title">Transição Transparente na Passagem de Função</h3>
+                <p class="card-desc">Quando um fiscal é movimentado ou substituído, o novo titular encontra o histórico completo já registrado: notificações formais, prazos concedidos, penalidades sugeridas e pendências em aberto.</p>
+            </div>
+
+            <div class="card card-feature">
+                <div class="feature-header-icon">🔒</div>
+                <h3 class="card-title">Segurança Institucional e Integridade</h3>
+                <p class="card-desc">Todos os registros são salvos no banco central da Força Aérea Brasileira, com controle de acesso, cópias de segurança automáticas e trilha de auditoria para cada ação executada.</p>
+            </div>
+
+            <div class="card card-feature">
+                <div class="feature-header-icon">📊</div>
+                <h3 class="card-title">Rastreabilidade Inquestionável</h3>
+                <p class="card-desc">Em caso de processo sancionatório ou rescisão contratual, todos os fatos estão formalmente registrados com datas e números de processos NUP/SEI, tornando a defesa da Administração robusta.</p>
+            </div>
+        </div>
+
+        <div class="slide-footer-callout callout-success">
+            <span class="callout-icon">✅</span>
+            <div class="callout-text"><strong>Continuidade Administrativa:</strong> Nenhum conhecimento sobre a prestação do serviço se perde. O histórico do contrato é um patrimônio do GAP-BR e está sempre disponível para consulta imediata.</div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 7 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">PILAR 3 &bull; CONTROLE CONCOMITANTE</span>
+                <h2 class="slide-title">Diálogo Direto com a ACI: Apoio Preventivo ao Fiscal</h2>
+                <p class="slide-subtitle">O controle interno atua como parceiro estratégico para evitar que falhas formais se transformem em penalidades.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-3col">
+            <div class="card card-benefit">
+                <div class="card-pill">COMUNICAÇÃO DIRETA</div>
+                <div class="card-icon icon-primary">💬</div>
+                <h3 class="card-title">Canal Exclusivo de Trâmites</h3>
+                <p class="card-desc">O novo campo de <strong>Observações para a ACI</strong> permite enviar recados, esclarecimentos e justificativas diretamente aos auditores, sem poluir o texto oficial do Livro do Fiscal.</p>
+            </div>
+
+            <div class="card card-benefit card-featured">
+                <div class="card-pill pill-gold">CORREÇÃO PREVENTIVA</div>
+                <div class="card-icon icon-gold">🛠️</div>
+                <h3 class="card-title">Saneamento Sem Burocracia</h3>
+                <p class="card-desc">Se a ACI identificar uma omissão (ex: falta de NUP da notificação), o Livro é devolvido com apontamento claro. O fiscal complementa o dado e reenvia no próprio sistema, sem troca de ofícios.</p>
+            </div>
+
+            <div class="card card-benefit">
+                <div class="card-pill">SEGURANÇA JURÍDICA</div>
+                <div class="card-icon icon-primary">📜</div>
+                <h3 class="card-title">Homologação Formal</h3>
+                <p class="card-desc">Com a validação da ACI, o Livro do Fiscal recebe o status oficial de <strong>"Conformidade (OK!)"</strong>, atestando que a prestação de contas mensal atendeu a todos os critérios regulamentares.</p>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 8 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">INTERFACE DO SISTEMA</span>
+                <h2 class="slide-title">Modal de Ateste: Formalização Segura e Canal com a ACI</h2>
+                <p class="slide-subtitle">Ateste ágil com declaração legal explícita e canal dedicado de troca de informações com a auditoria.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">📝</div>
+                    <div class="feature-desc">
+                        <h4>Declaração Legal de Conformidade</h4>
+                        <p>Texto padronizado em estrito cumprimento ao art. 117 da Lei nº 14.133/2021, conferindo plena validade jurídica ao ato.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">💬</div>
+                    <div class="feature-desc">
+                        <h4>Campo Dedicado para a ACI</h4>
+                        <p>Canal exclusivo para tirar dúvidas ou justificar situações peculiares diretamente aos auditores, sem duplicar dados no livro formal.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🚀</div>
+                    <div class="feature-desc">
+                        <h4>Envio Imediato com 1 Clique</h4>
+                        <p>O sistema atualiza o status para "Preenchido / Entregue" e notifica a equipe de controle interno para auditoria mensal.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">SISCONT &bull; Confirmação de Ateste e Envio</span>
+                    </div>
+                    <img src="img/v2_16_modal_tramites.png" alt="Modal de Trâmites" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 9 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">PILAR 4 &bull; AUDITORIA E INTELIGÊNCIA DE DADOS</span>
+                <h2 class="slide-title">Prontidão Total para Auditorias do TCU e CISET</h2>
+                <p class="slide-subtitle">Dados organizados em banco relacional permitem gerar documentos oficiais e relatórios gerenciais em segundos.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-3col">
+            <div class="card card-feature">
+                <div class="feature-header-icon">📑</div>
+                <h3 class="card-title">Espelho SILOMS em 1 Clique</h3>
+                <p class="card-desc">Geração imediata do Livro do Fiscal em PDF diagramado com termo de abertura, encerramento, histórico de ocorrências e declaração de conformidade pronto para juntada ao processo SEI.</p>
+            </div>
+
+            <div class="card card-feature">
+                <div class="feature-header-icon">📈</div>
+                <h3 class="card-title">Relatórios Gerenciais para a Direção</h3>
+                <p class="card-desc">A Assessoria de Controle Interno e a Direção do GAP-BR podem extrair indicadores consolidados de desempenho das empresas, reincidência de faltas e efetividade das notificações aplicadas.</p>
+            </div>
+
+            <div class="card card-feature">
+                <div class="feature-header-icon">🛡️</div>
+                <h3 class="card-title">Segurança Probatória Inquestionável</h3>
+                <p class="card-desc">Em caso de auditoria do TCU, o GAP-BR apresenta dados objetivos, contemporâneos e homologados pela ACI, eliminando o risco de apontamentos por falta de acompanhamento contratual.</p>
+            </div>
+        </div>
+
+        <div class="slide-footer-callout callout-info">
+            <span class="callout-icon">💡</span>
+            <div class="callout-text"><strong>Fim do Desespero em Auditorias:</strong> Chega de passar dias procurando arquivos antigos ou formatando relatórios manuais sob pressão. O sistema entrega o histórico completo com um simples clique.</div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 10 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">DOCUMENTO OFICIAL PADRONIZADO</span>
+                <h2 class="slide-title">Espelho Oficial do SILOMS: Documento com Força Probatória</h2>
+                <p class="slide-subtitle">Documento formal padronizado, chancelado pela ACI e pronto para juntada no processo de prestação de contas no SEI.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">🏛️</div>
+                    <div class="feature-desc">
+                        <h4>Estrutura Institucional Completa</h4>
+                        <p>Termo de Abertura com número do contrato, empresa contratada, objeto, vigência e designação formal do fiscal.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📋</div>
+                    <div class="feature-desc">
+                        <h4>Quadro Normativo de Ocorrências</h4>
+                        <p>Tabela detalhada contendo data do fato, tipo de falha, gravidade, descrição, determinações à empresa e prazo de resolução.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">✅</div>
+                    <div class="feature-desc">
+                        <h4>Chancela e Homologação da ACI</h4>
+                        <p>Declaração legal com data/hora de ateste eletrônico e selo de conformidade da auditoria interna do GAP-BR.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">PDF Oficial &bull; Livro do Fiscal Homologado</span>
+                    </div>
+                    <img src="img/v2_25_pdf_homologado.png" alt="PDF do Livro do Fiscal" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 11 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">QUADRO COMPARATIVO</span>
+                <h2 class="slide-title">Método Manual "Por Conta Própria" vs. Livro Digital SISCONT</h2>
+                <p class="slide-subtitle">Comparativo direto em cinco critérios fundamentais de gestão, organização e conformidade.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body">
+            <table class="table-comparativo">
+                <thead>
+                    <tr>
+                        <th style="width: 22%;">Critério de Análise</th>
+                        <th style="width: 39%;" class="th-manual">❌ Método Manual "Por Conta Própria"</th>
+                        <th style="width: 39%;" class="th-digital">✅ Livro do Fiscal Digital (SISCONT)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="td-crit"><strong>Armazenamento dos Dados</strong></td>
+                        <td class="td-manual">Planilhas e textos em disco local ou e-mail pessoal. Alto risco de perda e sem backup corporativo.</td>
+                        <td class="td-digital"><strong>Banco de dados corporativo centralizado</strong> com segurança institucional e backup diário.</td>
+                    </tr>
+                    <tr>
+                        <td class="td-crit"><strong>Passagem de Função</strong></td>
+                        <td class="td-manual">O novo fiscal precisa garimpar arquivos antigos; grande parte do histórico se perde com a saída do titular.</td>
+                        <td class="td-digital"><strong>Continuidade imediata:</strong> o novo fiscal nomeado acessa todo o histórico do contrato em segundos.</td>
+                    </tr>
+                    <tr>
+                        <td class="td-crit"><strong>Diálogo com a ACI</strong></td>
+                        <td class="td-manual">Troca burocrática de ofícios, memorandos ou mensagens informais de WhatsApp sujeitas a extravio.</td>
+                        <td class="td-digital"><strong>Timeline de trâmites integrada</strong> no próprio sistema, com registro claro de orientações e saneamento.</td>
+                    </tr>
+                    <tr>
+                        <td class="td-crit"><strong>Elaboração de Relatórios</strong></td>
+                        <td class="td-manual">Horas gastas formatando tabelas no Word e compilando dados soltos todo final de mês.</td>
+                        <td class="td-digital"><strong>1 clique para gerar o PDF oficial</strong> diagramado segundo o modelo SILOMS para juntada no SEI.</td>
+                    </tr>
+                    <tr>
+                        <td class="td-crit"><strong>Segurança perante o TCU</strong></td>
+                        <td class="td-manual">Fragilidade probatória por falta de carimbo de tempo institucional. Risco de responsabilização por omissão.</td>
+                        <td class="td-digital"><strong>Blindagem jurídica total:</strong> contemporaneidade atestada e homologação formal pelo Controle Interno.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 12 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">VALOR AGREGADO</span>
+                <h2 class="slide-title">Ganhos Concretos para Toda a Cadeia de Governança</h2>
+                <p class="slide-subtitle">Uma solução que gera valor real desde a ponta da execução até a alta administração do GAP-BR.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-3col">
+            <div class="card card-actor">
+                <div class="actor-header">
+                    <span class="actor-icon">👷‍♂️</span>
+                    <h3 class="actor-title">Para o Fiscal</h3>
+                </div>
+                <ul class="actor-benefits">
+                    <li><strong>Economia de tempo:</strong> lançamento rápido sem complicação</li>
+                    <li><strong>Formulários guiados:</strong> impossível esquecer dados essenciais</li>
+                    <li><strong>Segurança jurídica:</strong> comprovação formal de seu zelo funcional</li>
+                    <li><strong>Apoio proativo:</strong> canal direto com a ACI para tirar dúvidas</li>
+                </ul>
+            </div>
+
+            <div class="card card-actor card-featured">
+                <div class="actor-header">
+                    <span class="actor-icon">🎖️</span>
+                    <h3 class="actor-title">Para o Gestor / Ordenador</h3>
+                </div>
+                <ul class="actor-benefits">
+                    <li><strong>Visão panorâmica:</strong> saúde de todos os contratos em tempo real</li>
+                    <li><strong>Subsídios robustos:</strong> provas para aplicação de penalidades</li>
+                    <li><strong>Mitigação de riscos:</strong> prevenção de pagamentos indevidos</li>
+                    <li><strong>Decisões ágeis:</strong> dados consolidados para repactuação ou rescisão</li>
+                </ul>
+            </div>
+
+            <div class="card card-actor">
+                <div class="actor-header">
+                    <span class="actor-icon">🏛️</span>
+                    <h3 class="actor-title">Para a ACI &amp; Órgãos de Controle</h3>
+                </div>
+                <ul class="actor-benefits">
+                    <li><strong>Controle concomitante:</strong> orientação antes do problema crescer</li>
+                    <li><strong>Relatórios estruturados:</strong> atendimento imediato ao TCU/CISET</li>
+                    <li><strong>Trilha de auditoria 100% digital:</strong> transparência absoluta</li>
+                    <li><strong>Conformidade plena:</strong> atendimento à Lei 14.133/21 e NPA 009</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 13 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">ROTINA OPERACIONAL</span>
+                <h2 class="slide-title">Como Encaixar o Livro Digital na Sua Rotina Mensal</h2>
+                <p class="slide-subtitle">Quatro passos práticos e sem sobrecarga para manter a fiscalização sempre em dia.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-4col">
+            <div class="card card-timeline">
+                <div class="timeline-step">1</div>
+                <div class="timeline-phase">DURANTE O MÊS</div>
+                <h4 class="timeline-title">Lançamento Contínuo</h4>
+                <p class="timeline-desc">Ocorreu uma falha técnica ou administrativa? Registre imediatamente no sistema. A empresa corrigiu? Atualize para status "Resolvido".</p>
+            </div>
+
+            <div class="card card-timeline">
+                <div class="timeline-step">2</div>
+                <div class="timeline-phase">FIM DO MÊS</div>
+                <h4 class="timeline-title">Revisão Rápida</h4>
+                <p class="timeline-desc">No último dia útil, abra o painel e faça uma revisão visual para checar se todos os eventos e notificações do período foram anotados.</p>
+            </div>
+
+            <div class="card card-timeline card-featured-timeline">
+                <div class="timeline-step">3</div>
+                <div class="timeline-phase">ATÉ O 2º DIA ÚTIL</div>
+                <h4 class="timeline-title">Ateste &amp; Envio à ACI</h4>
+                <p class="timeline-desc">Com a virada do mês, clique em <strong>"Finalizar e Atestar"</strong>, insira observações para a ACI (se houver) e conclua a prestação mensal.</p>
+            </div>
+
+            <div class="card card-timeline">
+                <div class="timeline-step">4</div>
+                <div class="timeline-phase">PÓS-ATESTADO</div>
+                <h4 class="timeline-title">Auditoria &amp; PDF</h4>
+                <p class="timeline-desc">A ACI audita os lançamentos. Havendo ajustes, saneie no próprio sistema. Estando tudo certo, baixe o PDF oficial homologado para o SEI.</p>
+            </div>
+        </div>
+
+        <div class="slide-footer-callout callout-success">
+            <span class="callout-icon">💡</span>
+            <div class="callout-text"><strong>Regra de Ouro:</strong> Não deixe para anotar tudo no final do mês! A anotação contemporânea economiza seu tempo e garante que nenhuma determinação importante seja esquecida.</div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 14 / 15</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-dark slide-encerramento">
+        <div class="capa-bg-glow"></div>
+        <div class="slide-header-dark">
+            <div class="logos-group">
+                <img src="img/fab_logo.png" alt="FAB" class="logo-fab">
+                <div class="logo-divider"></div>
+                <img src="img/gap_logo.png" alt="GAP-BR" class="logo-gap">
+            </div>
+            <span class="badge badge-gold">GOVERNANÇA &bull; SEGURANÇA &bull; RESULTADOS</span>
+        </div>
+
+        <div class="encerramento-content">
+            <h2 class="encerramento-title">Modernize Sua Fiscalização.<br>Conte com a Assessoria de Controle Interno.</h2>
+            <p class="encerramento-subtitle">
+                Fiscalizar com tecnologia é proteger o patrimônio público, valorizar sua atuação como fiscal
+                e blindar o GAP-BR contra riscos e sanções.
+            </p>
+
+            <div class="encerramento-cards">
+                <div class="contato-card">
+                    <div class="contato-icon">🌐</div>
+                    <div class="contato-info">
+                        <span class="contato-label">ACESSO AO SISTEMA</span>
+                        <span class="contato-val">Portal SISCONT / Módulo Execução de Contratos</span>
+                    </div>
+                </div>
+
+                <div class="contato-card">
+                    <div class="contato-icon">📞</div>
+                    <div class="contato-info">
+                        <span class="contato-label">SUPORTE E ORIENTAÇÃO</span>
+                        <span class="contato-val">Assessoria de Controle Interno (ACI / GAP-BR)</span>
+                    </div>
+                </div>
+
+                <div class="contato-card">
+                    <div class="contato-icon">📖</div>
+                    <div class="contato-info">
+                        <span class="contato-label">MATERIAL DE APOIO</span>
+                        <span class="contato-val">Guia Ilustrado do Livro do Fiscal v2.0 (Passo a Passo)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="encerramento-footer">
+            <span>Comando da Aeronáutica &bull; Grupamento de Apoio de Brasília &bull; ACI</span>
+            <span>Slide 15 / 15</span>
+        </div>
+    </div>
+    
+</body>
+</html>

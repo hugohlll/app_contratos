@@ -157,5 +157,20 @@ class PortalRenderingTest(TestCase):
         self.assertContains(response, 'Livro do Fiscal')
         self.assertContains(response, 'Registro / Edição de Ocorrências')
 
+    def test_upload_prestacao_exibe_ano_referencia_badge_e_input(self):
+        """Garante que o ano de referência seja exibido na badge e no input do formulário."""
+        hoje = date.today()
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+        mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+        mes_esperado = f"{mes_anterior.month:02d}"
+        ano_esperado = str(mes_anterior.year)
+
+        url_contrato = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
+        res = self.client.get(url_contrato)
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, f"Mês de Referência: {mes_esperado}/{ano_esperado}")
+        self.assertContains(res, f'value="{mes_esperado}/{ano_esperado}"')
+
+
 
 

@@ -362,13 +362,53 @@
                         </button>
                         {% if bloquear_ateste_mes_corrente %}
                         <button type="button" class="btn btn-secondary fw-bold px-4 shadow-sm" disabled title="O ateste e finalização do mês corrente são liberados somente na virada do mês, durante o período da Prestação de Contas Mensal. Continue registrando ocorrências tempestivamente como rascunho.">
-                            <i class="bi bi-lock me-1"></i> Finalizar e Atestar Livro (Liberado após {{ mes_referencia|stringformat:"02d" }}/{{ ano_referencia|stringformat:"d" }})
+                            <i class="bi bi-lock me-1"></i> Finalizar e Atestar Livro (Liberado após {{ mes_referencia|stringformat:"02d" }}/{{ ano_referencia|stringformat:"s" }})
                         </button>
                         {% else %}
                         <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" id="btnFinalizarLivro">
                             <i class="bi bi-check-all me-1"></i> Finalizar e Atestar Livro do Mês
                         </button>
                         {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DE CONFIRMAÇÃO DE FINALIZAÇÃO E OBSERVAÇÃO PARA A ACI (TRÂMITES) -->
+        <div class="modal fade" id="modalConfirmarFinalizacao" tabindex="-1" aria-labelledby="modalConfirmarFinalizacaoLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header bg-success text-white rounded-top-4">
+                        <h5 class="modal-title fw-bold" id="modalConfirmarFinalizacaoLabel">
+                            <i class="bi bi-check2-circle me-2"></i>Finalizar e Atestar Livro do Fiscal
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-light border d-flex align-items-center mb-3 py-2">
+                            <i class="bi bi-info-circle-fill text-primary fs-4 me-3"></i>
+                            <div class="small">
+                                Você está finalizando o Livro do Fiscal ref. <strong>{{ mes_referencia|stringformat:"02d" }}/{{ ano_referencia|stringformat:"s" }}</strong> do contrato <strong>{{ contrato.numero }}</strong>.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_observacao_tramite" class="form-label fw-bold small text-dark">
+                                <i class="bi bi-chat-dots me-1 text-primary"></i>Observações para a ACI (Opcional):
+                            </label>
+                            <textarea id="id_observacao_tramite" name="observacao_tramite" class="form-control" rows="3" placeholder="Caso deseje, insira aqui informações ou esclarecimentos para a equipe da ACI durante os trâmites deste mês..."></textarea>
+                            <div class="form-text small text-muted mt-1">
+                                <i class="bi bi-shield-check text-muted me-1"></i>Esta mensagem é destinada aos trâmites com a ACI e será exibida na timeline de trâmites. Ela não altera as observações internas do documento do Livro do Fiscal.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light rounded-bottom-4 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-arrow-left me-1"></i> Voltar ao Formulário
+                        </button>
+                        <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" id="btnConfirmarFinalizacaoModal">
+                            <i class="bi bi-check-all me-1"></i> Confirmar e Finalizar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -561,6 +601,18 @@ $(document).ready(function() {
             atualizarSemOcorrencias();
         }
 
+        const modalEl = document.getElementById('modalConfirmarFinalizacao');
+        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        } else {
+            $('#acao_submit').val('finalizar');
+            $('#formLivroFiscal').submit();
+        }
+    });
+
+    $('#btnConfirmarFinalizacaoModal').on('click', function() {
+        $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Finalizando...');
         $('#acao_submit').val('finalizar');
         $('#formLivroFiscal').submit();
     });

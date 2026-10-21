@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Guia Ilustrado — Livro do Fiscal Digital (Apresentação em Slides) — GAP-BR</title>
+    <title>Guia Ilustrado do Livro do Fiscal Digital — Versão 2.0 (GAP-BR / ACI)</title>
     <style>
         @page {
             size: A4 landscape;
@@ -30,7 +30,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: #1e293b;
             line-height: 1.35;
-            font-size: 9.5pt;
+            font-size: 9pt;
             background: #ffffff;
             margin: 0;
             padding: 0;
@@ -64,9 +64,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 2px solid #0d6efd;
-            padding-bottom: 5px;
-            margin-bottom: 6px;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 4px;
+            margin-bottom: 5px;
             flex-shrink: 0;
         }
 
@@ -83,7 +83,7 @@
         }
 
         .slide-title-group h2 {
-            font-size: 13pt;
+            font-size: 12pt;
             font-weight: 800;
             color: #0f172a;
             margin: 0;
@@ -91,12 +91,12 @@
         }
 
         .slide-title-group .slide-subtitle {
-            font-size: 8pt;
+            font-size: 7.5pt;
             color: #64748b;
             font-weight: 600;
             margin-top: 1px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.03em;
         }
 
         .slide-header-right {
@@ -106,36 +106,23 @@
         }
 
         .badge-chapter {
-            font-size: 8pt;
+            font-size: 7.5pt;
             font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 20px;
+            padding: 2px 8px;
+            border-radius: 16px;
             background: #e0f2fe;
             color: #0369a1;
             border: 1px solid #bae6fd;
             text-transform: uppercase;
         }
 
-        .badge-case {
-            font-size: 8pt;
+        .badge-step-num {
+            font-size: 7.5pt;
             font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 20px;
-            background: #f1f5f9;
-            color: #334155;
-            border: 1px solid #cbd5e1;
-        }
-
-        .badge-case.case1 {
-            background: #dcfce7;
-            color: #15803d;
-            border-color: #bbf7d0;
-        }
-
-        .badge-case.case2 {
-            background: #fef3c7;
-            color: #b45309;
-            border-color: #fde68a;
+            padding: 2px 8px;
+            border-radius: 16px;
+            background: #1e293b;
+            color: #ffffff;
         }
 
         /* Área Principal de Conteúdo do Slide */
@@ -146,7 +133,7 @@
             justify-content: center;
             align-items: center;
             min-height: 0;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
 
         /* Container de 1 imagem ampla (1 Passo por Slide) */
@@ -159,7 +146,7 @@
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            padding: 6px 10px;
+            padding: 5px 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             overflow: hidden;
         }
@@ -179,13 +166,16 @@
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
-            padding: 6px 12px;
+            padding: 5px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .pins-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 8px 14px;
             align-items: center;
         }
 
@@ -193,20 +183,21 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: 8.5pt;
+            font-size: 8pt;
             color: #1e293b;
+            line-height: 1.25;
         }
 
         .pin-num {
             display: inline-block;
-            width: 18px;
-            height: 18px;
+            width: 17px;
+            height: 17px;
             border-radius: 50%;
             color: #ffffff;
             font-weight: 800;
-            font-size: 8pt;
+            font-size: 7.5pt;
             text-align: center;
-            line-height: 18px;
+            line-height: 17px;
             flex-shrink: 0;
         }
 
@@ -216,47 +207,43 @@
         .pin-b { background: #2563eb; }
 
         .callout-box {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 8.5pt;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 7.5pt;
             display: flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        .callout-info {
-            background: #eff6ff;
-            border-left: 4px solid #2563eb;
-            color: #1e40af;
-        }
-
-        .callout-warn {
-            background: #fffbeb;
-            border-left: 4px solid #f59e0b;
-            color: #92400e;
+            gap: 6px;
+            line-height: 1.3;
         }
 
         .callout-law {
+            background: #eff6ff;
+            border-left: 3px solid #2563eb;
+            color: #1e40af;
+        }
+
+        .callout-tip {
             background: #f0fdf4;
-            border-left: 4px solid #16a34a;
+            border-left: 3px solid #16a34a;
             color: #166534;
         }
 
-        /* Estilos da Capa */
+        /* ESTILOS DA CAPA */
         .cover-slide {
             justify-content: space-between;
             padding: 6mm 10mm;
-            background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #0369a1 100%);
             border: 2px solid #cbd5e1;
             border-radius: 12px;
+            color: #ffffff;
         }
 
         .cover-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 2px solid #0d6efd;
-            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.25);
+            padding-bottom: 6px;
         }
 
         .cover-header img {
@@ -272,7 +259,7 @@
             font-size: 11pt;
             font-weight: 800;
             margin: 0;
-            color: #0f172a;
+            color: #93c5fd;
             letter-spacing: 0.08em;
         }
 
@@ -280,379 +267,348 @@
             font-size: 9.5pt;
             font-weight: 700;
             margin: 2px 0 0;
-            color: #1e3a8a;
+            color: #e2e8f0;
         }
 
         .cover-org h5 {
             font-size: 8pt;
             font-weight: 600;
             margin: 2px 0 0;
-            color: #475569;
+            color: #cbd5e1;
         }
 
         .cover-main {
             text-align: center;
             margin: auto 0;
-            padding: 4mm 0;
+            padding: 2mm 0;
         }
 
         .cover-tag {
             display: inline-block;
-            font-size: 8.5pt;
+            font-size: 8pt;
             font-weight: 800;
-            letter-spacing: 0.1em;
-            color: #1e40af;
-            background: #dbeafe;
-            padding: 3px 14px;
+            letter-spacing: 0.08em;
+            color: #bae6fd;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 3px 12px;
             border-radius: 20px;
-            margin-bottom: 10px;
-            border: 1px solid #bfdbfe;
+            margin-bottom: 8px;
         }
 
         .cover-main h1 {
-            font-size: 23pt;
+            font-size: 22pt;
             font-weight: 900;
-            color: #0f172a;
-            margin: 0 0 8px;
+            color: #ffffff;
+            margin: 0 0 6px;
             line-height: 1.15;
             letter-spacing: -0.02em;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
 
         .cover-subtitle {
-            font-size: 10pt;
-            color: #475569;
+            font-size: 9.5pt;
+            color: #e0f2fe;
             max-width: 820px;
-            margin: 0 auto 16px;
-            line-height: 1.4;
+            margin: 0 auto 12px;
+            line-height: 1.35;
         }
 
         .cover-badges-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
+            gap: 10px;
             max-width: 950px;
             margin: 0 auto;
         }
 
         .cover-badge-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            backdrop-filter: blur(4px);
             border-radius: 8px;
             padding: 8px 10px;
             display: flex;
             align-items: center;
             gap: 8px;
             text-align: left;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         .cbc-num {
-            font-size: 14pt;
-            color: #0d6efd;
+            font-size: 13pt;
+            color: #38bdf8;
             font-weight: bold;
             flex-shrink: 0;
         }
 
         .cbc-text strong {
             display: block;
-            font-size: 8.5pt;
-            color: #0f172a;
+            font-size: 8pt;
+            color: #ffffff;
         }
 
         .cbc-text span {
-            font-size: 7pt;
-            color: #64748b;
+            font-size: 6.8pt;
+            color: #cbd5e1;
             line-height: 1.2;
             display: block;
         }
 
         .cover-footer {
-            border-top: 1px solid #cbd5e1;
-            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 6px;
             display: flex;
             justify-content: space-between;
-            font-size: 8pt;
-            color: #64748b;
+            font-size: 7.5pt;
+            color: #94a3b8;
         }
 
-        /* Estilos dos Slides Conceituais */
-        .two-cases-grid {
+        /* ESTILOS DO SLIDE 2: LINHA DO TEMPO */
+        .timeline-phases-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            width: 100%;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
             height: 100%;
+            width: 100%;
+            align-items: stretch;
         }
 
-        .case-card {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
+        .phase-card {
+            background: #f8fafc;
             border: 1px solid #e2e8f0;
-        }
-
-        .case1-card {
-            border-top: 4px solid #16a34a;
-            box-shadow: 0 2px 6px rgba(22,163,74,0.08);
-        }
-
-        .case2-card {
-            border-top: 4px solid #f59e0b;
-            box-shadow: 0 2px 6px rgba(245,158,11,0.08);
-        }
-
-        .case-card-header {
-            margin-bottom: 10px;
-        }
-
-        .case-pill {
-            font-size: 7pt;
-            font-weight: 800;
-            padding: 2px 8px;
-            border-radius: 12px;
-            letter-spacing: 0.05em;
-            display: inline-block;
-            margin-bottom: 4px;
-        }
-
-        .case1-pill {
-            background: #dcfce7;
-            color: #15803d;
-        }
-
-        .case2-pill {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-        .case-card-header h3 {
-            font-size: 10.5pt;
-            font-weight: 800;
-            margin: 0;
-            color: #0f172a;
-        }
-
-        .case-steps-list {
+            border-top: 4px solid #2563eb;
+            border-radius: 8px;
+            padding: 10px 8px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            flex-grow: 1;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
 
-        .case-step-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            font-size: 8.5pt;
-            line-height: 1.3;
-        }
-
-        .step-badge {
-            font-size: 7pt;
+        .phase-badge {
+            align-self: flex-start;
+            color: #ffffff;
+            font-size: 6.5pt;
             font-weight: 800;
             padding: 2px 6px;
             border-radius: 4px;
-            flex-shrink: 0;
-            margin-top: 1px;
+            margin-bottom: 4px;
         }
 
-        .step-b1 {
-            background: #dcfce7;
-            color: #15803d;
-            border: 1px solid #bbf7d0;
+        .phase-period {
+            font-size: 7pt;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 4px;
         }
 
-        .step-b2 {
-            background: #fef3c7;
-            color: #b45309;
-            border: 1px solid #fde68a;
+        .phase-card h4 {
+            margin: 0 0 6px 0;
+            font-size: 8.5pt;
+            font-weight: 800;
+            color: #0f172a;
         }
 
-        /* Grade do Slide 3: Tempestividade */
+        .phase-card p {
+            font-size: 7.2pt;
+            line-height: 1.35;
+            color: #334155;
+            margin: 0;
+            flex: 1;
+        }
+
+        .phase-action {
+            margin-top: 6px;
+            padding-top: 5px;
+            border-top: 1px dashed #cbd5e1;
+            font-size: 6.8pt;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        /* ESTILOS DO SLIDE 3: TEMPESTIVIDADE */
         .legal-tempestividade-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-            width: 100%;
+            gap: 12px;
             height: 100%;
+            width: 100%;
         }
 
         .legal-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-top: 4px solid #0d6efd;
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-        }
-
-        .legal-card h3 {
-            font-size: 9.5pt;
-            font-weight: 800;
-            color: #0f172a;
-            margin: 0 0 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .legal-card-body {
-            font-size: 8pt;
-            color: #334155;
-            line-height: 1.35;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            flex-grow: 1;
-        }
-
-        .legal-item {
-            background: #f8fafc;
-            border-left: 3px solid #0d6efd;
-            padding: 6px 8px;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .legal-item strong {
-            color: #0f172a;
-        }
-
-        .concept-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            width: 100%;
-            height: 100%;
-        }
-
-        .concept-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            border-top: 4px solid #2563eb;
             border-radius: 8px;
             padding: 10px;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
 
-        .concept-card h3 {
-            font-size: 10pt;
+        .legal-card h3 {
+            margin: 0 0 6px 0;
+            font-size: 9pt;
             font-weight: 800;
             color: #0f172a;
-            margin: 0 0 6px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 4px;
         }
 
-        .fields-10-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 3px;
-        }
-
-        .field-pill {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 7.5pt;
-            font-weight: 600;
-            color: #334155;
-        }
-
-        .buttons-diff-box {
+        .legal-card-body {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
+            flex: 1;
         }
 
-        .btn-diff-item {
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 8pt;
-        }
-
-        .btn-diff-modal {
-            background: #eff6ff;
-            border-left: 3px solid #2563eb;
-        }
-
-        .btn-diff-page {
-            background: #f0fdf4;
-            border-left: 3px solid #16a34a;
-        }
-
-        .btn-diff-title {
-            font-weight: 800;
-            margin-bottom: 2px;
-            font-size: 8.5pt;
-        }
-
-        .btn-diff-modal .btn-diff-title { color: #1e40af; }
-        .btn-diff-page .btn-diff-title { color: #166534; }
-
-        .btn-diff-desc {
+        .legal-item {
+            font-size: 7.5pt;
+            line-height: 1.35;
             color: #334155;
-            line-height: 1.25;
+        }
+
+        /* ESTILOS DO SLIDE 29: GOVERNANÇA */
+        .governance-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            height: 100%;
+            width: 100%;
+        }
+
+        .gov-col-rules, .gov-col-table {
+            display: flex;
+            flex-direction: column;
         }
 
         .rule-box {
-            display: flex;
-            gap: 8px;
-            align-items: flex-start;
-            background: #fffbeb;
-            border: 1px solid #fde68a;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #2563eb;
             border-radius: 6px;
-            padding: 8px;
-            font-size: 8pt;
-            line-height: 1.3;
+            padding: 5px 8px;
+            margin-bottom: 5px;
         }
 
-        .rule-icon {
-            font-size: 16pt;
-            flex-shrink: 0;
+        .rule-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 2px;
         }
 
-        /* Grade de Boas Práticas do Slide Final */
-        .best-practices-grid-4 {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
+        .rule-num {
+            background: #1e3a8a;
+            color: #ffffff;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7.5pt;
+            font-weight: 800;
+        }
+
+        .rule-header strong {
+            font-size: 7.8pt;
+            color: #0f172a;
+        }
+
+        .rule-box p {
+            margin: 0;
+            font-size: 7.2pt;
+            line-height: 1.25;
+            color: #475569;
+        }
+
+        .gov-table {
             width: 100%;
-            height: 100%;
+            border-collapse: collapse;
+            font-size: 7.2pt;
         }
 
-        .bp-card {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-top: 4px solid #16a34a;
-            border-radius: 8px;
-            padding: 12px;
+        .gov-table th {
+            background: #1e3a8a;
+            color: #ffffff;
+            padding: 4px 6px;
+            text-align: left;
+            font-size: 7.2pt;
+            font-weight: 700;
+        }
+
+        .gov-table td {
+            padding: 4px 6px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .gov-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        .badge-table {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 6.5pt;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .bg-primary { background: #2563eb; }
+        .bg-warning { background: #d97706; }
+        .bg-danger { background: #dc2626; }
+        .bg-info { background: #0284c7; }
+        .bg-success { background: #16a34a; }
+
+        /* ESTILOS DO SLIDE 30: CHECKLIST */
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 14px;
+            height: 100%;
+            width: 100%;
+        }
+
+        .chk-col-list {
             display: flex;
             flex-direction: column;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            gap: 4px;
         }
 
-        .bp-icon {
-            font-size: 18pt;
+        .chk-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 7.3pt;
+            line-height: 1.25;
+            color: #334155;
+        }
+
+        .chk-box {
             color: #16a34a;
-            font-weight: bold;
-            margin-bottom: 4px;
+            font-weight: 900;
+            font-size: 9pt;
+            line-height: 1;
         }
 
-        .bp-card h3 {
-            font-size: 10.5pt;
-            font-weight: 800;
-            color: #14532d;
-            margin: 0 0 6px;
+        .support-card {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 8px 10px;
         }
 
-        .bp-card p {
-            font-size: 8pt;
-            color: #1e3a29;
-            line-height: 1.4;
-            margin: 0;
+        .contact-row {
+            font-size: 7.3pt;
+            color: #1e3a8a;
+            margin-bottom: 3px;
         }
     </style>
 </head>
@@ -672,7 +628,7 @@
         </div>
 
         <div class="cover-main">
-            <span class="cover-tag">MANUAL DE PROCEDIMENTOS OPERACIONAIS &bull; NPA 009/SCON/2025</span>
+            <span class="cover-tag">MANUAL DE PROCEDIMENTOS OPERACIONAIS &bull; NPA 009/SCON/2025 &bull; EDIÇÃO V2.0</span>
             <h1>GUIA ILUSTRADO DO LIVRO DO FISCAL DIGITAL</h1>
             <div class="cover-subtitle">
                 Procedimento Operacional Padronizado de Lançamento de Ocorrências, Fiscalização Tempestiva, Saneamento de Apontamentos e Ateste Mensal no SISCONT
@@ -682,29 +638,29 @@
                 <div class="cover-badge-card">
                     <span class="cbc-num">&check;</span>
                     <div class="cbc-text">
-                        <strong>Tempestividade Assegurada</strong>
-                        <span>Lançamentos em tempo real no mês de execução (Selo Verde)</span>
+                        <strong>Gestão Unificada de Ocorrências</strong>
+                        <span>Painel centralizado com roteamento inteligente pelo fato gerador</span>
                     </div>
                 </div>
                 <div class="cover-badge-card">
                     <span class="cbc-num">&bull;</span>
                     <div class="cbc-text">
-                        <strong>Prevenção Regulatória</strong>
-                        <span>Trava de ateste no mês corrente para evitar fechamento prematuro</span>
+                        <strong>Novo Modal de Ateste & Trâmites</strong>
+                        <span>Canal direto de comunicação com a ACI sem poluir o Livro oficial</span>
                     </div>
                 </div>
                 <div class="cover-badge-card">
                     <span class="cbc-num">&sect;</span>
                     <div class="cbc-text">
-                        <strong>Amparo Normativo</strong>
-                        <span>Conformidade com o art. 117 da Lei 14.133/21 e NPA 009/SCON/2025</span>
+                        <strong>Amparo Normativo na Lei 14.133/21</strong>
+                        <span>Conformidade com o art. 117 e jurisprudência consolidada do TCU</span>
                     </div>
                 </div>
                 <div class="cover-badge-card">
                     <span class="cbc-num">&phone;</span>
                     <div class="cbc-text">
-                        <strong>Auditoria Integrada</strong>
-                        <span>Fluxo de análise preventiva e saneamento documental pela ACI</span>
+                        <strong>Auditoria Preventiva Integrada</strong>
+                        <span>Fluxo de análise prévia, saneamento de diligências e chancela formal</span>
                     </div>
                 </div>
             </div>
@@ -712,14 +668,14 @@
 
         <div class="cover-footer">
             <div>
-                <strong>Sistema:</strong> SISCONT &bull; Módulo de Prestação de Contas Mensal (Livro do Fiscal)
+                <strong>Sistema:</strong> SISCONT &bull; Módulo de Execução Contratual (Livro do Fiscal)
             </div>
             <div>
-                <strong>Versão:</strong> 1.0 &bull; <strong>Edição:</strong> Outubro/2026 &bull; <strong>Distribuição:</strong> Fiscais de Contrato GAP-BR
+                <strong>Versão:</strong> 2.0 &bull; <strong>Edição:</strong> Outubro/2026 &bull; <strong>Distribuição:</strong> Fiscais de Contrato do GAP-BR
             </div>
         </div>
     </div>
-    
+
 
     <!-- SLIDE 2: VISÃO GERAL -->
     <div class="slide">
@@ -727,86 +683,72 @@
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Visão Geral: Fluxo Mensal e Comparativo dos Casos de Uso</h2>
+                    <h2>Visão Geral: O Ciclo Mensal Unificado de Fiscalização Contratual</h2>
                     <div class="slide-subtitle">Linha do Tempo e Regras de Governança &bull; NPA 009/SCON/2025</div>
                 </div>
             </div>
             <div class="slide-header-right">
                 <span class="badge-chapter">Visão Geral</span>
+                <span class="badge-step-num">Slide 02 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
-            <div class="two-cases-grid">
-                <!-- CASO 1 -->
-                <div class="case-card case1-card">
-                    <div class="case-card-header">
-                        <span class="case-pill case1-pill">RECOMENDADO &bull; PADRÃO EXCELÊNCIA</span>
-                        <h3>Caso 1: Lançamento Tempestivo (Mês X) e Ateste (Mês X+1)</h3>
-                    </div>
-                    <div class="case-steps-list">
-                        <div class="case-step-item">
-                            <span class="step-badge step-b1">03/09</span>
-                            <div><strong>Constatação Técnica:</strong> Registro imediato no dia do fato da falha na limpeza (Modo Tempestivo). Salvar Rascunho.</div>
-                        </div>
-                        <div class="case-step-item">
-                            <span class="step-badge step-b1">08/09</span>
-                            <div><strong>Saneamento Técnico:</strong> Edição da ocorrência para status "Resolvido" após regularização pela empresa.</div>
-                        </div>
-                        <div class="case-step-item">
-                            <span class="step-badge step-b1">10/09</span>
-                            <div><strong>Falha Administrativa:</strong> Registro da ausência de guias de FGTS com notificação escrita (prazo 5d).</div>
-                        </div>
-                        <div class="case-step-item">
-                            <span class="step-badge step-b1">02/10</span>
-                            <div><strong>Consolidação e Ateste:</strong> Na virada do mês, conferência dos selos verdes e clique em "Finalizar e Atestar".</div>
-                        </div>
-                        <div class="case-step-item">
-                            <span class="step-badge step-b1">06 a 07/10</span>
-                            <div><strong>Auditoria ACI:</strong> Correção preventiva (inclusão de NUP) e homologação final com selo verde "Conformidade (OK!)".</div>
-                        </div>
-                    </div>
+            <div class="timeline-phases-grid">
+                <!-- FASE 1 -->
+                <div class="phase-card" style="border-top-color: #2563eb;">
+                    <div class="phase-badge" style="background: #2563eb;">Fase 1</div>
+                    <div class="phase-period">Mês de Execução (Mês X)</div>
+                    <h4>Registro Contemporâneo</h4>
+                    <p>Ocorrências fáticas (técnicas ou administrativas) são lançadas imediatamente no dia do fato na tela unificada. O sistema vincula automaticamente ao mês corrente.</p>
+                    <div class="phase-action">&rarr; Notificações, fotos e prazos (5d)</div>
                 </div>
 
-                <!-- CASO 2 -->
-                <div class="case-card case2-card">
-                    <div class="case-card-header">
-                        <span class="case-pill case2-pill">EXCEPCIONAL &bull; APONTAMENTO EM GOVERNANÇA</span>
-                        <h3>Caso 2: Lançamento Tardio / Extemporâneo em Lote (Mês X+1)</h3>
-                    </div>
-                    <div class="case-steps-list">
-                        <div class="case-step-item">
-                            <span class="step-badge step-b2">01 a 30/09</span>
-                            <div><strong>Omissão no Mês:</strong> Fatos ocorreram normalmente, mas o fiscal não realizou nenhum lançamento diário no sistema.</div>
-                        </div>
-                        <div class="case-step-item">
-                            <span class="step-badge step-b2">02/10</span>
-                            <div><strong>Abertura Tardia:</strong> Fiscal abre o formulário de consolidação em outubro e encontra a tabela sem ocorrências.</div>
-                        </div>
-                        <div class="case-step-item">
-                            <span class="step-badge step-b2">02/10</span>
-                            <div><strong>Cadastro Extemporâneo:</strong> Lançamento em lote dos fatos de setembro com data retroativa.</div>
-                        </div>
-                        <div class="case-step-item">
-                            <span class="step-badge step-b2">02/10</span>
-                            <div><strong>Selo Amarelo "Agrupado":</strong> O sistema detecta a data passada e estampa o selo extemporâneo de auditoria.</div>
-                        </div>
-                        <div class="case-step-item">
-                            <span class="step-badge step-b2">Ateste</span>
-                            <div><strong>Consequência de Governança:</strong> Livro é aceito no sistema, mas fica sinalizado nos relatórios de governança da ACI.</div>
-                        </div>
-                    </div>
+                <!-- FASE 2 -->
+                <div class="phase-card" style="border-top-color: #0284c7;">
+                    <div class="phase-badge" style="background: #0284c7;">Fase 2</div>
+                    <div class="phase-period">01 a 05 do Mês X+1</div>
+                    <h4>Virada do Mês & Abertura</h4>
+                    <p>Na virada do mês, o sistema destrava o botão de ateste. O formulário consolida todas as ocorrências lançadas, montando o Livro do Fiscal preliminar.</p>
+                    <div class="phase-action">&rarr; Revisão de dados e preposto</div>
+                </div>
+
+                <!-- FASE 3 -->
+                <div class="phase-card" style="border-top-color: #16a34a;">
+                    <div class="phase-badge" style="background: #16a34a;">Fase 3</div>
+                    <div class="phase-period">Até 05 do Mês X+1</div>
+                    <h4>Ateste com Trâmite ACI</h4>
+                    <p>O fiscal confere o relatório, assina a Declaração Legal e finaliza via novo modal, enviando observações exclusivas de trâmite para a equipe da ACI.</p>
+                    <div class="phase-action">&rarr; Status "Preenchido / Entregue"</div>
+                </div>
+
+                <!-- FASE 4 -->
+                <div class="phase-card" style="border-top-color: #f59e0b;">
+                    <div class="phase-badge" style="background: #f59e0b;">Fase 4</div>
+                    <div class="phase-period">06 a 09 do Mês X+1</div>
+                    <h4>Auditoria Preventiva ACI</h4>
+                    <p>A ACI analisa conformidade formal. Se houver pendências (ex: NUP), solicita ajustes no trâmite. O fiscal corrige na tela unificada e reatesta com justificativa.</p>
+                    <div class="phase-action">&rarr; Saneamento sem penalização</div>
+                </div>
+
+                <!-- FASE 5 -->
+                <div class="phase-card" style="border-top-color: #15803d;">
+                    <div class="phase-badge" style="background: #15803d;">Fase 5</div>
+                    <div class="phase-period">Até 10 do Mês X+1</div>
+                    <h4>Homologação & PDF</h4>
+                    <p>Com tudo regularizado, a ACI emite o selo "Conformidade (OK!)". O Livro oficial é emitido em PDF com termo formal de encerramento para juntada ao PAG.</p>
+                    <div class="phase-action">&rarr; Liquidação de despesa liberada</div>
                 </div>
             </div>
         </div>
 
         <div class="slide-footer">
-            <span style="font-size: 8.5pt; color: #475569;">
-                <strong>Diretriz de Governança ACI:</strong> O Caso 1 constitui o padrão de excelência preconizado pela ACI para assegurar a tempestividade. O Caso 2, embora admitido pelo sistema para viabilizar o fluxo financeiro do contrato, gera apontamento de auditoria e exige justificativa formal da fiscalização.
+            <span style="font-size: 8pt; color: #475569;">
+                <strong>Diretriz de Governança ACI:</strong> O fluxo unificado do SISCONT assegura rastreabilidade total desde a constatação in loco até a homologação final, eliminando retrabalhos e garantindo a defesa técnica do fiscal perante os órgãos de controle.
             </span>
         </div>
     </div>
-    
+
 
     <!-- SLIDE 3: IMPORTÂNCIA DA TEMPESTIVIDADE -->
     <div class="slide">
@@ -820,6 +762,7 @@
             </div>
             <div class="slide-header-right">
                 <span class="badge-chapter">Fundamentação Legal</span>
+                <span class="badge-step-num">Slide 03 de 30</span>
             </div>
         </div>
 
@@ -830,16 +773,16 @@
                     <h3>&bull; Jurisprudência do TCU (Controle Externo)</h3>
                     <div class="legal-card-body">
                         <div class="legal-item">
-                            <strong>Conceito de Atuação Tempestiva:</strong> Definida como a atuação diligente <em>"feita com rapidez e no tempo certo"</em> logo após a ocorrência factual (Manual de Fiscalização, art. 5.2.4).
+                            <strong>Conceito de Atuação Tempestiva:</strong> Definida como a atuação diligente <em>"feita com rapidez e no tempo certo"</em> logo após a ocorrência factual (Manual de Fiscalização do TCU).
                         </div>
                         <div class="legal-item">
-                            <strong>Acórdão 2748/2019-TCU-Plenário:</strong> O TCU aponta que a <em>"ausência de tempestividade na conclusão dos processos de infração e aplicação de penalidades"</em> caracteriza negligência e descumprimento dos princípios da eficiência e da moralidade.
+                            <strong>Acórdão 2.748/2019-TCU-Plenário:</strong> O TCU aponta que a <em>"ausência de tempestividade na conclusão dos processos de infração e aplicação de penalidades"</em> caracteriza negligência e descumprimento dos princípios da eficiência e moralidade.
                         </div>
                         <div class="legal-item">
-                            <strong>Acórdão 9240/2016-TCU-2ª Câmara:</strong> A demora ou omissão no registro atrai a <strong>responsabilização pessoal do fiscal</strong> por danos e prejuízos que poderiam ter sido evitados.
+                            <strong>Acórdão 9.240/2016-TCU-2ª Câmara:</strong> A omissão ou demora no registro atrai a <strong>responsabilização pessoal do fiscal</strong> por danos e prejuízos que poderiam ter sido evitados.
                         </div>
                         <div class="legal-item">
-                            <strong>Acórdão 2612/2015-TCU-Plenário:</strong> A falta de registro contemporâneo impede a aplicação de glosas imediatas na fatura, gerando pagamento indevido e prejuízo ao Erário.
+                            <strong>Acórdão 2.612/2015-TCU-Plenário:</strong> A falta de anotação contemporânea impede glosas na fatura, gerando pagamento indevido e dano ao Erário.
                         </div>
                     </div>
                 </div>
@@ -849,13 +792,13 @@
                     <h3>&bull; Normas Cogentes de Fiscalização</h3>
                     <div class="legal-card-body">
                         <div class="legal-item">
-                            <strong>Lei nº 14.133/2021 (Art. 117):</strong> Determina expressamente que a execução do contrato deve ser acompanhada e fiscalizada, com o <strong>dever legal de anotar em registro próprio todas as ocorrências</strong> contemporaneamente aos fatos.
+                            <strong>Lei nº 14.133/2021 (Art. 117):</strong> Determina expressamente que a execução deve ser fiscalizada, com o <strong>dever legal de anotar em registro próprio todas as ocorrências</strong> contemporaneamente aos fatos.
                         </div>
                         <div class="legal-item">
                             <strong>IN SEGES/ME nº 05/2017 (Art. 46):</strong> As falhas devem ser registradas <em>"durante toda a vigência da prestação dos serviços"</em> para assegurar a adoção de <strong>"medidas saneadoras em tempo hábil"</strong> (&sect; 2º).
                         </div>
                         <div class="legal-item">
-                            <strong>Finalidade Corretiva Imediata:</strong> Registrar faltas meses depois inviabiliza a correção pela contratada e compromete a rotina operacional do serviço público.
+                            <strong>Finalidade Corretiva Imediata:</strong> Registrar faltas meses depois inviabiliza a correção pela contratada e compromete a rotina operacional da Administração Pública.
                         </div>
                     </div>
                 </div>
@@ -865,13 +808,13 @@
                     <h3>&bull; Força Probatória e Proteção do Fiscal</h3>
                     <div class="legal-card-body">
                         <div class="legal-item">
-                            <strong>Presunção de Veracidade:</strong> O registro contemporâneo goza de presunção de legitimidade e fornece a prova material irrefutável para fundamentar glosas e sanções.
+                            <strong>Presunção de Veracidade:</strong> O registro contemporâneo goza de fé pública e presunção de legitimidade, fornecendo a prova material irrefutável para fundamentar glosas e sanções.
                         </div>
                         <div class="legal-item">
-                            <strong>Riscos da Intempestividade:</strong> A demora no registro gera preclusão, fragilidade em processos sancionatórios perante recursos judiciais e risco de nulidade processual.
+                            <strong>Riscos da Intempestividade:</strong> A demora no registro gera preclusão lógica, fragilidade em defesas judiciais e risco de nulidade processual de penalidades.
                         </div>
                         <div class="legal-item">
-                            <strong>Segurança Jurídica do Agente:</strong> O fiscal que registra tempestivamente no SISCONT comprova zelo funcional ininterrupto e protege sua responsabilidade perante a ACI, Ciset e TCU.
+                            <strong>Segurança Funcional do Agente:</strong> O fiscal que registra tempestivamente no SISCONT comprova zelo funcional e resguarda sua conduta perante a ACI, Ciset e TCU.
                         </div>
                     </div>
                 </div>
@@ -880,101 +823,31 @@
 
         <div class="slide-footer">
             <div class="callout-box callout-law">
-                <span><strong>Diretriz de Controle Interno:</strong> A tempestividade é a salvaguarda jurídica do fiscal de contrato. O SISCONT garante essa comprovação automática através da emissão dos <strong>Selos Verdes de Tempestividade</strong>.</span>
+                <span><strong>Diretriz de Controle Interno:</strong> A anotação em tempo hábil no Livro do Fiscal é a principal salvaguarda do fiscal de contrato. O registro tempestivo blinda o servidor contra apontamentos de omissão funcional.</span>
             </div>
         </div>
     </div>
-    
 
-    <!-- SLIDE 4: FUNDAMENTAÇÃO E 10 CAMPOS -->
+
+    <!-- SLIDE 4: PASSO 1 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Fundamentação Normativa: Os 10 Campos e Regras de Bloqueio</h2>
-                    <div class="slide-subtitle">Padrão Técnico Exigido pela NPA 009/SCON/2025</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Normas</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="concept-cards-grid">
-                <div class="concept-card">
-                    <h3>&bull; Os 10 Campos Obrigatórios do Modal</h3>
-                    <p style="font-size: 8.5pt; color: #475569; margin-bottom: 6px;">Cada ocorrência lançada no SISCONT deve conter obrigatoriamente:</p>
-                    <div class="fields-10-grid">
-                        <div class="field-pill">1. Data e Hora da Constatação</div>
-                        <div class="field-pill">2. Local Exato da Ocorrência</div>
-                        <div class="field-pill">3. Tipo (Técnica / Administrativa)</div>
-                        <div class="field-pill">4. Dispositivo Contratual / TR</div>
-                        <div class="field-pill">5. Descrição Detalhada e Factual</div>
-                        <div class="field-pill">6. Evidências / NUP do PAG</div>
-                        <div class="field-pill">7. Notificação Formal (Sim/Não)</div>
-                        <div class="field-pill">8. Nº Notificação, Prazo e Ciência</div>
-                        <div class="field-pill">9. Situação Atual (Status)</div>
-                        <div class="field-pill">10. Determinação / Ação Exigida</div>
-                    </div>
-                </div>
-
-                <div class="concept-card">
-                    <h3>&bull; A Diferença Crucial dos Dois Botões "Salvar"</h3>
-                    <div class="buttons-diff-box">
-                        <div class="btn-diff-item btn-diff-modal">
-                            <div class="btn-diff-title">1. Botão "Salvar Ocorrência" (no Modal)</div>
-                            <div class="btn-diff-desc">Salva os 10 campos em memória e <strong>inclui/atualiza a linha na tabela visual</strong> da página. <em>Atenção: Não grava no banco de dados!</em></div>
-                        </div>
-                        <div class="btn-diff-item btn-diff-page">
-                            <div class="btn-diff-title">2. Botão "Salvar Rascunho" (ao final da Página)</div>
-                            <div class="btn-diff-desc">Envia todas as linhas da tabela e o fiscal selecionado para o servidor e <strong>grava definitivamente no banco de dados</strong>.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="concept-card">
-                    <h3>&bull; A Trava Regulatória do Ateste Eletrônico</h3>
-                    <div class="rule-box">
-                        <div class="rule-icon">&#128274;</div>
-                        <div class="rule-text">
-                            <strong>Bloqueio no Mês Corrente (09/2026):</strong> O botão "Finalizar e Atestar Livro do Mês" permanece <strong>cinza e desabilitado</strong> durante a vigência do mês fiscalizado. O fiscal só pode registrar ocorrências e clicar em "Salvar Rascunho".
-                            <br><br>
-                            <strong>Liberação na Virada do Mês (após 30/09):</strong> No início do mês seguinte (Outubro), o botão é liberado em verde para ateste formal do período.
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="callout-box callout-warn">
-                <span><strong>Aviso Vital ao Fiscal:</strong> Nunca saia da página nem clique em atualizar (F5) logo após fechar o modal. Role sempre até o final da página e clique em <strong>"Salvar Rascunho"</strong> para assegurar a persistência dos dados no banco.</span>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 5: PASSO 1 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 1 — Página Inicial do Portal Público de Prestação de Contas</h2>
-                    <div class="slide-subtitle">Acesso Inicial &bull; Navegação Inicial &bull; /prestacoes/</div>
+                    <h2>Passo 1 — Acesso ao Portal Público de Prestação de Contas</h2>
+                    <div class="slide-subtitle">Página inicial do SISCONT para fiscalização de contratos &bull; /prestacoes/</div>
                 </div>
             </div>
             <div class="slide-header-right">
                 <span class="badge-chapter">Acesso Inicial</span>
-                
+                <span class="badge-step-num">Slide 04 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
             <div class="figure-wide-box">
-                <img src="img/acesso_01_portal.png" alt="Passo 1 — Página Inicial do Portal Público de Prestação de Contas">
+                <img src="img/v2_01_acesso_portal.png" alt="Passo 1 — Acesso ao Portal Público de Prestação de Contas">
             </div>
         </div>
 
@@ -982,32 +855,35 @@
             <div class="pins-list">
                 <div class="pin-item">
             <span class="pin-num pin-r">1</span>
-            <span>No card azul <strong>"Fiscais de Contrato"</strong>, clique no botão <strong>"Acessar Entregas"</strong> para ser direcionado à seleção do contrato sob sua responsabilidade.</span>
+            <span>No módulo destacado <strong>"Fiscais de Contrato"</strong>, clique no botão para acessar a listagem de contratos sob sua responsabilidade.</span>
         </div>
             </div>
+            <div class="callout-box callout-law">
+        <span><strong>NPA 009/SCON/2025 (Art. 3º):</strong> O SISCONT disponibiliza interface dedicada para que os fiscais designados em portaria alimentem o registro contínuo da execução contratual.</span>
+    </div>
         </div>
     </div>
     
 
-    <!-- SLIDE 6: PASSO 2 -->
+    <!-- SLIDE 5: PASSO 2 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
                     <h2>Passo 2 — Seleção do Contrato sob Responsabilidade do Fiscal</h2>
-                    <div class="slide-subtitle">Localização por Número ou Empresa &bull; /prestacoes/fiscais/</div>
+                    <div class="slide-subtitle">Localização rápida por número ou razão social &bull; /prestacoes/fiscais/</div>
                 </div>
             </div>
             <div class="slide-header-right">
                 <span class="badge-chapter">Acesso Inicial</span>
-                
+                <span class="badge-step-num">Slide 05 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
             <div class="figure-wide-box">
-                <img src="img/acesso_02_contrato.png" alt="Passo 2 — Seleção do Contrato sob Responsabilidade do Fiscal">
+                <img src="img/v2_02_selecao_contrato.png" alt="Passo 2 — Seleção do Contrato sob Responsabilidade do Fiscal">
             </div>
         </div>
 
@@ -1015,36 +891,39 @@
             <div class="pins-list">
                 <div class="pin-item">
             <span class="pin-num pin-r">1</span>
-            <span>Selecione o contrato desejado no menu suspenso ou digite o número (ex: <strong>Contrato nº 999/GAP-BR/2026</strong> - Limpeza e Conservação Predial).</span>
+            <span>No menu suspenso <strong>"Selecione o Contrato"</strong>, digite o número (ex: <code>999/GAP-BR/2026</code>) ou o nome da empresa.</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-r">2</span>
-            <span>Clique no botão azul <strong>"Prosseguir para Entregas"</strong> para abrir o painel individual do contrato.</span>
+            <span>Clique no botão azul <strong>"Prosseguir"</strong> para carregar o painel individual de fiscalização do contrato.</span>
         </div>
             </div>
+            <div class="callout-box callout-law">
+        <span><strong>Portaria de Designação:</strong> O fiscal só deve atuar e lançar registros em contratos para os quais tenha sido formalmente designado por Portaria do Ordenador de Despesas (art. 117 da Lei 14.133/21).</span>
+    </div>
         </div>
     </div>
     
 
-    <!-- SLIDE 7: PASSO 3 -->
+    <!-- SLIDE 6: PASSO 3 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Passo 3 — Painel do Contrato e Aba "1. Livro do Fiscal"</h2>
-                    <div class="slide-subtitle">Identificação da Aba e Botão de Acesso Tempestivo &bull; /prestacoes/fiscais/1/</div>
+                    <h2>Passo 3 — Painel Individual do Contrato e Aba "1. Livro do Fiscal"</h2>
+                    <div class="slide-subtitle">Visão sintética e atalho de ocorrências &bull; /prestacoes/fiscais/1/</div>
                 </div>
             </div>
             <div class="slide-header-right">
                 <span class="badge-chapter">Acesso Inicial</span>
-                
+                <span class="badge-step-num">Slide 06 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
             <div class="figure-wide-box">
-                <img src="img/acesso_03_aba_livro.png" alt="Passo 3 — Painel do Contrato e Aba "1. Livro do Fiscal"">
+                <img src="img/v2_03_aba_livro.png" alt="Passo 3 — Painel Individual do Contrato e Aba "1. Livro do Fiscal"">
             </div>
         </div>
 
@@ -1052,73 +931,39 @@
             <div class="pins-list">
                 <div class="pin-item">
             <span class="pin-num pin-b">1</span>
-            <span>Verifique a aba ativa <strong>"1. Livro do Fiscal"</strong>, que exibe o status sintético e as ações disponíveis para o mês corrente.</span>
+            <span>Confirme que a aba ativa é <strong>"1. Livro do Fiscal"</strong> no painel de etapas da prestação de contas mensal.</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-a">2</span>
-            <span>Clique no botão amarelo <strong>"Registro Tempestivo de Ocorrência"</strong> para abrir o formulário durante a vigência do mês.</span>
+            <span>Clique no botão amarelo <strong>"Registro / Edição de Ocorrências"</strong> para acessar o gerenciador contínuo do contrato.</span>
         </div>
             </div>
+            <div class="callout-box callout-tip">
+        <span><strong>Acesso Contínuo:</strong> Utilize este botão amarelo a qualquer momento do mês de execução para lançar ocorrências sem precisar aguardar a virada do mês.</span>
+    </div>
         </div>
     </div>
     
 
-    <!-- SLIDE 8: PASSO 4 -->
+    <!-- SLIDE 7: PASSO 4 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Passo 4 — Alerta de Modo Tempestivo e Botão Nova Ocorrência</h2>
-                    <div class="slide-subtitle">Formulário do Mês Corrente (09/2026) &bull; Alerta de Lançamento em Tempo Real</div>
+                    <h2>Passo 4 — Tela Unificada de Gestão de Ocorrências</h2>
+                    <div class="slide-subtitle">Ambiente integrado com agrupamento automático por mês &bull; /execucao/fiscais/1/ocorrencias/</div>
                 </div>
             </div>
             <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
+                <span class="badge-chapter">Gestão de Ocorrências</span>
+                <span class="badge-step-num">Slide 07 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
             <div class="figure-wide-box">
-                <img src="img/c1_01_modo_tempestivo.png" alt="Passo 4 — Alerta de Modo Tempestivo e Botão Nova Ocorrência">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-b">1</span>
-            <span>Quadro azul informativo confirmando que o sistema está operando em <strong>Modo de Lançamento Tempestivo</strong> (Mês Corrente 09/2026).</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-r">2</span>
-            <span>Clique no botão <strong>"+ Adicionar Ocorrência"</strong> para abrir o formulário modal de 10 campos normativos.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 9: PASSO 5 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 5 — Preenchimento dos Campos da Ocorrência Técnica</h2>
-                    <div class="slide-subtitle">Registro Factual Imediato (03/09/2026 08:40) &bull; NPA 009/SCON/2025</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_02_modal_tecnica.png" alt="Passo 5 — Preenchimento dos Campos da Ocorrência Técnica">
+                <img src="img/v2_04_tela_unificada.png" alt="Passo 4 — Tela Unificada de Gestão de Ocorrências">
             </div>
         </div>
 
@@ -1126,948 +971,135 @@
             <div class="pins-list">
                 <div class="pin-item">
             <span class="pin-num pin-r">1</span>
-            <span>Insira Data e Hora exatas da constatação fática (<code>03/09/2026 08:40</code>) e Local (<code>Bloco B – sanitários</code>).</span>
+            <span>Clique no botão azul <strong>"+ Adicionar Ocorrência"</strong> no topo da página para abrir o modal de lançamento.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-b">2</span>
+            <span>Observe o card do <strong>Mês em Andamento</strong> (ex: 09/2026), que agrupa os fatos contemporâneos automaticamente.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Arquitetura Unificada V2.0:</strong> Não há mais telas ou modos separados para fatos tempestivos ou extemporâneos. Toda a gestão ocorre nesta página centralizada.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 8: PASSO 5 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 5 — Cadastro de Ocorrência Técnica — Preenchimento do Modal</h2>
+                    <div class="slide-subtitle">Os 10 campos normativos da NPA 009/SCON/2025 para registro de falhas técnicas</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">Gestão de Ocorrências</span>
+                <span class="badge-step-num">Slide 08 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_05_modal_tecnica.png" alt="Passo 5 — Cadastro de Ocorrência Técnica — Preenchimento do Modal">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-r">1</span>
+            <span><strong>Data/Hora e Local:</strong> Insira o momento exato da vistoria (<code>03/09/2026 08:40</code>) e o local da falha.</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-r">2</span>
-            <span>Selecione o Tipo <strong>"Fiscalização Técnica"</strong> e cite o item do Termo de Referência violado.</span>
+            <span><strong>Tipo e Dispositivo:</strong> Selecione <em>Fiscalização Técnica</em> e cite a cláusula do TR (<em>Item 5.3</em>).</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-r">3</span>
-            <span>Descreva detalhadamente os fatos objetivos (lixeiras cheias, falta de papel e sabonete) e anexe evidências.</span>
+            <span><strong>Descrição e Evidências:</strong> Descreva o fato com objetividade e mencione as fotos anexadas.</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-r">4</span>
-            <span>Defina a Situação como <strong>"Em Aberto"</strong> e informe a medida imediata exigida da empresa.</span>
+            <span><strong>Situação:</strong> Selecione <em>Em Aberto</em> e registre a providência exigida à contratada.</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-v">5</span>
-            <span>Clique em <strong>"Salvar Ocorrência"</strong> para incluir a linha na tabela do formulário.</span>
+            <span>Clique em <strong>"Salvar Ocorrência"</strong> para gravar o registro imediatamente.</span>
         </div>
             </div>
+            <div class="callout-box callout-law">
+        <span><strong>Art. 117 da Lei 14.133/2021:</strong> A lei exige a individualização clara do fato, do local e do dispositivo contratual violado, com expressa determinação de correção.</span>
+    </div>
         </div>
     </div>
     
 
-    <!-- SLIDE 10: PASSO 6 -->
+    <!-- SLIDE 9: PASSO 6 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Passo 6 — Seleção do Fiscal Responsável e Ocorrência na Tabela</h2>
-                    <div class="slide-subtitle">Associação do Agente Público e Exibição em Tabela &bull; Seções 1 e 2</div>
+                    <h2>Passo 6 — Ocorrência Técnica Registrada na Tabela Unificada</h2>
+                    <div class="slide-subtitle">Confirmação de gravação imediata no banco de dados e ações de controle</div>
                 </div>
             </div>
             <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
+                <span class="badge-chapter">Gestão de Ocorrências</span>
+                <span class="badge-step-num">Slide 09 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
             <div class="figure-wide-box">
-                <img src="img/c1_03_tabela_e_fiscal.png" alt="Passo 6 — Seleção do Fiscal Responsável e Ocorrência na Tabela">
+                <img src="img/v2_06_lista_tecnica.png" alt="Passo 6 — Ocorrência Técnica Registrada na Tabela Unificada">
             </div>
         </div>
 
         <div class="slide-footer">
             <div class="pins-list">
                 <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>Selecione o fiscal atuante no campo obrigatório <strong>"Fiscal Responsável pelo Envio"</strong> (ex: 1º Ten EXEMPLO).</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-b">2</span>
-            <span>Verifique a ocorrência inserida na tabela com selo verde <strong>"Tempestivo"</strong>, status <strong>"Em Aberto"</strong> e ícones de ação (lápis e lixeira) devidamente visíveis.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 11: PASSO 7 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 7 — Card de Fechamento com Botões de Ação</h2>
-                    <div class="slide-subtitle">Persistência no Banco de Dados &bull; Seção 3 do Formulário</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_04_salvar_rascunho.png" alt="Passo 7 — Card de Fechamento com Botões de Ação">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>Clique no botão azul <strong>"Salvar Rascunho"</strong> para gravar as ocorrências e o fiscal selecionado no banco de dados.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-a">2</span>
-            <span>Observe que o botão verde <strong>"Finalizar e Atestar Livro do Mês"</strong> permanece bloqueado (cinza) durante o mês corrente para proteger a integridade do período.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 12: PASSO 8 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 8 — Confirmação do Rascunho Salvo com Sucesso</h2>
-                    <div class="slide-subtitle">Mensagem de Feedback e Segurança da Informação</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_05_rascunho_salvo.png" alt="Passo 8 — Confirmação do Rascunho Salvo com Sucesso">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-v">1</span>
-            <span>Alerta verde confirmando: <strong>"Rascunho do Livro do Fiscal salvo com sucesso!"</strong>. Os dados estão gravados com segurança no banco de dados.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 13: PASSO 9 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 9 — Localização do Botão de Edição na Tabela</h2>
-                    <div class="slide-subtitle">Saneamento da Ocorrência após Regularização pela Empresa (08/09/2026)</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_06_editar.png" alt="Passo 9 — Localização do Botão de Edição na Tabela">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>Na coluna <strong>"AÇÕES"</strong>, clique no ícone do lápis azul (<code>btnEditarOc</code>) na linha da ocorrência técnica para reabrir o modal.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 14: PASSO 10 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 10 — Atualização da Ocorrência Técnica para "Resolvido"</h2>
-                    <div class="slide-subtitle">Registro do Saneamento e Verificação In Loco &bull; Modal de Edição</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_07_modal_resolvido.png" alt="Passo 10 — Atualização da Ocorrência Técnica para "Resolvido"">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>Altere o campo Situação Atual para <strong>"Resolvido"</strong>.</span>
+            <span class="pin-num pin-b">1</span>
+            <span>A ocorrência aparece listada no card do mês com data, local, descrição e status <strong>"Em Aberto"</strong>.</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-r">2</span>
-            <span>No campo Determinação / Medida, complemente com a data da regularização pela empresa e da vistoria <em>in loco</em>.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-v">3</span>
-            <span>Clique em <strong>"Salvar Ocorrência"</strong> para atualizar a linha na tabela. (Em seguida, salve o rascunho da página).</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 15: PASSO 11 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 11 — Preenchimento da Ocorrência Administrativa com Notificação</h2>
-                    <div class="slide-subtitle">Ausência de Guias de FGTS (10/09/2026) &bull; Cláusula 12.4 do Contrato</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_08_modal_administrativa.png" alt="Passo 11 — Preenchimento da Ocorrência Administrativa com Notificação">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>Selecione Tipo <strong>"Fiscalização Administrativa"</strong>.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-r">2</span>
-            <span>Marque a opção <strong>"Notificação formal expedida à contratada?"</strong>.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-r">3</span>
-            <span>Informe o número oficial da notificação (<code>012/GAP-BR/2026</code>), prazo (<code>5 dias úteis</code>) e ciência (<code>Assinado</code>).</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-r">4</span>
-            <span>Defina a situação como <strong>"Saneamento (5d)"</strong> e clique em <strong>"Salvar Ocorrência"</strong>.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 16: PASSO 12 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 12 — Identificação e Exclusão de Ocorrência Duplicada</h2>
-                    <div class="slide-subtitle">Demonstração de Cancelamento de Registro Incorreto &bull; Coluna Ações</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_09_excluir_duplicado.png" alt="Passo 12 — Identificação e Exclusão de Ocorrência Duplicada">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>Identificada a linha inserida por engano na tabela, clique no ícone da lixeira vermelha (<code>btnExcluirOc</code>) correspondente.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-a">2</span>
-            <span>Confirme a exclusão no alerta do navegador; a linha é removida imediatamente da tabela sem afetar os outros registros.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 17: PASSO 13 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 13 — Tabela de Setembro Consolidada e Pronta para a Virada</h2>
-                    <div class="slide-subtitle">Duas Ocorrências Tempestivas Prontas para o Período de Prestação</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_10_tabela_setembro.png" alt="Passo 13 — Tabela de Setembro Consolidada e Pronta para a Virada">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-v">1</span>
-            <span>Tabela saneada contendo a falha técnica sanada (<strong>"Resolvido"</strong>) e a falha documental em acompanhamento (<strong>"Saneamento (5d)"</strong>), ambas com selo verde <strong>"Tempestivo"</strong> e botões de ação perfeitamente legíveis.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 18: PASSO 14 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 14 — Trava Regulatória do Ateste Eletrônico no Mês Corrente</h2>
-                    <div class="slide-subtitle">Proteção Normativa contra Ateste Prematuro do Período</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_11_ateste_bloqueado.png" alt="Passo 14 — Trava Regulatória do Ateste Eletrônico no Mês Corrente">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>Clique em <strong>"Salvar Rascunho"</strong> para persistir os registros finais de setembro.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-a">2</span>
-            <span>O botão <strong>"Finalizar e Atestar Livro (Liberado após 09/2026)"</strong> permanece desabilitado, impedindo fechamento antes do encerramento integral do mês fiscalizado.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 19: PASSO 15 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 15 — Portal de Prestações em Outubro (Botão Liberado)</h2>
-                    <div class="slide-subtitle">Virada do Mês (02/10/2026) &bull; Liberação do Ateste Oficial</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_12_prestacao_outubro.png" alt="Passo 15 — Portal de Prestações em Outubro (Botão Liberado)">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-b">1</span>
-            <span>O sistema identifica automaticamente o <strong>Mês de Referência: 09/2026</strong> para a prestação em aberto.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-a">2</span>
-            <span>Aviso do prazo limite regulamentar do Calendário da ACI (<strong>05/10/2026</strong>).</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-r">3</span>
-            <span>Clique no botão em destaque <strong>"Atestar e Finalizar Livro do Fiscal"</strong> para abrir o formulário consolidado.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 20: PASSO 16 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 16 — Cabeçalho do Formulário em Modo de Consolidação</h2>
-                    <div class="slide-subtitle">Liberação dos Controles Finais e Status Rascunho</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_13_formulario_consolidacao.png" alt="Passo 16 — Cabeçalho do Formulário em Modo de Consolidação">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-b">1</span>
-            <span>O cabeçalho exibe os dados do contrato e o mês fiscalizado (09/2026).</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-a">2</span>
-            <span>O badge de status indica <strong>"Rascunho / Em Andamento"</strong>, com todos os controles de edição e ateste destravados.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 21: PASSO 17 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 17 — Tabela com Selos Verdes de Tempestividade</h2>
-                    <div class="slide-subtitle">Rastreabilidade Temporal Automática Garantida pelo Sistema</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_14_tabela_tempestivas.png" alt="Passo 17 — Tabela com Selos Verdes de Tempestividade">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-v">1</span>
-            <span>Selo verde <strong>"Tempestivo"</strong> garantido na ocorrência técnica lançada em 03/09/2026.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-v">2</span>
-            <span>Selo verde <strong>"Tempestivo"</strong> garantido na ocorrência administrativa lançada em 10/09/2026.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 22: PASSO 18 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 18 — Observações Finais, Declaração Legal e Ateste</h2>
-                    <div class="slide-subtitle">Fechamento Formal do Livro &bull; Cumprimento do Art. 117 da Lei 14.133/2021</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_15_finalizar.png" alt="Passo 18 — Observações Finais, Declaração Legal e Ateste">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>No campo <strong>"Observações Gerais"</strong>, insira os esclarecimentos complementares sobre as ocorrências em andamento.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-b">2</span>
-            <span>Leia a <strong>Declaração de Conformidade da Fiscalização</strong> (declaração sob as penas da lei militar e administrativa).</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-v">3</span>
-            <span>Clique no botão verde <strong>"Finalizar e Atestar Livro do Mês"</strong> para concluir formalmente o envio.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 23: PASSO 19 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 19 — Confirmação de Entrega e Registro do Ateste no Portal</h2>
-                    <div class="slide-subtitle">Status Oficial "Preenchido / Entregue" Registrado no Sistema</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_16_atestado.png" alt="Passo 19 — Confirmação de Entrega e Registro do Ateste no Portal">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-v">1</span>
-            <span>Alerta verde confirmando o recebimento da prestação com sucesso.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-b">2</span>
-            <span>O badge do Livro do Fiscal é atualizado para <strong>"Preenchido / Entregue"</strong>, liberando o trâmite seguinte.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 24: PASSO 20 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 20 — Acesso ao Formulário Pós-Ateste e Botão do PDF</h2>
-                    <div class="slide-subtitle">Acesso ao Espelho Documental no Cabeçalho do Formulário</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_18_botao_pdf.png" alt="Passo 20 — Acesso ao Formulário Pós-Ateste e Botão do PDF">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>Clique no botão vermelho <strong>"PDF do Livro"</strong> para baixar o documento oficial consolidado.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-b">2</span>
-            <span>O status <strong>"Preenchido / Entregue"</strong> confirma que o documento reflete a versão atestada pelo fiscal.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 25: PASSO 21 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 21 — Espelho do Livro do Fiscal em PDF Oficial (Página 1)</h2>
-                    <div class="slide-subtitle">Documento Formal de Fiscalização &bull; NPA 009/SCON/2025</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/pdf_caso1_page-1.png" alt="Passo 21 — Espelho do Livro do Fiscal em PDF Oficial (Página 1)">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-b">1</span>
-            <span>Termo de Abertura com dados do contrato, empresa, vigência, portaria e fiscal designado.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-v">2</span>
-            <span>Tabela formatada contendo todas as ocorrências com indicação expressa do selo de tempestividade.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 26: PASSO 22 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 22 — Espelho do Livro do Fiscal em PDF Oficial (Página 2)</h2>
-                    <div class="slide-subtitle">Declaração Legal de Conformidade e Campo para Assinatura Eletrônica</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/pdf_caso1_page-2.png" alt="Passo 22 — Espelho do Livro do Fiscal em PDF Oficial (Página 2)">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-b">1</span>
-            <span>Observações gerais e texto integral da Declaração de Conformidade da Fiscalização.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-v">2</span>
-            <span>Campo oficial para assinatura eletrônica do Fiscal do Contrato (juntada ao SILOMS).</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 27: PASSO 23 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 23 — Auditoria ACI: Status "Ajustes Solicitados" e Diálogo</h2>
-                    <div class="slide-subtitle">Análise Preventiva pela Assessoria de Controle Interno (06/10/2026)</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_19_aci_correcao.png" alt="Passo 23 — Auditoria ACI: Status "Ajustes Solicitados" e Diálogo">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-a">1</span>
-            <span>Clique no botão <strong>"Corrigir Livro do Fiscal"</strong> para reabrir o formulário em modo de correção.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-a">2</span>
-            <span>Linha de diálogo exibindo a mensagem oficial da ACI solicitando o saneamento documental (inclusão do NUP).</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 28: PASSO 24 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 24 — Painel de Apontamentos da ACI no Formulário</h2>
-                    <div class="slide-subtitle">Alerta Amarelo com as Orientações Precisas para o Fiscal</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_20_apontamentos.png" alt="Passo 24 — Painel de Apontamentos da ACI no Formulário">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-a">1</span>
-            <span>O badge de status muda para <strong>"Aguardando Correção pelo Fiscal"</strong>.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-a">2</span>
-            <span>Quadro de alerta amarelo destacando o apontamento da ACI: informar o NUP do processo em que a notificação foi juntada.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 29: PASSO 25 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 25 — Saneamento do Apontamento: Inclusão do NUP</h2>
-                    <div class="slide-subtitle">Atualização do Campo de Evidências com o NUP Oficial</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_21_corrige_evidencia.png" alt="Passo 25 — Saneamento do Apontamento: Inclusão do NUP">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>No campo <strong>"Evidências Anexadas"</strong>, inclua o NUP oficial (<code>67000.000999/2026-01</code>).</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-v">2</span>
-            <span>Clique em <strong>"Salvar Ocorrência"</strong> para consolidar a alteração na tabela.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 30: PASSO 26 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 26 — Esclarecimento Complementar e Reateste Oficial</h2>
-                    <div class="slide-subtitle">Fechamento com Rastreabilidade da Resposta à ACI</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_22_reatestar.png" alt="Passo 26 — Esclarecimento Complementar e Reateste Oficial">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>No campo de observações, registre a confirmação do atendimento ao apontamento da ACI.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-v">2</span>
-            <span>Clique no botão verde <strong>"Finalizar e Atestar Livro do Mês"</strong> para submeter novamente à auditoria.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 31: PASSO 27 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 27 — Homologação Final: Selo Verde "Conformidade (OK!)"</h2>
-                    <div class="slide-subtitle">Conformidade Plena Concedida pela ACI (07/10/2026)</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 1</span>
-                <span class="badge-case case1">Tempestivo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c1_23_conformidade_ok.png" alt="Passo 27 — Homologação Final: Selo Verde "Conformidade (OK!)"">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-v">1</span>
-            <span>Selo oficial <strong>"Conformidade (OK!)"</strong> atribuído pela ACI após conferência do saneamento.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-v">2</span>
-            <span>Botão verde liberado para baixar a versão final definitiva do Livro em PDF para arquivo do contrato.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 32: PASSO 28 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 28 — Portal no Início de Outubro sem Registros Prévios</h2>
-                    <div class="slide-subtitle">Nenhuma Ocorrência Lançada durante Setembro &bull; Portal de Prestações</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 2</span>
-                <span class="badge-case case2">Extemporâneo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c2_01_prestacao_outubro.png" alt="Passo 28 — Portal no Início de Outubro sem Registros Prévios">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-b">1</span>
-            <span>Identificação da competência fiscalizada (<strong>Mês de Referência: 09/2026</strong>).</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-r">2</span>
-            <span>Clique em <strong>"Atestar e Finalizar Livro do Fiscal"</strong> para abrir o formulário sem registros prévios.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 33: PASSO 29 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 29 — Formulário Aberto sem Registros Prévios</h2>
-                    <div class="slide-subtitle">Tabela Inicial Vazia e Alerta de Ausência de Lançamentos</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 2</span>
-                <span class="badge-case case2">Extemporâneo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c2_02_formulario_vazio.png" alt="Passo 29 — Formulário Aberto sem Registros Prévios">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-b">1</span>
-            <span>Cabeçalho identificando a prestação de contas de setembro/2026.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-r">2</span>
-            <span>Clique no botão <strong>"+ Adicionar Ocorrência"</strong> para inserir os fatos ocorridos no mês anterior.</span>
+            <span>O botão do <strong>Lápis Azul</strong> permite editar a ocorrência a qualquer momento para atualizar seu andamento.</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-a">3</span>
-            <span>Mensagem de alerta indicando que não há ocorrências registradas na tabela.</span>
+            <span>O botão da <strong>Lixeira Vermelha</strong> permite a exclusão em caso de erro material ou duplicidade.</span>
         </div>
             </div>
+            <div class="callout-box callout-law">
+        <span><strong>Efeito Jurídico Imediato:</strong> Ao salvar no modal, a ocorrência passa a existir formalmente no banco de dados, assegurando a contemporaneidade perante o TCU.</span>
+    </div>
         </div>
     </div>
     
 
-    <!-- SLIDE 34: PASSO 30 -->
+    <!-- SLIDE 10: PASSO 7 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Passo 30 — Inclusão Tardia da Falha Técnica no Mês Seguinte</h2>
-                    <div class="slide-subtitle">Lançamento em 02/10 com Data Fática Retroativa (03/09/2026)</div>
+                    <h2>Passo 7 — Edição da Ocorrência e Regularização Técnica</h2>
+                    <div class="slide-subtitle">Saneamento de falhas após vistoria in loco &bull; Atualização para 'Resolvido'</div>
                 </div>
             </div>
             <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 2</span>
-                <span class="badge-case case2">Extemporâneo</span>
+                <span class="badge-chapter">Gestão de Ocorrências</span>
+                <span class="badge-step-num">Slide 10 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
             <div class="figure-wide-box">
-                <img src="img/c2_03_modal_tecnica.png" alt="Passo 30 — Inclusão Tardia da Falha Técnica no Mês Seguinte">
+                <img src="img/v2_07_modal_resolvido.png" alt="Passo 7 — Edição da Ocorrência e Regularização Técnica">
             </div>
         </div>
 
@@ -2075,44 +1107,43 @@
             <div class="pins-list">
                 <div class="pin-item">
             <span class="pin-num pin-r">1</span>
-            <span>Data fática inserida como retroativa (<code>03/09/2026 08:40</code>), posterior ao encerramento do mês do fato.</span>
+            <span>No modal de edição, altere o campo <strong>Situação Atual</strong> de <em>Em Aberto</em> para <strong>"Resolvido"</strong>.</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-r">2</span>
-            <span>Selecione Tipo <strong>"Fiscalização Técnica"</strong> e detalhe a descrição factual.</span>
+            <span>No campo <strong>Determinação / Medida</strong>, registre a data da regularização física e da nova vistoria in loco.</span>
         </div>
 <div class="pin-item">
-            <span class="pin-num pin-r">3</span>
-            <span>Situação definida como <strong>"Resolvido"</strong> diretamente no momento do cadastro.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-v">4</span>
-            <span>Clique em <strong>"Salvar Ocorrência"</strong> para incluir na tabela.</span>
+            <span class="pin-num pin-v">3</span>
+            <span>Clique em <strong>"Salvar Ocorrência"</strong> para registrar a conclusão do desvio no histórico.</span>
         </div>
             </div>
+            <div class="callout-box callout-law">
+        <span><strong>IN SEGES/ME 05/2017 (Art. 46, § 2º):</strong> A adoção de medidas saneadoras em tempo hábil comprova a diligência da fiscalização e desonera a contratada de glosas quando o serviço é regularizado.</span>
+    </div>
         </div>
     </div>
     
 
-    <!-- SLIDE 35: PASSO 31 -->
+    <!-- SLIDE 11: PASSO 8 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Passo 31 — Inclusão Tardia da Falha Administrativa no Mês Seguinte</h2>
-                    <div class="slide-subtitle">Lançamento em 02/10 com Notificação Retroativa (10/09/2026)</div>
+                    <h2>Passo 8 — Cadastro de Ocorrência Administrativa com Notificação</h2>
+                    <div class="slide-subtitle">Inadimplemento trabalhista, notificação formal e prazo de defesa (NPA 009)</div>
                 </div>
             </div>
             <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 2</span>
-                <span class="badge-case case2">Extemporâneo</span>
+                <span class="badge-chapter">Gestão de Ocorrências</span>
+                <span class="badge-step-num">Slide 11 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
             <div class="figure-wide-box">
-                <img src="img/c2_04_modal_administrativa.png" alt="Passo 31 — Inclusão Tardia da Falha Administrativa no Mês Seguinte">
+                <img src="img/v2_08_modal_adm.png" alt="Passo 8 — Cadastro de Ocorrência Administrativa com Notificação">
             </div>
         </div>
 
@@ -2120,44 +1151,47 @@
             <div class="pins-list">
                 <div class="pin-item">
             <span class="pin-num pin-r">1</span>
-            <span>Data retroativa (<code>10/09/2026 10:00</code>) inserida durante a virada do mês.</span>
+            <span>Selecione o Tipo <strong>"Fiscalização Administrativa"</strong> (ex: ausência de guias de FGTS).</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-r">2</span>
-            <span>Selecione Tipo <strong>"Fiscalização Administrativa"</strong>.</span>
+            <span>Marque <strong>"Notificação Emitida: Sim"</strong>, digite o número formal (<code>012/GAP-BR/2026</code>) e o prazo de <code>5</code> dias úteis.</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-r">3</span>
-            <span>Marque notificação formal expedida com número e prazo.</span>
+            <span>Selecione a Situação Atual como <strong>"Em Saneamento"</strong> e detalhe a retenção cautelar preventiva.</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-v">4</span>
-            <span>Clique em <strong>"Salvar Ocorrência"</strong> para incluir a segunda linha na tabela.</span>
+            <span>Clique em <strong>"Salvar Ocorrência"</strong> para formalizar o procedimento.</span>
         </div>
             </div>
+            <div class="callout-box callout-law">
+        <span><strong>Garantia da Ampla Defesa (Art. 156 Lei 14.133/21):</strong> Qualquer sanção ou retenção cautelar exige prévia notificação formal com prazo útil de manifestação e ciência expressa do preposto.</span>
+    </div>
         </div>
     </div>
     
 
-    <!-- SLIDE 36: PASSO 32 -->
+    <!-- SLIDE 12: PASSO 9 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Passo 32 — Tabela de Ocorrências com Selo Amarelo "Agrupado"</h2>
-                    <div class="slide-subtitle">Marcação de Auditoria para Lançamentos Fora do Mês do Fato</div>
+                    <h2>Passo 9 — Exclusão de Registro em Duplicidade ou Indevido</h2>
+                    <div class="slide-subtitle">Expurgo seguro de lançamentos incorretos &bull; Manutenção da integridade documental</div>
                 </div>
             </div>
             <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 2</span>
-                <span class="badge-case case2">Extemporâneo</span>
+                <span class="badge-chapter">Gestão de Ocorrências</span>
+                <span class="badge-step-num">Slide 12 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
             <div class="figure-wide-box">
-                <img src="img/c2_05_tabela_agrupadas.png" alt="Passo 32 — Tabela de Ocorrências com Selo Amarelo "Agrupado"">
+                <img src="img/v2_09_excluir_duplicata.png" alt="Passo 9 — Exclusão de Registro em Duplicidade ou Indevido">
             </div>
         </div>
 
@@ -2165,73 +1199,39 @@
             <div class="pins-list">
                 <div class="pin-item">
             <span class="pin-num pin-a">1</span>
-            <span>Selo amarelo <strong>"Agrupado (Extemporâneo)"</strong> atribuído automaticamente à falha técnica.</span>
+            <span>Localize na tabela do mês a linha cadastrada por engano ou em duplicidade.</span>
         </div>
 <div class="pin-item">
-            <span class="pin-num pin-a">2</span>
-            <span>Selo amarelo <strong>"Agrupado (Extemporâneo)"</strong> atribuído automaticamente à falha administrativa.</span>
+            <span class="pin-num pin-r">2</span>
+            <span>Clique no ícone da <strong>Lixeira Vermelha</strong> correspondente à linha indesejada e confirme no navegador.</span>
         </div>
             </div>
+            <div class="callout-box callout-law">
+        <span><strong>Autotutela Administrativa:</strong> A Administração tem o dever de expurgar registros duplicados ou com vício material, mantendo o histórico de fiscalização estritamente fidedigno.</span>
+    </div>
         </div>
     </div>
     
 
-    <!-- SLIDE 37: PASSO 33 -->
+    <!-- SLIDE 13: PASSO 10 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Passo 33 — Seleção do Fiscal e Fechamento com Declaração</h2>
-                    <div class="slide-subtitle">Declaração Legal e Conclusão do Lote de Ocorrências</div>
+                    <h2>Passo 10 — Painel Consolidado de Ocorrências do Mês</h2>
+                    <div class="slide-subtitle">Panorama fático completo de setembro pronto para a virada do mês</div>
                 </div>
             </div>
             <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 2</span>
-                <span class="badge-case case2">Extemporâneo</span>
+                <span class="badge-chapter">Gestão de Ocorrências</span>
+                <span class="badge-step-num">Slide 13 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
             <div class="figure-wide-box">
-                <img src="img/c2_07_finalizar.png" alt="Passo 33 — Seleção do Fiscal e Fechamento com Declaração">
-            </div>
-        </div>
-
-        <div class="slide-footer">
-            <div class="pins-list">
-                <div class="pin-item">
-            <span class="pin-num pin-r">1</span>
-            <span>No campo <strong>"Observações Gerais"</strong>, insira os esclarecimentos sobre a atuação da fiscalização.</span>
-        </div>
-<div class="pin-item">
-            <span class="pin-num pin-v">2</span>
-            <span>Clique no botão verde <strong>"Finalizar e Atestar Livro do Mês"</strong> para submeter o lote à auditoria da ACI.</span>
-        </div>
-            </div>
-        </div>
-    </div>
-    
-
-    <!-- SLIDE 38: PASSO 34 -->
-    <div class="slide">
-        <div class="slide-header">
-            <div class="slide-header-left">
-                <img src="img/gap_logo.png" alt="GAP-BR">
-                <div class="slide-title-group">
-                    <h2>Passo 34 — Confirmação do Ateste Extemporâneo no Portal</h2>
-                    <div class="slide-subtitle">Status "Preenchido / Entregue" Registrado para o Caso 2</div>
-                </div>
-            </div>
-            <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 2</span>
-                <span class="badge-case case2">Extemporâneo</span>
-            </div>
-        </div>
-
-        <div class="slide-body">
-            <div class="figure-wide-box">
-                <img src="img/c2_08_atestado.png" alt="Passo 34 — Confirmação do Ateste Extemporâneo no Portal">
+                <img src="img/v2_10_painel_consolidado.png" alt="Passo 10 — Painel Consolidado de Ocorrências do Mês">
             </div>
         </div>
 
@@ -2239,36 +1239,39 @@
             <div class="pins-list">
                 <div class="pin-item">
             <span class="pin-num pin-v">1</span>
-            <span>Alerta verde confirmando a entrega da prestação de contas com sucesso.</span>
+            <span>Confira na tabela consolidada as ocorrências do período (Técnica Resolvida e Administrativa em Saneamento).</span>
         </div>
 <div class="pin-item">
             <span class="pin-num pin-b">2</span>
-            <span>O badge do Livro do Fiscal é atualizado para <strong>"Preenchido / Entregue"</strong>.</span>
+            <span>Os registros contemporâneos estão gravados e serão carregados automaticamente no formulário de fechamento.</span>
         </div>
             </div>
+            <div class="callout-box callout-law">
+        <span><strong>Conformidade Fática Plena:</strong> O histórico consolidado reflete com exatidão toda a fiscalização exercida no contrato durante o mês de referência, sem omissões.</span>
+    </div>
         </div>
     </div>
     
 
-    <!-- SLIDE 39: PASSO 35 -->
+    <!-- SLIDE 14: PASSO 11 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Passo 35 — Espelho do PDF Oficial com Selos Extemporâneos</h2>
-                    <div class="slide-subtitle">Registro Transparente da Extemporaneidade para Fins de Controle Interno</div>
+                    <h2>Passo 11 — Virada do Mês — Painel da Prestação e Prazo de Ateste</h2>
+                    <div class="slide-subtitle">Início do mês subsequente (02/10) &bull; Liberação do botão de ateste oficial</div>
                 </div>
             </div>
             <div class="slide-header-right">
-                <span class="badge-chapter">Caso de Uso 2</span>
-                <span class="badge-case case2">Extemporâneo</span>
+                <span class="badge-chapter">Consolidação & Ateste</span>
+                <span class="badge-step-num">Slide 14 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
             <div class="figure-wide-box">
-                <img src="img/pdf_caso2_page-1.png" alt="Passo 35 — Espelho do PDF Oficial com Selos Extemporâneos">
+                <img src="img/v2_11_painel_outubro.png" alt="Passo 11 — Virada do Mês — Painel da Prestação e Prazo de Ateste">
             </div>
         </div>
 
@@ -2276,64 +1279,800 @@
             <div class="pins-list">
                 <div class="pin-item">
             <span class="pin-num pin-b">1</span>
-            <span>No PDF oficial gerado, a coluna de tempestividade registra expressamente a condição de lançamento extemporâneo.</span>
+            <span>Na virada para outubro (02/10), acesse o portal: o <strong>Mês de Referência</strong> passa para <code>09/2026</code>.</span>
         </div>
 <div class="pin-item">
-            <span class="pin-num pin-v">2</span>
-            <span>O documento preserva a validade legal, mas evidencia a consolidação em lote para os relatórios de governança da ACI.</span>
+            <span class="pin-num pin-a">2</span>
+            <span>Observe a indicação do <strong>Prazo Limite</strong> regimental (até o 5º dia do mês subsequente).</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-r">3</span>
+            <span>O botão vermelho <strong>"Atestar e Finalizar Livro do Fiscal"</strong> agora está plenamente liberado.</span>
         </div>
             </div>
+            <div class="callout-box callout-law">
+        <span><strong>Calendário da ACI:</strong> O ateste do Livro do Fiscal deve ocorrer impreterivelmente até o 5º dia útil do mês subsequente para viabilizar a liquidação da fatura.</span>
+    </div>
         </div>
     </div>
     
 
-    <!-- SLIDE 40: BOAS PRÁTICAS E REGRAS DE OURO -->
+    <!-- SLIDE 15: PASSO 12 -->
     <div class="slide">
         <div class="slide-header">
             <div class="slide-header-left">
                 <img src="img/gap_logo.png" alt="GAP-BR">
                 <div class="slide-title-group">
-                    <h2>Boas Práticas e Regras de Ouro da Fiscalização de Contratos</h2>
-                    <div class="slide-subtitle">Diretrizes Preventivas da Assessoria de Controle Interno (GAP-BR / ACI) &bull; Lei 14.133/2021</div>
+                    <h2>Passo 12 — Formulário de Consolidação Mensal do Livro</h2>
+                    <div class="slide-subtitle">Cabeçalho contratual e identificação do Fiscal Responsável da portaria</div>
                 </div>
             </div>
             <div class="slide-header-right">
-                <span class="badge-chapter">Boas Práticas</span>
+                <span class="badge-chapter">Consolidação & Ateste</span>
+                <span class="badge-step-num">Slide 15 de 30</span>
             </div>
         </div>
 
         <div class="slide-body">
-            <div class="best-practices-grid-4">
-                <div class="bp-card">
-                    <div class="bp-icon">&check;</div>
-                    <h3>1. Tempestividade Diária</h3>
-                    <p>Ocorreu uma falta ou desvio contratual? <strong>Lance no sistema no próprio dia do fato</strong>, mesmo sem desfecho conclusivo. A tempestividade assegura o selo verde e confere presunção de veracidade ao registro.</p>
+            <div class="figure-wide-box">
+                <img src="img/v2_12_formulario_consolidacao.png" alt="Passo 12 — Formulário de Consolidação Mensal do Livro">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-b">1</span>
+            <span>Confira no cabeçalho o número do contrato, processo PAG, empresa e a competência (<code>Setembro/2026</code>).</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-r">2</span>
+            <span>No campo <strong>"Fiscal Responsável"</strong>, selecione seu nome conforme designado em Portaria (<em>1º Ten EXEMPLO</em>).</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Competência Funcional Exclusiva:</strong> Apenas militares ou servidores formalmente designados em portaria possuem competência legal para assinar e atestar o Livro do Fiscal.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 16: PASSO 13 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 13 — Tabela de Ocorrências Consolidadas (Layout Sóbrio)</h2>
+                    <div class="slide-subtitle">Visualização consolidada em harmonia com o padrão oficial do SILOMS</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">Consolidação & Ateste</span>
+                <span class="badge-step-num">Slide 16 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_13_tabela_consolidada.png" alt="Passo 13 — Tabela de Ocorrências Consolidadas (Layout Sóbrio)">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-v">1</span>
+            <span>A tabela do formulário consolida todas as ocorrências cadastradas na tela unificada durante o mês de setembro.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-b">2</span>
+            <span>Não há rótulos de tempestividade na interface: o layout é limpo, técnico e profissional, conforme padrão SILOMS.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Padrão Oficial SILOMS:</strong> O espelho digital segue a estrutura oficial do Livro do Fiscal do SILOMS, conferindo sobriedade e padronização aos documentos da FAB.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 17: PASSO 14 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 14 — Observações Gerais do Livro e Declaração Legal</h2>
+                    <div class="slide-subtitle">Síntese da fiscalização e Declaração de Conformidade com o art. 117 da Lei 14.133/21</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">Consolidação & Ateste</span>
+                <span class="badge-step-num">Slide 17 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_14_observacoes_gerais.png" alt="Passo 14 — Observações Gerais do Livro e Declaração Legal">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-r">1</span>
+            <span>No campo <strong>"Observações Gerais da Fiscalização"</strong>, insira a síntese perene da execução contratual.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-b">2</span>
+            <span>Leia atentamente a <strong>Declaração Legal de Conformidade</strong> no quadro institucional antes de submeter.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Declaração de Responsabilidade:</strong> Ao submeter o Livro, o fiscal atesta formalmente a conformidade dos serviços executados sob as penas da lei e dos regulamentos militares.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 18: PASSO 15 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 15 — Botão 'Finalizar e Atestar Livro do Mês'</h2>
+                    <div class="slide-subtitle">Acionamento da trava de fechamento oficial &bull; Abertura do modal de trâmites</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">Consolidação & Ateste</span>
+                <span class="badge-step-num">Slide 18 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_15_clique_finalizar.png" alt="Passo 15 — Botão 'Finalizar e Atestar Livro do Mês'">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-v">1</span>
+            <span>Após revisar as observações gerais e os dados contratuais, clique no botão verde <strong>"Finalizar e Atestar Livro do Mês"</strong>.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-b">2</span>
+            <span>O sistema abrirá automaticamente o <strong>Novo Modal de Confirmação e Trâmites</strong>.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-tip">
+        <span><strong>Trava de Segurança:</strong> A finalização não é instantânea: o modal intermediário previne cliques acidentais e abre canal de diálogo direto com a ACI.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 19: PASSO 16 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 16 — NOVO MODAL DE FINALIZAÇÃO — Observações para a ACI</h2>
+                    <div class="slide-subtitle">Canal exclusivo de comunicação nos trâmites sem poluir o Livro oficial (V2.0)</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">Consolidação & Ateste</span>
+                <span class="badge-step-num">Slide 19 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_16_modal_tramites.png" alt="Passo 16 — NOVO MODAL DE FINALIZAÇÃO — Observações para a ACI">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-b">1</span>
+            <span>O modal confirma a finalização do Livro ref. <code>09/2026</code> do contrato <code>999/GAP-BR/2026</code>.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-r">2</span>
+            <span>No campo opcional <strong>"Observações para a ACI (Trâmites)"</strong>, insira esclarecimentos operacionais da entrega.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-v">3</span>
+            <span>Clique no botão verde <strong>"Confirmar e Finalizar"</strong> para submeter o ateste formal.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Desacoplamento Funcional (V2.0):</strong> As mensagens inseridas neste campo vão diretamente para a timeline de trâmites, sem duplicar nem alterar as observações do PDF oficial.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 20: PASSO 17 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 17 — Painel Pós-Ateste — Status Entregue e Timeline de Trâmite</h2>
+                    <div class="slide-subtitle">Confirmação de entrega com sucesso e registro visual da mensagem de trâmite</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">Consolidação & Ateste</span>
+                <span class="badge-step-num">Slide 20 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_17_painel_entregue_timeline.png" alt="Passo 17 — Painel Pós-Ateste — Status Entregue e Timeline de Trâmite">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-b">1</span>
+            <span>O card do Livro do Fiscal exibe o badge oficial <strong>"Preenchido / Entregue"</strong> com fundo verde.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-v">2</span>
+            <span>A caixa de <strong>Trâmites</strong> exibe a mensagem enviada pelo fiscal no modal, com data e hora exatas.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-v">3</span>
+            <span>Com o Livro atestado, a etapa de envio dos slides da prestação é automaticamente destravada.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Comprovação de Entrega Tempestiva:</strong> O registro do status "Preenchido / Entregue" no sistema comprova documentalmente o cumprimento da obrigação funcional no prazo.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 21: PASSO 18 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 18 — Localização do Botão de Download do PDF Oficial</h2>
+                    <div class="slide-subtitle">Geração instantânea do documento padronizado para anexação aos autos</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">PDF & Auditoria</span>
+                <span class="badge-step-num">Slide 21 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_18_botao_pdf.png" alt="Passo 18 — Localização do Botão de Download do PDF Oficial">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-r">1</span>
+            <span>No cabeçalho do formulário, clique no botão azul <strong>"PDF do Livro"</strong> para baixar o documento.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-b">2</span>
+            <span>O badge ao lado confirma o status oficial do documento (<em>Preenchido / Entregue</em>).</span>
+        </div>
+            </div>
+            <div class="callout-box callout-tip">
+        <span><strong>Padrão Documental:</strong> O arquivo gerado é estruturado conforme o padrão documental do Comando da Aeronáutica para juntada ao processo de pagamento (PAG).</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 22: PASSO 19 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 19 — Espelho do Livro do Fiscal em PDF Oficial (Página 1)</h2>
+                    <div class="slide-subtitle">Layout oficial do SILOMS: Termo de abertura, dados cadastrais e tabela limpa</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">PDF & Auditoria</span>
+                <span class="badge-step-num">Slide 22 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_19_pdf_espelho.png" alt="Passo 19 — Espelho do Livro do Fiscal em PDF Oficial (Página 1)">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-b">1</span>
+            <span><strong>Termo de Abertura:</strong> Identificação formal da OM, comissão designada e número do processo administrativo.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-v">2</span>
+            <span><strong>Tabela Oficial:</strong> Detalhamento técnico e administrativo das ocorrências fáticas sem selos visuais de tempestividade.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Fé Pública do Documento:</strong> O PDF gerado pelo SISCONT possui presunção de autenticidade e validade jurídica para instrução de processos administrativos.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 23: PASSO 20 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 20 — Auditoria ACI — Solicitação de Ajustes no Trâmite</h2>
+                    <div class="slide-subtitle">Devolução preventiva para saneamento sem aplicação de penalidades</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">PDF & Auditoria</span>
+                <span class="badge-step-num">Slide 23 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_20_devolucao_aci.png" alt="Passo 20 — Auditoria ACI — Solicitação de Ajustes no Trâmite">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-a">1</span>
+            <span>O card do Livro exibe o aviso âmbar <strong>"Ajustes Solicitados pela ACI"</strong> e o botão <em>"Corrigir Livro do Fiscal"</em>.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-a">2</span>
+            <span>Na caixa de <strong>Trâmites</strong>, leia a mensagem detalhada deixada pela equipe da ACI solicitando o NUP nas evidências.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Controle Preventivo Integrado:</strong> A atuação da ACI visa sanear previamente falhas formais antes do envio aos órgãos de controle externo (TCU / Ciset).</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 24: PASSO 21 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 21 — Tela de Correção do Livro — Alerta de Apontamentos</h2>
+                    <div class="slide-subtitle">Orientação clara no topo do formulário com as determinações da ACI</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">PDF & Auditoria</span>
+                <span class="badge-step-num">Slide 24 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_21_alerta_correcao.png" alt="Passo 21 — Tela de Correção do Livro — Alerta de Apontamentos">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-a">1</span>
+            <span>O cabeçalho do formulário indica expressamente o status <strong>"Ajustes Solicitados"</strong>.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-a">2</span>
+            <span>O quadro de alerta amarelo apresenta textualmente o apontamento emitido pelo auditor da ACI.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Transparência Processual:</strong> Todos os apontamentos da ACI ficam registrados na trilha de auditoria do sistema, garantindo clareza sobre o que foi exigido.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 25: PASSO 22 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 22 — Saneamento da Ocorrência — Inclusão do NUP</h2>
+                    <div class="slide-subtitle">Ajuste na tela unificada com complementação das evidências formais</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">PDF & Auditoria</span>
+                <span class="badge-step-num">Slide 25 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_22_modal_saneamento.png" alt="Passo 22 — Saneamento da Ocorrência — Inclusão do NUP">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-r">1</span>
+            <span>No modal de edição da ocorrência administrativa, adicione o NUP formal (<code>NUP 67000.000999/2026-01</code>) no campo Evidências.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-v">2</span>
+            <span>Clique em <strong>"Salvar Ocorrência"</strong> para gravar o saneamento no banco de dados.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Art. 50 da Lei 9.784/1999 (Motivação e Prova):</strong> A indicação precisa do NUP assegura que qualquer auditor localize fisicamente a notificação e a comprovação da entrega nos autos.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 26: PASSO 23 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 23 — Reateste com Resposta no Modal de Trâmites</h2>
+                    <div class="slide-subtitle">Comunicação formal de saneamento enviada à ACI via novo modal (V2.0)</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">PDF & Auditoria</span>
+                <span class="badge-step-num">Slide 26 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_23_reateste_modal.png" alt="Passo 23 — Reateste com Resposta no Modal de Trâmites">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-r">1</span>
+            <span>No campo <strong>"Observações para a ACI (Trâmites)"</strong>, informe o atendimento: <em>"Atendimento ao apontamento ACI: NUP incluído..."</em>.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-v">2</span>
+            <span>Clique em <strong>"Confirmar e Finalizar"</strong> para reencaminhar o Livro saneado à equipe de auditoria.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Ciclo de Saneamento Concluído:</strong> A resposta formal no trâmite documenta que a fiscalização atuou com presteza no cumprimento da recomendação do Controle Interno.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 27: PASSO 24 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 24 — Homologação Final da ACI — Selo 'Conformidade (OK!)'</h2>
+                    <div class="slide-subtitle">Conclusão com louvor da auditoria preventiva &bull; Liberação para liquidação</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">PDF & Auditoria</span>
+                <span class="badge-step-num">Slide 27 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_24_conformidade_ok.png" alt="Passo 24 — Homologação Final da ACI — Selo 'Conformidade (OK!)'">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-v">1</span>
+            <span>O card do Livro exibe o selo verde definitivo <strong>"Conformidade (OK!)"</strong> chancelado pela ACI.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-v">2</span>
+            <span>O botão verde <strong>"Baixar Livro do Fiscal (PDF)"</strong> está disponível com a versão chancelada para arquivamento.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-b">3</span>
+            <span>A timeline de trâmites registra a mensagem final de aprovação da auditoria interna.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Chancela do Controle Interno:</strong> A homologação atesta que a prestação cumpre todas as exigências legais e normativas da Lei 14.133/21 e da NPA 009/SCON/2025.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 28: PASSO 25 -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Passo 25 — Espelho do Livro do Fiscal Homologado com Trâmite</h2>
+                    <div class="slide-subtitle">Documento oficial chancelado definitivo para juntada aos autos do PAG</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">PDF & Auditoria</span>
+                <span class="badge-step-num">Slide 28 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="figure-wide-box">
+                <img src="img/v2_25_pdf_homologado.png" alt="Passo 25 — Espelho do Livro do Fiscal Homologado com Trâmite">
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <div class="pins-list">
+                <div class="pin-item">
+            <span class="pin-num pin-v">1</span>
+            <span>O PDF definitivo contém as ocorrências saneadas com a indicação precisa do NUP processual.</span>
+        </div>
+<div class="pin-item">
+            <span class="pin-num pin-b">2</span>
+            <span>Termo de encerramento chancelado com histórico cronológico de ateste do fiscal e homologação da ACI.</span>
+        </div>
+            </div>
+            <div class="callout-box callout-law">
+        <span><strong>Prestação de Contas Plena:</strong> O Livro homologado integra o processo de prestação de contas e serve de base para as reuniões mensais de governança.</span>
+    </div>
+        </div>
+    </div>
+    
+
+    <!-- SLIDE 29: BOAS PRÁTICAS E REGRAS DE OURO -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Síntese de Governança: As 4 Regras de Ouro e Prazos Regimentais</h2>
+                    <div class="slide-subtitle">Diretrizes Práticas da Assessoria de Controle Interno &bull; GAP-BR</div>
+                </div>
+            </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">Governança</span>
+                <span class="badge-step-num">Slide 29 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="governance-grid">
+                <!-- COLUNA DA ESQUERDA: AS 4 REGRAS DE OURO -->
+                <div class="gov-col-rules">
+                    <h3 style="color: #1e3a8a; font-size: 10.5pt; margin: 0 0 6px; font-weight: 800;">
+                        &bull; As 4 Regras de Ouro da Fiscalização Contratual
+                    </h3>
+                    
+                    <div class="rule-box" style="border-left-color: #2563eb;">
+                        <div class="rule-header">
+                            <span class="rule-num">1</span>
+                            <strong>Contemporaneidade Absoluta dos Fatos</strong>
+                        </div>
+                        <p>Registre falhas e desvios no exato dia em que ocorrerem na tela unificada. O registro retroativo enfraquece a força probatória perante o TCU.</p>
+                    </div>
+
+                    <div class="rule-box" style="border-left-color: #16a34a;">
+                        <div class="rule-header">
+                            <span class="rule-num">2</span>
+                            <strong>Descrição Fática Precisa e Provas Materiais</strong>
+                        </div>
+                        <p>Detalhe o fato com objetividade técnica (local, horário, quantidade) e anexe evidências (fotos, checklists, e-mails). Evite adjetivações subjetivas.</p>
+                    </div>
+
+                    <div class="rule-box" style="border-left-color: #f59e0b;">
+                        <div class="rule-header">
+                            <span class="rule-num">3</span>
+                            <strong>Notificação Formal com Prazo Útil e NUP</strong>
+                        </div>
+                        <p>Desvios administrativos e reincidências técnicas exigem notificação por escrito com prazo formal (5 dias úteis), ciência do preposto e registro do NUP.</p>
+                    </div>
+
+                    <div class="rule-box" style="border-left-color: #15803d;">
+                        <div class="rule-header">
+                            <span class="rule-num">4</span>
+                            <strong>Ateste Tempestivo com Comunicação no Modal</strong>
+                        </div>
+                        <p>Ateste o Livro impreterivelmente até o 5º dia útil do mês subsequente, utilizando o campo do modal para esclarecer particularidades à equipe da ACI.</p>
+                    </div>
                 </div>
 
-                <div class="bp-card">
-                    <div class="bp-icon">&check;</div>
-                    <h3>2. Duplo Salvamento Consciente</h3>
-                    <p>Lembre-se da distinção operacional: fechar o modal clicando em "Salvar Ocorrência" apenas atualiza a tela; <strong>sempre clique em "Salvar Rascunho" ao final da página</strong> para gravar no banco de dados.</p>
-                </div>
+                <!-- COLUNA DA DIREITA: TABELA DE PRAZOS REGIMENTAIS -->
+                <div class="gov-col-table">
+                    <h3 style="color: #1e3a8a; font-size: 10.5pt; margin: 0 0 6px; font-weight: 800;">
+                        &bull; Prazos Regimentais (NPA 009/SCON/2025)
+                    </h3>
 
-                <div class="bp-card">
-                    <div class="bp-icon">&check;</div>
-                    <h3>3. Notificação Formal e NUP</h3>
-                    <p>Falhas administrativas ou descumprimento de prazos devem gerar <strong>notificação escrita com prazo em dias úteis</strong>. Vincule sempre o NUP do processo administrativo no campo de evidências.</p>
-                </div>
+                    <table class="gov-table">
+                        <thead>
+                            <tr>
+                                <th>Etapa / Marco Operacional</th>
+                                <th style="width: 120px;">Prazo Limite</th>
+                                <th>Responsável</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Registro de Ocorrências Fáticas</strong><br><span style="font-size:7pt; color:#64748b;">Anotação contínua in loco</span></td>
+                                <td><span class="badge-table bg-primary">Imediato (dia do fato)</span></td>
+                                <td>Fiscal Técnico / Administrativo</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Prazo para Defesa / Saneamento</strong><br><span style="font-size:7pt; color:#64748b;">Notificação formal de inadimplemento</span></td>
+                                <td><span class="badge-table bg-warning">5 dias úteis</span></td>
+                                <td>Empresa Contratada (Preposto)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Fechamento & Ateste do Livro</strong><br><span style="font-size:7pt; color:#64748b;">Consolidação mensal no SISCONT</span></td>
+                                <td><span class="badge-table bg-danger">Até o 5º dia do mês X+1</span></td>
+                                <td>Fiscal Titular Designado</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Auditoria Preventiva & Diligências</strong><br><span style="font-size:7pt; color:#64748b;">Análise formal e pedidos de ajuste</span></td>
+                                <td><span class="badge-table bg-info">Até o 9º dia do mês X+1</span></td>
+                                <td>Assessoria de Controle Interno</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Reuniões de Prestação de Contas</strong><br><span style="font-size:7pt; color:#64748b;">Apresentação ao Ordenador</span></td>
+                                <td><span class="badge-table bg-success">15 a 20 do mês X+1</span></td>
+                                <td>Fiscais e Gestores de Contrato</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-                <div class="bp-card">
-                    <div class="bp-icon">&check;</div>
-                    <h3>4. Ateste no Prazo e SILOMS</h3>
-                    <p>Realize o ateste eletrônico <strong>dentro do prazo previsto pela ACI</strong>. Baixe o PDF gerado e insira-o no PAG do contrato no SILOMS.</p>
+                    <div class="callout-box callout-law" style="margin-top: 6px;">
+                        <span><strong>Blindagem Jurídica:</strong> O cumprimento rigoroso destes prazos assegura que o fiscal cumpra as exigências da Lei 14.133/21, blindando sua conduta perante os órgãos de controle.</span>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="slide-footer">
-            <div class="callout-box callout-law">
-                <span><strong>Mensagem Institucional da ACI:</strong> A fiscalização tempestiva, motivada e documentalmente instruída é a maior garantia jurídica do próprio fiscal perante os órgãos de controle interno e externo (TCU, Ciset e Ministério Público). O SISCONT foi projetado para valorizar e proteger a atuação do agente público.</span>
+            <span>SISCONT &bull; Diretrizes de Governança e Controle Interno &bull; GAP-BR / ACI &bull; Versão 2.0</span>
+        </div>
+    </div>
+
+
+    <!-- SLIDE 30: CHECKLIST E ENCERRAMENTO -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-header-left">
+                <img src="img/gap_logo.png" alt="GAP-BR">
+                <div class="slide-title-group">
+                    <h2>Checklist Operacional do Fiscal de Contrato e Canais de Apoio</h2>
+                    <div class="slide-subtitle">Roteiro de Autoavaliação Mensal antes do Ateste Definitivo &bull; GAP-BR</div>
+                </div>
             </div>
+            <div class="slide-header-right">
+                <span class="badge-chapter">Checklist Final</span>
+                <span class="badge-step-num">Slide 30 de 30</span>
+            </div>
+        </div>
+
+        <div class="slide-body">
+            <div class="checklist-grid">
+                <!-- COLUNA DA ESQUERDA: CHECKLIST INTERATIVO -->
+                <div class="chk-col-list">
+                    <h3 style="color: #1e3a8a; font-size: 10.5pt; margin: 0 0 6px; font-weight: 800;">
+                        &bull; Checklist Mensal do Fiscal (8 Itens Mandatórios)
+                    </h3>
+
+                    <div class="chk-item">
+                        <span class="chk-box">&check;</span>
+                        <div><strong>1. Vistorias Físicas Registradas:</strong> Vistorias de rotina e ordens de serviço do mês devidamente lançadas.</div>
+                    </div>
+                    <div class="chk-item">
+                        <span class="chk-box">&check;</span>
+                        <div><strong>2. Desvios e Falhas Lançados:</strong> Fatos geradores de limpeza, insumos ou faltas inseridos no próprio dia do fato.</div>
+                    </div>
+                    <div class="chk-item">
+                        <span class="chk-box">&check;</span>
+                        <div><strong>3. Regularizações Verificadas in loco:</strong> Ocorrências solucionadas auditadas e atualizadas para "Resolvido".</div>
+                    </div>
+                    <div class="chk-item">
+                        <span class="chk-box">&check;</span>
+                        <div><strong>4. Notificações com Prazo e Ciência:</strong> Inadimplementos possuem número de notificação, ciência do preposto e NUP.</div>
+                    </div>
+                    <div class="chk-item">
+                        <span class="chk-box">&check;</span>
+                        <div><strong>5. Eliminação de Duplicidades:</strong> A tabela foi revisada e não possui lançamentos repetidos ou indevidos.</div>
+                    </div>
+                    <div class="chk-item">
+                        <span class="chk-box">&check;</span>
+                        <div><strong>6. Identificação do Fiscal em Portaria:</strong> O nome selecionado no formulário corresponde à portaria vigente.</div>
+                    </div>
+                    <div class="chk-item">
+                        <span class="chk-box">&check;</span>
+                        <div><strong>7. Observações de Trâmite Enviadas:</strong> Particularidades e retenções cautelares foram informadas no novo modal.</div>
+                    </div>
+                    <div class="chk-item">
+                        <span class="chk-box">&check;</span>
+                        <div><strong>8. PDF Oficial Homologado Juntado ao PAG:</strong> O arquivo chancelado foi baixado e inserido no processo SEI.</div>
+                    </div>
+                </div>
+
+                <!-- COLUNA DA DIREITA: CANAIS DE APOIO E CONTATO ACI -->
+                <div class="chk-col-support">
+                    <div class="support-card">
+                        <h4 style="color: #1e3a8a; margin: 0 0 4px; font-size: 10pt; font-weight: 800;">
+                            &bull; Assessoria de Controle Interno (ACI / GAP-BR)
+                        </h4>
+                        <p style="font-size: 8pt; color: #334155; margin: 0 0 6px; line-height: 1.35;">
+                            A equipe da ACI está à disposição dos fiscais de contrato para orientações preventivas sobre procedimentos, notificações formais e preenchimento no SISCONT.
+                        </p>
+
+                        <div class="contact-row">
+                            <strong>Localização:</strong> Prédio do Comando do GAP-BR &bull; Sala da ACI
+                        </div>
+                        <div class="contact-row">
+                            <strong>Ramal Telefônico:</strong> (61) 3204-XXXX / Ramal XXXX
+                        </div>
+                        <div class="contact-row">
+                            <strong>E-mail Institucional:</strong> <code>aci.gapbr@fab.mil.br</code>
+                        </div>
+                        <div class="contact-row">
+                            <strong>Canal SISCONT:</strong> Caixa de Trâmites da Prestação de Contas Mensal
+                        </div>
+                    </div>
+
+                    <div class="callout-box callout-law" style="margin-top: 8px;">
+                        <span><strong>Mensagem Final da ACI:</strong> A boa fiscalização contratual não é aquela que apenas pune, mas a que previne falhas, protege o Erário e assegura a excelência dos serviços prestados à Força Aérea Brasileira.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>COMANDO DA AERONÁUTICA &bull; GRUPAMENTO DE APOIO DE BRASÍLIA &bull; ASSESSORIA DE CONTROLE INTERNO &bull; 2026</span>
         </div>
     </div>
 

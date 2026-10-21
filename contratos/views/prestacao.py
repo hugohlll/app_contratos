@@ -241,23 +241,8 @@ def upload_prestacao(request, contrato_id):
             })
         
         obs_historico = controle_execucao.historico_observacoes.select_related('agente', 'agente__posto').all()
-        if obs_historico.exists():
-            for obs in obs_historico:
-                ag = obs.agente or controle_execucao.agente
-                if ag and hasattr(ag, 'posto') and ag.posto:
-                    fiscal_nome = f"{ag.posto.sigla} {ag.nome_de_guerra}"
-                elif ag:
-                    fiscal_nome = ag.nome_de_guerra or ag.nome_completo
-                else:
-                    fiscal_nome = "Fiscal Responsável"
-                dialogo_execucao.append({
-                    'tipo': 'fiscal',
-                    'autor': fiscal_nome,
-                    'data': obs.data_envio,
-                    'texto': obs.observacao.strip(),
-                })
-        elif controle_execucao.observacao and controle_execucao.observacao.strip():
-            ag = controle_execucao.agente
+        for obs in obs_historico:
+            ag = obs.agente or controle_execucao.agente
             if ag and hasattr(ag, 'posto') and ag.posto:
                 fiscal_nome = f"{ag.posto.sigla} {ag.nome_de_guerra}"
             elif ag:
@@ -267,8 +252,8 @@ def upload_prestacao(request, contrato_id):
             dialogo_execucao.append({
                 'tipo': 'fiscal',
                 'autor': fiscal_nome,
-                'data': controle_execucao.data_envio,
-                'texto': controle_execucao.observacao.strip(),
+                'data': obs.data_envio,
+                'texto': obs.observacao.strip(),
             })
         dialogo_execucao.sort(key=lambda x: x['data'])
 
@@ -617,7 +602,7 @@ def get_msg_mais_recente(obj, tipo_agente='fiscal'):
                     'data': obs.data_envio,
                     'texto': obs.observacao.strip(),
                 })
-    elif getattr(obj, 'observacao', None) and obj.observacao.strip():
+    elif not hasattr(obj, 'historico_observacoes') and getattr(obj, 'observacao', None) and obj.observacao.strip():
         mensagens.append({
             'tipo': tipo_agente,
             'autor': 'Fiscal Responsável' if tipo_agente == 'fiscal' else 'Gestor do Setor',

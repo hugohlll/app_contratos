@@ -241,11 +241,12 @@ def formulario_execucao(request, contrato_id):
             controle.data_envio = timezone.now()
             controle.save()
 
-            if controle.observacao and controle.observacao.strip():
+            observacao_tramite = request.POST.get('observacao_tramite', '').strip()
+            if acao != 'rascunho' and observacao_tramite:
                 HistoricoObservacaoExecucao.objects.create(
                     controle=controle,
                     agente=controle.agente,
-                    observacao=controle.observacao.strip()
+                    observacao=observacao_tramite
                 )
 
             # Se fornecido ocorrencias_json (compatibilidade com envios legados e testes):

@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Apresentação Prática - Guia de Utilização para Fiscais de Contrato</title>
+    <style>
+        @page {
+            size: 16in 9in;
+            margin: 0;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            width: 16in;
+            height: 9in;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #071527;
+            color: #1a2a44;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .slide {
+            width: 16in;
+            height: 9in;
+            max-height: 9in;
+            overflow: hidden;
+            position: relative;
+            page-break-after: always;
+            break-after: page;
+            padding: 0.65in 0.85in 0.45in 0.85in;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Slide Claro */
+        .slide-light {
+            background: linear-gradient(180deg, #F8FAFD 0%, #EEF3F9 100%);
+            border-top: 6px solid #004B87;
+        }
+
+        /* Slide Escuro (Capa e Encerramento) */
+        .slide-dark {
+            background: linear-gradient(135deg, #071527 0%, #0B1E36 50%, #002B49 100%);
+            color: #FFFFFF;
+            border-top: 6px solid #00C2FF;
+        }
+
+        .capa-bg-glow {
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(0, 128, 255, 0.15) 0%, rgba(0, 75, 135, 0) 70%);
+            pointer-events: none;
+        }
+
+        /* Headers */
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.25in;
+        }
+        .header-text {
+            max-width: 85%;
+        }
+        .eyebrow {
+            display: inline-block;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .eyebrow-blue { color: #0066CC; }
+        .eyebrow-red { color: #D9383A; }
+        .slide-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #0B1E36;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+        .slide-subtitle {
+            font-size: 17px;
+            color: #4A607A;
+            line-height: 1.4;
+        }
+        .header-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #FFFFFF;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #004B87;
+            box-shadow: 0 4px 12px rgba(11, 30, 54, 0.06);
+            border: 1px solid rgba(0, 75, 135, 0.1);
+        }
+        .mini-logo {
+            height: 24px;
+            width: auto;
+        }
+
+        /* Footers */
+        .slide-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #7B8FA6;
+            border-top: 1px solid #D6E0EC;
+            padding-top: 12px;
+            margin-top: 0.15in;
+        }
+
+        /* Slide Body Layouts */
+        .slide-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 20px;
+        }
+        .grid-3col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-gap: 22px;
+        }
+        .grid-split {
+            display: grid;
+            grid-template-columns: 1fr 1.25fr;
+            grid-gap: 30px;
+            align-items: center;
+        }
+
+        /* Cards Base */
+        .card {
+            background: #FFFFFF;
+            border-radius: 14px;
+            padding: 22px 24px;
+            box-shadow: 0 8px 20px rgba(11, 30, 54, 0.05);
+            border: 1px solid rgba(0, 75, 135, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #0B1E36;
+        }
+        .card-desc {
+            font-size: 14.5px;
+            color: #4A607A;
+            line-height: 1.5;
+        }
+
+        /* Callouts */
+        .slide-footer-callout {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-top: 16px;
+            font-size: 14.5px;
+            line-height: 1.4;
+        }
+        .callout-info {
+            background: #E6F7FF;
+            border: 1px solid #91D5FF;
+            color: #0050B3;
+        }
+        .callout-success {
+            background: #F6FFED;
+            border: 1px solid #B7EB8F;
+            color: #237804;
+        }
+        .callout-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        /* Benefit Cards */
+        .card-benefit {
+            position: relative;
+            justify-content: flex-start;
+            padding-top: 26px;
+        }
+        .card-pill {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #004B87;
+            color: #FFFFFF;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .icon-primary {
+            background: #EBF3FB;
+            color: #004B87;
+            width: fit-content;
+            margin-bottom: 14px;
+            font-size: 28px;
+            line-height: 1;
+            padding: 10px;
+            border-radius: 12px;
+        }
+        .icon-gold {
+            background: #FFF9E6;
+            color: #B8860B;
+            width: fit-content;
+            margin-bottom: 14px;
+            font-size: 28px;
+            line-height: 1;
+            padding: 10px;
+            border-radius: 12px;
+        }
+        .benefit-list {
+            list-style: none;
+            margin-top: 14px;
+            border-top: 1px dashed #D6E0EC;
+            padding-top: 12px;
+        }
+        .benefit-list li {
+            font-size: 14px;
+            color: #2E4057;
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+        .benefit-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #0080FF;
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        /* Step Cards */
+        .card-step {
+            border-top: 4px solid #0066CC;
+            padding-top: 24px;
+            position: relative;
+        }
+        .card-featured {
+            border-top: 4px solid #0080FF;
+            box-shadow: 0 12px 30px rgba(0, 102, 204, 0.12);
+        }
+        .step-badge {
+            display: inline-block;
+            background: #EBF3FB;
+            color: #0066CC;
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            width: fit-content;
+        }
+        .step-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0B1E36;
+            margin-bottom: 8px;
+        }
+        .step-desc {
+            font-size: 14.5px;
+            color: #4A607A;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+        .card-tag {
+            display: inline-block;
+            background: #F0F4F8;
+            color: #556B82;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-top: auto;
+            width: fit-content;
+        }
+
+        /* Split Screen */
+        .split-col-text {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .feature-item {
+            display: flex;
+            gap: 16px;
+            background: #FFFFFF;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 75, 135, 0.08);
+            box-shadow: 0 4px 12px rgba(11, 30, 54, 0.03);
+            align-items: flex-start;
+        }
+        .feature-icon {
+            font-size: 26px;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .feature-desc h4 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0B1E36;
+            margin-bottom: 4px;
+        }
+        .feature-desc p {
+            font-size: 14px;
+            color: #4A607A;
+            line-height: 1.45;
+        }
+
+        .mockup-window {
+            background: #FFFFFF;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(11, 30, 54, 0.15);
+            border: 1px solid #D6E0EC;
+        }
+        .mockup-header {
+            background: #E8EEF5;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid #D6E0EC;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot.red { background: #FF5F56; }
+        .dot.yellow { background: #FFBD2E; }
+        .dot.green { background: #27C93F; }
+        .mockup-title {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #556B82;
+            margin-left: 8px;
+        }
+        .mockup-img {
+            width: 100%;
+            height: 3.8in;
+            object-fit: contain;
+            background: #FFFFFF;
+            display: block;
+            padding: 8px;
+        }
+
+        /* Capa Estilo */
+        .slide-capa {
+            justify-content: space-between;
+        }
+        .capa-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logos-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .logo-fab {
+            height: 52px;
+            width: auto;
+        }
+        .logo-gap {
+            height: 52px;
+            width: auto;
+        }
+        .logo-divider {
+            width: 1px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .capa-meta {
+            display: flex;
+            gap: 10px;
+        }
+        .badge {
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .badge-gold {
+            background: rgba(212, 175, 55, 0.2);
+            color: #F1D77A;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+        .badge-cyan {
+            background: rgba(0, 194, 255, 0.2);
+            color: #5CE1E6;
+            border: 1px solid rgba(0, 194, 255, 0.4);
+        }
+        .eyebrow-accent {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 2.5px;
+            color: #00C2FF;
+            margin-bottom: 14px;
+        }
+        .capa-title {
+            font-size: 54px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+            margin-bottom: 12px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #D4E4F7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .capa-subtitle {
+            font-size: 25px;
+            font-weight: 600;
+            color: #92BCEB;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+        .capa-desc {
+            font-size: 16.5px;
+            color: #C0D6F0;
+            line-height: 1.6;
+            max-width: 80%;
+        }
+        .capa-footer {
+            display: grid;
+            grid-template-columns: 1.5fr 1.5fr 1fr;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 20px;
+        }
+        .footer-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .footer-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #6C8DAE;
+            letter-spacing: 1px;
+        }
+        .footer-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        /* Encerramento Estilo */
+        .slide-encerramento {
+            justify-content: space-between;
+        }
+        .slide-header-dark {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .encerramento-content {
+            text-align: center;
+            max-width: 85%;
+            margin: 0 auto;
+        }
+        .encerramento-title {
+            font-size: 40px;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #FFFFFF;
+        }
+        .encerramento-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-gap: 20px;
+            text-align: left;
+        }
+        .contato-card {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 18px 22px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .contato-icon {
+            font-size: 28px;
+        }
+        .contato-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .contato-label {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #00C2FF;
+        }
+        .contato-val {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+        .encerramento-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 14px;
+            font-size: 13px;
+            color: #6C8DAE;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide slide-dark slide-capa">
+        <div class="capa-bg-glow"></div>
+        <div class="capa-header">
+            <div class="logos-group">
+                <img src="img/fab_logo.png" alt="FAB" class="logo-fab">
+                <div class="logo-divider"></div>
+                <img src="img/gap_logo.png" alt="GAP-BR" class="logo-gap">
+            </div>
+            <div class="capa-meta">
+                <span class="badge badge-gold">CAPACITAÇÃO DE FISCAIS DE CONTRATO</span>
+                <span class="badge badge-cyan">GUIA RÁPIDO V2.0</span>
+            </div>
+        </div>
+
+        <div class="capa-content">
+            <div class="eyebrow-accent">ROTEIRO OPERACIONAL SIMPLIFICADO &bull; GAP-BR</div>
+            <h1 class="capa-title">LIVRO DO FISCAL NA PRÁTICA</h1>
+            <p class="capa-subtitle">Lançamento de Ocorrências, Ateste Mensal e Interação com a ACI</p>
+            <p class="capa-desc">
+                Um guia direto ao ponto para orientar os fiscais de contrato do GAP-BR no registro de falhas,
+                fechamento mensal do Livro do Fiscal e saneamento preventivo de apontamentos de auditoria.
+            </p>
+        </div>
+
+        <div class="capa-footer">
+            <div class="footer-col">
+                <span class="footer-label">ELABORAÇÃO</span>
+                <span class="footer-value">Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            </div>
+            <div class="footer-col">
+                <span class="footer-label">PÚBLICO-ALVO</span>
+                <span class="footer-value">Fiscais Técnicos e Administrativos de Contratos</span>
+            </div>
+            <div class="footer-col">
+                <span class="footer-label">VERSÃO</span>
+                <span class="footer-value">Outubro de 2026 &bull; Versão 2.0</span>
+            </div>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">PANORAMA OPERACIONAL</span>
+                <h2 class="slide-title">Sua Rotina Mensal em Três Momentos Simples</h2>
+                <p class="slide-subtitle">O sistema foi desenhado para eliminar burocracias e integrar-se com leveza ao seu dia a dia.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-3col">
+            <div class="card card-step">
+                <div class="step-badge">ETAPA 1 &bull; NO DIA A DIA</div>
+                <h3 class="step-title">1. Lançar Ocorrências</h3>
+                <p class="step-desc">Identificou uma falha ou descumprimento na execução do contrato? Lance no sistema no momento em que ocorreu e acompanhe a regularização pela contratada.</p>
+                <div class="card-tag">Lançamento Contínuo</div>
+            </div>
+
+            <div class="card card-step card-featured">
+                <div class="step-badge" style="background:#EBF3FB; color:#0066CC;">ETAPA 2 &bull; ATÉ O 2º DIA ÚTIL</div>
+                <h3 class="step-title">2. Atestar e Enviar o Mês</h3>
+                <p class="step-desc">Com o fim do mês, acesse o portal, revise as ocorrências consolidadas automaticamente, insira recados para a ACI (se houver) e clique em <strong>Finalizar e Atestar</strong>.</p>
+                <div class="card-tag" style="background:#0066CC; color:#fff;">Fechamento Mensal</div>
+            </div>
+
+            <div class="card card-step">
+                <div class="step-badge">ETAPA 3 &bull; PÓS-ENVIO</div>
+                <h3 class="step-title">3. Acompanhar a Auditoria</h3>
+                <p class="step-desc">A ACI audita os lançamentos. Havendo orientações de saneamento, corrija no próprio sistema. Estando conforme, baixe o PDF homologado para juntada no SEI.</p>
+                <div class="card-tag">Homologação ACI</div>
+            </div>
+        </div>
+
+        <div class="slide-footer-callout callout-info">
+            <span class="callout-icon">💡</span>
+            <div class="callout-text"><strong>Sem papel e sem complicação:</strong> O fiscal não precisa formatar arquivos Word ou manter planilhas paralelas. Todas as etapas ocorrem dentro do Portal de Prestação de Contas.</div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 2 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">PASSO INICIAL</span>
+                <h2 class="slide-title">Como Acessar o Livro do Fiscal no Portal</h2>
+                <p class="slide-subtitle">Acesso direto pelo SISCONT com visualização dos contratos sob sua responsabilidade funcional.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">🌐</div>
+                    <div class="feature-desc">
+                        <h4>1. Acesse a Área dos Fiscais</h4>
+                        <p>No Portal de Prestação de Contas, selecione o módulo de fiscais em <code>/prestacoes/fiscais/</code> para listar seus contratos designados.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-desc">
+                        <h4>2. Localize o Contrato</h4>
+                        <p>Utilize os filtros rápidos por número de contrato, fornecedor ou objeto para abrir o painel individual de fiscalização.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📑</div>
+                    <div class="feature-desc">
+                        <h4>3. Abra a Aba "Livro do Fiscal"</h4>
+                        <p>Na visualização do contrato, clique na aba <strong>"1. Livro do Fiscal"</strong> para acessar a central de ocorrências e o histórico mensal.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">SISCONT &bull; Painel do Contrato / Aba Livro do Fiscal</span>
+                    </div>
+                    <img src="img/v2_03_aba_livro.png" alt="Aba Livro do Fiscal" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 3 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">MÓDULO 1 &bull; LANÇAMENTO DE OCORRÊNCIAS</span>
+                <h2 class="slide-title">Registro Contínuo: Lance no Momento do Fato</h2>
+                <p class="slide-subtitle">A anotação contemporânea protege o fiscal, atende ao art. 117 da Lei 14.133/21 e evita esquecimentos.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-2x2">
+            <div class="card card-benefit">
+                <div class="card-pill">TIPO 1</div>
+                <div class="card-icon icon-primary">🛠️</div>
+                <h3 class="card-title">Fiscalização Técnica</h3>
+                <p class="card-desc">Falhas na execução física do serviço ou entrega do bem material.</p>
+                <ul class="benefit-list">
+                    <li>Falta de insumos, materiais ou equipamentos</li>
+                    <li>Atraso na prestação do serviço ou limpeza inadequada</li>
+                    <li>Ausência de uniforme, crachá ou EPIs por funcionários</li>
+                </ul>
+            </div>
+
+            <div class="card card-benefit">
+                <div class="card-pill">TIPO 2</div>
+                <div class="card-icon icon-gold">📄</div>
+                <h3 class="card-title">Fiscalização Administrativa</h3>
+                <p class="card-desc">Irregularidades documentais, trabalhistas, previdenciárias ou fiscais.</p>
+                <ul class="benefit-list">
+                    <li>Ausência de guias de recolhimento de FGTS e INSS</li>
+                    <li>Atraso no pagamento de salários ou benefícios trabalhistas</li>
+                    <li>Certidão negativa de débitos vencida ou pendência fiscal</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide-footer-callout callout-success">
+            <span class="callout-icon">🎯</span>
+            <div class="callout-text"><strong>Roteamento Automático:</strong> Você não precisa se preocupar em qual mês salvar. Ao informar a Data do Fato, o sistema aloca a ocorrência diretamente no mês de competência correto!</div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 4 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">PASSO A PASSO</span>
+                <h2 class="slide-title">Preenchendo a Ocorrência em Poucos Cliques</h2>
+                <p class="slide-subtitle">O formulário inteligente solicita apenas as informações estritamente necessárias para a gestão do fato.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">📅</div>
+                    <div class="feature-desc">
+                        <h4>1. Data, Hora e Local</h4>
+                        <p>Informe o momento exato em que a falha foi constatada e o setor/bloco onde ocorreu o fato.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">⚖️</div>
+                    <div class="feature-desc">
+                        <h4>2. Tipo e Gravidade</h4>
+                        <p>Selecione Técnica ou Administrativa e defina a gravidade (Leve, Média, Grave ou Gravíssima) conforme a NPA 009.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">✍️</div>
+                    <div class="feature-desc">
+                        <h4>3. Descrição e Determinações</h4>
+                        <p>Descreva o fato objetivamente e indique a providência exigida da contratada com o prazo concedido para regularização.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">Formulário Guiado &bull; Nova Ocorrência</span>
+                    </div>
+                    <img src="img/v2_05_modal_tecnica.png" alt="Modal Nova Ocorrência" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 5 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">CICLO DE RESOLUÇÃO</span>
+                <h2 class="slide-title">A Empresa Corrigiu a Falha? Saneie o Registro</h2>
+                <p class="slide-subtitle">Manter o status atualizado reflete a efetividade da fiscalização e o cumprimento das determinações.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">✏️</div>
+                    <div class="feature-desc">
+                        <h4>1. Clique no Lápis Azul de Edição</h4>
+                        <p>Na tabela de ocorrências, localize o lançamento pendente e clique no ícone de lápis para reabrir o formulário.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🟢</div>
+                    <div class="feature-desc">
+                        <h4>2. Altere o Status para "Resolvido"</h4>
+                        <p>Caso a contratada tenha regularizado a situação no prazo concedido, altere a situação para o status verde <strong>"Resolvido"</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📝</div>
+                    <div class="feature-desc">
+                        <h4>3. Registre a Ação Corretiva</h4>
+                        <p>No campo de determinações ou observações, insira uma breve descrição da solução adotada pela empresa e salve.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">Edição de Ocorrência &bull; Status Resolvido</span>
+                    </div>
+                    <img src="img/v2_07_modal_resolvido.png" alt="Ocorrência Resolvida" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 6 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">RIGOR FORMAL</span>
+                <h2 class="slide-title">Ocorrências com Notificação Formal ou Processo NUP</h2>
+                <p class="slide-subtitle">Como vincular documentos oficiais às ocorrências graves para fundamentar glosas ou sanções contratuais.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">📬</div>
+                    <div class="feature-desc">
+                        <h4>Notificação Formal Emitida? Marque "SIM"</h4>
+                        <p>Se a empresa foi formalmente notificada via ofício ou SEI, selecione a opção "SIM" e informe o número do documento (ex: <em>Notificação nº 012/GAP-BR/2026</em>).</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔢</div>
+                    <div class="feature-desc">
+                        <h4>Informe o Processo NUP/SEI</h4>
+                        <p>No campo de evidências, cite o número do processo administrativo onde tramita a apuração ou retenção cautelar de valores.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-desc">
+                        <h4>Aprova Imediata na Auditoria</h4>
+                        <p>Esse preenchimento correto evita que a ACI devolva o Livro para solicitar o número da notificação durante a auditoria.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">Formulário &bull; Notificação Administrativa com NUP</span>
+                    </div>
+                    <img src="img/v2_08_modal_adm.png" alt="Ocorrência com Notificação" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 7 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">MÓDULO 2 &bull; FECHAMENTO MENSAL</span>
+                <h2 class="slide-title">Virada do Mês: O Livro Pronto Sem Esforço</h2>
+                <p class="slide-subtitle">Todas as ocorrências registradas ao longo do mês já aparecem consolidadas no formulário mensal.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-3col">
+            <div class="card card-step">
+                <div class="step-badge">DURANTE O MÊS</div>
+                <h3 class="step-title">Trava Regulatória</h3>
+                <p class="step-desc">Enquanto o mês estiver em andamento, o botão de ateste fica bloqueado. Isso assegura que o fiscal continue registrando fatos até o último dia do período.</p>
+            </div>
+
+            <div class="card card-step card-featured">
+                <div class="step-badge" style="background:#EBF3FB; color:#0066CC;">VIRADA DO MÊS</div>
+                <h3 class="step-title">Liberação do Botão</h3>
+                <p class="step-desc">No 1º dia útil do mês seguinte, o botão <strong>"Finalizar e Atestar Mês"</strong> é automaticamente liberado no portal para realização do fechamento.</p>
+            </div>
+
+            <div class="card card-step">
+                <div class="step-badge">PRAZO REGIMENTAL</div>
+                <h3 class="step-title">Até o 2º Dia Útil</h3>
+                <p class="step-desc">O fiscal deve realizar o ateste até o 2º dia útil, permitindo que a ACI proceda com a auditoria mensal antes do envio para liquidação e pagamento.</p>
+            </div>
+        </div>
+
+        <div class="slide-footer-callout callout-info">
+            <span class="callout-icon">💡</span>
+            <div class="callout-text"><strong>Sem ocorrências no mês?</strong> Sem problemas! O fiscal simplesmente acessa o formulário de ateste, confirma que o serviço transcorreu em perfeita normalidade e atesta o Livro sem ocorrências.</div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 8 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">ATESTO ELETRÔNICO</span>
+                <h2 class="slide-title">Novo Modal de Ateste: Formalização e Canal para a ACI</h2>
+                <p class="slide-subtitle">Conheça o novo campo exclusivo de observações de trâmite, que não polui o texto oficial do Livro do Fiscal.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">📜</div>
+                    <div class="feature-desc">
+                        <h4>Declaração Legal de Ateste</h4>
+                        <p>O fiscal lê a manifestação legal em cumprimento à Lei 14.133/2021, atestando a veracidade de todas as anotações do período.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">💬</div>
+                    <div class="feature-desc">
+                        <h4>NOVO: Observações para a ACI (Trâmites)</h4>
+                        <p>Campo opcional para enviar recados, esclarecer particularidades ou justificar atrasos da empresa diretamente à equipe de auditoria.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-desc">
+                        <h4>Separação Inteligente de Conteúdo</h4>
+                        <p>Esta mensagem trafega na timeline de trâmites da ACI e <strong>não altera</strong> as declarações formais ("Nada mais a declarar") do Livro do Fiscal.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">Novo Modal &bull; Ateste e Campo para a ACI</span>
+                    </div>
+                    <img src="img/v2_16_modal_tramites.png" alt="Modal de Trâmites" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 9 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">MÓDULO 3 &bull; AUDITORIA E TRÂMITES</span>
+                <h2 class="slide-title">Pós-Envio: Como Acompanhar a Auditoria da ACI</h2>
+                <p class="slide-subtitle">Após o ateste, o sistema atualiza o status para "Preenchido / Entregue" e inicia a análise do Controle Interno.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">📋</div>
+                    <div class="feature-desc">
+                        <h4>Status "Preenchido / Entregue"</h4>
+                        <p>Confirmação imediata no portal de que o Livro do mês foi transmitido com sucesso à Assessoria de Controle Interno.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">⏱️</div>
+                    <div class="feature-desc">
+                        <h4>Timeline de Trâmites em Tempo Real</h4>
+                        <p>Histórico completo com registro de data/hora do ateste, nome do fiscal e mensagens trocadas com a ACI.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🚦</div>
+                    <div class="feature-desc">
+                        <h4>Os Dois Caminhos da Auditoria</h4>
+                        <p><strong>Caminho A:</strong> Homologação direta ("Conformidade OK!").<br><strong>Caminho B:</strong> Devolução preventiva para saneamento de pendências.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">Portal do Contrato &bull; Status Entregue e Timeline</span>
+                    </div>
+                    <img src="img/v2_17_painel_entregue_timeline.png" alt="Status Entregue" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 10 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-red">SANEAMENTO PREVENTIVO</span>
+                <h2 class="slide-title">A ACI Solicitou Ajustes? Veja Como Proceder</h2>
+                <p class="slide-subtitle">A devolução não é uma punição: é uma oportunidade preventiva de sanear falhas antes do fechamento das contas.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">⚠️</div>
+                    <div class="feature-desc">
+                        <h4>1. Alerta "Ajustes Solicitados"</h4>
+                        <p>O portal destaca o status em amarelo e exibe a mensagem detalhada enviada pelo auditor da ACI com o que deve ser corrigido.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-desc">
+                        <h4>2. Verifique o Apontamento</h4>
+                        <p>Exemplo comum: <em>"Favor anexar o NUP do processo de notificação formal da empresa na ocorrência administrativa nº 1"</em>.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">✏️</div>
+                    <div class="feature-desc">
+                        <h4>3. Edite e Saneie na Tabela</h4>
+                        <p>Abra a ocorrência indicada, clique no lápis de edição, complemente a informação solicitada e salve as alterações.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">Portal do Contrato &bull; Devolução com Apontamentos da ACI</span>
+                    </div>
+                    <img src="img/v2_20_devolucao_aci.png" alt="Devolução ACI" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 11 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">REATESTE E HOMOLOGAÇÃO</span>
+                <h2 class="slide-title">Reenvio Justificado e Conclusão com Selo Verde</h2>
+                <p class="slide-subtitle">Após sanear a pendência, reenvie o Livro e acompanhe a homologação definitiva da ACI.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">📤</div>
+                    <div class="feature-desc">
+                        <h4>1. Clique em "Finalizar e Atestar"</h4>
+                        <p>No final do formulário, clique novamente no botão verde para abrir o modal de confirmação de envio.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">💬</div>
+                    <div class="feature-desc">
+                        <h4>2. Responda à ACI no Campo de Trâmites</h4>
+                        <p>Informe o que foi ajustado (ex: <em>"Apontamento atendido: NUP inserido no campo de evidências"</em>) e confirme.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">✅</div>
+                    <div class="feature-desc">
+                        <h4>3. Selo Verde "Conformidade (OK!)"</h4>
+                        <p>A ACI valida a correção e homologa a prestação de contas, encerrando o ciclo mensal com total segurança jurídica.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">Homologação ACI &bull; Status Conformidade (OK!)</span>
+                    </div>
+                    <img src="img/v2_24_conformidade_ok.png" alt="Homologação OK" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 12 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-light">
+        <div class="slide-header">
+            <div class="header-text">
+                <span class="eyebrow eyebrow-blue">DOCUMENTAÇÃO OFICIAL</span>
+                <h2 class="slide-title">Baixando o PDF Oficial para o Processo SEI</h2>
+                <p class="slide-subtitle">Documento diagramado no padrão SILOMS com valor probatório formal pronto para download em 1 clique.</p>
+            </div>
+            <div class="header-badge"><img src="img/gap_logo.png" class="mini-logo"> GAP-BR / ACI</div>
+        </div>
+
+        <div class="slide-body grid-split">
+            <div class="split-col-text">
+                <div class="feature-item">
+                    <div class="feature-icon">📥</div>
+                    <div class="feature-desc">
+                        <h4>Download em 1 Clique</h4>
+                        <p>No painel do contrato ou dentro do formulário, clique no botão azul <strong>"Visualizar / Baixar PDF Oficial"</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🏛️</div>
+                    <div class="feature-desc">
+                        <h4>Padronização do SILOMS</h4>
+                        <p>O documento gerado contém Termo de Abertura, tabela cronológica completa de ocorrências e declaração de ciência com carimbo de tempo.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📎</div>
+                    <div class="feature-desc">
+                        <h4>Juntada Imediata no SEI</h4>
+                        <p>Anexe o arquivo PDF diretamente ao processo de prestação de contas mensal da sua unidade no SEI, sem necessidade de editar nada.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="split-col-img">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                        <span class="mockup-title">Espelho SILOMS &bull; PDF Oficial Homologado</span>
+                    </div>
+                    <img src="img/v2_25_pdf_homologado.png" alt="PDF Homologado" class="mockup-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>Assessoria de Controle Interno (ACI / GAP-BR)</span>
+            <span>Slide 13 / 14</span>
+        </div>
+    </div>
+    
+
+    <div class="slide slide-dark slide-encerramento">
+        <div class="capa-bg-glow"></div>
+        <div class="slide-header-dark">
+            <div class="logos-group">
+                <img src="img/fab_logo.png" alt="FAB" class="logo-fab">
+                <div class="logo-divider"></div>
+                <img src="img/gap_logo.png" alt="GAP-BR" class="logo-gap">
+            </div>
+            <span class="badge badge-gold">SÍNTESE OPERACIONAL DO FISCAL</span>
+        </div>
+
+        <div class="encerramento-content" style="max-width: 95%;">
+            <h2 class="encerramento-title" style="font-size: 34px; margin-bottom: 22px;">As Quatro Regras de Ouro da Sua Fiscalização</h2>
+
+            <div class="encerramento-cards" style="grid-template-columns: 1fr 1fr 1fr 1fr; margin-bottom: 28px;">
+                <div class="contato-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <div class="contato-icon">⏱️</div>
+                    <span class="contato-label">REGRA 1</span>
+                    <span class="contato-val" style="font-size: 14px;"><strong>Anote na hora:</strong> Registre as falhas no momento em que ocorrerem, sem acumular para o final do mês.</span>
+                </div>
+
+                <div class="contato-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <div class="contato-icon">🟢</div>
+                    <span class="contato-label">REGRA 2</span>
+                    <span class="contato-val" style="font-size: 14px;"><strong>Saneie o status:</strong> A empresa regularizou o problema? Atualize o registro para "Resolvido".</span>
+                </div>
+
+                <div class="contato-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <div class="contato-icon">📅</div>
+                    <span class="contato-label">REGRA 3</span>
+                    <span class="contato-val" style="font-size: 14px;"><strong>Ateste no prazo:</strong> Conclua o ateste eletrônico sempre até o 2º dia útil de cada mês.</span>
+                </div>
+
+                <div class="contato-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <div class="contato-icon">💬</div>
+                    <span class="contato-label">REGRA 4</span>
+                    <span class="contato-val" style="font-size: 14px;"><strong>Comunique-se com a ACI:</strong> Use o campo de trâmites para recados e esclarecimentos preventivos.</span>
+                </div>
+            </div>
+
+            <div class="slide-footer-callout callout-info" style="background: rgba(0, 194, 255, 0.12); border: 1px solid rgba(0, 194, 255, 0.3); color: #E6F7FF; text-align: left; padding: 12px 20px;">
+                <span class="callout-icon" style="color: #00C2FF;">📞</span>
+                <div class="callout-text" style="font-size: 14px;"><strong>Dúvidas ou Dificuldades?</strong> A equipe da Assessoria de Controle Interno (ACI / GAP-BR) está à disposição para apoiar os fiscais por meio dos canais oficiais e no módulo do SISCONT.</div>
+            </div>
+        </div>
+
+        <div class="encerramento-footer">
+            <span>Grupamento de Apoio de Brasília &bull; Assessoria de Controle Interno &bull; SISCONT</span>
+            <span>Slide 14 / 14</span>
+        </div>
+    </div>
+    
+</body>
+</html>
