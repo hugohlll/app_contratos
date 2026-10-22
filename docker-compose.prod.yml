@@ -13,6 +13,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
+      # O build não respeita a diretiva 'dns:' abaixo; usa a rede do host
+      # para resolver nomes (pypi.org, deb.debian.org) na rede corporativa.
+      network: host
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/mediafiles
@@ -63,6 +66,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
+      network: host
     env_file: .env.prod
     environment:
       - GMAIL_CREDENTIALS_PATH=/app/credentials.json
