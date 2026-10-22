@@ -130,9 +130,11 @@
                 <a class="nav-link" href="#livro-fiscal">8. Livro do Fiscal Digital</a>
                 <ul class="nav flex-column border-start border-2 ms-2 mt-1 mb-2">
                     <li class="nav-item"><a class="nav-link ms-3" href="#lf-pre-requisito">Requisito Obrigatório</a></li>
-                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-secoes-formulario">Seções do Formulário</a></li>
-                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-fluxo-correcao">Fluxo de Auditoria & Correção</a></li>
-                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-geracao-pdf">Relatório em PDF Oficial</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-ocorrencias">1. Lançamento de Ocorrências</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-fechamento-ateste">2. Fechamento e Ateste</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-tramites-aci">Trâmites com a ACI</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-fluxo-correcao">3. Auditoria &amp; Correção</a></li>
+                    <li class="nav-item"><a class="nav-link ms-3" href="#lf-geracao-pdf">4. Relatório em PDF Oficial</a></li>
                 </ul>
             </li>
             <li class="nav-item">
@@ -307,56 +309,94 @@
         <!-- SEÇÃO 8: LIVRO DO FISCAL DIGITAL -->
         <section id="livro-fiscal">
             <h2>8. Livro do Fiscal Digital (Controle de Execução Contratual)</h2>
-            <p>O <strong>Livro do Fiscal Digital</strong> é o instrumento oficial de registro e controle contínuo da execução física e financeira do contrato administrativo pela equipe de fiscalização designada.</p>
+            <p>O <strong>Livro de Registro de Ocorrências do Fiscal de Contrato (Livro do Fiscal Digital)</strong> é o instrumento oficial de registro, acompanhamento contínuo e ateste da execução contratual pelas equipes de fiscalização designadas pelo GAP-BR, em estrito cumprimento ao <strong>art. 117, § 1º da Lei nº 14.133/2021</strong>, à <strong>NPA 009/SCON/2025</strong> e às orientações jurisprudenciais do Tribunal de Contas da União (TCU).</p>
             
-            <h3 id="lf-pre-requisito">⚠️ Requisito Prévia Obrigatório</h3>
-            <div class="alert alert-warning py-2">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Atenção:</strong> O envio do formulário do Livro do Fiscal é um <strong>pré-requisito obrigatório</strong> para que o fiscal possa realizar o upload da prestação de contas mensal (slides PDF). Caso o Livro do Fiscal do mês de referência esteja pendente ou em correção, a caixa de upload de slides fica bloqueada.
+            <div class="concept-box">
+                <strong>Numeração Oficial Padronizada (NPA 009):</strong> Todo Livro do Fiscal gerado no sistema recebe automaticamente um identificador único no padrão <code>&lt;mês&gt;/&lt;ano&gt;/&lt;D ou R&gt;/&lt;número do contrato&gt;</code> (exemplo: <code>09/2026/D/012/GAP-BR/2024</code>, onde "D" representa Despesa e "R" Receita).
             </div>
 
-            <h3 id="lf-secoes-formulario">📝 Seções do Formulário de Execução</h3>
-            <p>O formulário é estruturado em quatro seções principais de preenchimento intuitivo:</p>
+            <h3 id="lf-pre-requisito">⚠️ Requisito Prévio Obrigatório na Prestação de Contas</h3>
+            <p>O fiscal de contrato acessa o sistema pelo Portal de Prestação de Contas (<code>/prestacoes/fiscais/</code>) e seleciona o contrato sob sua responsabilidade. No painel do contrato, a interface é estruturada em duas abas:</p>
+            <ul>
+                <li><strong>Aba 1. Livro do Fiscal:</strong> Controle e ateste da execução do contrato no mês de referência.</li>
+                <li><strong>Aba 2. Envio de Slides:</strong> Upload do arquivo PDF dos slides mensais de prestação de contas.</li>
+            </ul>
+            <div class="alert alert-warning py-2">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Trava de Pré-Requisito:</strong> O envio de slides (Aba 2) fica <strong>bloqueado</strong> enquanto o Livro do Fiscal do mês de referência estiver <em>Pendente</em> ou em <em>Ajustes Solicitados (Correção)</em>. O fiscal precisa atestar ou sanear o Livro do Fiscal para liberar o upload dos slides.
+            </div>
+
+            <h3 id="lf-ocorrencias">🗂️ Fase 1: Lançamento Contínuo e Tempestivo de Ocorrências</h3>
+            <p>Em conformidade com os Acórdãos 2748/2019-Plenário e 9240/2016-2ª Câmara do TCU, o fiscal tem o dever funcional de registrar fatos e descumprimentos de forma <strong>tempestiva</strong> (no momento em que ocorrem), evitando o registro tardio ao final do período, que fragiliza notificações, glosas e penalidades.</p>
+            <p>O lançamento é realizado pela interface unificada de ocorrências (<code>/execucao/fiscais/&lt;contrato_id&gt;/ocorrencias/</code>), disponível a qualquer momento pelo botão <strong>"Registrar / Editar Ocorrências"</strong>. A tela organiza as ocorrências em dois cards mensais:</p>
+            <ul>
+                <li><strong>Mês Corrente (em andamento):</strong> Permite lançar imediatamente as ocorrências à medida que os fatos acontecem ao longo do mês.</li>
+                <li><strong>Mês Anterior (fechamento):</strong> Permite complementar ou sanear ocorrências até o momento do ateste final.</li>
+            </ul>
+
+            <div class="alert alert-info py-2">
+                <h6 class="fw-bold mb-1"><i class="bi bi-card-checklist me-1"></i> Os 10 Campos Padronizados da Ocorrência (NPA 009/SCON/2025):</h6>
+                <ol class="mb-0 ps-3 small">
+                    <li><strong>Data e Horário da Constatação:</strong> Data/hora real do fato gerador (não permite datas futuras).</li>
+                    <li><strong>Local da Ocorrência:</strong> Local exato onde ocorreu a falha (ex.: Ala Operacional, Sala de Servidores, Prédio do Comando).</li>
+                    <li><strong>Tipo de Ocorrência:</strong> Fiscalização Técnica, Administrativa, Setorial, Usuário Público, Obras/Engenharia ou Outro.</li>
+                    <li><strong>Descrição Detalhada e Factual:</strong> Relato objetivo e minucioso da falha ou desvio constatado.</li>
+                    <li><strong>Dispositivo Contratual Violado:</strong> Cláusula do Contrato, Edital ou Termo de Referência infringida.</li>
+                    <li><strong>Evidências Anexadas:</strong> Registros fotográficos, relatórios técnicos, e-mails ou NUP de processo SEI.</li>
+                    <li><strong>Notificação Formal Expedida?:</strong> Se ativado, permite registrar o número oficial da notificação à empresa, prazo regulamentar para regularização/defesa (em dias úteis) e ciência/recusa do preposto.</li>
+                    <li><strong>Encaminhado à ARC para PAAI?:</strong> Registro do encaminhamento à Assessoria de Riscos e Conformidade caso enseje Processo Administrativo de Apuração de Irregularidade.</li>
+                    <li><strong>Situação Atual:</strong> Em Aberto, Em Saneamento (prazo de 5 dias úteis), Resolvido ou Encaminhado para PAAI (ARC).</li>
+                    <li><strong>Determinação do Fiscal:</strong> Ordem ou medida corretiva imposta pelo fiscal à empresa contratada.</li>
+                </ol>
+            </div>
+
+            <p><strong>Roteamento Automático:</strong> O sistema analisa a data e horário da constatação e vincula a ocorrência automaticamente ao Livro do mês correspondente, rejeitando datas futuras ou registros em meses cujo Livro já tenha sido homologado (garantindo imutabilidade probatória).</p>
+
+            <h3 id="lf-fechamento-ateste">📝 Fase 2: Fechamento, Ateste Mensal e Trava Regulatória</h3>
+            <p>Ao término do período de apuração, o fiscal acessa o formulário de ateste do Livro do Fiscal (<code>/execucao/fiscais/&lt;contrato_id&gt;/</code>). O formulário compreende:</p>
             <ol>
-                <li><strong>Seção 1 — Identificação do Contrato e da Equipe:</strong> Exibe os dados gerais do contrato (objeto, vigência, comissão) e valida se houve substituição de fiscal no período com a devida passagem formal de serviço.</li>
-                <li><strong>Seção 2 — Controle de Prazos e SILOMS:</strong>
+                <li><strong>Termo de Abertura e Identificação:</strong> Dados carregados automaticamente pelo sistema (número oficial do Livro, dados do contrato, CNPJ da contratada, período de vigência e publicação em Boletim Interno/Portaria de designação). O usuário apenas seleciona o Fiscal Responsável pelo envio.</li>
+                <li><strong>Módulos Opcionais (Preposto e Diário de Obra):</strong> As seções de dados do Preposto da Contratada e do Diário de Obras/Engenharia (Anexo B da NPA) são modularizadas via <code>ModulosLivroFiscalService</code> e permanecem recolhidas por padrão para assegurar um fluxo enxuto e objetivo.</li>
+                <li><strong>Registro de Ocorrências ou Declaração de Conformidade:</strong>
                     <ul>
-                        <li>Conferência das datas de assinatura e vigência atualizadas no SILOMS.</li>
-                        <li><strong>Data término da execução físico-financeira conferida no SILOMS?:</strong> Seleção via botões entre <code>[ Sim ]</code> (que abre dinamicamente o campo de inserção da data) e <code>[ N/A ]</code> (que oculta e limpa o campo).</li>
-                        <li><strong>Vigência da garantia contratual:</strong> Seleção entre <code>[ Sim ]</code>, <code>[ Não ]</code> e <code>[ N/A ]</code>. Caso a garantia esteja vencida (marcado <code>Não</code>), abre-se um campo obrigatório para detalhamento das <em>Providências Adotadas</em>.</li>
-                        <li><strong>Acompanhamento de Aditivação:</strong> Prazos de 120 e 90 dias antes do vencimento com status de tratativas e coordenação com a DOC/SCON.</li>
+                        <li>Se houver ocorrências cadastradas no mês: o sistema exibe a tabela consolidada do período para conferência, com botão direto para saneá-las na tela de ocorrências.</li>
+                        <li>Se não houver qualquer descumprimento: o fiscal aciona o interruptor <strong>"Sem ocorrências ou desvios no período (Em conformidade)"</strong>, o que certifica formalmente a regularidade e gera a declaração positiva de estrita conformidade nos autos.</li>
                     </ul>
                 </li>
-                <li><strong>Seção 3 — Execução Orçamentária e Financeira:</strong>
-                    <ul>
-                        <li>Notas de Empenho (NE) vigentes.</li>
-                        <li>Cumprimento do cronograma físico-financeiro e detalhamento.</li>
-                        <li><strong>Tabela Dinâmica de Faturas:</strong> Registro de número de Nota Fiscal, valor (com máscara de moeda automática em R$) e número de Ordem Bancária (OB).</li>
-                        <li>Instrumento de Medição de Resultado (IMR) e glosas efetuadas no período.</li>
-                    </ul>
-                </li>
-                <li><strong>Seção 4 — Livro de Ocorrências, PAAI e Avaliação de Risco:</strong>
-                    <ul>
-                        <li>Detalhamento de alterações de cronograma, atrasos, diligências e impossibilidade de recebimento.</li>
-                        <li><strong>Tabela de Ocorrências e Tratativas:</strong> Registro com data, tipo (reunião/e-mail/visita/falha), descrição e ação/prazo do fiscal.</li>
-                        <li>Avaliação quanto à solicitação de abertura de Processo Administrativo de Apuração de Irregularidade (PAAI).</li>
-                    </ul>
-                </li>
+                <li><strong>Observações Finais e Fechamento:</strong> Campo para esclarecimentos gerais ou anotações complementares do fiscal.</li>
+                <li><strong>Declaração Oficial da Fiscalização (NPA 009):</strong> Texto de compromisso legal em que o fiscal declara formalmente a veracidade das anotações sob as penas da lei e regulamentos militares.</li>
             </ol>
 
-            <h3 id="lf-fluxo-correcao">🔍 Fluxo de Auditoria e Apontamentos da ACI</h3>
-            <p>Após a submissão pelo fiscal, a equipe de auditoria da ACI analisa as informações declaradas:</p>
+            <div class="alert alert-warning py-2">
+                <i class="bi bi-lock-fill me-2"></i> <strong>Trava do Mês Corrente:</strong> Enquanto o mês de referência estiver em andamento, o sistema permite apenas a ação <strong>"Salvar Rascunho"</strong>. O botão de finalização oficial (<strong>"Finalizar e Atestar Livro do Mês"</strong>) fica bloqueado até o 1º dia do mês subsequente, assegurando que o ateste reflita a totalidade do ciclo mensal encerrado.
+            </div>
+
+            <h3 id="lf-tramites-aci">💬 Trâmites com a ACI (Comunicação Direta)</h3>
+            <p>Ao acionar o botão de finalização e ateste, abre-se uma janela de diálogo contendo o campo opcional <strong>"Observações para a ACI (Trâmites)"</strong>.</p>
             <ul>
-                <li><strong>Status de Aprovação (OK!):</strong> Indica que o Livro do Fiscal foi homologado pela auditoria.</li>
-                <li><strong>Status de Correção (Apontamento):</strong> Caso sejam identificadas pendências, o auditor altera o status para <code>Correção</code> com indicação de cor <strong>âmbar/vermelha</strong> em destaque. As orientações da ACI ficam disponíveis diretamente no portal e na tela de upload para que o fiscal realize os ajustes necessários e reenvie.</li>
+                <li>Esse canal permite ao fiscal enviar esclarecimentos, mensagens ou justificativas diretamente para a equipe da Assessoria de Controle Interno (ACI).</li>
+                <li>As mensagens ficam registradas em um histórico próprio de trâmites (<code>HistoricoObservacaoExecucao</code>), sem misturar com as notas formais que constam do Livro do Fiscal definitivo.</li>
             </ul>
 
-            <h3 id="lf-geracao-pdf">📄 Relatório em PDF Oficial</h3>
-            <p>O sistema gera dinamicamente um arquivo PDF completo do Livro do Fiscal pronto para ser assinado ou anexado ao Processo Administrativo de Gestão (PAG):</p>
+            <h3 id="lf-fluxo-correcao">🔍 Fase 3: Auditoria, Apontamentos da ACI e Saneamento</h3>
+            <p>Após a submissão, a equipe de auditoria da ACI avalia o Livro no painel restrito de auditoria (<code>/portal/execucao/</code>). O fluxo de status prevê:</p>
             <ul>
-                <li>Controle de quebra de página por seção (evitando o particionamento indevido de itens).</li>
-                <li>Rodapé regulamentar padronizado alinhado à direita a partir da 2ª página: <code>"Livro do Fiscal CT xxx (Empresa) - mm/aaaa - pág x/n"</code>.</li>
+                <li><strong>Entregue / Atestado:</strong> Livro finalizado pelo fiscal, aguardando análise da ACI.</li>
+                <li><strong>Aguardando Correção (Ajustes Solicitados):</strong> Se o auditor identificar pendências (ex.: falta de número de NUP em notificação ou descrição incompleta), o status é alterado com destaque em cor <strong>âmbar/amarela</strong>. Um card com o histórico dos apontamentos da ACI passa a ser exibido no topo do formulário do fiscal para orientação.</li>
+                <li><strong>Conformidade (OK!):</strong> Quando homologado pela ACI, o ciclo do mês é concluído com sucesso (destaque em verde).</li>
+            </ul>
+
+            <h3 id="lf-geracao-pdf">📄 Fase 4: Espelho em PDF Oficial do Livro do Fiscal</h3>
+            <p>A qualquer momento (mesmo em rascunho ou após homologação), é possível emitir o PDF oficial do Livro do Fiscal pelo botão <strong>"PDF do Livro"</strong> (rota <code>/execucao/livro-fiscal/&lt;pk&gt;/pdf/</code>):</p>
+            <ul>
+                <li><strong>Padrão Regulamentar GAP-BR / COMAER:</strong> Cabeçalho oficial do Ministério da Defesa / Comando da Aeronáutica, brasão do GAP-BR, identificação da Unidade Gestora (UG 120006) e número oficial do Livro.</li>
+                <li><strong>Termo de Abertura:</strong> Quadro estruturado com número e objeto do contrato, contratada, CNPJ, vigência, ato de designação e nome completo e posto do fiscal responsável.</li>
+                <li><strong>Tabela de Ocorrências:</strong> Espelho com todas as ocorrências do período, detalhando data/hora, tipo, dispositivo violado, evidências, dados da notificação formal, prazos, ciência do preposto e determinações.</li>
+                <li><strong>Declaração de Conformidade:</strong> Se não houver ocorrências no mês, o PDF substitui a tabela por uma caixa destacada em verde com a Declaração de Estrita Conformidade Integral.</li>
+                <li><strong>Fechamento Legal:</strong> Texto da declaração do art. 117 da Lei 14.133/2021 e assinatura oficial com posto e nome completo do fiscal.</li>
+                <li><strong>Controle de Páginas e Rodapé Padronizado:</strong> A partir da 2ª página, é gerado automaticamente o rodapé regulamentar à direita: <code>"Livro do Fiscal CT xxx (Empresa) - mm/aaaa - pág x/n"</code>.</li>
             </ul>
         </section>
+
 
         <!-- SEÇÃO 9: CARGOS REGIMENTAIS -->
         <section id="cargos-regimentais">

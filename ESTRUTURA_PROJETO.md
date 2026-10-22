@@ -46,8 +46,9 @@ Scripts que não fazem parte do código central do projeto.
 
 ### `docs/`
 Toda a documentação que não é o `README`.
-- `manuais/`: Manuais de instalação, teste local e correção de CSVs.
+- `manuais/`: Manuais de instalação, teste local, correção de CSV e `guia_livro_fiscal/` (Guia Ilustrado e apresentações v2.0 do Livro do Fiscal).
 - `roteiros/`: Roteiros de teste e documentação de integração (ex: Gmail API).
+- `ganhos_beneficios_siscont.*`: Documento de ganhos e benefícios do sistema (md/csv/xlsx).
 
 ### `logs/`
 Arquivos `.log` gerados por falhas de teste ou execução, ignorados pelo Git.
@@ -79,7 +80,15 @@ Esta é a "app" onde reside toda a lógica de negócio do SISCONT.
 - **`apps.py`**: Metadados da aplicação.
 - **`urls.py`**: Rotas específicas da aplicação `contratos`.
 - **`utils.py`**: Funções utilitárias e auxiliares.
-- **`management/commands/`**: Comandos customizados do Django (ex: `executar_backup.py`, `populate_db.py`).
+- **`management/commands/`**: Comandos customizados do Django: `executar_backup`, `populate_db`, `ativar_comissoes_iniciadas`, `desativar_comissoes_expiradas`, `testar_email`.
+- **`utils.py`** / **`utils_gmail.py`**: Utilitários gerais e integração com a Gmail API.
+
+### 🧩 Services (Regras de Negócio Reutilizáveis)
+Localizados em `contratos/services/`:
+- **`ocorrencias.py`** (`OcorrenciasService`): Janela de meses visíveis (corrente e anterior), editabilidade do Livro e roteamento da ocorrência ao Livro do mês da constatação.
+- **`notificacao.py`** (`NotificacaoService`): Geradores de notificação (Anexo D legado e novo modelo); emissão automática controlada por `NOTIFICACAO_AUTOMATICA_HABILITADA` (desabilitada por padrão).
+- **`execucao_modulos.py`** (`ModulosLivroFiscalService`): Habilita/desabilita blocos modulares do Livro (Preposto e Obras/Engenharia, desativados por padrão).
+
 
 ### 👁️ Views (Controladores)
 As views estão organizadas em um pacote `views/` para melhor modularização:
@@ -97,7 +106,8 @@ As views estão organizadas em um pacote `views/` para melhor modularização:
 Localizados em `contratos/templates/contratos/`:
 - **`portal/`**: Templates do portal (dashboard, detalhes, edição, configurações).
     - `detalhe_contrato.html`, `base_portal.html`, `configuracoes.html`, etc.
-- **`execucao/`**: Templates do Livro do Fiscal Digital (`formulario.html`, `visualizar.html`, `fiscais.html`, `index.html`).
+- **`execucao/`**: Templates do Livro do Fiscal Digital (`formulario.html`, `visualizar.html`, `fiscais.html`, `index.html`, `ocorrencias.html`, `includes/`).
+- **`prestacao/`**: Templates do portal público de prestação de contas.
 - **`relatorio_periodo.html`**, **`relatorio_transparencia.html`**: Páginas de relatórios.
 - **`home.html`**, **`pesquisa.html`**: Páginas públicas iniciais.
 
@@ -122,6 +132,9 @@ Localizados em `contratos/tests/`:
 - **`test_configuracoes.py`**: Testes do painel de Configurações e rotina de Backup.
 - **`test_cargos.py` / `test_persistencia_cargos_setores.py`**: Testes de cargos regimentais e ordenação de setores.
 - **`test_historico_ultimos_envios.py`**: Testes das matrizes históricas de envios (6 meses).
+- **`test_ocorrencias_unificadas.py`** / **`test_livro_fiscal_tramite_observacoes.py`**: Testes do fluxo unificado de ocorrências e dos trâmites com a ACI.
+- **`test_apresentacao_modo_livre.py`**: Testes do modo de apresentação (Antiguidade/Livre).
+- **`test_consulta_militar.py`**, **`test_portal_rendering.py`**, **`test_commands.py`**, **`test_error_handling.py`**: Consulta do militar, renderização do portal, comandos e tratamento de erros.
 - **`test_regressao_*.py`**: Testes específicos para validação de regressão e comportamentos corrigidos.
 
 ### 💾 Migrations

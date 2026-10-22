@@ -74,14 +74,24 @@ Garantir **transparência**, **controle** e **conformidade** no gerenciamento de
 - Visualização das inconsistências apontadas pela auditoria (popovers)
 - Reenvio de documentação corrigida e gestão de status transparente
 
-#### 5. **Livro do Fiscal Digital (Controle de Execução Contratual)**
-- Preenchimento digital estruturado em 4 seções: Identificação/Substituição de Fiscais, Prazos/SILOMS/Garantia, Execução Financeira (Faturas/IMR) e Ocorrências/PAAI
-- Requisito prévio obrigatório: o envio de slides no portal fica bloqueado até o preenchimento ou regularização do Livro do Fiscal no mês de referência
-- Verificação da Vigência da Garantia Contratual com detalhamento obrigatório de providências adotadas caso vencida
-- Verificação do término da execução físico-financeira conferida no SILOMS com botão `[ Sim ]` (abertura dinâmica de data) e `[ N/A ]`
-- Tabela dinâmica com máscara automática de moeda para registro de faturas (NF, Valor e OB)
-- Geração de relatório PDF oficial formatado, com controle de quebra de página por seção e rodapé padronizado em todas as páginas a partir da 2ª: `"Livro do Fiscal CT xxx (Empresa) - mm/aaaa - pág x/n"`
-- Status de acompanhamento com destaque em cor âmbar (`Correção`) para fácil identificação visual dos apontamentos da ACI
+#### 5. **Livro do Fiscal Digital (Registro de Ocorrências e Ateste — NPA 009/SCON/2025)**
+- **Fundamentação Legal e Normativa**: Em estrito cumprimento ao art. 117, § 1º da Lei nº 14.133/2021, à NPA 009/SCON/2025 do GAP-BR e à jurisprudência do TCU (Acórdãos 2748/2019-P e 9240/2016-2ªC).
+- **Numeração Oficial Padronizada**: Identificador automático no padrão `<mês>/<ano>/<D|R>/<contrato>` (ex.: `09/2026/D/012/GAP-BR/2024`).
+- **Requisito Prévio Obrigatório**: O envio de slides (PDF) no Portal de Prestações fica estritamente condicionado ao preenchimento e ateste prévio do Livro do Fiscal do mês de referência.
+- **Gestão Unificada e Tempestiva de Ocorrências** (`/execucao/fiscais/<id>/ocorrencias/`):
+  - Lançamento contínuo em 10 campos padronizados (data/hora, local, tipo, descrição factual, cláusula violada, evidências, notificação formal expedida com prazo e ciência, trâmite à ARC/PAAI, situação e determinação do fiscal).
+  - Roteamento automático para o Livro do mês da constatação, aceitando apenas o **mês corrente** (em andamento) e o **mês anterior** (fechamento), com bloqueio de datas futuras e de livros já atestados (imutabilidade probatória).
+  - Rota de **Registro Tempestivo** (`/tempestivo/`) com redirecionamento integrado.
+- **Fechamento e Ateste Mensal com Trava Regulatória**:
+  - Trava do mês corrente: o Livro do mês em andamento só pode ser salvo como rascunho; o ateste oficial é liberado a partir do 1º dia útil do mês subsequente.
+  - Termo de Abertura automático com dados do contrato, empresa, CNPJ, vigência, ato de designação (BInt/Portaria) e fiscal responsável.
+  - Declaração de Conformidade: opção de certificar a estrita regularidade quando não houver desvios no período ("Sem ocorrências ou desvios no período").
+  - Declaração oficial expressa de veracidade sob as penas da lei (art. 117 da Lei 14.133/2021).
+- **Canal de Trâmites com a ACI**: Campo opcional "Observações para a ACI" no modal de confirmação do ateste, mantendo histórico de diálogo técnico separado do livro formal.
+- **Fluxo de Auditoria e Correção da ACI**: Status de acompanhamento com destaque visual âmbar (`Correção / Ajustes Solicitados`), card de apontamentos no topo do formulário e saneamento facilitado.
+- **Relatório em PDF Oficial**: Espelho com cabeçalho institucional (GAP-BR / COMAER), Termo de Abertura, tabela de ocorrências ou declaração de conformidade, assinatura oficial com posto e nome completo, e rodapé regulamentar padronizado a partir da 2ª página (`"Livro do Fiscal CT xxx (Empresa) - mm/aaaa - pág x/n"`).
+- **Blocos Modulares Acessórios**: Módulos de Preposto da Contratada e Diário de Obras/Engenharia (Anexo B) configuráveis via `ModulosLivroFiscalService` (ocultos por padrão).
+- Guias de treinamento (PDF/HTML) e apresentações v2.0 disponíveis em `docs/manuais/guia_livro_fiscal/`.
 
 ---
 
@@ -148,11 +158,17 @@ Dashboard interativo com gráficos e indicadores:
 - Delegação de status de aprovação com envio obrigatório de justificativa em caso de correção (prompt dinâmico)
 - Histórico de inconsistências registrado e persistido por usuário
 - Marcação de slides como **Prioritário** em qualquer status (inclusive pendentes), com resolução automática do gestor responsável via comissão ativa ou cargo regimental
-- Geração de PDF consolidado apenas para Fiscais (prioritários)
+- Geração de PDF consolidado para Fiscais e para Gestores de Setor (prioritários, aprovados)
+- **Slides Avulsos** (capa, transição, encerramento): upload, reordenação e exclusão, vinculados ao mês/ano do filtro
+- **Modo de Apresentação**: *Antiguidade* (padrão, respeita posto/graduação) ou *Ordem Livre* (arraste irrestrito), persistido por tipo/mês/ano (`ConfiguracaoApresentacao`)
+- **Livro do Fiscal no Dashboard**: visualização, alteração de status (OK/Correção), exclusão e exportação CSV (`/portal/execucao/...`)
 - Dashboard estatístico específico (Gráfico de Pizza e de Barras) sincronizado com o mês/ano selecionado no filtro
 - Filtro iterativo de Mês/Ano com exportação em CSV/Excel (inclui observações do fiscal e motivos de correção)
 - Horário de envio exibido no fuso horário de Brasília (GMT-3) nos downloads
 - Calendário de Entregas: datas de entrega de slides, apresentação de fiscais e gestores, exibidas na página inicial
+
+#### 3. **Gestão de Usuários**
+- Cadastro, edição e exclusão de usuários do portal e alteração de senha (`/portal/usuarios/`)
 
 #### 4. **Cargos Regimentais**
 - Cadastro e organização de setores e cargos de chefia da organização militar
@@ -556,6 +572,8 @@ app_contratos/
 └── README.md              # Este arquivo
 ```
 
+Dentro de `contratos/`: `views/` (public, militar, auditoria, portal, prestacao, execucao, cargos, users, auth), `services/` (`ocorrencias.py`, `notificacao.py`, `execucao_modulos.py`), `management/commands/` (`populate_db`, `executar_backup`, `ativar_comissoes_iniciadas`, `desativar_comissoes_expiradas`, `testar_email`), `templates/`, `templatetags/` e `tests/`.
+
 ---
 
 ## 🛠️ Tecnologias Utilizadas
@@ -665,14 +683,15 @@ DATABASE_URL=postgres://admin_siscont:SenhaF0rte!2026@db:5432/siscont_db
 6. **Funcao**: Tipos de função nas comissões
 7. **Integrante**: Histórico de designações
 8. **PrestacaoContas / PrestacaoContasSetor**: Envios de prestação de contas (Fiscais e Setores)
-9. **ControleExecucao**: Registro do Livro do Fiscal Digital (vigências, SILOMS, garantias e pareceres)
+9. **ControleExecucao**: Registro do Livro do Fiscal Digital (vigências, SILOMS, garantias e pareceres; numeração NPA 009 `mês/ano/D|R/contrato`)
 10. **RegistroFatura**: Faturas cadastradas no Livro do Fiscal (NF, Valor e OB)
-11. **OcorrenciaContratual**: Ocorrências e tratativas fiscais registradas no Livro do Fiscal
-12. **ApontamentoCorrecao / ApontamentoExecucao**: Observações e correções apontadas pela auditoria da ACI sobre slides e Livro do Fiscal
-13. **SlideApresentacao**: Slides avulsos (capa, transição, encerramento) injetados manualmente na apresentação
-14. **CalendarioPrestacao**: Datas de entrega de slides e apresentações de fiscais/gestores
-15. **Setor / CargoRegimental**: Estrutura organizacional da OM
-16. **ConfiguracaoSistema**: Parâmetros globais do sistema (Singleton)
+11. **OcorrenciaContratual**: Ocorrências e tratativas fiscais (notificação, ciência do preposto, trâmite ARC/PAAI)
+12. **ApontamentoCorrecao / ApontamentoCorrecaoSetor / ApontamentoCorrecaoExecucao**: Correções apontadas pela ACI sobre slides (fiscais e setores) e Livro do Fiscal
+13. **HistoricoObservacaoExecucao**: Histórico de observações/trâmites do fiscal para a ACI
+14. **SlideApresentacao / ConfiguracaoApresentacao**: Slides avulsos e modo de ordenação (Antiguidade/Livre) da apresentação
+15. **CalendarioPrestacao**: Datas de entrega de slides e apresentações de fiscais/gestores
+16. **Setor / CargoRegimental**: Estrutura organizacional da OM
+17. **ConfiguracaoSistema**: Parâmetros globais do sistema (Singleton)
 
 ### **Relacionamentos**
 
@@ -753,6 +772,16 @@ Contribuições são bem-vindas! Para contribuir:
 ---
 
 ## 📅 Changelog
+
+### **Versão 2.2.0**
+- ✅ **Ocorrências Unificadas**: Fim da distinção Tempestivo/Extemporâneo; roteamento automático para o Livro do mês da constatação (mês corrente e anterior), com remoção dos rótulos de tempestividade na UI e no PDF.
+- ✅ **Registro Tempestivo Independente**: Rota `/tempestivo/` desacoplada da prestação de contas.
+- ✅ **Trâmites com a ACI**: Campo "Observações para a ACI" separado das observações formais do Livro.
+- ✅ **Modularização do Livro**: Preposto e Obras/Engenharia desativados por padrão; serviço de notificações extensível com emissão automática do Anexo D suspensa para revisão.
+- ✅ **Livro do Fiscal em PDF**: Títulos sem numeração, "Número do Livro" simplificado, assinatura com nome completo e remoção de dados do preposto.
+- ✅ **Formulário**: Máscara/validação de telefone e e-mail, datas no formato DD/MM/AAAA e switch "Notificação Formal expedida?".
+- ✅ **Documentação**: Guias Ilustrados e apresentações v2.0 e modelo NPA 009 incluídos em `docs/`.
+- ✅ **Infra**: Build de produção com `network host` para resolução de DNS corporativo.
 
 ### **Versão 2.1.0**
 - ✅ **Prioritário para Pendentes**: O switch de marcação "Prioritário" agora está disponível em **todos os status** de prestação de contas — incluindo pendentes — tanto para Fiscais de Contrato quanto para Gestores de Setor, em todas as visões (tabela mensal detalhada, matriz histórica de 6 meses e renderização dinâmica via AJAX).
