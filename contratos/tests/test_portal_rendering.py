@@ -171,6 +171,22 @@ class PortalRenderingTest(TestCase):
         self.assertContains(res, f"Mês de Referência: {mes_esperado}/{ano_esperado}")
         self.assertContains(res, f'value="{mes_esperado}/{ano_esperado}"')
 
+    def test_versao_aplicacao_renderizada(self):
+        """Garante que a versão oficial v2.2.0 seja injetada pelo context processor e renderizada nos templates."""
+        from django.conf import settings
+        self.assertEqual(settings.SISCONT_VERSION, '2.2.0')
 
+        # 1. Página inicial pública
+        res_pesquisa = self.client.get(reverse('pesquisa'))
+        self.assertEqual(res_pesquisa.status_code, 200)
+        self.assertContains(res_pesquisa, 'v2.2.0')
 
+        # 2. Base do Portal (logado)
+        res_portal = self.client.get(reverse('portal_home'))
+        self.assertEqual(res_portal.status_code, 200)
+        self.assertContains(res_portal, 'v2.2.0')
 
+        # 3. Base pública da Prestação de Contas
+        res_prestacao = self.client.get(reverse('portal_prestacao_index'))
+        self.assertEqual(res_prestacao.status_code, 200)
+        self.assertContains(res_prestacao, 'v2.2.0')

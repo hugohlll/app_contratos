@@ -66,10 +66,14 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'contratos.context_processors.app_version',
             ],
         },
     },
 ]
+
+# Versão Oficial do Sistema
+SISCONT_VERSION = '2.2.0'
 
 WSGI_APPLICATION = 'core.wsgi.application'
 

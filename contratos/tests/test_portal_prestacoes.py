@@ -1,5 +1,5 @@
 """
-Testes para o Portal Público de Prestações de Contas (v1.6.0).
+Testes para o Portal Público de Prestações de Contas (v2.2.0).
 
 Cobre:
 - Landing page, seleção de contratos e seleção de setores
