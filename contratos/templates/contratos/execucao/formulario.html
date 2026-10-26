@@ -84,9 +84,17 @@
                 <span class="badge px-3 py-2 fs-6 {% if controle_existente.status == 'ok' %}bg-success{% elif controle_existente.status == 'correcao' %}bg-warning text-dark{% elif controle_existente.status == 'rascunho' %}bg-secondary{% else %}bg-primary{% endif %}">
                     {{ controle_existente.get_status_display }}
                 </span>
-                <a href="{% url 'download_livro_fiscal_pdf' pk=controle_existente.id %}?v={% now 'U' %}" class="btn btn-sm btn-outline-danger fw-bold" target="_blank">
-                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF do Livro
-                </a>
+                {% if user.is_authenticated or controle_existente.status == 'ok' %}
+                    <a href="{% url 'download_livro_fiscal_pdf' pk=controle_existente.id %}?v={% now 'U' %}" class="btn btn-sm btn-outline-danger fw-bold" target="_blank">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF do Livro
+                    </a>
+                {% else %}
+                    <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Download disponível apenas após conformidade da ACI">
+                        <button type="button" class="btn btn-sm btn-outline-secondary fw-bold" disabled style="pointer-events: none;">
+                            <i class="bi bi-lock me-1"></i> PDF do Livro
+                        </button>
+                    </span>
+                {% endif %}
             {% else %}
                 <span class="badge bg-secondary px-3 py-2 fs-6">Novo Registro</span>
             {% endif %}
@@ -420,6 +428,14 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+    // Inicialização dos tooltips Bootstrap
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+
     // Máscara e formatação dinâmica para Telefone / Celular (11 dígitos: (99) 99999-9999)
     const $tel = $('#id_preposto_telefone');
     if ($tel.length) {

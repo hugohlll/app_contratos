@@ -386,8 +386,10 @@
             </ul>
 
             <h3 id="lf-geracao-pdf">📄 Fase 4: Espelho em PDF Oficial do Livro do Fiscal</h3>
-            <p>A qualquer momento (mesmo em rascunho ou após homologação), é possível emitir o PDF oficial do Livro do Fiscal pelo botão <strong>"PDF do Livro"</strong> (rota <code>/execucao/livro-fiscal/&lt;pk&gt;/pdf/</code>):</p>
+            <p>O PDF oficial do Livro do Fiscal pode ser emitido pelo botão <strong>"PDF do Livro"</strong> (rota <code>/execucao/livro-fiscal/&lt;pk&gt;/pdf/</code>), observando-se as seguintes regras de integridade e acesso:</p>
             <ul>
+                <li><strong>Acesso Não Logado (Fiscal de Contrato):</strong> O download do PDF oficial é liberado <strong>exclusivamente após a conformidade da ACI (status OK!)</strong>. Essa regra visa garantir que o fiscal anexe no SILOMS apenas a versão definitiva homologada pelo Controle Interno. Enquanto estiver em rascunho, entregue ou em correção, o botão de download permanece desabilitado para o fiscal.</li>
+                <li><strong>Acesso Logado (Equipe da ACI e Administradores):</strong> A emissão e visualização do PDF estão disponíveis a qualquer momento (em qualquer status), permitindo a auditoria prévia, conferência documental e validação dos dados antes da homologação.</li>
                 <li><strong>Padrão Regulamentar GAP-BR / COMAER:</strong> Cabeçalho oficial do Ministério da Defesa / Comando da Aeronáutica, brasão do GAP-BR, identificação da Unidade Gestora (UG 120006) e número oficial do Livro.</li>
                 <li><strong>Termo de Abertura:</strong> Quadro estruturado com número e objeto do contrato, contratada, CNPJ, vigência, ato de designação e nome completo e posto do fiscal responsável.</li>
                 <li><strong>Tabela de Ocorrências:</strong> Espelho com todas as ocorrências do período, detalhando data/hora, tipo, dispositivo violado, evidências, dados da notificação formal, prazos, ciência do preposto e determinações.</li>

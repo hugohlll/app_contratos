@@ -404,7 +404,7 @@ class OcorrenciasUnificadasTests(TestCase):
             mes_referencia=self.mes_x,
             ano_referencia=self.ano_x,
             agente=self.agente,
-            status='entregue'
+            status='ok'
         )
         OcorrenciaContratual.objects.create(
             controle=livro,

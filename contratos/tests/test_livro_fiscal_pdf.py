@@ -7,6 +7,8 @@ from datetime import date
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.contrib.auth.models import User
+from django.contrib.messages import get_messages
 from contratos.services.notificacao import NotificacaoService, BaseNotificacaoGenerator
 
 from contratos.models import (
@@ -289,5 +291,102 @@ class LivroFiscalPDFTestCase(TestCase):
             self.assertIn('Carlos Eduardo Preposto', full_text_ativado)
         finally:
             ModulosLivroFiscalService.BLOCO_PREPOSTO_HABILITADO = False
+
+    def test_download_nao_logado_bloqueado_quando_nao_ok(self):
+        """Usuário não logado não pode baixar PDF de Livro em rascunho, entregue ou correção."""
+        for st in ['rascunho', 'entregue', 'correcao']:
+            ctrl = ControleExecucao.objects.create(
+                contrato=self.contrato,
+                agente=self.agente,
+                mes_referencia=8,
+                ano_referencia=2026,
+                status=st
+            )
+            url = reverse('download_livro_fiscal_pdf', kwargs={'pk': ctrl.pk})
+            response = self.client.get(url, follow=False)
+
+            self.assertEqual(response.status_code, 302, f"Deveria redirecionar para status '{st}'")
+            expected_redirect = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id})
+            self.assertIn(expected_redirect, response.url)
+
+            # Verifica mensagem de aviso
+            response_followed = self.client.get(url, follow=True)
+            msgs = list(get_messages(response_followed.wsgi_request))
+            self.assertTrue(
+                any("O download do Livro do Fiscal só está disponível após a validação e conformidade pela ACI." in str(m) for m in msgs),
+                f"Mensagem de aviso ausente para status '{st}'"
+            )
+
+    def test_download_logado_aci_permitido_em_qualquer_status(self):
+        """Usuário autenticado (ACI / Admin) pode baixar PDF em qualquer status."""
+        user = User.objects.create_user(username='auditor_aci_teste', password='pwd')
+        self.client.force_login(user)
+
+        for st in ['rascunho', 'entregue', 'correcao', 'ok']:
+            ctrl = ControleExecucao.objects.create(
+                contrato=self.contrato,
+                agente=self.agente,
+                mes_referencia=9,
+                ano_referencia=2026,
+                status=st
+            )
+            url = reverse('download_livro_fiscal_pdf', kwargs={'pk': ctrl.pk})
+            response = self.client.get(url)
+
+            self.assertEqual(response.status_code, 200, f"Deveria permitir download logado para status '{st}'")
+            self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_formulario_exibicao_botao_download_condicional(self):
+        """Formulário exibe botão desabilitado com tooltip para fiscal e habilitado para ACI ou status 'ok'."""
+        ctrl_entregue = ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=10,
+            ano_referencia=2026,
+            status='entregue'
+        )
+        url_form = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}) + f"?mes=10&ano=2026"
+
+        # 1. Não logado com status entregue: botão desabilitado com tooltip informativo
+        self.client.logout()
+        res_anonimo = self.client.get(url_form)
+        self.assertEqual(res_anonimo.status_code, 200)
+        self.assertContains(res_anonimo, 'Download disponível apenas após conformidade da ACI')
+        self.assertContains(res_anonimo, '<button type="button" class="btn btn-sm btn-outline-secondary fw-bold" disabled')
+        # Não deve haver link <a> para download
+        download_url = reverse('download_livro_fiscal_pdf', kwargs={'pk': ctrl_entregue.pk})
+        self.assertNotContains(res_anonimo, f'href="{download_url}')
+
+        # 2. Não logado na tela de prestação com status 'ok': botão de download liberado
+        ctrl_entregue.status = 'ok'
+        ctrl_entregue.save()
+        url_prestacao_ok = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id}) + f"?mes=10&ano=2026"
+        res_anonimo_ok = self.client.get(url_prestacao_ok)
+        self.assertEqual(res_anonimo_ok.status_code, 200)
+        self.assertContains(res_anonimo_ok, f'href="{download_url}')
+
+        # 3. Logado na ACI com status não-ok no formulário: botão ativo com link para download
+        ctrl_entregue.status = 'entregue'
+        ctrl_entregue.save()
+        user = User.objects.create_user(username='auditor_form_teste', password='pwd')
+        self.client.force_login(user)
+        res_logado = self.client.get(url_form)
+        self.assertEqual(res_logado.status_code, 200)
+        self.assertContains(res_logado, f'href="{download_url}')
+
+    def test_upload_contrato_aviso_aguardando_conformidade(self):
+        """Tela de envio de prestação exibe aviso de conformidade pendente quando status é 'entregue'."""
+        ControleExecucao.objects.create(
+            contrato=self.contrato,
+            agente=self.agente,
+            mes_referencia=11,
+            ano_referencia=2026,
+            status='entregue'
+        )
+        url_prestacao = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id}) + f"?mes=11&ano=2026"
+        res = self.client.get(url_prestacao)
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, 'Aguardando ateste de conformidade da ACI para liberação do documento oficial do SILOMS.')
+
 
 

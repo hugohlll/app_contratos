@@ -713,6 +713,14 @@ def gerar_livro_fiscal_pdf(request, pk):
         pk=pk
     )
 
+    # Acesso não autenticado (fiscal) só pode baixar após conformidade da ACI (status 'ok')
+    if not request.user.is_authenticated and controle.status != 'ok':
+        messages.warning(
+            request,
+            "O download do Livro do Fiscal só está disponível após a validação e conformidade pela ACI."
+        )
+        return redirect('formulario_execucao', contrato_id=controle.contrato.id)
+
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
