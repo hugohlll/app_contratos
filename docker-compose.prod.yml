@@ -13,8 +13,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
-      # O build não respeita a diretiva 'dns:' abaixo; usa a rede do host
-      # para resolver nomes (pypi.org, deb.debian.org) na rede corporativa.
+      # O build usa a rede do host para resolver nomes (pypi.org, deb.debian.org)
+      # na rede corporativa. Atenção: no Docker Compose v5+, use sempre o script
+      # ./scripts/deploy_prod.sh em vez de 'docker compose up -d --build'.
       network: host
     volumes:
       - static_volume:/app/staticfiles

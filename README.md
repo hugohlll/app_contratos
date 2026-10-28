@@ -264,11 +264,19 @@ docker compose exec web python manage.py createsuperuser
 
 ---
 
-### **🚀 Instalação em Produção**
+### **🚀 Instalação e Atualização em Produção**
 
-Para implantar o sistema em um servidor real (Linux/Docker/Nginx), consulte os manuais dedicados:
+Para implantar ou atualizar o sistema em um servidor real (Linux/Docker/Nginx), utilize o script automatizado:
 
-- **[Manual de Instalação (TI)](docs/manuais/MANUAL_INSTALACAO_TI.md)**: Guia completo para instalação no servidor da OM.
+```bash
+cd /opt/app_contratos
+sudo ./scripts/deploy_prod.sh --pull
+```
+
+O script gerencia automaticamente a compilação com `--network host`, backup preventivo do banco, salvaguarda de migrações (`makemigrations --check --dry-run`), recriação dos containers e atualização dos arquivos estáticos, com suporte a **rollback automático** em caso de falha.
+
+Para detalhes completos e opções avançadas, consulte:
+- **[Manual de Instalação (TI)](docs/manuais/MANUAL_INSTALACAO_TI.md)**: Guia completo para instalação e atualização no servidor da OM.
 - **[Manual de Teste Local](docs/manuais/MANUAL_TESTE_LOCAL.md)**: Guia para simular o ambiente de produção na sua máquina.
 
 ---

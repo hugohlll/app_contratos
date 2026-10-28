@@ -190,44 +190,65 @@ Esse atributo automaticamente:
 
 ## 3. Procedimento de Atualização
 
-Sempre que houver uma nova versão do sistema (commit no Git), siga estes passos:
+Sempre que houver uma nova versão do sistema (commit no Git), siga o procedimento automatizado abaixo.
 
-### 3.1 Baixar Atualizações
+### 3.1 Método Automatizado (Recomendado)
+
+O script `scripts/deploy_prod.sh` executa com segurança todas as etapas necessárias:
+1. Valida o arquivo `.env.prod` e integridade das credenciais;
+2. Realiza backup automático do banco de dados antes da atualização;
+3. Guarda a imagem atual com a tag `:previous` para possibilitar **rollback automático** em caso de falha;
+4. Executa o build com `--network host` (evitando a restrição do Bake no Docker Compose v5+);
+5. Recria os containers e valida o health check;
+6. Executa a salvaguarda de integridade de migrações (`makemigrations --check --dry-run`);
+7. Aplica as migrações no banco (`migrate`);
+8. Limpa e atualiza os arquivos estáticos no volume persistente (`collectstatic --clear`).
+
+**Comando padrão (com download do código mais recente):**
 ```bash
 cd /opt/app_contratos
+sudo ./scripts/deploy_prod.sh --pull
+```
+
+**Comandos adicionais úteis:**
+```bash
+# Deploy ativando página de manutenção durante a troca de versão:
+sudo ./scripts/deploy_prod.sh --pull --manutencao
+
+# Deploy sem baixar alterações do Git (usando o código já em disco):
+sudo ./scripts/deploy_prod.sh
+
+# Reverter imediatamente para a versão estável anterior em caso de emergência:
+sudo ./scripts/deploy_prod.sh --rollback
+```
+
+---
+
+### 3.2 Método Manual Passo a Passo (Alternativa)
+
+Caso prefira executar cada comando individualmente:
+
+```bash
+cd /opt/app_contratos
+
+# 1. Baixar atualizações do repositório
 git pull origin master
-```
 
-### 3.2 Reconstruir e Reiniciar Containers
-Isso garante que novas dependências e alterações de código sejam aplicadas:
-```bash
-docker compose -f docker-compose.prod.yml up -d --build
-```
+# 2. Construir a imagem com rede host (obrigatório para resolver DNS corporativo)
+docker build --network host -f Dockerfile.prod -t app_contratos-web:latest .
 
-### 3.3 Aplicar Migrações (Se Houver)
-Caso a atualização envolva mudanças no banco de dados:
-```bash
-docker compose -f docker-compose.prod.yml exec web python manage.py migrate
-```
+# 3. Subir os containers (sem a flag --build)
+docker compose -f docker-compose.prod.yml up -d
 
-> **Nota:** O `collectstatic` já é executado automaticamente durante o build da imagem Docker (passo 3.2).
+# 4. Validar integridade e aplicar migrações do banco
+docker compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput
 
-### 3.4 Atualizar Arquivos Estáticos (Imagens, CSS, JS)
-
-> **⚠️ ATENÇÃO — Comportamento importante do Docker:** O volume `static_volume` **persiste os arquivos entre builds**. Isso significa que, mesmo após reconstruir a imagem com uma nova imagem ou CSS, o Nginx pode continuar a servir a versão anterior do arquivo estático.
-
-Para garantir que os arquivos estáticos sejam totalmente atualizados após um deploy que altere imagens, estilos ou scripts:
-
-```bash
-# Apaga os estáticos antigos do volume e recopia os novos
+# 5. Atualizar os arquivos estáticos persistidos no volume
 docker compose -f docker-compose.prod.yml exec web python manage.py collectstatic --noinput --clear
 ```
 
-Alternativamente, para atualizar um arquivo específico sem refazer tudo:
-
-```bash
-docker cp caminho/local/arquivo.png app_contratos-web-1:/app/staticfiles/caminho/destino/arquivo.png
-```
+> **⚠️ Atenção — Por que não usar `docker compose up -d --build` diretamente?**  
+> No Docker Compose v5+, o comando `compose build` utiliza internamente o Docker Bake, que exige permissão explícita para `network: host` (`--allow=network.host`). Como o `docker compose` não repassa essa permissão, o build falha. O build direto via `docker build --network host` ou o script `deploy_prod.sh` contornam essa limitação.
 
 ---
 
@@ -391,3 +412,29 @@ Para resolver de forma global para esse servidor, adicione a pasta à lista de e
 git config --global --add safe.directory /opt/app_contratos
 ```
 *(Atenção: verifique se o caminho bate com o caminho real do repositório no seu servidor)*
+
+### Erro `additional privileges requested: pass "--allow=network.host"`
+Ocorre ao tentar rodar `docker compose up -d --build` no Docker Compose v5+, pois o construtor Bake bloqueia o compartilhamento da rede do host durante o build.
+**Solução:** Utilize o script de deploy automatizado:
+```bash
+sudo ./scripts/deploy_prod.sh --pull
+```
+Ou construa a imagem separadamente antes de subir os containers:
+```bash
+docker build --network host -f Dockerfile.prod -t app_contratos-web:latest .
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Aviso `The "X" variable is not set. Defaulting to a blank string.`
+Ocorre quando o arquivo `.env.prod` possui caracteres de cifrão (`$`) em campos como `SECRET_KEY` ou senhas de banco. O Docker Compose interpreta qualquer string iniciada por `$` como uma variável de ambiente não definida e remove o conteúdo.
+**Solução:** Edite o arquivo `.env.prod` e remova o caractere `$` (ou substitua por `$$` caso deseje preservar o caractere literal no Compose).
+
+### Erro `ERRO DE MIGRAÇÃO: Existem alterações nos models sem migração gerada no Git`
+O script de deploy detectou que um desenvolvedor alterou arquivos `models.py` mas não executou `makemigrations` no ambiente local antes de enviar o código ao repositório.
+**Solução:**
+1. No seu ambiente de desenvolvimento/local, gere a migração:
+   ```bash
+   python manage.py makemigrations
+   ```
+2. Faça commit do novo arquivo `.py` de migração gerado na pasta `contratos/migrations/` e envie ao Git (`git push origin master`).
+3. No servidor de produção, execute o deploy novamente (`sudo ./scripts/deploy_prod.sh --pull`).
