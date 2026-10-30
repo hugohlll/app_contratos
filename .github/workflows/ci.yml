@@ -13,6 +13,9 @@ jobs:
   test:
     name: Run Tests & Build
     runs-on: ubuntu-latest
+    env:
+      # O override do CI remove o 'network: host' do build (ver docker-compose.ci.yml)
+      COMPOSE_FILE: docker-compose.yml:docker-compose.ci.yml
 
     steps:
       - name: Checkout code
