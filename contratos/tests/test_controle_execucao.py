@@ -113,9 +113,10 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(response_get.status_code, 200)
         self.assertContains(response_get, "120006 - GAP-BR")
 
+        mes_ant = date.today().replace(day=1) - timedelta(days=1)
         ocorrencias_payload = [
             {
-                'data_hora': '2026-05-10T09:30',
+                'data_hora': f'{mes_ant.replace(day=10).isoformat()}T09:30',
                 'local': 'Canteiro de Obras Principal',
                 'tipo': 'OBRAS',
                 'descricao': 'Operários trabalhando sem EPI adequado.',
@@ -132,8 +133,8 @@ class ControleExecucaoTests(TestCase):
         ]
 
         post_data = {
-            'mes_referencia': 5,
-            'ano_referencia': 2026,
+            'mes_referencia': mes_ant.month,
+            'ano_referencia': mes_ant.year,
             'agente': self.agente.id,
             'omap': 'GAP-BR',
             'unidade_gestora': '120006 - GAP-BR',
@@ -181,9 +182,10 @@ class ControleExecucaoTests(TestCase):
     def test_salvar_rascunho_tempestivo(self):
         """Testa salvar como rascunho (lançamento tempestivo durante o mês)."""
         url = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id})
+        mes_ant = date.today().replace(day=1) - timedelta(days=1)
         post_data = {
-            'mes_referencia': 5,
-            'ano_referencia': 2026,
+            'mes_referencia': mes_ant.month,
+            'ano_referencia': mes_ant.year,
             'agente': self.agente.id,
             'preposto_nome': 'Preposto Temporario',
             'sem_ocorrencias_periodo': True,
@@ -259,11 +261,16 @@ class ControleExecucaoTests(TestCase):
         )
 
         url_ok = reverse('alterar_status_execucao', kwargs={'pk': ctrl.id, 'novo_status': 'ok'})
-        res_no_auth = self.client.get(url_ok)
+        res_no_auth = self.client.post(url_ok)
         self.assertEqual(res_no_auth.status_code, 302)
 
         self.client.login(username="auditor1", password="password123")
-        res_ok = self.client.get(url_ok)
+        res_get = self.client.get(url_ok)
+        self.assertEqual(res_get.status_code, 405)
+        ctrl.refresh_from_db()
+        self.assertEqual(ctrl.status, 'entregue')
+
+        res_ok = self.client.post(url_ok)
         self.assertEqual(res_ok.status_code, 302)
         ctrl.refresh_from_db()
         self.assertEqual(ctrl.status, 'ok')
@@ -322,7 +329,9 @@ class ControleExecucaoTests(TestCase):
             status='rascunho'
         )
         url_del_pub = reverse('excluir_controle_execucao_publico', kwargs={'contrato_id': self.contrato.id})
-        res_del = self.client.get(url_del_pub)
+        self.assertEqual(self.client.get(url_del_pub).status_code, 405)
+        self.assertEqual(ControleExecucao.objects.count(), 1)
+        res_del = self.client.post(url_del_pub)
         self.assertEqual(res_del.status_code, 302)
         self.assertEqual(ControleExecucao.objects.count(), 0)
 
@@ -334,7 +343,9 @@ class ControleExecucaoTests(TestCase):
         )
         self.client.login(username="admin1", password="password123")
         url_admin_del = reverse('excluir_controle_execucao', kwargs={'pk': ctrl2.pk})
-        res_adm = self.client.get(url_admin_del)
+        self.assertEqual(self.client.get(url_admin_del).status_code, 405)
+        self.assertEqual(ControleExecucao.objects.count(), 1)
+        res_adm = self.client.post(url_admin_del)
         self.assertEqual(res_adm.status_code, 302)
         self.assertEqual(ControleExecucao.objects.count(), 0)
 
@@ -615,9 +626,10 @@ class ControleExecucaoTests(TestCase):
             'status_ocorrencia': 'aberto',
             'acao_fiscal': '',
         }]
+        mes_ant = date.today().replace(day=1) - timedelta(days=1)
         post_data = {
-            'mes_referencia': 10,
-            'ano_referencia': 2026,
+            'mes_referencia': mes_ant.month,
+            'ano_referencia': mes_ant.year,
             'agente': self.agente.id,
             'preposto_nome': 'Fiscal Teste',
             'sem_ocorrencias_periodo': False,
@@ -627,7 +639,7 @@ class ControleExecucaoTests(TestCase):
         response = self.client.post(url, post_data)
         self.assertEqual(response.status_code, 302)
 
-        ctrl = ControleExecucao.objects.get(contrato=self.contrato, mes_referencia=10, ano_referencia=2026)
+        ctrl = ControleExecucao.objects.get(contrato=self.contrato, mes_referencia=mes_ant.month, ano_referencia=mes_ant.year)
         self.assertEqual(ctrl.ocorrencias.count(), 1)
         oc = ctrl.ocorrencias.first()
         dt_local = timezone.localtime(oc.data_hora)
@@ -658,9 +670,10 @@ class ControleExecucaoTests(TestCase):
         self.assertIn('3. Observações Finais e Fechamento', content)
 
         # 2. Submissão sem campos de preposto e obras salva com sucesso
+        mes_ant = date.today().replace(day=1) - timedelta(days=1)
         post_data = {
-            'mes_referencia': 7,
-            'ano_referencia': 2026,
+            'mes_referencia': mes_ant.month,
+            'ano_referencia': mes_ant.year,
             'agente': self.agente.id,
             'sem_ocorrencias_periodo': True,
             'ocorrencias_json': '[]',
@@ -668,7 +681,7 @@ class ControleExecucaoTests(TestCase):
         }
         res_post = self.client.post(url, post_data)
         self.assertEqual(res_post.status_code, 302)
-        ctrl = ControleExecucao.objects.get(contrato=self.contrato, mes_referencia=7, ano_referencia=2026)
+        ctrl = ControleExecucao.objects.get(contrato=self.contrato, mes_referencia=mes_ant.month, ano_referencia=mes_ant.year)
         self.assertTrue(ctrl.sem_ocorrencias_periodo)
 
         # 3. Teste de reativação modular

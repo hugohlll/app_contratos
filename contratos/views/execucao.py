@@ -55,8 +55,12 @@ def portal_registro_tempestivo(request):
     return redirect('portal_prestacao_fiscais')
 
 
+@require_POST
 def excluir_controle_execucao_publico(request, contrato_id):
-    """Permite ao fiscal excluir o registro do Livro do Fiscal do contrato no mês de referência atual."""
+    """
+    Permite ao fiscal excluir o registro do Livro do Fiscal do contrato no mês de referência atual.
+    Livros já atestados ('entregue') ou homologados ('ok') não podem ser excluídos pelo fiscal.
+    """
     contrato = get_object_or_404(Contrato, pk=contrato_id)
     hoje = date.today()
     primeiro_dia_mes_atual = hoje.replace(day=1)
@@ -68,7 +72,13 @@ def excluir_controle_execucao_publico(request, contrato_id):
         contrato=contrato, mes_referencia=filtro_mes, ano_referencia=filtro_ano
     ).first()
 
-    if controle:
+    if controle and not OcorrenciasService.livro_editavel(controle):
+        messages.error(
+            request,
+            f"O Livro do Fiscal {controle.numero_livro} já foi atestado e não pode ser excluído. "
+            "Para alterações, solicite à ACI a devolução para correção."
+        )
+    elif controle:
         controle.delete()
         messages.success(request, f"Registro do Livro do Fiscal do Contrato {contrato.numero} excluído com sucesso.")
     else:
@@ -215,6 +225,34 @@ def formulario_execucao(request, contrato_id):
     if controle_existente and controle_existente.status == 'ok':
         return redirect('visualizar_controle_execucao', pk=controle_existente.pk)
 
+    # Edição permitida apenas no mês anterior (X) e no mês corrente (X+1), ou em Livro devolvido pela ACI.
+    # Livro já atestado ('entregue') só volta a ser editável após devolução para correção.
+    periodo_permitido = (
+        (filtro_mes, filtro_ano) in OcorrenciasService.get_meses_visiveis()
+        or bool(controle_existente and controle_existente.status == 'correcao')
+    )
+    if not controle_existente and not periodo_permitido:
+        messages.error(
+            request,
+            f"O período {filtro_mes:02d}/{filtro_ano} não está aberto para preenchimento do Livro do Fiscal."
+        )
+        return redirect('upload_prestacao', contrato_id=contrato.id)
+
+    somente_leitura = not periodo_permitido or not OcorrenciasService.livro_editavel(controle_existente)
+    if not OcorrenciasService.livro_editavel(controle_existente):
+        motivo_somente_leitura = "Este Livro já foi atestado e aguarda a análise da ACI."
+    else:
+        motivo_somente_leitura = f"O período {filtro_mes:02d}/{filtro_ano} não está mais aberto para edição."
+
+    if request.method == 'POST' and somente_leitura:
+        messages.error(
+            request,
+            f"{motivo_somente_leitura} Para alterações, solicite à ACI a devolução para correção."
+        )
+        return redirect(
+            reverse('formulario_execucao', kwargs={'contrato_id': contrato.id}) + f"?mes={filtro_mes}&ano={filtro_ano}"
+        )
+
     if request.method == 'POST':
         form = ControleExecucaoForm(request.POST, contrato=contrato, instance=controle_existente)
         acao = request.POST.get('acao', 'finalizar')
@@ -226,6 +264,15 @@ def formulario_execucao(request, contrato_id):
                 "O mês de referência ainda está em andamento. O Livro do Fiscal foi salvo como rascunho com sucesso. "
                 "O ateste oficial estará disponível na Prestação de Contas a partir do 1º dia do mês subsequente."
             )
+
+        if form.is_valid() and form.cleaned_data.get('sem_ocorrencias_periodo') and controle_existente:
+            qtd_ocorrencias = controle_existente.ocorrencias.count()
+            if qtd_ocorrencias:
+                form.add_error(
+                    'sem_ocorrencias_periodo',
+                    f"Existem {qtd_ocorrencias} ocorrência(s) registrada(s) neste mês. "
+                    "Exclua-as na tela de ocorrências antes de declarar o período sem ocorrências."
+                )
 
         if form.is_valid():
             controle = form.save(commit=False)
@@ -251,7 +298,7 @@ def formulario_execucao(request, contrato_id):
 
             # Se fornecido ocorrencias_json (compatibilidade com envios legados e testes):
             ocorrencias_json_raw = request.POST.get('ocorrencias_json')
-            if ocorrencias_json_raw:
+            if ocorrencias_json_raw and not controle.sem_ocorrencias_periodo:
                 try:
                     oc_list = json.loads(ocorrencias_json_raw)
                     if isinstance(oc_list, list) and oc_list:
@@ -307,7 +354,6 @@ def formulario_execucao(request, contrato_id):
 
             # Consolidar Ocorrências a partir dos registros gravados no banco
             if controle.sem_ocorrencias_periodo:
-                controle.ocorrencias.all().delete()
                 controle.relatorio_ocorrencias = "Em conformidade: Não houve ocorrências ou desvios registrados no período."
             else:
                 relatorio_text_lines = []
@@ -335,7 +381,11 @@ def formulario_execucao(request, contrato_id):
                 messages.success(request, f"Livro do Fiscal {controle.numero_livro} finalizado e atestado com sucesso!")
                 return redirect('upload_prestacao', contrato_id=contrato.id)
         else:
-            messages.error(request, "Por favor, corrija os erros apontados no formulário.")
+            erros_sem_ocorrencias = form.errors.get('sem_ocorrencias_periodo')
+            messages.error(
+                request,
+                erros_sem_ocorrencias[0] if erros_sem_ocorrencias else "Por favor, corrija os erros apontados no formulário."
+            )
     else:
         form = ControleExecucaoForm(contrato=contrato, instance=controle_existente)
 
@@ -385,6 +435,8 @@ def formulario_execucao(request, contrato_id):
         'ano_referencia': filtro_ano,
         'is_mes_corrente': is_mes_corrente,
         'bloquear_ateste_mes_corrente': is_mes_corrente,
+        'somente_leitura': somente_leitura,
+        'motivo_somente_leitura': motivo_somente_leitura,
         'data_limite_execucao': data_limite_execucao,
         'fora_do_prazo': fora_do_prazo,
         'notificacao_automatica_habilitada': NotificacaoService.is_habilitada(),
@@ -566,6 +618,7 @@ def visualizar_controle_execucao(request, pk):
 
 
 @login_required
+@require_POST
 def alterar_status_execucao(request, pk, novo_status):
     """Altera o status do Livro do Fiscal (ACI Auditor / Admin)."""
     if not is_auditor(request.user):
@@ -579,14 +632,13 @@ def alterar_status_execucao(request, pk, novo_status):
         return redirect('dashboard_prestacao')
 
     justificativa = ""
-    if request.method == 'POST':
-        if request.content_type == 'application/json':
-            try:
-                justificativa = json.loads(request.body).get('justificativa', '').strip()
-            except json.JSONDecodeError:
-                pass
-        else:
-            justificativa = request.POST.get('justificativa', '').strip()
+    if request.content_type == 'application/json':
+        try:
+            justificativa = json.loads(request.body).get('justificativa', '').strip()
+        except json.JSONDecodeError:
+            pass
+    else:
+        justificativa = request.POST.get('justificativa', '').strip()
 
     if novo_status == 'correcao' and not justificativa:
         messages.error(request, "A justificativa é obrigatória para solicitar correção.")
@@ -607,6 +659,7 @@ def alterar_status_execucao(request, pk, novo_status):
 
 
 @admin_required
+@require_POST
 def excluir_controle_execucao(request, pk):
     """Excluir registro do Livro do Fiscal (Apenas Admin)."""
     controle = get_object_or_404(ControleExecucao, pk=pk)
@@ -1021,7 +1074,7 @@ def gerar_notificacao_anexo_d_pdf(request, pk):
     """
     Gera a Notificação Oficial de Ocorrência delegando a lógica ao NotificacaoService.
     A geração automática padrão está suspensa para revisão de modelo, sendo permitida
-    apenas quando habilitada ou forçada (force=1 para testes/auditoria).
+    apenas quando habilitada ou forçada por usuário da ACI (force=1 para testes/auditoria).
     """
     oc = get_object_or_404(
         OcorrenciaContratual.objects.select_related(
@@ -1033,7 +1086,7 @@ def gerar_notificacao_anexo_d_pdf(request, pk):
 
     permitir = (
         NotificacaoService.is_habilitada()
-        or bool(request.GET.get('force'))
+        or (bool(request.GET.get('force')) and is_auditor(request.user))
         or (request.user.is_authenticated and request.user.is_superuser)
     )
 
