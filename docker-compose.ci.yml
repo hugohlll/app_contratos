@@ -1,0 +1,8 @@
+# Override usado apenas no CI (GitHub Actions).
+# O docker-compose.yml usa 'network: host' no build para resolver o DNS da rede
+# corporativa; no GitHub Actions esse privilégio é negado pelo build via bake
+# ("pass --allow=network.host"), então o CI volta a usar a rede padrão.
+services:
+  web:
+    build:
+      network: default
