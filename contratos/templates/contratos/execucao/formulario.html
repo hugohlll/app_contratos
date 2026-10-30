@@ -146,8 +146,21 @@
     </div>
     {% endif %}
 
+    {% if somente_leitura %}
+    <div class="alert alert-secondary border-secondary shadow-sm mb-4 d-flex align-items-center">
+        <i class="bi bi-lock-fill fs-4 me-3 text-secondary"></i>
+        <div>
+            <strong>Livro do Fiscal disponível somente para leitura.</strong>
+            <div class="small text-dark">
+                {{ motivo_somente_leitura }} Para alterações, solicite à ACI a devolução para correção.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <form method="post" id="formLivroFiscal">
         {% csrf_token %}
+        <fieldset {% if somente_leitura %}disabled{% endif %}>
         {{ form.mes_referencia }}
         {{ form.ano_referencia }}
         {{ form.status }}
@@ -364,6 +377,7 @@
                     <a href="{% url 'upload_prestacao' contrato_id=contrato.id %}" class="btn btn-outline-secondary">
                         <i class="bi bi-x-circle me-1"></i> Cancelar / Voltar
                     </a>
+                    {% if not somente_leitura %}
                     <div class="d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-outline-primary fw-bold" id="btnSalvarRascunho">
                             <i class="bi bi-save me-1"></i> Salvar Rascunho
@@ -378,6 +392,7 @@
                         </button>
                         {% endif %}
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -421,6 +436,7 @@
                 </div>
             </div>
         </div>
+        </fieldset>
     </form>
 </div>
 {% endblock %}

@@ -102,7 +102,8 @@ class PortalRenderingTest(TestCase):
         self.assertEqual(res_entregue.status_code, 200)
         self.assertContains(res_entregue, url_ocorrencias)
         self.assertContains(res_entregue, 'Registro / Edição de Ocorrências')
-        self.assertContains(res_entregue, 'Editar Livro do Fiscal')
+        self.assertContains(res_entregue, 'Visualizar Livro do Fiscal')
+        self.assertNotContains(res_entregue, 'Editar Livro do Fiscal')
 
         # 3. Estado Conformidade (OK)
         controle.status = 'ok'
