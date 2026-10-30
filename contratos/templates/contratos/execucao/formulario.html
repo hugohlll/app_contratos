@@ -84,7 +84,7 @@
                 <span class="badge px-3 py-2 fs-6 {% if controle_existente.status == 'ok' %}bg-success{% elif controle_existente.status == 'correcao' %}bg-warning text-dark{% elif controle_existente.status == 'rascunho' %}bg-secondary{% else %}bg-primary{% endif %}">
                     {{ controle_existente.get_status_display }}
                 </span>
-                {% if user.is_authenticated or controle_existente.status == 'ok' %}
+                {% if is_auditor or controle_existente.status == 'ok' %}
                     <a href="{% url 'download_livro_fiscal_pdf' pk=controle_existente.id %}?v={% now 'U' %}" class="btn btn-sm btn-outline-danger fw-bold" target="_blank">
                         <i class="bi bi-file-earmark-pdf me-1"></i> PDF do Livro
                     </a>
