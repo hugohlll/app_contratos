@@ -437,6 +437,7 @@ def formulario_execucao(request, contrato_id):
         'bloquear_ateste_mes_corrente': is_mes_corrente,
         'somente_leitura': somente_leitura,
         'motivo_somente_leitura': motivo_somente_leitura,
+        'is_auditor': is_auditor(request.user),
         'data_limite_execucao': data_limite_execucao,
         'fora_do_prazo': fora_do_prazo,
         'notificacao_automatica_habilitada': NotificacaoService.is_habilitada(),
@@ -766,8 +767,8 @@ def gerar_livro_fiscal_pdf(request, pk):
         pk=pk
     )
 
-    # Acesso não autenticado (fiscal) só pode baixar após conformidade da ACI (status 'ok')
-    if not request.user.is_authenticated and controle.status != 'ok':
+    # Antes da homologação (status 'ok'), apenas a ACI (auditores/administradores) pode baixar o PDF
+    if controle.status != 'ok' and not is_auditor(request.user):
         messages.warning(
             request,
             "O download do Livro do Fiscal só está disponível após a validação e conformidade pela ACI."

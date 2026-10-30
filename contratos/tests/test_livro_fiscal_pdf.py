@@ -7,7 +7,7 @@ from datetime import date
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.messages import get_messages
 from contratos.services.notificacao import NotificacaoService, BaseNotificacaoGenerator
 
@@ -318,8 +318,9 @@ class LivroFiscalPDFTestCase(TestCase):
             )
 
     def test_download_logado_aci_permitido_em_qualquer_status(self):
-        """Usuário autenticado (ACI / Admin) pode baixar PDF em qualquer status."""
+        """Usuário da ACI (Auditores / Administradores) pode baixar PDF em qualquer status."""
         user = User.objects.create_user(username='auditor_aci_teste', password='pwd')
+        user.groups.add(Group.objects.get_or_create(name='Auditores')[0])
         self.client.force_login(user)
 
         for st in ['rascunho', 'entregue', 'correcao', 'ok']:
@@ -335,6 +336,30 @@ class LivroFiscalPDFTestCase(TestCase):
 
             self.assertEqual(response.status_code, 200, f"Deveria permitir download logado para status '{st}'")
             self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_download_logado_sem_perfil_aci_bloqueado_quando_nao_ok(self):
+        """Usuário logado que não pertence à ACI só baixa o PDF após a homologação (status 'ok')."""
+        user = User.objects.create_user(username='usuario_sem_perfil', password='pwd')
+        self.client.force_login(user)
+
+        for st in ['rascunho', 'entregue', 'correcao']:
+            ctrl = ControleExecucao.objects.create(
+                contrato=self.contrato,
+                agente=self.agente,
+                mes_referencia=8,
+                ano_referencia=2026,
+                status=st
+            )
+            url = reverse('download_livro_fiscal_pdf', kwargs={'pk': ctrl.pk})
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 302, f"Deveria bloquear download para status '{st}'")
+
+            url_form = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}) + "?mes=8&ano=2026"
+            self.assertNotContains(self.client.get(url_form), f'href="{url}')
+            ctrl.delete()
+
+        url_ok = reverse('download_livro_fiscal_pdf', kwargs={'pk': self.controle_ok.pk})
+        self.assertEqual(self.client.get(url_ok).status_code, 200)
 
     def test_formulario_exibicao_botao_download_condicional(self):
         """Formulário exibe botão desabilitado com tooltip para fiscal e habilitado para ACI ou status 'ok'."""
@@ -369,6 +394,7 @@ class LivroFiscalPDFTestCase(TestCase):
         ctrl_entregue.status = 'entregue'
         ctrl_entregue.save()
         user = User.objects.create_user(username='auditor_form_teste', password='pwd')
+        user.groups.add(Group.objects.get_or_create(name='Auditores')[0])
         self.client.force_login(user)
         res_logado = self.client.get(url_form)
         self.assertEqual(res_logado.status_code, 200)

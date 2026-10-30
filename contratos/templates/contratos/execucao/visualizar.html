@@ -20,9 +20,11 @@
             </div>
         </div>
         <div class="d-flex align-items-center gap-2">
+            {% if is_auditor or controle.status == 'ok' %}
             <a href="{% url 'download_livro_fiscal_pdf' pk=controle.id %}?v={% now 'U' %}" class="btn btn-sm btn-danger fw-bold shadow-sm" target="_blank">
                 <i class="bi bi-file-earmark-pdf me-1"></i> Baixar Livro em PDF
             </a>
+            {% endif %}
             <span class="badge fs-6 {% if controle.status == 'ok' %}bg-success{% elif controle.status == 'correcao' %}bg-warning text-dark{% elif controle.status == 'rascunho' %}bg-secondary{% else %}bg-primary{% endif %}">
                 {{ controle.get_status_display }}
             </span>
