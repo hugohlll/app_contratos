@@ -54,6 +54,10 @@ jobs:
       - name: Run Migrations (Prepare DB)
         run: docker compose exec -T web python manage.py migrate
 
+      # Mesma salvaguarda de scripts/deploy_prod.sh, antecipada para antes do merge
+      - name: Check Missing Migrations
+        run: docker compose exec -T web python manage.py makemigrations --check --dry-run
+
       - name: Run Tests
         run: docker compose exec -T web python manage.py test contratos
 

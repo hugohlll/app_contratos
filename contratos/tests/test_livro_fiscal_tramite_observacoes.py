@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 
 from contratos.models import (
     Contrato, Empresa, Agente, PostoGraduacao, ControleExecucao,
-    HistoricoObservacaoExecucao, Comissao, Integrante, Funcao
+    HistoricoObservacaoExecucao, Comissao, Integrante, Funcao, CalendarioPrestacao
 )
 
 
@@ -54,6 +54,12 @@ class LivroFiscalTramiteObservacoesTests(TestCase):
         self.url_formulario = reverse('formulario_execucao', kwargs={'contrato_id': self.contrato.id}) + f"?mes={self.mes_ref}&ano={self.ano_ref}"
         self.url_prestacao = reverse('upload_prestacao', kwargs={'contrato_id': self.contrato.id})
 
+    def _vencer_prazo_do_livro(self):
+        """Com o prazo vencido não há conformidade automática: o Livro segue para a ACI."""
+        CalendarioPrestacao.objects.create(
+            mes=self.mes_ref, ano=self.ano_ref, data_entrega_execucao=date.today() - timedelta(days=1)
+        )
+
     def test_modal_confirmacao_presente_no_formulario(self):
         """Verifica se o modal de confirmação e o campo de observação de trâmite são renderizados no formulário."""
         res = self.client.get(self.url_formulario)
@@ -64,6 +70,7 @@ class LivroFiscalTramiteObservacoesTests(TestCase):
 
     def test_finalizar_com_observacao_tramite_registra_historico_separado(self):
         """Ao finalizar com observação de trâmite, esta é salva em HistoricoObservacaoExecucao e não duplica observações do livro."""
+        self._vencer_prazo_do_livro()
         data = {
             'agente': self.agente.id,
             'mes_referencia': self.mes_ref,
@@ -97,6 +104,7 @@ class LivroFiscalTramiteObservacoesTests(TestCase):
 
     def test_finalizar_sem_observacao_tramite_nao_cria_historico(self):
         """Ao finalizar sem preencher observação de trâmite, nenhum histórico é criado e o livro mantém sua observação."""
+        self._vencer_prazo_do_livro()
         data = {
             'agente': self.agente.id,
             'mes_referencia': self.mes_ref,

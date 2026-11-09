@@ -164,7 +164,7 @@
                                         </div>
                                     </div>
                                     <p class="small text-dark mb-2">
-                                        O Controle de Execução Contratual do período foi analisado e aprovado.
+                                        {% if controle_execucao.conformidade_automatica %}Conformidade automática: livro sem ocorrências.{% else %}O Controle de Execução Contratual do período foi analisado e aprovado.{% endif %}
                                     </p>
                                     <p class="small fw-semibold text-dark mb-3">
                                         <i class="bi bi-info-circle me-1 text-success"></i>Insira o documento gerado no SILOMS
