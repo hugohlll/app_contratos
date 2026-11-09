@@ -34,7 +34,7 @@ class ConformidadeAutomaticaBase(TestCase):
         self.empresa = Empresa.objects.create(razao_social="Empresa Conformidade", cnpj="33.444.555/0001-66")
         self.contrato = Contrato.objects.create(
             numero="300/2026", objeto="Serviços de Limpeza", tipo="DESPESA", empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1), vigencia_fim=date(2027, 12, 31), valor_total=90000.00
+            vigencia_inicio=date.today() - timedelta(days=365), vigencia_fim=date.today() + timedelta(days=365), valor_total=90000.00
         )
         self.comissao = Comissao.objects.create(
             contrato=self.contrato, tipo='FISCALIZACAO', ativa=True, data_inicio=date(2026, 1, 1)
@@ -261,7 +261,7 @@ class AcoesDaACITests(ConformidadeAutomaticaBase):
         self._criar_livro('ok', conformidade_automatica=True)
         outro = Contrato.objects.create(
             numero="301/2026", objeto="Outro", tipo="DESPESA", empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1), vigencia_fim=date(2027, 12, 31), valor_total=1000.00
+            vigencia_inicio=date.today() - timedelta(days=365), vigencia_fim=date.today() + timedelta(days=365), valor_total=1000.00
         )
         ControleExecucao.objects.create(
             contrato=outro, agente=self.agente, mes_referencia=self.mes, ano_referencia=self.ano, status='ok'

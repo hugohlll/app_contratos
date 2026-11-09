@@ -1,5 +1,5 @@
 import os
-from datetime import date
+from datetime import date, timedelta
 from django.test import TestCase, Client
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
@@ -22,8 +22,8 @@ class PrestacaoContasTests(TestCase):
             numero="10/2026",
             objeto="Serviços de Teste",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=1000.00
         )
         
@@ -485,12 +485,11 @@ class PrestacaoContasTests(TestCase):
             numero="20/2026",
             objeto="Serviços de Teste 2",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=2000.00
         )
 
-        from datetime import timedelta
         hoje = date.today()
         primeiro_dia = hoje.replace(day=1)
         mes_anterior = primeiro_dia - timedelta(days=1)

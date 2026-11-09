@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User, Group
@@ -20,8 +20,8 @@ class ApontamentoCorrecaoTests(TestCase):
         self.contrato = Contrato.objects.create(
             numero="20/2026", objeto="Manutenção Predial",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=50000.00
         )
         self.comissao = Comissao.objects.create(

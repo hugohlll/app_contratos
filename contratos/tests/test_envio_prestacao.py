@@ -23,7 +23,7 @@ Cobre:
 """
 import os
 import json
-from datetime import date
+from datetime import date, timedelta
 from django.test import TestCase, Client
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
@@ -48,8 +48,8 @@ class BaseTestSetup(TestCase):
         self.contrato = Contrato.objects.create(
             numero="20/2026", objeto="Manutenção Predial",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=50000.00
         )
         self.comissao = Comissao.objects.create(
@@ -635,15 +635,15 @@ class AlterarStatusAjaxTests(BaseTestSetup):
         contrato2 = Contrato.objects.create(
             numero="21/2026", objeto="Serviço 2",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=30000.00
         )
         contrato3 = Contrato.objects.create(
             numero="22/2026", objeto="Serviço 3",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=20000.00
         )
         
@@ -984,8 +984,8 @@ class ModelPrestacaoContasTests(BaseTestSetup):
         contrato2 = Contrato.objects.create(
             numero="21/2026", objeto="Outro Serviço",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=30000.00
         )
         p2 = PrestacaoContas.objects.create(

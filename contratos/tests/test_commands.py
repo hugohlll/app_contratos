@@ -11,8 +11,8 @@ class TestComissaoManagementCommands(TestCase):
         self.contrato = Contrato.objects.create(
             numero="12345/2026",
             empresa=self.empresa,
-            vigencia_inicio=date(2025, 1, 1),
-            vigencia_fim=date(2027, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=1000.00
             # tipo defaults to 'DESPESA'
         )
