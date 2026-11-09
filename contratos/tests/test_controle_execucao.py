@@ -402,7 +402,7 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(ctrl.status, 'rascunho')
 
     def test_finalizar_mes_anterior_permitido(self):
-        """Testa que finalizar livro de mês anterior encerra e atesta com status entregue."""
+        """Testa que finalizar livro de mês anterior sem ocorrências, sem calendário, atinge a conformidade automática."""
         hoje = timezone.localtime(timezone.now()).date()
         primeiro_dia_mes_atual = hoje.replace(day=1)
         ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
@@ -429,7 +429,8 @@ class ControleExecucaoTests(TestCase):
             mes_referencia=mes_ant,
             ano_referencia=ano_ant
         )
-        self.assertEqual(ctrl.status, 'entregue')
+        self.assertEqual(ctrl.status, 'ok')
+        self.assertTrue(ctrl.conformidade_automatica)
 
     def test_classificacao_tempestividade_ocorrencia(self):
         """Testa auto-diferenciação de tempestividade pelo timestamp de inserção."""

@@ -634,6 +634,9 @@ class ControleExecucao(models.Model):
     # === Observações Gerais e Diálogo ===
     observacao = models.TextField("Observações Gerais / Justificativas", blank=True)
 
+    # === Conformidade concedida no próprio ateste, sem análise da ACI ===
+    conformidade_automatica = models.BooleanField("Conformidade automática", default=False)
+
     class Meta:
         verbose_name = "Controle de Execução Contratual (Livro do Fiscal)"
         verbose_name_plural = "Controles de Execução Contratual (Livros do Fiscal)"

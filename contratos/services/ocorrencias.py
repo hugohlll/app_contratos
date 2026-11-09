@@ -2,7 +2,9 @@ from datetime import date, timedelta
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from contratos.models import ControleExecucao, Contrato
+from contratos.models import (
+    ApontamentoCorrecaoExecucao, CalendarioPrestacao, ControleExecucao, Contrato
+)
 
 
 class OcorrenciasService:
@@ -37,6 +39,34 @@ class OcorrenciasService:
         if controle is None:
             return True
         return controle.status not in ('entregue', 'ok')
+
+    @staticmethod
+    def livro_apto_conformidade_automatica(controle, mes, ano, hoje=None):
+        """
+        Indica se o Livro do mês/ano atende às condições independentes da declaração do fiscal:
+        ateste dentro do prazo do calendário (sem calendário ou sem data = dentro do prazo) e
+        nenhuma devolução anterior. A devolução é apurada pela existência de apontamento, e não
+        pelo status, pois um Livro em 'correcao' salvo como rascunho volta a ser 'rascunho'.
+        """
+        if hoje is None:
+            hoje = timezone.localdate()
+
+        cal = CalendarioPrestacao.objects.filter(mes=mes, ano=ano).first()
+        data_limite = cal.data_entrega_execucao if (cal and cal.data_entrega_execucao) else None
+        if data_limite and hoje > data_limite:
+            return False
+
+        if controle is None or controle.pk is None:
+            return True
+        # Lê o status gravado: no POST, o ModelForm já sobrescreveu controle.status em memória.
+        if ControleExecucao.objects.filter(pk=controle.pk, status='correcao').exists():
+            return False
+        return not ApontamentoCorrecaoExecucao.objects.filter(controle=controle).exists()
+
+    @classmethod
+    def conformidade_automatica_aplicavel(cls, controle, sem_ocorrencias, mes, ano, hoje=None):
+        """Indica se o ateste leva o Livro direto à Conformidade, sem passar pela análise da ACI."""
+        return bool(sem_ocorrencias) and cls.livro_apto_conformidade_automatica(controle, mes, ano, hoje)
 
     @classmethod
     def resolver_livro_para_data(cls, contrato, data_hora, hoje=None):

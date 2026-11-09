@@ -313,7 +313,7 @@ class LivroFiscalPDFTestCase(TestCase):
             response_followed = self.client.get(url, follow=True)
             msgs = list(get_messages(response_followed.wsgi_request))
             self.assertTrue(
-                any("O download do Livro do Fiscal só está disponível após a validação e conformidade pela ACI." in str(m) for m in msgs),
+                any("O download do Livro do Fiscal só está disponível depois que o Livro atinge a situação de Conformidade." in str(m) for m in msgs),
                 f"Mensagem de aviso ausente para status '{st}'"
             )
 
@@ -376,7 +376,7 @@ class LivroFiscalPDFTestCase(TestCase):
         self.client.logout()
         res_anonimo = self.client.get(url_form)
         self.assertEqual(res_anonimo.status_code, 200)
-        self.assertContains(res_anonimo, 'Download disponível apenas após conformidade da ACI')
+        self.assertContains(res_anonimo, 'Download disponível depois que o Livro atingir a situação de Conformidade')
         self.assertContains(res_anonimo, '<button type="button" class="btn btn-sm btn-outline-secondary fw-bold" disabled')
         # Não deve haver link <a> para download
         download_url = reverse('download_livro_fiscal_pdf', kwargs={'pk': ctrl_entregue.pk})

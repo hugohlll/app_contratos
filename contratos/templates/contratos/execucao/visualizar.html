@@ -26,7 +26,7 @@
             </a>
             {% endif %}
             <span class="badge fs-6 {% if controle.status == 'ok' %}bg-success{% elif controle.status == 'correcao' %}bg-warning text-dark{% elif controle.status == 'rascunho' %}bg-secondary{% else %}bg-primary{% endif %}">
-                {{ controle.get_status_display }}
+                {{ controle.get_status_display }}{% if controle.conformidade_automatica %} — Automática{% endif %}
             </span>
         </div>
     </div>

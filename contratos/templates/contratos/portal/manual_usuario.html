@@ -349,7 +349,7 @@
                 </ol>
             </div>
 
-            <p><strong>Roteamento Automático:</strong> O sistema analisa a data e horário da constatação e vincula a ocorrência automaticamente ao Livro do mês correspondente, rejeitando datas futuras ou registros em meses cujo Livro já tenha sido homologado (garantindo imutabilidade probatória).</p>
+            <p><strong>Roteamento Automático:</strong> O sistema analisa a data e horário da constatação e vincula a ocorrência automaticamente ao Livro do mês correspondente, rejeitando datas futuras ou registros em meses cujo Livro já tenha sido atestado (garantindo imutabilidade probatória).</p>
 
             <h3 id="lf-fechamento-ateste">📝 Fase 2: Fechamento, Ateste Mensal e Trava Regulatória</h3>
             <p>Ao término do período de apuração, o fiscal acessa o formulário de ateste do Livro do Fiscal (<code>/execucao/fiscais/&lt;contrato_id&gt;/</code>). O formulário compreende:</p>
@@ -359,7 +359,7 @@
                 <li><strong>Registro de Ocorrências ou Declaração de Conformidade:</strong>
                     <ul>
                         <li>Se houver ocorrências cadastradas no mês: o sistema exibe a tabela consolidada do período para conferência, com botão direto para saneá-las na tela de ocorrências.</li>
-                        <li>Se não houver qualquer descumprimento: o fiscal aciona o interruptor <strong>"Sem ocorrências ou desvios no período (Em conformidade)"</strong>, o que certifica formalmente a regularidade e gera a declaração positiva de estrita conformidade nos autos.</li>
+                        <li>Se não houver qualquer descumprimento: o fiscal aciona o interruptor <strong>"Sem ocorrências ou desvios no período (Em conformidade)"</strong>, o que certifica formalmente a regularidade e gera a declaração positiva de estrita conformidade nos autos. Nesses casos, o ateste pode levar à <strong>Conformidade automática</strong> (ver Fase 3).</li>
                     </ul>
                 </li>
                 <li><strong>Observações Finais e Fechamento:</strong> Campo para esclarecimentos gerais ou anotações complementares do fiscal.</li>
@@ -371,25 +371,26 @@
             </div>
 
             <h3 id="lf-tramites-aci">💬 Trâmites com a ACI (Comunicação Direta)</h3>
-            <p>Ao acionar o botão de finalização e ateste, abre-se uma janela de diálogo contendo o campo opcional <strong>"Observações para a ACI (Trâmites)"</strong>.</p>
+            <p>Ao acionar o botão de finalização e ateste, abre-se uma janela de diálogo contendo o campo opcional <strong>"Observações para a ACI (Trâmites)"</strong>. Nos casos de Conformidade automática (ver Fase 3), esse campo não é exibido e nenhuma mensagem é enviada à ACI.</p>
             <ul>
                 <li>Esse canal permite ao fiscal enviar esclarecimentos, mensagens ou justificativas diretamente para a equipe da Assessoria de Controle Interno (ACI).</li>
                 <li>As mensagens ficam registradas em um histórico próprio de trâmites (<code>HistoricoObservacaoExecucao</code>), sem misturar com as notas formais que constam do Livro do Fiscal definitivo.</li>
             </ul>
 
             <h3 id="lf-fluxo-correcao">🔍 Fase 3: Auditoria, Apontamentos da ACI e Saneamento</h3>
-            <p>Após a submissão, a equipe de auditoria da ACI avalia o Livro no painel restrito de auditoria (<code>/portal/execucao/</code>). O fluxo de status prevê:</p>
+            <p>Após a submissão, a equipe de auditoria da ACI avalia o Livro no painel restrito de auditoria (<code>/portal/execucao/</code>), exceto nos casos de <strong>Conformidade automática</strong>. O Livro segue para análise da ACI sempre que o ateste ocorrer depois da data de entrega do Livro definida no calendário, quando já tiver sido devolvido pela ACI para correção alguma vez ou quando houver ocorrências registradas. O SISCONT é um sistema de apoio: em todos os casos, o PDF deve ser inserido no SILOMS, onde a ACI faz a validação e a homologação oficiais. O fluxo de status prevê:</p>
             <ul>
                 <li><strong>Entregue / Atestado:</strong> Livro finalizado pelo fiscal, aguardando análise da ACI.</li>
-                <li><strong>Aguardando Correção (Ajustes Solicitados):</strong> Se o auditor identificar pendências (ex.: falta de número de NUP em notificação ou descrição incompleta), o status é alterado com destaque em cor <strong>âmbar/amarela</strong>. Um card com o histórico dos apontamentos da ACI passa a ser exibido no topo do formulário do fiscal para orientação.</li>
-                <li><strong>Conformidade (OK!):</strong> Quando homologado pela ACI, o ciclo do mês é concluído com sucesso (destaque em verde).</li>
+                <li><strong>Aguardando Correção (Ajustes Solicitados):</strong> Se o auditor identificar pendências, inclusive em Livro com Conformidade automática (ex.: falta de número de NUP em notificação ou descrição incompleta), o status é alterado com destaque em cor <strong>âmbar/amarela</strong>. Um card com o histórico dos apontamentos da ACI passa a ser exibido no topo do formulário do fiscal para orientação.</li>
+                <li><strong>Conformidade (OK!):</strong> Quando aprovado pela ACI no SISCONT, o ciclo do mês é concluído com sucesso no sistema (destaque em verde).</li>
+                <li><strong>Conformidade automática:</strong> Ao atestar um mês marcado como "Sem ocorrências ou desvios no período", fora das exceções acima, o Livro é concluído no SISCONT sem análise da ACI e sem mensagem à ACI, com o PDF disponível na hora.</li>
             </ul>
 
             <h3 id="lf-geracao-pdf">📄 Fase 4: Espelho em PDF Oficial do Livro do Fiscal</h3>
             <p>O PDF oficial do Livro do Fiscal pode ser emitido pelo botão <strong>"PDF do Livro"</strong> (rota <code>/execucao/livro-fiscal/&lt;pk&gt;/pdf/</code>), observando-se as seguintes regras de integridade e acesso:</p>
             <ul>
-                <li><strong>Acesso Não Logado (Fiscal de Contrato):</strong> O download do PDF oficial é liberado <strong>exclusivamente após a conformidade da ACI (status OK!)</strong>. Essa regra visa garantir que o fiscal anexe no SILOMS apenas a versão definitiva homologada pelo Controle Interno. Enquanto estiver em rascunho, entregue ou em correção, o botão de download permanece desabilitado para o fiscal.</li>
-                <li><strong>Acesso Logado (Equipe da ACI e Administradores):</strong> A emissão e visualização do PDF estão disponíveis a qualquer momento (em qualquer status), permitindo a auditoria prévia, conferência documental e validação dos dados antes da homologação.</li>
+                <li><strong>Acesso Não Logado (Fiscal de Contrato):</strong> O download do PDF oficial é liberado <strong>somente após a conformidade (status OK!), seja da ACI ou automática</strong>. Na Conformidade automática, o PDF fica disponível logo após o ateste. Em todos os casos, o fiscal deve inserir o PDF no SILOMS, onde a ACI faz a validação e a homologação oficiais. Enquanto estiver em rascunho, entregue ou em correção, o botão de download permanece desabilitado para o fiscal.</li>
+                <li><strong>Acesso Logado (Equipe da ACI e Administradores):</strong> A emissão e visualização do PDF estão disponíveis a qualquer momento (em qualquer status), permitindo a auditoria prévia, conferência documental e verificação dos dados antes da conformidade.</li>
                 <li><strong>Padrão Regulamentar GAP-BR / COMAER:</strong> Cabeçalho oficial do Ministério da Defesa / Comando da Aeronáutica, brasão do GAP-BR, identificação da Unidade Gestora (UG 120006) e número oficial do Livro.</li>
                 <li><strong>Termo de Abertura:</strong> Quadro estruturado com número e objeto do contrato, contratada, CNPJ, vigência, ato de designação e nome completo e posto do fiscal responsável.</li>
                 <li><strong>Tabela de Ocorrências:</strong> Espelho com todas as ocorrências do período, detalhando data/hora, tipo, dispositivo violado, evidências, dados da notificação formal, prazos, ciência do preposto e determinações.</li>

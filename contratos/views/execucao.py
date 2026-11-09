@@ -78,6 +78,13 @@ def excluir_controle_execucao_publico(request, contrato_id):
             f"O Livro do Fiscal {controle.numero_livro} já foi atestado e não pode ser excluído. "
             "Para alterações, solicite à ACI a devolução para correção."
         )
+    elif controle and (controle.status == 'correcao' or controle.apontamentos.exists()):
+        # Excluir apagaria o registro da devolução, e o Livro recriado escaparia da análise da ACI.
+        messages.error(
+            request,
+            f"O Livro do Fiscal {controle.numero_livro} foi devolvido pela ACI e não pode ser excluído. "
+            "Faça as correções e ateste novamente."
+        )
     elif controle:
         controle.delete()
         messages.success(request, f"Registro do Livro do Fiscal do Contrato {contrato.numero} excluído com sucesso.")
@@ -223,7 +230,12 @@ def formulario_execucao(request, contrato_id):
     ).order_by('-id').first()
 
     if controle_existente and controle_existente.status == 'ok':
-        return redirect('visualizar_controle_execucao', pk=controle_existente.pk)
+        if request.user.is_authenticated:
+            return redirect('visualizar_controle_execucao', pk=controle_existente.pk)
+        # A visualização exige login; o fiscal anônimo baixa o PDF na tela da prestação.
+        return redirect(
+            reverse('upload_prestacao', kwargs={'contrato_id': contrato.id}) + f"?mes={filtro_mes}&ano={filtro_ano}"
+        )
 
     # Edição permitida apenas no mês anterior (X) e no mês corrente (X+1), ou em Livro devolvido pela ACI.
     # Livro já atestado ('entregue') só volta a ser editável após devolução para correção.
@@ -280,16 +292,21 @@ def formulario_execucao(request, contrato_id):
             controle.mes_referencia = filtro_mes
             controle.ano_referencia = filtro_ano
 
+            conformidade_automatica = False
             if acao == 'rascunho':
                 controle.status = 'rascunho'
             else:
-                controle.status = 'entregue'
+                conformidade_automatica = OcorrenciasService.conformidade_automatica_aplicavel(
+                    controle, form.cleaned_data.get('sem_ocorrencias_periodo'), filtro_mes, filtro_ano
+                )
+                controle.status = 'ok' if conformidade_automatica else 'entregue'
+            controle.conformidade_automatica = conformidade_automatica
 
             controle.data_envio = timezone.now()
             controle.save()
 
             observacao_tramite = request.POST.get('observacao_tramite', '').strip()
-            if acao != 'rascunho' and observacao_tramite:
+            if acao != 'rascunho' and not conformidade_automatica and observacao_tramite:
                 HistoricoObservacaoExecucao.objects.create(
                     controle=controle,
                     agente=controle.agente,
@@ -378,7 +395,14 @@ def formulario_execucao(request, contrato_id):
                 messages.success(request, f"Rascunho do Livro {controle.numero_livro} salvo com sucesso!")
                 return redirect('formulario_execucao', contrato_id=contrato.id)
             else:
-                messages.success(request, f"Livro do Fiscal {controle.numero_livro} finalizado e atestado com sucesso!")
+                if conformidade_automatica:
+                    messages.success(
+                        request,
+                        f"Livro do Fiscal {controle.numero_livro} atestado com conformidade automática. "
+                        "O PDF do Livro já está disponível para download."
+                    )
+                else:
+                    messages.success(request, f"Livro do Fiscal {controle.numero_livro} finalizado e atestado com sucesso!")
                 return redirect('upload_prestacao', contrato_id=contrato.id)
         else:
             erros_sem_ocorrencias = form.errors.get('sem_ocorrencias_periodo')
@@ -421,6 +445,11 @@ def formulario_execucao(request, contrato_id):
     data_limite_execucao = cal.data_entrega_execucao if (cal and cal.data_entrega_execucao) else None
     fora_do_prazo = bool(data_limite_execucao and date.today() > data_limite_execucao)
 
+    # No mês corrente o ateste é convertido em rascunho, logo a conformidade automática não se aplica.
+    conformidade_automatica_elegivel = not is_mes_corrente and OcorrenciasService.livro_apto_conformidade_automatica(
+        controle_existente, filtro_mes, filtro_ano
+    )
+
     return render(request, 'contratos/execucao/formulario.html', {
         'contrato': contrato,
         'comissao': comissao_ativa,
@@ -440,6 +469,7 @@ def formulario_execucao(request, contrato_id):
         'is_auditor': is_auditor(request.user),
         'data_limite_execucao': data_limite_execucao,
         'fora_do_prazo': fora_do_prazo,
+        'conformidade_automatica_elegivel': conformidade_automatica_elegivel,
         'notificacao_automatica_habilitada': NotificacaoService.is_habilitada(),
         'exibir_bloco_preposto': ModulosLivroFiscalService.is_preposto_habilitado(),
         'exibir_bloco_obras': ModulosLivroFiscalService.is_obras_habilitado(),
@@ -646,6 +676,7 @@ def alterar_status_execucao(request, pk, novo_status):
         return redirect(reverse('visualizar_controle_execucao', args=[pk]))
 
     controle.status = novo_status
+    controle.conformidade_automatica = False
     controle.save()
 
     if novo_status == 'correcao' and justificativa:
@@ -688,7 +719,8 @@ def exportar_execucao_csv(request):
     writer.writerow([
         'Número do Livro', 'Contrato', 'Objeto', 'UG', 'OMAP', 'Fiscal Responsável',
         'Mês Ref.', 'Ano Ref.', 'Data Envio', 'Status', 'Preposto Nome', 'Preposto Tel.',
-        'Sem Ocorrências?', 'Qtd Ocorrências', 'Qtd Ocorrências Fora do Mês', 'Obra Engenharia?', 'Relatório Resumido'
+        'Sem Ocorrências?', 'Qtd Ocorrências', 'Qtd Ocorrências Fora do Mês', 'Obra Engenharia?', 'Relatório Resumido',
+        'Conformidade Automática?'
     ])
 
     controles = ControleExecucao.objects.filter(
@@ -715,7 +747,8 @@ def exportar_execucao_csv(request):
             c.ocorrencias.count(),
             ocs_fora,
             'Sim' if c.eh_obra_engenharia else 'Não',
-            c.relatorio_ocorrencias[:150]
+            c.relatorio_ocorrencias[:150],
+            'Sim' if c.conformidade_automatica else 'Não'
         ])
 
     return response
@@ -767,11 +800,11 @@ def gerar_livro_fiscal_pdf(request, pk):
         pk=pk
     )
 
-    # Antes da homologação (status 'ok'), apenas a ACI (auditores/administradores) pode baixar o PDF
+    # Antes da conformidade (status 'ok'), apenas a ACI (auditores/administradores) pode baixar o PDF
     if controle.status != 'ok' and not is_auditor(request.user):
         messages.warning(
             request,
-            "O download do Livro do Fiscal só está disponível após a validação e conformidade pela ACI."
+            "O download do Livro do Fiscal só está disponível depois que o Livro atinge a situação de Conformidade."
         )
         return redirect('formulario_execucao', contrato_id=controle.contrato.id)
 
