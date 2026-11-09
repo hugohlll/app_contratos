@@ -6,7 +6,7 @@ ordenadas do mais recente para o mais antigo, excluindo status 'pendente',
 e exibindo apenas o envio mais recente quando há múltiplos para o mesmo período.
 """
 import os
-from datetime import date
+from datetime import date, timedelta
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -34,8 +34,8 @@ class HistoricoUltimosEnviosTests(TestCase):
         self.contrato = Contrato.objects.create(
             numero="30/2026", objeto="Serviços Gerais",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=80000.00
         )
         self.comissao = Comissao.objects.create(
@@ -228,8 +228,8 @@ class HistoricoUltimosEnviosTests(TestCase):
         outro_contrato = Contrato.objects.create(
             numero="99/2026", objeto="Outro Serviço",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=10000.00
         )
         Comissao.objects.create(

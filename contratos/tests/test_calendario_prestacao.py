@@ -246,11 +246,13 @@ class DashboardCalendarioRenderingTest(TestCase):
 
     def test_dashboard_calendario_com_datas_preenchidas(self):
         """Datas salvas no banco devem aparecer nos inputs do calendário."""
+        # Sem filtro, o dashboard abre no ano do mês anterior (em janeiro, o ano passado).
+        ano = (date.today().replace(day=1) - timedelta(days=1)).year
         CalendarioPrestacao.objects.create(
-            ano=date.today().year, mes=5,
-            data_entrega=date(date.today().year, 5, 10),
-            data_apresentacao_fiscais=date(date.today().year, 5, 20),
-            data_apresentacao_gestores=date(date.today().year, 5, 25)
+            ano=ano, mes=5,
+            data_entrega=date(ano, 5, 10),
+            data_apresentacao_fiscais=date(ano, 5, 20),
+            data_apresentacao_gestores=date(ano, 5, 25)
         )
 
         self.client.login(username='user_dash', password='password123')
@@ -259,9 +261,9 @@ class DashboardCalendarioRenderingTest(TestCase):
 
         calendario = response.context['calendario_anual']
         maio = next(c for c in calendario if c['mes'] == 5)
-        self.assertEqual(maio['data_entrega'], f'{date.today().year}-05-10')
-        self.assertEqual(maio['data_apresentacao_fiscais'], f'{date.today().year}-05-20')
-        self.assertEqual(maio['data_apresentacao_gestores'], f'{date.today().year}-05-25')
+        self.assertEqual(maio['data_entrega'], f'{ano}-05-10')
+        self.assertEqual(maio['data_apresentacao_fiscais'], f'{ano}-05-20')
+        self.assertEqual(maio['data_apresentacao_gestores'], f'{ano}-05-25')
 
     def test_dashboard_calendario_inputs_disabled_para_usuario_comum(self):
         """Usuário sem permissão de admin/auditor deve ver os inputs desabilitados."""

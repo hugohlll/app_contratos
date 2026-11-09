@@ -32,8 +32,8 @@ class LivroFiscalTramiteObservacoesTests(TestCase):
             objeto="Serviços Gerais",
             tipo="DESPESA",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=50000.00
         )
         self.comissao = Comissao.objects.create(
