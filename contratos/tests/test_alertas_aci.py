@@ -1,6 +1,7 @@
 """
 Alertas da ACI sobre ocorrências do Livro do Fiscal: geração por evento, agrupamento,
-ausência de ruído no reenvio do Livro e acesso restrito ao grupo 'Auditores'.
+ausência de ruído no reenvio do Livro e acesso restrito aos grupos 'Auditores' e
+'Administradores'.
 """
 import json
 from datetime import date, timedelta
@@ -68,9 +69,22 @@ class GeracaoAlertasTests(AlertasACIBase):
         self.assertIn('Cap Alerta', dados['responsaveis'])
         self.assertEqual(alertas.first().contrato, self.contrato)
 
-    def test_administrador_fora_do_grupo_nao_recebe(self):
+    def test_superusuario_sem_grupo_nao_recebe(self):
         self._ocorrencia()
         self.assertFalse(NotificacaoACI.objects.filter(destinatario=self.admin).exists())
+
+    def test_grupo_administradores_recebe(self):
+        gestor = User.objects.create_user(username='gestor_alertas', password='pwd123')
+        gestor.groups.add(Group.objects.create(name='Administradores'))
+        oc = self._ocorrencia()
+        self.assertTrue(NotificacaoACI.objects.filter(
+            destinatario=gestor, evento='OCORRENCIA_CRIADA', ocorrencia=oc
+        ).exists())
+
+    def test_usuario_nos_dois_grupos_recebe_uma_vez(self):
+        Group.objects.create(name='Administradores').user_set.add(self.aci1)
+        oc = self._ocorrencia()
+        self.assertEqual(NotificacaoACI.objects.filter(destinatario=self.aci1, ocorrencia=oc).count(), 1)
 
     def test_mudanca_de_status_gera_alerta_com_antes_e_depois(self):
         oc = self._ocorrencia()
@@ -196,13 +210,17 @@ class CaminhosDeGravacaoTests(AlertasACIBase):
 
 
 class AcessoNotificacoesTests(AlertasACIBase):
-    def test_lista_e_resumo_restritos_ao_grupo_auditores(self):
+    def test_lista_e_resumo_restritos_aos_grupos_da_aci(self):
+        gestor = User.objects.create_user(username='gestor_acesso', password='pwd123')
+        gestor.groups.add(Group.objects.create(name='Administradores'))
         for url in (reverse('notificacoes_lista'), reverse('notificacoes_resumo')):
             self.client.force_login(self.comum)
             self.assertEqual(self.client.get(url).status_code, 403)
             self.client.force_login(self.admin)
             self.assertEqual(self.client.get(url).status_code, 403)
             self.client.force_login(self.aci1)
+            self.assertEqual(self.client.get(url).status_code, 200)
+            self.client.force_login(gestor)
             self.assertEqual(self.client.get(url).status_code, 200)
 
     def test_anonimo_e_redirecionado_para_login(self):
@@ -265,6 +283,10 @@ class AcessoNotificacoesTests(AlertasACIBase):
 
     def test_sino_aparece_somente_para_aci(self):
         self.client.force_login(self.aci1)
+        self.assertContains(self.client.get(reverse('portal_home')), 'id="alertas-aci"')
+        gestor = User.objects.create_user(username='gestor_sino', password='pwd123')
+        gestor.groups.add(Group.objects.create(name='Administradores'))
+        self.client.force_login(gestor)
         self.assertContains(self.client.get(reverse('portal_home')), 'id="alertas-aci"')
         self.client.force_login(self.admin)
         self.assertNotContains(self.client.get(reverse('portal_home')), 'id="alertas-aci"')

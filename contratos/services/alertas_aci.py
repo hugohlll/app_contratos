@@ -2,7 +2,8 @@
 Alertas internos para a ACI sobre ocorrências do Livro do Fiscal.
 
 Cada evento relevante (criação, exclusão ou mudança de campo-chave) gera uma NotificacaoACI
-para cada usuário ativo do grupo 'Auditores'. Edições apenas de texto não geram alerta, e
+para cada usuário ativo dos grupos 'Auditores' e 'Administradores' (que acumulam a função de
+auditor). Edições apenas de texto não geram alerta, e
 o reenvio de uma ocorrência sem alterações (salvamento do Livro) também não.
 
 Os signals em `contratos/signals.py` apenas chamam este serviço; falhas aqui nunca podem
@@ -17,7 +18,7 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-GRUPO_ACI = 'Auditores'
+GRUPOS_ACI = ('Auditores', 'Administradores')
 JANELA_AGRUPAMENTO = timedelta(minutes=5)
 TAMANHO_RESUMO = 120
 
@@ -31,15 +32,18 @@ CAMPOS_MONITORADOS = {
 
 
 def eh_destinatario_aci(user):
-    """Somente membros do grupo 'Auditores' recebem e visualizam os alertas."""
+    """Recebem e visualizam os alertas os membros de 'Auditores' e 'Administradores'.
+
+    Superusuários sem um desses grupos ficam de fora.
+    """
     return bool(
-        user and user.is_authenticated and user.groups.filter(name=GRUPO_ACI).exists()
+        user and user.is_authenticated and user.groups.filter(name__in=GRUPOS_ACI).exists()
     )
 
 
 def destinatarios_aci():
     User = get_user_model()
-    return User.objects.filter(groups__name=GRUPO_ACI, is_active=True).distinct()
+    return User.objects.filter(groups__name__in=GRUPOS_ACI, is_active=True).distinct()
 
 
 def estado_monitorado(oc):
