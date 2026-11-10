@@ -1,6 +1,7 @@
 {% extends 'contratos/portal/base_portal.html' %}
 {% block title %}Livro do Fiscal — {{ controle.contrato.numero }} — SISCONT{% endblock %}
 {% block content %}
+<style>tr:target > td { background-color: #fff3cd !important; transition: background-color .6s; }</style>
 <div class="container-fluid py-4">
     <!-- Cabeçalho Principal -->
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
@@ -79,7 +80,7 @@
                         </thead>
                         <tbody>
                             {% for oc in ocorrencias_estruturadas %}
-                            <tr>
+                            <tr id="oc-{{ oc.pk }}" style="scroll-margin-top: 1rem;">
                                 <td class="fw-semibold">
                                     {{ oc.data_hora|date:"d/m/Y H:i"|default:"S/D" }}
                                     <div class="mt-1">

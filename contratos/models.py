@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -801,3 +802,48 @@ class ConfiguracaoApresentacao(models.Model):
     def __str__(self):
         modo = "Livre" if self.modo_livre else "Antiguidade"
         return f"Config {self.get_tipo_apresentacao_display()} - {self.mes_referencia:02d}/{self.ano_referencia} ({modo})"
+
+
+class NotificacaoACI(models.Model):
+    """
+    Alerta interno destinado a um usuário da ACI (grupo 'Auditores').
+
+    Nasce genérico (evento + objeto relacionado + retrato JSON) para acomodar, no futuro,
+    eventos do próprio Livro do Fiscal além das ocorrências contratuais. O retrato em `dados`
+    mantém o alerta legível mesmo após a exclusão da ocorrência ou do contrato.
+    """
+    EVENTO_CHOICES = [
+        ('OCORRENCIA_CRIADA', 'Nova ocorrência'),
+        ('OCORRENCIA_ATUALIZADA', 'Ocorrência atualizada'),
+        ('OCORRENCIA_EXCLUIDA', 'Ocorrência excluída'),
+    ]
+
+    destinatario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notificacoes_aci'
+    )
+    evento = models.CharField("Evento", max_length=40, choices=EVENTO_CHOICES)
+    titulo = models.CharField("Título", max_length=200)
+    ocorrencia = models.ForeignKey(
+        OcorrenciaContratual, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='notificacoes_aci'
+    )
+    contrato = models.ForeignKey(
+        Contrato, on_delete=models.SET_NULL, null=True, blank=True, related_name='notificacoes_aci'
+    )
+    dados = models.JSONField("Retrato do evento", default=dict, blank=True)
+    criado_em = models.DateTimeField("Criado em", default=timezone.now)
+    atualizado_em = models.DateTimeField("Atualizado em", default=timezone.now, db_index=True)
+    lida_em = models.DateTimeField("Lida em", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Notificação da ACI"
+        verbose_name_plural = "Notificações da ACI"
+        ordering = ['-atualizado_em', '-id']
+        indexes = [models.Index(fields=['destinatario', 'lida_em'])]
+
+    def __str__(self):
+        return f"{self.titulo} → {self.destinatario}"
+
+    @property
+    def lida(self):
+        return self.lida_em is not None

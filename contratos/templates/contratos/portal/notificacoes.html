@@ -1,0 +1,125 @@
+{% extends 'contratos/portal/base_portal.html' %}
+{% block title %}Notificações da ACI — SISCONT{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="bi bi-bell-fill text-primary me-2"></i>Notificações</h3>
+        <p class="text-muted mb-0">Alertas sobre ocorrências registradas, alteradas ou excluídas nos Livros do Fiscal.</p>
+    </div>
+    {% if total_nao_lidas %}
+    <form method="post" action="{% url 'notificacoes_marcar_todas' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="btn btn-outline-primary">
+            <i class="bi bi-check2-all me-1"></i> Marcar todas como lidas ({{ total_nao_lidas }})
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="card card-custom mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="form-label small text-muted mb-1" for="f-status">Situação</label>
+                <select name="status" id="f-status" class="form-select no-tomselect">
+                    <option value="nao_lidas" {% if status == 'nao_lidas' %}selected{% endif %}>Não lidas</option>
+                    <option value="lidas" {% if status == 'lidas' %}selected{% endif %}>Lidas</option>
+                    <option value="todas" {% if status == 'todas' %}selected{% endif %}>Todas</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label small text-muted mb-1" for="f-evento">Evento</label>
+                <select name="evento" id="f-evento" class="form-select no-tomselect">
+                    <option value="">Todos</option>
+                    {% for valor, rotulo in eventos %}
+                    <option value="{{ valor }}" {% if evento == valor %}selected{% endif %}>{{ rotulo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small text-muted mb-1" for="f-contrato">Contrato</label>
+                <select name="contrato" id="f-contrato" class="form-select">
+                    <option value="">Todos</option>
+                    {% for c in contratos %}
+                    <option value="{{ c.pk }}" {% if contrato_id == c.pk %}selected{% endif %}>{{ c.numero }} — {{ c.empresa.razao_social }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i> Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if pagina.object_list %}
+<div class="list-group shadow-sm mb-3">
+    {% for n in pagina %}
+    <a href="{% url 'notificacao_abrir' n.pk %}" id="notif-{{ n.pk }}"
+       class="list-group-item list-group-item-action py-3"
+       {% if not n.lida %}style="border-left: 4px solid var(--bs-primary); background-color: rgba(var(--bs-primary-rgb), .06);"{% endif %}>
+        <div class="d-flex justify-content-between align-items-start gap-3">
+            <div class="flex-grow-1">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    {% if n.evento == 'OCORRENCIA_CRIADA' %}
+                        <span class="badge bg-primary"><i class="bi bi-plus-circle me-1"></i>Nova</span>
+                    {% elif n.evento == 'OCORRENCIA_EXCLUIDA' %}
+                        <span class="badge bg-danger"><i class="bi bi-trash me-1"></i>Excluída</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat me-1"></i>Atualizada</span>
+                    {% endif %}
+                    <span class="fw-semibold">{{ n.titulo }}</span>
+                    {% if not n.lida %}<span class="badge rounded-pill text-bg-light border">não lida</span>{% endif %}
+                </div>
+                <div class="small text-body">
+                    <strong>Contrato {{ n.dados.contrato_numero }}</strong>{% if n.dados.empresa %} — {{ n.dados.empresa }}{% endif %}
+                    · Livro {{ n.dados.livro_mes }} <span class="text-muted">({{ n.dados.livro_status }})</span>
+                    · {{ n.dados.tipo }}
+                    {% if n.dados.data_hora %}· constatada em {{ n.dados.data_hora }}{% endif %}
+                </div>
+                {% if n.dados.descricao_resumo %}
+                <div class="small text-muted mt-1 fst-italic">“{{ n.dados.descricao_resumo }}”</div>
+                {% endif %}
+                {% if n.dados.mudancas %}
+                <ul class="small mb-0 mt-1 ps-3">
+                    {% for m in n.dados.mudancas %}
+                    <li>{{ m.rotulo }}: <span class="text-muted">{{ m.antes }}</span> → <strong>{{ m.depois }}</strong></li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if n.dados.responsaveis %}
+                <div class="small text-muted mt-1"><i class="bi bi-people me-1"></i>Fiscalização: {{ n.dados.responsaveis|join:", " }}</div>
+                {% endif %}
+            </div>
+            <div class="text-end small text-muted text-nowrap">
+                {{ n.atualizado_em|date:"d/m/Y H:i" }}
+                {% if n.lida %}<div><i class="bi bi-check2"></i> lida {{ n.lida_em|date:"d/m H:i" }}</div>{% endif %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+{% if pagina.has_other_pages %}
+<nav aria-label="Paginação das notificações">
+    <ul class="pagination justify-content-center">
+        {% if pagina.has_previous %}
+        <li class="page-item"><a class="page-link" href="?{{ filtros_qs }}&page={{ pagina.previous_page_number }}">Anterior</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span></li>
+        {% if pagina.has_next %}
+        <li class="page-item"><a class="page-link" href="?{{ filtros_qs }}&page={{ pagina.next_page_number }}">Próxima</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% else %}
+<div class="card card-custom">
+    <div class="card-body text-center text-muted py-5">
+        <i class="bi bi-bell-slash fs-1 d-block mb-2"></i>
+        Nenhuma notificação {% if status == 'nao_lidas' %}não lida{% elif status == 'lidas' %}lida{% endif %} para os filtros selecionados.
+    </div>
+</div>
+{% endif %}
+{% endblock %}
