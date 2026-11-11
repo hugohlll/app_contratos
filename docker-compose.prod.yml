@@ -84,6 +84,8 @@ services:
       - ./secrets/credentials.json:/app/credentials.json:ro
       - ./secrets/token.json:/app/token.json
       - ./backups:/backups
+      # Sem este volume o backup automático (02:00) não enxerga os arquivos enviados.
+      - media_volume:/app/mediafiles:ro
     entrypoint: sh -c "printenv >> /etc/environment && chmod 0644 /etc/cron.d/app_contratos && cron -f"
 
 volumes:
