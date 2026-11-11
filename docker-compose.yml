@@ -29,7 +29,10 @@ services:
       - DB_USER=admin_contratos
       - DB_PASSWORD=senha_segura_militar
       - DB_HOST=db
+    # DNS interno primeiro (resolve servidores da rede, como o servidor de arquivos);
+    # os públicos ficam de reserva.
     dns:
+      - 10.228.68.1
       - 8.8.8.8
       - 8.8.4.4
     restart: always
