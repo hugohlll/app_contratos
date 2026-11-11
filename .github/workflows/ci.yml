@@ -21,6 +21,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Confere a sintaxe e a estrutura do compose de produção (não sobe nada).
+      # O .env.prod real não fica no repositório; um vazio basta para a validação.
+      - name: Validate Production Compose
+        run: |
+          touch .env.prod
+          docker compose -f docker-compose.prod.yml config --quiet
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
