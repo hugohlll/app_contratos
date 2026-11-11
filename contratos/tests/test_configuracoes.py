@@ -83,7 +83,7 @@ class ConfiguracaoSistemaTests(TestCase):
         response = self.client.post(self.url, data)
         
         self.assertRedirects(response, self.url)
-        mock_call_command.assert_called_once_with('executar_backup', force=True)
+        mock_call_command.assert_called_once_with('executar_backup', force=True, usuario='super')
 
 
 class SidebarConfiguracaoTests(TestCase):

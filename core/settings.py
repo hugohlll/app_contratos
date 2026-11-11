@@ -148,10 +148,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/portal/'
 
-# Configurações Gmail API
-GMAIL_CREDENTIALS_PATH = os.getenv('GMAIL_CREDENTIALS_PATH', os.path.join(BASE_DIR, 'credentials.json'))
-GMAIL_TOKEN_PATH = os.getenv('GMAIL_TOKEN_PATH', os.path.join(BASE_DIR, 'token.json'))
-EMAIL_PADRAO = os.getenv('EMAIL_PADRAO', 'notificacoes@suaempresa.com.br')
+# Configurações de E-mail (SMTP corporativo do Intraer)
+# Em desenvolvimento (padrão) nada é enviado: as mensagens só aparecem no console.
+# Em produção, defina no .env.prod:
+#   EMAIL_BACKEND=contratos.email_backend.IntraerSMTPBackend
+#   EMAIL_HOST_USER / EMAIL_HOST_PASSWORD (código de aplicativo do Zimbra)
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'mail.intraer')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '20'))
+# O certificado do servidor é *.fab.mil.br e não corresponde a mail.intraer; por decisão,
+# a conexão é criptografada (STARTTLS) sem verificar o certificado. Mude para True quando
+# houver um nome de servidor coberto pelo certificado e a AC instalada no container.
+EMAIL_SSL_VERIFY = os.getenv('EMAIL_SSL_VERIFY', 'False').lower() in ('true', '1', 'yes')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'SCIPG - GAP-BR <scipg.gapbr@fab.mil.br>')
 
 # Configuração Padrão do Diretório de Logs
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')
@@ -162,16 +175,26 @@ if not os.path.exists(LOGS_DIR):
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'simples': {'format': '%(asctime)s %(levelname)s %(name)s: %(message)s'},
+    },
     'handlers': {
         'email_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOGS_DIR, 'email.log'),
+            'formatter': 'simples',
+        },
+        'console': {
+            # Só avisos e erros no console (log do cron); o detalhe completo fica em logs/email.log.
+            'level': 'WARNING',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simples',
         },
     },
     'loggers': {
-        'contratos.utils_gmail': {
-            'handlers': ['email_file'],
+        'contratos.email': {
+            'handlers': ['email_file', 'console'],
             'level': 'INFO',
             'propagate': False,
         },

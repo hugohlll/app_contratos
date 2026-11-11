@@ -17,7 +17,6 @@ app_contratos/
 ├── scripts/               # 🛠️ Scripts utilitários e testes avulsos
 ├── docs/                  # 📚 Documentação (Manuais e roteiros)
 ├── logs/                  # 📝 Arquivos de log gerados pelo sistema ou testes
-├── secrets/               # 🔐 Repositório seguro de credenciais e tokens (Gmail API)
 ├── docker-compose.yml     # Orquestração (Desenvolvimento)
 ├── docker-compose.prod.yml # 🚀 Orquestração (Produção)
 ├── Dockerfile             # Imagem Docker (Desenvolvimento)
@@ -41,20 +40,18 @@ Scripts que não fazem parte do código central do projeto.
 - `load_data.py`: Script para povoar o banco.
 - `maintenance_on.sh`: Script para ativar o Modo de Manutenção no Nginx.
 - `maintenance_off.sh`: Script para desativar o Modo de Manutenção no Nginx.
-- `tests/`: Scripts isolados de teste (ex: `teste_email_producao.py`).
+- `tests/`: Scripts isolados de teste (ex: `teste_smtp_intraer.py`).
 - `debug/`: Scripts para debugar requests e headers.
 
 ### `docs/`
 Toda a documentação que não é o `README`.
 - `manuais/`: Manuais de instalação, teste local, correção de CSV e `guia_livro_fiscal/` (Guia Ilustrado e apresentações v2.0 do Livro do Fiscal).
-- `roteiros/`: Roteiros de teste e documentação de integração (ex: Gmail API).
+- `roteiros/`: Roteiros de teste e documentação de integração.
 - `ganhos_beneficios_siscont.*`: Documento de ganhos e benefícios do sistema (md/csv/xlsx).
 
 ### `logs/`
 Arquivos `.log` gerados por falhas de teste ou execução, ignorados pelo Git.
 
-### `secrets/`
-Repositório mapeado e seguro para as chaves JSON confidenciais (ex: `credentials.json`, `token.json` do Gmail API). Todos os arquivos aqui são terminantemente ignorados pelo Git.
 
 
 ---
@@ -80,8 +77,9 @@ Esta é a "app" onde reside toda a lógica de negócio do SISCONT.
 - **`apps.py`**: Metadados da aplicação.
 - **`urls.py`**: Rotas específicas da aplicação `contratos`.
 - **`utils.py`**: Funções utilitárias e auxiliares.
-- **`management/commands/`**: Comandos customizados do Django: `executar_backup`, `populate_db`, `ativar_comissoes_iniciadas`, `desativar_comissoes_expiradas`, `testar_email`.
-- **`utils.py`** / **`utils_gmail.py`**: Utilitários gerais e integração com a Gmail API.
+- **`management/commands/`**: Comandos customizados do Django: `executar_backup`, `populate_db`, `ativar_comissoes_iniciadas`, `desativar_comissoes_expiradas`, `testar_email`, `processar_fila_email`.
+- **`utils.py`**: Utilitários gerais.
+- **`email_backend.py`** / **`services/email.py`**: Envio de e-mail pelo SMTP do Intraer (backend e fila).
 
 ### 🧩 Services (Regras de Negócio Reutilizáveis)
 Localizados em `contratos/services/`:
