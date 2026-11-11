@@ -23,6 +23,10 @@ services:
       - "8000:8000"
     depends_on:
       - db
+    # Opcional: variáveis de e-mail real para testes (arquivo fora do Git).
+    env_file:
+      - path: .env.dev
+        required: false
     environment:
       - DATABASE_URL=postgres://admin_contratos:senha_segura_militar@db:5432/gestao_contratos_db
       - DB_NAME=gestao_contratos_db
@@ -35,6 +39,28 @@ services:
       - 10.228.68.1
       - 8.8.8.8
       - 8.8.4.4
+    restart: always
+
+  # Processa a fila de e-mails a cada 2 minutos, como o cron da produção.
+  # Sem o .env.dev, os e-mails só aparecem no log deste container.
+  fila_email:
+    image: siscont_dev-web
+    pull_policy: never  # usa a imagem construída pelo serviço web
+    command: sh -c "while true; do python manage.py processar_fila_email; sleep 120; done"
+    volumes:
+      - .:/app
+    env_file:
+      - path: .env.dev
+        required: false
+    environment:
+      - DATABASE_URL=postgres://admin_contratos:senha_segura_militar@db:5432/gestao_contratos_db
+    dns:
+      - 10.228.68.1
+      - 8.8.8.8
+      - 8.8.4.4
+    depends_on:
+      - db
+      - web
     restart: always
 
 volumes:
