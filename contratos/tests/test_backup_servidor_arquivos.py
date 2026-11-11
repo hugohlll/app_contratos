@@ -367,6 +367,13 @@ class ConfiguracoesServidorArquivosTests(SmbSimuladoMixin, TestCase):
         resposta = self.client.post(self.url, {'testar_conexao': 'true'}, follow=True)
         self.assertContains(resposta, 'acesso negado')
 
+    def test_aviso_quando_nao_ha_destinatarios(self):
+        self.assertContains(self.client.get(self.url), 'Nenhum destinatário cadastrado')
+        config = ConfiguracaoSistema.get_config()
+        config.backup_emails_destinatarios = 'adm@fab.mil.br'
+        config.save()
+        self.assertNotContains(self.client.get(self.url), 'Nenhum destinatário cadastrado')
+
     def test_senha_nao_aparece_na_pagina(self):
         self.client.post(self.url, self._dados(backup_remoto_senha='SenhaSecreta123'))
         resposta = self.client.get(self.url)

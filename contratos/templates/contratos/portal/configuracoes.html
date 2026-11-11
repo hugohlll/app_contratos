@@ -146,6 +146,12 @@
                 {% if backup_em_andamento %}
                 <div class="alert alert-warning small"><i class="bi bi-hourglass-split me-1"></i>Há um backup em andamento neste momento.</div>
                 {% endif %}
+                {% if not config.destinatarios_backup %}
+                <div class="alert alert-warning small" id="aviso-sem-destinatarios">
+                    <i class="bi bi-envelope-exclamation me-1"></i>
+                    <strong>Nenhum destinatário cadastrado:</strong> o backup roda normalmente, mas o relatório por e-mail não será enviado. Preencha <em>Destinatários do Relatório de Backup</em> acima e clique em <strong>Salvar Configurações</strong>.
+                </div>
+                {% endif %}
                 <div class="d-flex flex-wrap gap-2">
                     <form method="post" action="">
                         {% csrf_token %}
