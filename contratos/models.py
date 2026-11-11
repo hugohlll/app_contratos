@@ -537,7 +537,72 @@ class ConfiguracaoSistema(models.Model):
         help_text="E-mails que recebem o relatório de cada backup, separados por vírgula. "
                   "Deixe em branco para não enviar.",
     )
+
+    # ---- Retenção no próprio servidor do SISCONT
+    backup_local_retencao_banco = models.PositiveSmallIntegerField(
+        "Dumps do banco mantidos no servidor", default=7,
+        help_text="Quantidade de backups do banco mais recentes guardados na pasta local.",
+    )
+    backup_local_retencao_midia = models.PositiveSmallIntegerField(
+        "Zips de anexos mantidos no servidor", default=1,
+        help_text="Quantidade de zips completos dos anexos mais recentes guardados na pasta local.",
+    )
+
+    # ---- Cópia para servidor de arquivos da rede (SMB)
+    backup_remoto_ativo = models.BooleanField(
+        "Enviar cópia ao servidor de arquivos", default=False,
+    )
+    backup_remoto_caminho = models.CharField(
+        "Caminho da pasta de destino", max_length=255, blank=True, default='',
+        help_text=r"Ex.: \\servidor\compartilhamento\SISCONT\Backup ou "
+                  "smb://servidor/compartilhamento/SISCONT/Backup",
+    )
+    backup_remoto_dominio = models.CharField(
+        "Domínio (grupo de trabalho)", max_length=100, blank=True, default='',
+        help_text="Ex.: om.intraer",
+    )
+    backup_remoto_usuario = models.CharField(
+        "Usuário de rede", max_length=100, blank=True, default='',
+    )
+    backup_remoto_senha_cifrada = models.TextField(
+        "Senha de rede (cifrada)", blank=True, default='', editable=False,
+    )
+    backup_remoto_retencao_diaria = models.PositiveSmallIntegerField(
+        "Dumps diários mantidos no servidor de arquivos", default=30,
+    )
+    backup_remoto_retencao_mensal = models.PositiveSmallIntegerField(
+        "Dumps mensais mantidos no servidor de arquivos", default=12,
+        help_text="Além dos diários, guarda o primeiro dump de cada mês.",
+    )
+    backup_remoto_retencao_midia = models.PositiveSmallIntegerField(
+        "Zips mensais de anexos mantidos no servidor de arquivos", default=3,
+    )
+
     data_atualizacao = models.DateTimeField(auto_now=True)
+
+    # ---- senha de rede
+    @property
+    def tem_senha_remota(self):
+        return bool(self.backup_remoto_senha_cifrada)
+
+    def definir_senha_remota(self, senha):
+        from contratos.services import cripto
+        self.backup_remoto_senha_cifrada = cripto.cifrar(senha) if senha else ''
+
+    def obter_senha_remota(self):
+        """Senha em texto puro. Lança cripto.SegredoIlegivel se não puder ser lida."""
+        from contratos.services import cripto
+        if not self.backup_remoto_senha_cifrada:
+            return ''
+        return cripto.decifrar(self.backup_remoto_senha_cifrada)
+
+    def servidor_arquivos(self, senha=None):
+        """Conexão (ainda não aberta) com o servidor de arquivos configurado."""
+        from contratos.services.servidor_arquivos import ServidorArquivos
+        return ServidorArquivos(
+            self.backup_remoto_caminho, self.backup_remoto_dominio, self.backup_remoto_usuario,
+            self.obter_senha_remota() if senha is None else senha,
+        )
 
     @staticmethod
     def separar_emails(texto):

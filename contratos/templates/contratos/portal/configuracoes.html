@@ -19,16 +19,20 @@
     {% endfor %}
 {% endif %}
 
+{% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
+{% endif %}
+
 <div class="row">
-    <div class="col-md-8 col-lg-6">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-header bg-white border-bottom pb-0 pt-4 px-4">
-                <h5 class="mb-3 text-primary"><i class="bi bi-server me-2"></i>Rotinas de Backup</h5>
-            </div>
-            <div class="card-body p-4">
-                <form method="post" action="">
-                    {% csrf_token %}
-                    
+    <div class="col-lg-8 col-xl-7">
+        <form method="post" action="">
+            {% csrf_token %}
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-bottom pb-0 pt-4 px-4">
+                    <h5 class="mb-3 text-primary"><i class="bi bi-server me-2"></i>Rotinas de Backup</h5>
+                </div>
+                <div class="card-body p-4">
                     <div class="mb-4">
                         <label for="{{ form.backup_periodicidade.id_for_label }}" class="form-label fw-bold">{{ form.backup_periodicidade.label }}</label>
                         {{ form.backup_periodicidade }}
@@ -41,18 +45,95 @@
                         <div class="form-text">{{ form.backup_emails_destinatarios.help_text }} Cada backup executado (automático ou manual) envia um relatório com o resultado.</div>
                         {% if form.backup_emails_destinatarios.errors %}<div class="text-danger small mt-1">{{ form.backup_emails_destinatarios.errors|join:" " }}</div>{% endif %}
                     </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                        <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-2"></i>Salvar Configurações</button>
+
+                    <h6 class="fw-bold text-secondary mb-3">Retenção no servidor do SISCONT</h6>
+                    <div class="row g-3">
+                        {% for campo in form %}{% if campo.name == 'backup_local_retencao_banco' or campo.name == 'backup_local_retencao_midia' %}
+                        <div class="col-sm-6">
+                            <label for="{{ campo.id_for_label }}" class="form-label">{{ campo.label }}</label>
+                            {{ campo }}
+                            {% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}
+                            {% if campo.errors %}<div class="text-danger small mt-1">{{ campo.errors|join:" " }}</div>{% endif %}
+                        </div>
+                        {% endif %}{% endfor %}
                     </div>
-                </form>
+                </div>
             </div>
-        </div>
-        
+
+            <div class="card border-0 shadow-sm rounded-4 mt-4">
+                <div class="card-header bg-white border-bottom pb-0 pt-4 px-4">
+                    <h5 class="mb-3 text-primary"><i class="bi bi-hdd-network me-2"></i>Cópia no Servidor de Arquivos da Rede</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small">
+                        Envia uma cópia de cada backup para uma pasta compartilhada da rede (Windows/SMB), protegendo
+                        os dados contra uma pane no servidor do SISCONT. Dentro da pasta de destino são criadas as
+                        subpastas <code>banco</code>, <code>midia</code> (réplica dos anexos, que nunca apaga arquivos)
+                        e <code>midia_mensal</code> (um zip completo dos anexos por mês).
+                    </p>
+
+                    <div class="form-check form-switch mb-4">
+                        {{ form.backup_remoto_ativo }}
+                        <label class="form-check-label fw-bold" for="{{ form.backup_remoto_ativo.id_for_label }}">{{ form.backup_remoto_ativo.label }}</label>
+                        <div class="form-text">Ao ativar ou alterar os dados de acesso, a conexão é testada antes de salvar.</div>
+                    </div>
+
+                    {% if senha_ilegivel %}
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        A senha de rede guardada não pode mais ser lida (a <code>SECRET_KEY</code> do servidor mudou). Digite-a novamente e salve.
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.backup_remoto_caminho.id_for_label }}" class="form-label fw-bold">{{ form.backup_remoto_caminho.label }}</label>
+                        {{ form.backup_remoto_caminho }}
+                        <div class="form-text">{{ form.backup_remoto_caminho.help_text }}</div>
+                        {% if form.backup_remoto_caminho.errors %}<div class="text-danger small mt-1">{{ form.backup_remoto_caminho.errors|join:" " }}</div>{% endif %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-4">
+                            <label for="{{ form.backup_remoto_dominio.id_for_label }}" class="form-label fw-bold">{{ form.backup_remoto_dominio.label }}</label>
+                            {{ form.backup_remoto_dominio }}
+                            <div class="form-text">{{ form.backup_remoto_dominio.help_text }}</div>
+                        </div>
+                        <div class="col-sm-4">
+                            <label for="{{ form.backup_remoto_usuario.id_for_label }}" class="form-label fw-bold">{{ form.backup_remoto_usuario.label }}</label>
+                            {{ form.backup_remoto_usuario }}
+                            {% if form.backup_remoto_usuario.errors %}<div class="text-danger small mt-1">{{ form.backup_remoto_usuario.errors|join:" " }}</div>{% endif %}
+                        </div>
+                        <div class="col-sm-4">
+                            <label for="{{ form.backup_remoto_senha.id_for_label }}" class="form-label fw-bold">{{ form.backup_remoto_senha.label }}</label>
+                            {{ form.backup_remoto_senha }}
+                            <div class="form-text">{% if config.tem_senha_remota %}<i class="bi bi-lock-fill"></i> Senha cadastrada. {% endif %}{{ form.backup_remoto_senha.help_text }}</div>
+                            {% if form.backup_remoto_senha.errors %}<div class="text-danger small mt-1">{{ form.backup_remoto_senha.errors|join:" " }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-secondary mb-3 mt-4">Retenção no servidor de arquivos</h6>
+                    <div class="row g-3">
+                        {% for campo in form %}{% if campo.name == 'backup_remoto_retencao_diaria' or campo.name == 'backup_remoto_retencao_mensal' or campo.name == 'backup_remoto_retencao_midia' %}
+                        <div class="col-sm-4">
+                            <label for="{{ campo.id_for_label }}" class="form-label">{{ campo.label }}</label>
+                            {{ campo }}
+                            {% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}
+                            {% if campo.errors %}<div class="text-danger small mt-1">{{ campo.errors|join:" " }}</div>{% endif %}
+                        </div>
+                        {% endif %}{% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-2"></i>Salvar Configurações</button>
+            </div>
+        </form>
+
         <div class="alert alert-info mt-4 d-flex align-items-center">
             <i class="bi bi-info-circle-fill fs-4 me-3"></i>
             <div>
-                <strong>Importante:</strong> As configurações acima são armazenadas no banco de dados para serem consumidas por um script externo (cron) que efetivamente fará a compactação e cópia dos dados no sistema operacional do servidor.
+                <strong>Importante:</strong> As configurações acima são armazenadas no banco de dados e consumidas pela rotina agendada (cron), que gera o dump do banco, copia os anexos e envia a cópia ao servidor de arquivos.
             </div>
         </div>
 
@@ -61,12 +142,24 @@
                 <h5 class="mb-3 text-success"><i class="bi bi-play-circle me-2"></i>Ação Imediata</h5>
             </div>
             <div class="card-body p-4">
-                <p class="text-muted mb-4">Se desejar, você pode forçar a execução da rotina de backup neste exato momento, ignorando a periodicidade configurada acima.</p>
-                <form method="post" action="">
-                    {% csrf_token %}
-                    <input type="hidden" name="force_backup" value="true">
-                    <button type="submit" class="btn btn-outline-success"><i class="bi bi-cloud-download me-2"></i>Executar Backup Agora</button>
-                </form>
+                <p class="text-muted mb-4">Se desejar, você pode forçar a execução da rotina de backup neste exato momento, ignorando a periodicidade configurada acima. O backup roda em segundo plano e o resultado chega pelo relatório por e-mail.</p>
+                {% if backup_em_andamento %}
+                <div class="alert alert-warning small"><i class="bi bi-hourglass-split me-1"></i>Há um backup em andamento neste momento.</div>
+                {% endif %}
+                <div class="d-flex flex-wrap gap-2">
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="force_backup" value="true">
+                        <button type="submit" class="btn btn-outline-success"{% if backup_em_andamento %} disabled{% endif %}><i class="bi bi-cloud-download me-2"></i>Executar Backup Agora</button>
+                    </form>
+                    {% if config.backup_remoto_caminho %}
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="testar_conexao" value="true">
+                        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-plug me-2"></i>Testar Conexão com o Servidor de Arquivos</button>
+                    </form>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

@@ -3,7 +3,8 @@ Relatório por e-mail de cada execução do backup.
 
 Status:
 - OK       – banco e mídia copiados.
-- PARCIAL  – banco copiado, mas a mídia falhou, não foi encontrada ou estava vazia.
+- PARCIAL  – banco copiado, mas a mídia falhou, não foi encontrada ou estava vazia, ou
+             o envio ao servidor de arquivos (quando ativado) falhou.
 - FALHOU   – o dump do banco falhou (ou nem foi possível começar).
 
 O relatório vai para a fila de e-mails. Se não for possível gravar na fila (banco fora do
@@ -40,6 +41,23 @@ class ParteBackup:
     quantidade: Optional[int] = None
     erro: str = ''
     aviso: str = ''
+    info: str = ''
+
+
+@dataclass
+class ParteRemota:
+    """Cópia no servidor de arquivos da rede."""
+    ativo: bool = False
+    ok: bool = False
+    destino: str = ''
+    erro: str = ''
+    aviso: str = ''
+    banco_enviado: str = ''
+    midia_total: int = 0
+    midia_enviados: int = 0
+    midia_bytes: int = 0
+    zip_mensal_enviado: str = ''
+    removidos: int = 0
 
 
 @dataclass
@@ -53,6 +71,8 @@ class ResultadoBackup:
     erro_geral: str = ''
     banco: ParteBackup = field(default_factory=ParteBackup)
     midia: ParteBackup = field(default_factory=ParteBackup)
+    remoto: ParteRemota = field(default_factory=ParteRemota)
+    removidos_locais: int = 0
     log: List[str] = field(default_factory=list)
 
     @property
@@ -60,6 +80,8 @@ class ResultadoBackup:
         if self.erro_geral or not self.banco.ok:
             return STATUS_FALHOU
         if not self.midia.ok or self.midia.aviso:
+            return STATUS_PARCIAL
+        if self.remoto.ativo and not self.remoto.ok:
             return STATUS_PARCIAL
         return STATUS_OK
 
@@ -116,6 +138,7 @@ def _contexto(resultado):
         'duracao': formatar_duracao(resultado.duracao_segundos),
         'banco_tamanho': formatar_tamanho(resultado.banco.tamanho),
         'midia_tamanho': formatar_tamanho(resultado.midia.tamanho),
+        'remoto_bytes': formatar_tamanho(resultado.remoto.midia_bytes),
         'disco': disco,
         'disco_livre': formatar_tamanho(disco.get('livre')),
         'disco_total': formatar_tamanho(disco.get('total')),

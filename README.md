@@ -177,13 +177,16 @@ Dashboard interativo com gráficos e indicadores:
 
 #### 5. **Configurações do Sistema** (Superusuário)
 - Painel exclusivo para superusuários com parâmetros de infraestrutura
-- Configuração da periodicidade do backup automático (Diário, Semanal, Mensal)
+- Configuração da periodicidade do backup automático (Diário, Semanal, Mensal), dos destinatários do relatório e da retenção
+- Cópia do backup em servidor de arquivos da rede (SMB): caminho, domínio, usuário e senha (cifrada), com teste de conexão
 
 #### 6. **Backup Automático**
-- Rotina interna Docker que executa diariamente às 02h00
+- Rotina interna Docker que executa diariamente às 02h00 UTC
 - Gera dump do banco PostgreSQL e ZIP da pasta de mídia
 - Periodicidade configurável via interface web (Diário/Semanal/Mensal)
-- Arquivos salvos na pasta `./backups` do servidor (mapeada via volume Docker)
+- Arquivos salvos na pasta `./backups` do servidor (mapeada via volume Docker), com retenção automática
+- Cópia opcional em servidor de arquivos da rede: dumps com histórico diário e mensal, réplica incremental dos anexos (nunca apaga) e zip mensal completo; falha no envio gera relatório **PARCIAL**
+- Configuração e restauração descritas no [Manual de TI](docs/manuais/MANUAL_INSTALACAO_TI.md#4-backup-e-restauração)
 
 #### 3. **Relatórios e Exportações**
 

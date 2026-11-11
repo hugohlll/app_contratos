@@ -402,27 +402,66 @@ def configuracoes_sistema(request):
         messages.error(request, 'Acesso negado. Apenas superusuários podem acessar as configurações.')
         return redirect('painel_controle')
     
+    from contratos.services import execucao_backup
+    from contratos.services.cripto import SegredoIlegivel
+    from contratos.services.servidor_arquivos import ErroServidorArquivos
+
     config = ConfiguracaoSistema.get_config()
     if request.method == 'POST':
         if 'force_backup' in request.POST:
-            from django.core.management import call_command
+            if execucao_backup.backup_em_andamento():
+                messages.warning(request, 'Já existe um backup em andamento. Aguarde o relatório por e-mail.')
+                return redirect('configuracoes_sistema')
             try:
-                call_command('executar_backup', force=True, usuario=request.user.get_username())
-                messages.success(request, 'Rotina de backup executada manualmente. O relatório será '
-                                          'enviado por e-mail aos destinatários configurados.')
+                execucao_backup.disparar_em_segundo_plano(request.user.get_username())
+                messages.success(request, 'Backup iniciado em segundo plano. O relatório será '
+                                          'enviado por e-mail aos destinatários configurados ao final.')
             except Exception as e:
-                messages.error(request, f'Erro ao executar rotina de backup: {e}')
+                messages.error(request, f'Erro ao iniciar a rotina de backup: {e}')
+            return redirect('configuracoes_sistema')
+
+        if 'testar_conexao' in request.POST:
+            if not (config.backup_remoto_caminho and config.backup_remoto_usuario):
+                messages.error(request, 'Preencha e salve os dados do servidor de arquivos antes de testar.')
+                return redirect('configuracoes_sistema')
+            try:
+                with config.servidor_arquivos() as srv:
+                    srv.testar()
+                messages.success(request, f'Conexão OK: gravação de teste em {srv.base} concluída.')
+            except (ErroServidorArquivos, SegredoIlegivel) as e:
+                messages.error(request, f'Falha no teste de conexão: {e}')
             return redirect('configuracoes_sistema')
 
         form = ConfiguracaoSistemaForm(request.POST, instance=config)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Configurações salvas com sucesso!')
-            return redirect('configuracoes_sistema')
+            conexao_ok = True
+            if form.precisa_testar_conexao():
+                try:
+                    with form.servidor_arquivos() as srv:
+                        srv.testar()
+                except (ErroServidorArquivos, SegredoIlegivel) as e:
+                    conexao_ok = False
+                    form.add_error(None, f'As configurações não foram salvas: o teste de conexão com o '
+                                         f'servidor de arquivos falhou ({e}). Corrija os dados ou '
+                                         f'desmarque o envio ao servidor de arquivos.')
+            if conexao_ok:
+                form.save()
+                messages.success(request, 'Configurações salvas com sucesso!')
+                return redirect('configuracoes_sistema')
     else:
         form = ConfiguracaoSistemaForm(instance=config)
-    
+
+    senha_ilegivel = False
+    if config.tem_senha_remota:
+        try:
+            config.obter_senha_remota()
+        except SegredoIlegivel:
+            senha_ilegivel = True
+
     return render(request, 'contratos/portal/configuracoes.html', {
         'form': form,
+        'config': config,
+        'senha_ilegivel': senha_ilegivel,
+        'backup_em_andamento': execucao_backup.backup_em_andamento(),
         'titulo': 'Configurações do Sistema'
     })

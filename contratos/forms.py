@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 from django import forms
-from django.core.validators import validate_email
+from django.core.validators import validate_email, MinValueValidator
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
@@ -355,14 +355,93 @@ class PrestacaoContasSetorUploadForm(EstiloFormMixin, forms.ModelForm):
 
 
 class ConfiguracaoSistemaForm(EstiloFormMixin, forms.ModelForm):
+    CAMPOS_CONEXAO = ('backup_remoto_caminho', 'backup_remoto_dominio', 'backup_remoto_usuario')
+
+    backup_remoto_senha = forms.CharField(
+        label="Senha de rede", required=False, strip=False,
+        widget=forms.PasswordInput(render_value=False, attrs={'autocomplete': 'new-password'}),
+        help_text="Fica oculta e é gravada cifrada. Deixe em branco para manter a senha já cadastrada.",
+    )
+
     class Meta:
         model = ConfiguracaoSistema
-        fields = ('backup_periodicidade', 'backup_emails_destinatarios')
+        fields = (
+            'backup_periodicidade', 'backup_emails_destinatarios',
+            'backup_local_retencao_banco', 'backup_local_retencao_midia',
+            'backup_remoto_ativo', 'backup_remoto_caminho', 'backup_remoto_dominio',
+            'backup_remoto_usuario',
+            'backup_remoto_retencao_diaria', 'backup_remoto_retencao_mensal',
+            'backup_remoto_retencao_midia',
+        )
         widgets = {
             'backup_emails_destinatarios': forms.Textarea(attrs={
                 'rows': 2, 'placeholder': 'fulano@fab.mil.br, beltrano@fab.mil.br',
             }),
+            'backup_remoto_caminho': forms.TextInput(attrs={
+                'placeholder': r'\\servidor\compartilhamento\SISCONT\Backup',
+            }),
+            'backup_remoto_dominio': forms.TextInput(attrs={'placeholder': 'om.intraer'}),
+            'backup_remoto_usuario': forms.TextInput(attrs={'autocomplete': 'off'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for nome in ('backup_local_retencao_banco', 'backup_local_retencao_midia',
+                     'backup_remoto_retencao_diaria', 'backup_remoto_retencao_midia'):
+            self.fields[nome].min_value = 1
+            self.fields[nome].widget.attrs['min'] = 1
+            self.fields[nome].validators.append(MinValueValidator(1))
+
+    def clean_backup_remoto_caminho(self):
+        caminho = (self.cleaned_data.get('backup_remoto_caminho') or '').strip()
+        if caminho:
+            from contratos.services.servidor_arquivos import normalizar_caminho, ErroServidorArquivos
+            try:
+                normalizar_caminho(caminho)
+            except ErroServidorArquivos as e:
+                raise forms.ValidationError(str(e))
+        return caminho
+
+    def clean(self):
+        dados = super().clean()
+        if dados.get('backup_remoto_ativo'):
+            faltando = []
+            if not dados.get('backup_remoto_caminho') and 'backup_remoto_caminho' not in self.errors:
+                faltando.append('backup_remoto_caminho')
+            if not dados.get('backup_remoto_usuario'):
+                faltando.append('backup_remoto_usuario')
+            if not dados.get('backup_remoto_senha') and not self.instance.tem_senha_remota:
+                faltando.append('backup_remoto_senha')
+            for campo in faltando:
+                self.add_error(campo, "Obrigatório para enviar a cópia ao servidor de arquivos.")
+        return dados
+
+    def precisa_testar_conexao(self):
+        """Ao ativar o envio ou mudar os dados de acesso, a conexão é testada antes de salvar."""
+        if not self.cleaned_data.get('backup_remoto_ativo'):
+            return False
+        if not self.initial.get('backup_remoto_ativo'):
+            return True
+        if self.cleaned_data.get('backup_remoto_senha'):
+            return True
+        return any(self.cleaned_data.get(c) != self.initial.get(c) for c in self.CAMPOS_CONEXAO)
+
+    def servidor_arquivos(self):
+        """Conexão com os dados digitados (senha nova ou a já guardada)."""
+        from contratos.services.servidor_arquivos import ServidorArquivos
+        d = self.cleaned_data
+        senha = d.get('backup_remoto_senha') or self.instance.obter_senha_remota()
+        return ServidorArquivos(d['backup_remoto_caminho'], d.get('backup_remoto_dominio'),
+                                d['backup_remoto_usuario'], senha)
+
+    def save(self, commit=True):
+        config = super().save(commit=False)
+        senha = self.cleaned_data.get('backup_remoto_senha')
+        if senha:
+            config.definir_senha_remota(senha)
+        if commit:
+            config.save()
+        return config
 
     def clean_backup_emails_destinatarios(self):
         emails = ConfiguracaoSistema.separar_emails(self.cleaned_data.get('backup_emails_destinatarios'))
