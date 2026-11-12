@@ -119,3 +119,28 @@ class SlideApresentacaoAdmin(admin.ModelAdmin):
 class ConfiguracaoApresentacaoAdmin(admin.ModelAdmin):
     list_display = ('tipo_apresentacao', 'ano_referencia', 'mes_referencia', 'modo_livre', 'data_atualizacao')
     list_filter = ('tipo_apresentacao', 'ano_referencia', 'mes_referencia', 'modo_livre')
+
+from .models import EmailPendente
+from contratos.services import email as servico_email
+
+
+@admin.register(EmailPendente)
+class EmailPendenteAdmin(admin.ModelAdmin):
+    """Fila de e-mails: somente leitura, com ação para reenviar os que falharam."""
+    list_display = ('criado_em', 'categoria', 'assunto', 'destinatarios', 'status', 'tentativas', 'enviado_em')
+    list_filter = ('status', 'categoria', 'criado_em')
+    search_fields = ('assunto', 'destinatarios', 'ultimo_erro')
+    date_hierarchy = 'criado_em'
+    readonly_fields = [f.name for f in EmailPendente._meta.fields]
+    actions = ['reenviar_falhados']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    @admin.action(description='Reenviar e-mails que falharam')
+    def reenviar_falhados(self, request, queryset):
+        qtd = servico_email.reenviar(queryset)
+        self.message_user(request, f'{qtd} e-mail(s) devolvido(s) para a fila.')

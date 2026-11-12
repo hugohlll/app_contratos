@@ -530,7 +530,29 @@ class ConfiguracaoSistema(models.Model):
         verbose_name="Periodicidade do Backup",
         help_text="Frequência com que o backup automatizado será executado."
     )
+    backup_emails_destinatarios = models.TextField(
+        "Destinatários do Relatório de Backup",
+        blank=True,
+        default='',
+        help_text="E-mails que recebem o relatório de cada backup, separados por vírgula. "
+                  "Deixe em branco para não enviar.",
+    )
     data_atualizacao = models.DateTimeField(auto_now=True)
+
+    @staticmethod
+    def separar_emails(texto):
+        """Divide uma lista de e-mails separada por vírgula, ponto e vírgula ou quebra de linha."""
+        partes = re.split(r'[,;\s]+', texto or '')
+        vistos = []
+        for p in partes:
+            p = p.strip().lower()
+            if p and p not in vistos:
+                vistos.append(p)
+        return vistos
+
+    @property
+    def destinatarios_backup(self):
+        return self.separar_emails(self.backup_emails_destinatarios)
 
     class Meta:
         verbose_name = "Configuração do Sistema"
@@ -801,3 +823,46 @@ class ConfiguracaoApresentacao(models.Model):
     def __str__(self):
         modo = "Livre" if self.modo_livre else "Antiguidade"
         return f"Config {self.get_tipo_apresentacao_display()} - {self.mes_referencia:02d}/{self.ano_referencia} ({modo})"
+
+
+class EmailPendente(models.Model):
+    """
+    Fila de e-mails do SISCONT. Cada mensagem é gravada aqui e enviada pelo comando
+    `processar_fila_email` (cron a cada 2 minutos), com novas tentativas em caso de falha.
+    O registro também serve de histórico do que foi enviado (apagado após 90 dias).
+    """
+    STATUS_PENDENTE = 'PENDENTE'
+    STATUS_ENVIADO = 'ENVIADO'
+    STATUS_FALHOU = 'FALHOU'
+    STATUS_CHOICES = [
+        (STATUS_PENDENTE, 'Pendente'),
+        (STATUS_ENVIADO, 'Enviado'),
+        (STATUS_FALHOU, 'Falhou'),
+    ]
+
+    categoria = models.CharField("Categoria", max_length=40, default='GERAL', db_index=True)
+    destinatarios = models.TextField("Destinatários", help_text="Separados por vírgula.")
+    assunto = models.CharField("Assunto", max_length=255)
+    corpo_texto = models.TextField("Corpo (texto)")
+    corpo_html = models.TextField("Corpo (HTML)", blank=True, default='')
+
+    status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES,
+                              default=STATUS_PENDENTE, db_index=True)
+    tentativas = models.PositiveSmallIntegerField("Tentativas", default=0)
+    proxima_tentativa = models.DateTimeField("Próxima Tentativa", default=timezone.now, db_index=True)
+    ultimo_erro = models.TextField("Último Erro", blank=True, default='')
+
+    criado_em = models.DateTimeField("Criado em", auto_now_add=True)
+    enviado_em = models.DateTimeField("Enviado em", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "E-mail da Fila"
+        verbose_name_plural = "Fila de E-mails"
+        ordering = ['-criado_em']
+
+    @property
+    def lista_destinatarios(self):
+        return ConfiguracaoSistema.separar_emails(self.destinatarios)
+
+    def __str__(self):
+        return f"[{self.get_status_display()}] {self.assunto}"

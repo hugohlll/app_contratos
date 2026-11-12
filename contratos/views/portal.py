@@ -407,8 +407,9 @@ def configuracoes_sistema(request):
         if 'force_backup' in request.POST:
             from django.core.management import call_command
             try:
-                call_command('executar_backup', force=True)
-                messages.success(request, 'Rotina de backup executada manualmente com sucesso!')
+                call_command('executar_backup', force=True, usuario=request.user.get_username())
+                messages.success(request, 'Rotina de backup executada manualmente. O relatório será '
+                                          'enviado por e-mail aos destinatários configurados.')
             except Exception as e:
                 messages.error(request, f'Erro ao executar rotina de backup: {e}')
             return redirect('configuracoes_sistema')

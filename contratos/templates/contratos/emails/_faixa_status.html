@@ -1,0 +1,6 @@
+<div style="padding:12px 16px;border-left:6px solid {{ cor }};background:{{ fundo }};color:{{ cor }}">
+  <div style="font-size:18px;font-weight:bold">Backup {{ status }}</div>
+  <div style="margin-top:2px;color:#333">
+    {% if status == 'OK' %}Banco de dados e arquivos copiados com sucesso.{% elif status == 'PARCIAL' %}O banco de dados foi copiado, mas houve problema com os arquivos (mídia).{% else %}O backup do banco de dados NÃO foi feito. Verifique o servidor.{% endif %}
+  </div>
+</div>

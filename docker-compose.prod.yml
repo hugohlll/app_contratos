@@ -20,19 +20,15 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/mediafiles
-      - ./secrets/credentials.json:/app/credentials.json:ro
-      - ./secrets/token.json:/app/token.json
       - ./backups:/backups
       - ./core/settings.py:/app/core/settings.py:ro
     command: gunicorn --bind 0.0.0.0:8000 --workers 3 --threads 4 --timeout 120 --keep-alive 5 --max-requests 1000 --max-requests-jitter 50 --access-logfile - core.wsgi:application
     env_file: .env.prod
-    environment:
-      - GMAIL_CREDENTIALS_PATH=/app/credentials.json
-      - GMAIL_TOKEN_PATH=/app/token.json
+    # DNS interno primeiro (resolve mail.intraer); os públicos ficam de reserva.
     dns:
+      - 10.228.68.1
       - 8.8.8.8
       - 8.8.4.4
-      - 1.1.1.1
     depends_on:
       - db
     restart: always
@@ -69,20 +65,16 @@ services:
       dockerfile: Dockerfile.prod
       network: host
     env_file: .env.prod
-    environment:
-      - GMAIL_CREDENTIALS_PATH=/app/credentials.json
-      - GMAIL_TOKEN_PATH=/app/token.json
+    # DNS interno primeiro (resolve mail.intraer); os públicos ficam de reserva.
     dns:
+      - 10.228.68.1
       - 8.8.8.8
       - 8.8.4.4
-      - 1.1.1.1
     depends_on:
       - db
     restart: always
     volumes:
       - ./crontab.prod:/etc/cron.d/app_contratos
-      - ./secrets/credentials.json:/app/credentials.json:ro
-      - ./secrets/token.json:/app/token.json
       - ./backups:/backups
       # Sem este volume o backup automático (02:00) não enxerga os arquivos enviados.
       - media_volume:/app/mediafiles:ro

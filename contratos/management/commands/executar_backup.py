@@ -3,9 +3,14 @@ import datetime
 import subprocess
 import zipfile
 from pathlib import Path
-from django.core.management.base import BaseCommand
+
 from django.conf import settings
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+
 from contratos.models import ConfiguracaoSistema
+from contratos.services import relatorio_backup
+
 
 class Command(BaseCommand):
     help = 'Executa rotina de backup baseada nas configurações no banco de dados'
@@ -16,105 +21,152 @@ class Command(BaseCommand):
             action='store_true',
             help='Ignora a periodicidade e força a execução do backup agora',
         )
+        parser.add_argument(
+            '--usuario',
+            default='',
+            help='Usuário que disparou o backup manualmente (aparece no relatório por e-mail)',
+        )
+
+    # ------------------------------------------------------------------ log
+    def _log(self, mensagem, estilo=None):
+        """Escreve no stdout (log do cron) e guarda a linha para o relatório por e-mail."""
+        self._linhas.append(f"{timezone.localtime():%H:%M:%S} {mensagem}")
+        self.stdout.write(estilo(mensagem) if estilo else mensagem)
 
     def handle(self, *args, **options):
-        self.stdout.write("Iniciando rotina de backup...")
-        
+        self._linhas = []
+        force = options.get('force', False)
+        usuario = options.get('usuario') or ''
+        resultado = relatorio_backup.ResultadoBackup(
+            inicio=timezone.now(),
+            origem='manual' if (force and usuario) else ('forçado' if force else 'automático'),
+            usuario=usuario,
+            diretorio=getattr(settings, 'BACKUP_DIR', '/backups'),
+        )
+        executou = self._executar(resultado, force)
+        if not executou:
+            return
+        resultado.fim = timezone.now()
+        resultado.log = list(self._linhas)
+        relatorio_backup.enviar_relatorio(resultado, self._log)
+
+    def _executar(self, resultado, force):
+        """Roda o backup preenchendo `resultado`. Retorna False se foi pulado pela periodicidade."""
+        self._log("Iniciando rotina de backup...")
+
         try:
             config = ConfiguracaoSistema.get_config()
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Erro ao acessar as configurações: {e}"))
-            return
+            resultado.erro_geral = f"Erro ao acessar as configurações (banco indisponível?): {e}"
+            self._log(resultado.erro_geral, self.style.ERROR)
+            return True
 
+        resultado.destinatarios = config.destinatarios_backup
         periodicidade = config.backup_periodicidade
-        backup_dir_path = '/backups'
-        
+
         # Validar periodicidade (se é dia de rodar o backup)
         hoje = datetime.date.today()
-        force = options.get('force', False)
-        
+
         if not force:
             # Se for 'diario', sempre roda.
             if periodicidade == 'semanal':
                 # domingo = 6 (monday=0)
                 if hoje.weekday() != 6:
-                    self.stdout.write(self.style.NOTICE("Backup ignorado: configurado para 'semanal' e hoje não é domingo."))
-                    return
+                    self._log("Backup ignorado: configurado para 'semanal' e hoje não é domingo.",
+                              self.style.NOTICE)
+                    return False
             elif periodicidade == 'mensal':
                 if hoje.day != 1:
-                    self.stdout.write(self.style.NOTICE("Backup ignorado: configurado para 'mensal' e hoje não é dia 1º."))
-                    return
+                    self._log("Backup ignorado: configurado para 'mensal' e hoje não é dia 1º.",
+                              self.style.NOTICE)
+                    return False
         else:
-            self.stdout.write(self.style.NOTICE("Execução forçada solicitada. Ignorando periodicidade."))
+            self._log("Execução forçada solicitada. Ignorando periodicidade.", self.style.NOTICE)
 
         # Verifica se o diretório de destino existe, tenta criar se não.
-        backup_dir = Path(backup_dir_path)
+        backup_dir = Path(resultado.diretorio)
         try:
             backup_dir.mkdir(parents=True, exist_ok=True)
             os.chmod(backup_dir, 0o777)
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Não foi possível criar/acessar o diretório de backup {backup_dir_path}: {e}"))
-            return
-            
+            resultado.erro_geral = f"Não foi possível criar/acessar o diretório de backup {backup_dir}: {e}"
+            self._log(resultado.erro_geral, self.style.ERROR)
+            return True
+
         data_str = hoje.strftime("%Y%m%d")
-        
-        # 1. Backup do Banco de Dados (Postgres)
-        self.stdout.write("Realizando dump do banco de dados...")
+        self._backup_banco(resultado, backup_dir / f"db_backup_{data_str}.sql")
+        self._backup_media(resultado, backup_dir / f"media_backup_{data_str}.zip")
+
+        self._log("Rotina de backup finalizada.", self.style.SUCCESS)
+        return True
+
+    # --------------------------------------------------------------- banco
+    def _backup_banco(self, resultado, sql_file_path):
+        self._log("Realizando dump do banco de dados...")
         # Usa as configurações atuais do Django para chamar pg_dump
         db_settings = settings.DATABASES['default']
-        db_name = db_settings['NAME']
-        db_user = db_settings['USER']
-        db_host = db_settings['HOST']
-        db_port = db_settings.get('PORT', '5432')
-        db_pass = db_settings.get('PASSWORD', '')
-
-        sql_file_path = backup_dir / f"db_backup_{data_str}.sql"
-        
         env = os.environ.copy()
-        if db_pass:
-            env['PGPASSWORD'] = db_pass
-            
+        if db_settings.get('PASSWORD'):
+            env['PGPASSWORD'] = db_settings['PASSWORD']
+
         dump_command = [
             'pg_dump',
-            '-h', db_host,
-            '-p', str(db_port),
-            '-U', db_user,
-            '-d', db_name,
+            '-h', str(db_settings.get('HOST') or ''),
+            '-p', str(db_settings.get('PORT') or '5432'),
+            '-U', str(db_settings.get('USER') or ''),
+            '-d', str(db_settings.get('NAME') or ''),
             '-F', 'p',  # formato em texto puro (plain text), legível em bloco de notas
             '-f', str(sql_file_path)
         ]
-        
+
+        banco = resultado.banco
+        banco.arquivo = sql_file_path.name
         try:
-            # Como a imagem python:3.12 (ou similar) base pode não ter pg_dump instalado, 
-            # se falhar o backup do DB, tentamos via docker (se rodar fora) ou temos que instalar postgresql-client
-            # No docker-compose, a imagem django costuma ter libpq-dev, mas não pg_dump. 
-            # Vamos testar a execução. Se não encontrar pg_dump, vamos logar.
             subprocess.run(dump_command, env=env, check=True, capture_output=True)
-            os.chmod(sql_file_path, 0o666)
-            self.stdout.write(self.style.SUCCESS(f"Dump do banco salvo em: {sql_file_path}"))
+            if sql_file_path.exists():
+                os.chmod(sql_file_path, 0o666)
+                banco.tamanho = sql_file_path.stat().st_size
+            banco.ok = True
+            self._log(f"Dump do banco salvo em: {sql_file_path}", self.style.SUCCESS)
         except FileNotFoundError:
-            self.stdout.write(self.style.ERROR("Comando 'pg_dump' não encontrado. Instale postgresql-client no container."))
+            banco.erro = "Comando 'pg_dump' não encontrado. Instale postgresql-client no container."
+            self._log(banco.erro, self.style.ERROR)
         except subprocess.CalledProcessError as e:
-            self.stdout.write(self.style.ERROR(f"Erro ao executar pg_dump: {e.stderr.decode()}"))
+            detalhe = (e.stderr or b'').decode(errors='replace').strip()
+            banco.erro = f"Erro ao executar pg_dump: {detalhe}"
+            self._log(banco.erro, self.style.ERROR)
+        except Exception as e:
+            banco.erro = f"Erro inesperado no dump do banco: {e}"
+            self._log(banco.erro, self.style.ERROR)
 
-        # 2. Backup da Pasta Media (Arquivos)
-        self.stdout.write("Compactando pasta mediafiles...")
+    # --------------------------------------------------------------- mídia
+    def _backup_media(self, resultado, zip_file_path):
+        self._log("Compactando pasta mediafiles...")
         media_root = settings.MEDIA_ROOT
-        zip_file_path = backup_dir / f"media_backup_{data_str}.zip"
-        
-        if os.path.exists(media_root):
-            try:
-                with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                    for root, _, files in os.walk(media_root):
-                        for file in files:
-                            file_path = os.path.join(root, file)
-                            arcname = os.path.relpath(file_path, media_root)
-                            zipf.write(file_path, arcname)
-                os.chmod(zip_file_path, 0o666)
-                self.stdout.write(self.style.SUCCESS(f"Mediafiles salvos em: {zip_file_path}"))
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(f"Erro ao compactar pasta media: {e}"))
-        else:
-            self.stdout.write(self.style.WARNING("Pasta MEDIA_ROOT não encontrada. Nenhuma mídia copiada."))
+        midia = resultado.midia
+        midia.arquivo = zip_file_path.name
 
-        self.stdout.write(self.style.SUCCESS("Rotina de backup finalizada."))
+        if not os.path.exists(media_root):
+            midia.erro = f"Pasta MEDIA_ROOT ({media_root}) não encontrada. Nenhuma mídia copiada."
+            self._log(midia.erro, self.style.WARNING)
+            return
+        try:
+            quantidade = 0
+            with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for root, _, files in os.walk(media_root):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, media_root)
+                        zipf.write(file_path, arcname)
+                        quantidade += 1
+            os.chmod(zip_file_path, 0o666)
+            midia.tamanho = zip_file_path.stat().st_size
+            midia.quantidade = quantidade
+            midia.ok = True
+            self._log(f"Mediafiles salvos em: {zip_file_path} ({quantidade} arquivo(s))", self.style.SUCCESS)
+            if quantidade == 0:
+                midia.aviso = "A pasta de mídia está vazia: nenhum arquivo foi copiado."
+                self._log(midia.aviso, self.style.WARNING)
+        except Exception as e:
+            midia.erro = f"Erro ao compactar pasta media: {e}"
+            self._log(midia.erro, self.style.ERROR)

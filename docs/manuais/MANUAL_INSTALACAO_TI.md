@@ -35,23 +35,19 @@ nano .env.prod
 | `DATABASE_URL` | URL de conexão (deve refletir os valores acima) | `postgres://admin_siscont:SenhaF0rte!2026@db:5432/siscont_db` |
 | `DJANGO_ALLOWED_HOSTS` | IP ou domínio do servidor (sem `http://`) | `10.0.0.5,portal.om.eb.mil.br` |
 | `DEBUG` | Modo de depuração — **deve ser `False` em produção** | `False` |
-| `EMAIL_PADRAO` | Remetente/destinatário padrão das notificações por e-mail (opcional) | `notificacoes@om.eb.mil.br` |
+| `EMAIL_BACKEND` | Liga o envio real de e-mails (opcional; sem ele nada é enviado) | `contratos.email_backend.IntraerSMTPBackend` |
+| `EMAIL_HOST_USER` | Conta institucional que envia os e-mails | `scipg.gapbr@fab.mil.br` |
+| `EMAIL_HOST_PASSWORD` | **Código de aplicativo** da conta (não a senha) — veja o Passo 1.9 | `abcd1234...` |
 
 > **⚠️ IMPORTANTE:** O `DATABASE_URL` deve conter exatamente o mesmo usuário, senha e nome de banco definidos em `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_DB`.
 
 > **⚠️ Evite o caractere `$`** na `SECRET_KEY` e nas senhas: o Docker Compose o interpreta como variável (veja a Seção 7).
 
-### 1.3 Preparar a Pasta `secrets/`
-O `docker-compose.prod.yml` monta os arquivos `secrets/credentials.json` e `secrets/token.json` nos serviços `web` e `cron`, e o script `deploy_prod.sh` **se recusa a executar** se eles não existirem. Por isso, a pasta deve ser preparada **antes** de subir os containers:
-
-- **Se for usar o envio de e-mails (Gmail API):** siga o Passo 1.9 e coloque os arquivos reais na pasta.
-- **Se ainda não for usar e-mails:** crie arquivos vazios apenas para satisfazer as montagens. A aplicação funciona normalmente; apenas o envio de e-mails fica indisponível (o comando `testar_email` retorna erro) e a verificação diária do token (01h00) registrará um erro em `/var/log/cron.log` do container `cron` até que as credenciais reais sejam colocadas:
-  ```bash
-  mkdir -p /opt/app_contratos/secrets
-  touch /opt/app_contratos/secrets/credentials.json /opt/app_contratos/secrets/token.json
-  ```
-
-> **⚠️ Atenção:** Se os arquivos não existirem quando os containers subirem, o Docker criará **diretórios** (pertencentes ao `root`) com esses nomes no lugar dos arquivos. O `deploy_prod.sh` **não detecta** essa situação (ele só verifica se o caminho existe). Confira com `ls -l secrets/`: se aparecerem como diretórios (`d` no início), remova-os (`sudo rm -rf secrets/credentials.json secrets/token.json`), crie os arquivos corretamente e recrie os serviços (`docker compose -f docker-compose.prod.yml up -d --force-recreate web cron`).
+### 1.3 Proteger o `.env.prod`
+O `.env.prod` guarda senhas e o código de aplicativo do e-mail. Restrinja a leitura ao dono do arquivo:
+```bash
+chmod 600 /opt/app_contratos/.env.prod
+```
 
 ### 1.4 Habilitar Inicialização Automática do Docker
 Para que a aplicação inicie automaticamente quando o servidor for ligado ou reiniciado:
@@ -90,8 +86,8 @@ Rotinas executadas pelo serviço `cron` (definidas em `crontab.prod`, log em `/v
 | Horário | Rotina |
 |---|---|
 | 00h00 | Desativa comissões encerradas e ativa comissões iniciadas |
-| 01h00 | Verifica/renova o token do Gmail (`scripts/check_gmail_health.py`) |
-| 02h00 | Executa a rotina de backup (`executar_backup`), conforme a periodicidade definida em **⚙️ Configurações** |
+| A cada 2 min | Envia os e-mails pendentes da fila (`processar_fila_email`) |
+| 02h00 | Executa a rotina de backup (`executar_backup`), conforme a periodicidade definida em **⚙️ Configurações**, e envia o relatório por e-mail |
 
 ### 1.7 Inicializar o Banco de Dados
 ```bash
@@ -104,22 +100,25 @@ docker compose -f docker-compose.prod.yml exec web python manage.py createsuperu
 ```
 Informe nome de usuário, e-mail e senha quando solicitado.
 
-### 1.9 Configurar Envio Automático de E-mails (Gmail API)
-O sistema suporta o envio automático de alertas (ex: vencimento de comissões e contratos) via Gmail API. Para habilitar essa funcionalidade:
+### 1.9 Configurar Envio Automático de E-mails (SMTP do Intraer)
+O SISCONT envia e-mails pelo servidor `mail.intraer` (porta 587, STARTTLS), autenticado com uma conta institucional. Hoje o único e-mail automático é o **relatório de cada backup**.
 
-1. Acesse o guia completo na documentação da aplicação: **[Roteiro de Implementação: Gmail API](../roteiros/ROTEIRO_PRODUCAO_GMAIL_API.md)**.
-2. O guia explicará como criar as credenciais OAuth 2.0 no Google Cloud.
-3. Ao gerar as credenciais, você baixará um arquivo chamado `credentials.json` e, após a autenticação inicial simulada no script, também será gerado o arquivo `token.json`.
-4. Mova ambos os arquivos JSON para a pasta `secrets/` na raiz do projeto (onde fica o `docker-compose.prod.yml`), substituindo os arquivos vazios criados no Passo 1.3, se for o caso:
+1. **Código de aplicativo:** as contas do FAB Mail usam autenticação de dois fatores, então a senha normal é recusada (`535 authentication failed`). Entre no FAB Mail com a conta institucional, vá em **Preferências > Contas > Aplicativos > Adicionar código do aplicativo**, dê o nome `SISCONT` e copie o código (ele aparece uma única vez).
+2. **Configuração:** preencha no `.env.prod` as variáveis `EMAIL_BACKEND`, `EMAIL_HOST_USER` e `EMAIL_HOST_PASSWORD` (veja o `.env.prod.example`) e recrie os serviços:
    ```bash
-   mkdir -p /opt/app_contratos/secrets
-   mv credentials.json /opt/app_contratos/secrets/
-   mv token.json /opt/app_contratos/secrets/
+   docker compose -f docker-compose.prod.yml up -d --force-recreate web cron
    ```
-5. O `docker-compose.prod.yml` já está configurado de fábrica para ler as credenciais automaticamente desta pasta nos serviços `web` e `cron`. Reinicie esses serviços para carregar os novos arquivos:
+3. **Teste:** envie um e-mail de teste (use `--direto` para ver a resposta do servidor sem passar pela fila):
    ```bash
-   docker compose -f docker-compose.prod.yml restart web cron
+   docker compose -f docker-compose.prod.yml exec web python manage.py testar_email seu.email@fab.mil.br
    ```
+4. **Destinatários do backup:** em **⚙️ Configurações**, preencha *Destinatários do Relatório de Backup* e clique em **Executar Backup Agora** para receber o primeiro relatório.
+
+> **Rede:** a porta 25 do `mail.intraer` é bloqueada; use sempre a 587. Os containers `web` e `cron` usam o DNS interno (`10.228.68.1`) para encontrar `mail.intraer`.
+>
+> **Certificado:** o servidor apresenta um certificado `*.fab.mil.br`, que não corresponde a `mail.intraer`. Por isso a conexão é criptografada **sem verificar o certificado** (`EMAIL_SSL_VERIFY=False`, padrão).
+>
+> **Acompanhamento:** a fila de e-mails (enviados, pendentes e com falha) fica no Django Admin, em **Fila de E-mails**, com a ação *Reenviar e-mails que falharam*.
 
 ---
 
@@ -226,7 +225,7 @@ Sempre que houver uma nova versão do sistema (commit no Git), siga o procedimen
 ### 3.1 Método Automatizado (Recomendado)
 
 O script `scripts/deploy_prod.sh` executa, em ordem, as seguintes etapas:
-1. **Pré-verificações:** confirma que o Docker está acessível e que existem os arquivos `docker-compose.prod.yml`, `Dockerfile.prod`, `.env.prod`, `secrets/credentials.json` e `secrets/token.json`; detecta caracteres `$` no `.env.prod` que seriam interpretados como variáveis pelo Compose;
+1. **Pré-verificações:** confirma que o Docker está acessível e que existem os arquivos `docker-compose.prod.yml`, `Dockerfile.prod`, e `.env.prod`; detecta caracteres `$` no `.env.prod` que seriam interpretados como variáveis pelo Compose;
 2. **Atualização do código** (somente com `--pull`): executa `git pull origin master`;
 3. **Backup preventivo** do banco e da mídia (`executar_backup`) usando o container `web` ou `cron` em execução;
 4. **Salvaguarda da imagem atual** com a tag `app_contratos-web:previous`, para possibilitar rollback;
@@ -239,7 +238,7 @@ O script `scripts/deploy_prod.sh` executa, em ordem, as seguintes etapas:
 
 #### Pré-requisitos de execução
 - Execute com `sudo` (ou com um usuário pertencente ao grupo `docker`). O script pode ser chamado de qualquer diretório — ele se posiciona automaticamente na raiz do repositório.
-- A pasta `secrets/` deve estar preparada (Passo 1.3).
+- O `.env.prod` deve estar preenchido e protegido (Passos 1.2 e 1.3).
 - Para usar `--pull`, o repositório no servidor **não pode ter alterações locais nem arquivos novos não versionados** (o script verifica `git status --porcelain` e aborta caso existam — até um documento solto na pasta do projeto bloqueia o deploy). Isso inclui o `core/settings.py`, que é montado diretamente do servidor no container `web`: ajustes locais nesse arquivo bloqueiam os deploys com `--pull`. Ao ser executado via `sudo`, o `git pull` roda com o usuário que chamou o `sudo` (`SUDO_USER`), evitando o erro de *dubious ownership*.
 
 #### Opções disponíveis
@@ -517,9 +516,6 @@ O `deploy_prod.sh --pull` encontrou arquivos modificados (`M`) ou não versionad
 - Arquivos não versionados (`??`): mova-os para fora da pasta do projeto (ou apague-os, se forem descartáveis).
 
 Em seguida, repita o deploy.
-
-### Erro `Arquivo/caminho de credenciais não encontrado: secrets/...`
-O script exige `secrets/credentials.json` e `secrets/token.json`. Prepare a pasta conforme o Passo 1.3.
 
 ### Erro `ERRO DE MIGRAÇÃO: Existem alterações nos models sem migração gerada no Git`
 O script de deploy detectou que um desenvolvedor alterou arquivos `models.py` mas não executou `makemigrations` no ambiente local antes de enviar o código ao repositório.

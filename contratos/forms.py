@@ -357,7 +357,24 @@ class PrestacaoContasSetorUploadForm(EstiloFormMixin, forms.ModelForm):
 class ConfiguracaoSistemaForm(EstiloFormMixin, forms.ModelForm):
     class Meta:
         model = ConfiguracaoSistema
-        fields = ('backup_periodicidade',)
+        fields = ('backup_periodicidade', 'backup_emails_destinatarios')
+        widgets = {
+            'backup_emails_destinatarios': forms.Textarea(attrs={
+                'rows': 2, 'placeholder': 'fulano@fab.mil.br, beltrano@fab.mil.br',
+            }),
+        }
+
+    def clean_backup_emails_destinatarios(self):
+        emails = ConfiguracaoSistema.separar_emails(self.cleaned_data.get('backup_emails_destinatarios'))
+        invalidos = []
+        for e in emails:
+            try:
+                validate_email(e)
+            except forms.ValidationError:
+                invalidos.append(e)
+        if invalidos:
+            raise forms.ValidationError(f"E-mail(s) inválido(s): {', '.join(invalidos)}")
+        return ', '.join(emails)
 
 
 from .models import ControleExecucao, RegistroFatura, OcorrenciaContratual

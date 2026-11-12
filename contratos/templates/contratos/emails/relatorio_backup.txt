@@ -1,0 +1,26 @@
+{% autoescape off %}RELATÓRIO DE BACKUP – SISCONT
+Status: {{ status }}{% if status == 'OK' %} (banco e mídia copiados){% elif status == 'PARCIAL' %} (banco copiado; mídia com problema){% else %} (o backup do banco NÃO foi feito){% endif %}
+
+EXECUÇÃO
+  Origem ......: {{ origem }}
+  Início ......: {{ inicio|date:"d/m/Y H:i:s" }}
+  Fim .........: {% if fim %}{{ fim|date:"d/m/Y H:i:s" }}{% else %}-{% endif %}
+  Duração .....: {{ duracao }}
+{% if r.erro_geral %}
+ERRO GERAL
+  {{ r.erro_geral }}
+{% endif %}
+BANCO DE DADOS
+{% if r.banco.ok %}  OK – {{ r.banco.arquivo }} ({{ banco_tamanho }}){% elif r.banco.erro %}  FALHOU – {{ r.banco.erro }}{% else %}  Não executado.{% endif %}
+
+ARQUIVOS (MÍDIA)
+{% if r.midia.ok %}  OK – {{ r.midia.arquivo }} ({{ midia_tamanho }}, {{ r.midia.quantidade }} arquivo(s)){% if r.midia.aviso %}
+  ATENÇÃO – {{ r.midia.aviso }}{% endif %}{% elif r.midia.erro %}  FALHOU – {{ r.midia.erro }}{% else %}  Não executado.{% endif %}
+
+DISCO ({{ r.diretorio }})
+{% if disco.erro %}  Não foi possível ler: {{ disco.erro }}{% else %}  Espaço livre ......: {{ disco_livre }} de {{ disco_total }}
+  Backups guardados .: {{ disco.quantidade }} arquivo(s), {{ disco_backups }}{% endif %}
+
+LOG DA EXECUÇÃO
+{{ log }}
+{% endautoescape %}
