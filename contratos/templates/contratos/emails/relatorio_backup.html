@@ -1,0 +1,55 @@
+<html><body style="margin:0;padding:16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#222;background:#ffffff">
+{% if status == 'OK' %}{% with cor='#1e7e34' fundo='#e6f4ea' %}{% include 'contratos/emails/_faixa_status.html' %}{% endwith %}
+{% elif status == 'PARCIAL' %}{% with cor='#8a6d00' fundo='#fff4ce' %}{% include 'contratos/emails/_faixa_status.html' %}{% endwith %}
+{% else %}{% with cor='#b00020' fundo='#fde7e9' %}{% include 'contratos/emails/_faixa_status.html' %}{% endwith %}{% endif %}
+
+<h3 style="margin:20px 0 6px;font-size:15px;color:#0b5394">Execução</h3>
+<table style="border-collapse:collapse">
+  <tr><td style="padding:3px 16px 3px 0;color:#555">Origem</td><td style="padding:3px 0">{{ origem }}</td></tr>
+  <tr><td style="padding:3px 16px 3px 0;color:#555">Início</td><td style="padding:3px 0">{{ inicio|date:"d/m/Y H:i:s" }}</td></tr>
+  <tr><td style="padding:3px 16px 3px 0;color:#555">Fim</td><td style="padding:3px 0">{% if fim %}{{ fim|date:"d/m/Y H:i:s" }}{% else %}-{% endif %}</td></tr>
+  <tr><td style="padding:3px 16px 3px 0;color:#555">Duração</td><td style="padding:3px 0">{{ duracao }}</td></tr>
+</table>
+
+{% if r.erro_geral %}
+<h3 style="margin:20px 0 6px;font-size:15px;color:#b00020">Erro geral</h3>
+<p style="margin:0">{{ r.erro_geral }}</p>
+{% endif %}
+
+<h3 style="margin:20px 0 6px;font-size:15px;color:#0b5394">Resultado</h3>
+<table style="border-collapse:collapse;min-width:420px">
+  <thead><tr>
+    <th style="text-align:left;padding:6px 10px;border-bottom:2px solid #0b5394">Item</th>
+    <th style="text-align:left;padding:6px 10px;border-bottom:2px solid #0b5394">Situação</th>
+    <th style="text-align:left;padding:6px 10px;border-bottom:2px solid #0b5394">Detalhes</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">Banco de dados</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea;font-weight:bold;color:{% if r.banco.ok %}#1e7e34{% else %}#b00020{% endif %}">{% if r.banco.ok %}OK{% elif r.banco.erro %}Falhou{% else %}Não executado{% endif %}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">{% if r.banco.ok %}{{ r.banco.arquivo }} ({{ banco_tamanho }}){% else %}{{ r.banco.erro|default:"-" }}{% endif %}</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">Arquivos (mídia)</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea;font-weight:bold;color:{% if r.midia.ok and not r.midia.aviso %}#1e7e34{% elif r.midia.ok %}#8a6d00{% else %}#b00020{% endif %}">{% if r.midia.ok and not r.midia.aviso %}OK{% elif r.midia.ok %}Atenção{% elif r.midia.erro %}Falhou{% else %}Não executado{% endif %}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">{% if r.midia.ok %}{% if r.midia.arquivo %}{{ r.midia.arquivo }} ({{ midia_tamanho }}, {{ r.midia.quantidade }} arquivo(s)){% else %}{{ r.midia.quantidade }} arquivo(s). {{ r.midia.info }}{% endif %}{% if r.midia.aviso %}<br>{{ r.midia.aviso }}{% endif %}{% else %}{{ r.midia.erro|default:"-" }}{% endif %}</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">Servidor de arquivos</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea;font-weight:bold;color:{% if not r.remoto.ativo %}#555{% elif r.remoto.ok %}#1e7e34{% else %}#b00020{% endif %}">{% if not r.remoto.ativo %}Desativado{% elif r.remoto.ok %}OK{% else %}Falhou{% endif %}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">{% if not r.remoto.ativo %}A cópia fica só no servidor do SISCONT (configure em Configurações).{% elif r.remoto.ok %}{{ r.remoto.destino }}<br>Dump: {{ r.remoto.banco_enviado|default:"-" }}<br>Réplica dos anexos: {{ r.remoto.midia_enviados }} enviado(s) de {{ r.remoto.midia_total }} ({{ remoto_bytes }})<br>Zip mensal: {{ r.remoto.zip_mensal_enviado|default:"já existente ou não gerado nesta execução" }}<br>Antigos apagados: {{ r.remoto.removidos }}{% else %}{{ r.remoto.erro|default:r.remoto.aviso }}<br>Destino: {{ r.remoto.destino }}<br>O backup local foi mantido.{% endif %}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 style="margin:20px 0 6px;font-size:15px;color:#0b5394">Disco ({{ r.diretorio }})</h3>
+{% if disco.erro %}
+<p style="margin:0">Não foi possível ler: {{ disco.erro }}</p>
+{% else %}
+<p style="margin:0">Espaço livre: <b>{{ disco_livre }}</b> de {{ disco_total }}<br>
+Backups guardados: {{ disco.quantidade }} arquivo(s), {{ disco_backups }}{% if r.removidos_locais %}<br>Antigos apagados: {{ r.removidos_locais }}{% endif %}</p>
+{% endif %}
+
+<h3 style="margin:20px 0 6px;font-size:15px;color:#0b5394">Log da execução</h3>
+<pre style="margin:0;padding:10px;background:#f6f8fa;border:1px solid #dde3ea;font-size:12px;white-space:pre-wrap">{{ log }}</pre>
+</body></html>

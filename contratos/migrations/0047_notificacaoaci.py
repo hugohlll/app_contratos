@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contratos', '0044_controleexecucao_conformidade_automatica'),
+        ('contratos', '0046_backup_servidor_arquivos'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

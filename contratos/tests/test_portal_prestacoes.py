@@ -46,8 +46,8 @@ class BaseSetorTestSetup(TestCase):
         self.contrato = Contrato.objects.create(
             numero="50/2026", objeto="TI",
             empresa=self.empresa,
-            vigencia_inicio=date(2026, 1, 1),
-            vigencia_fim=date(2026, 12, 31),
+            vigencia_inicio=date.today() - timedelta(days=365),
+            vigencia_fim=date.today() + timedelta(days=365),
             valor_total=100000
         )
         self.comissao = Comissao.objects.create(

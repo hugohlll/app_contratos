@@ -531,7 +531,94 @@ class ConfiguracaoSistema(models.Model):
         verbose_name="Periodicidade do Backup",
         help_text="Frequência com que o backup automatizado será executado."
     )
+    backup_emails_destinatarios = models.TextField(
+        "Destinatários do Relatório de Backup",
+        blank=True,
+        default='',
+        help_text="E-mails que recebem o relatório de cada backup, separados por vírgula. "
+                  "Deixe em branco para não enviar.",
+    )
+
+    # ---- Retenção no próprio servidor do SISCONT
+    backup_local_retencao_banco = models.PositiveSmallIntegerField(
+        "Dumps do banco mantidos no servidor", default=7,
+        help_text="Quantidade de backups do banco mais recentes guardados na pasta local.",
+    )
+    backup_local_retencao_midia = models.PositiveSmallIntegerField(
+        "Zips de anexos mantidos no servidor", default=1,
+        help_text="Quantidade de zips completos dos anexos mais recentes guardados na pasta local.",
+    )
+
+    # ---- Cópia para servidor de arquivos da rede (SMB)
+    backup_remoto_ativo = models.BooleanField(
+        "Enviar cópia ao servidor de arquivos", default=False,
+    )
+    backup_remoto_caminho = models.CharField(
+        "Caminho da pasta de destino", max_length=255, blank=True, default='',
+        help_text=r"Ex.: \\servidor\compartilhamento\SISCONT\Backup ou "
+                  "smb://servidor/compartilhamento/SISCONT/Backup",
+    )
+    backup_remoto_dominio = models.CharField(
+        "Domínio (grupo de trabalho)", max_length=100, blank=True, default='',
+        help_text="Ex.: om.intraer",
+    )
+    backup_remoto_usuario = models.CharField(
+        "Usuário de rede", max_length=100, blank=True, default='',
+    )
+    backup_remoto_senha_cifrada = models.TextField(
+        "Senha de rede (cifrada)", blank=True, default='', editable=False,
+    )
+    backup_remoto_retencao_diaria = models.PositiveSmallIntegerField(
+        "Dumps diários mantidos no servidor de arquivos", default=30,
+    )
+    backup_remoto_retencao_mensal = models.PositiveSmallIntegerField(
+        "Dumps mensais mantidos no servidor de arquivos", default=12,
+        help_text="Além dos diários, guarda o primeiro dump de cada mês.",
+    )
+    backup_remoto_retencao_midia = models.PositiveSmallIntegerField(
+        "Zips mensais de anexos mantidos no servidor de arquivos", default=3,
+    )
+
     data_atualizacao = models.DateTimeField(auto_now=True)
+
+    # ---- senha de rede
+    @property
+    def tem_senha_remota(self):
+        return bool(self.backup_remoto_senha_cifrada)
+
+    def definir_senha_remota(self, senha):
+        from contratos.services import cripto
+        self.backup_remoto_senha_cifrada = cripto.cifrar(senha) if senha else ''
+
+    def obter_senha_remota(self):
+        """Senha em texto puro. Lança cripto.SegredoIlegivel se não puder ser lida."""
+        from contratos.services import cripto
+        if not self.backup_remoto_senha_cifrada:
+            return ''
+        return cripto.decifrar(self.backup_remoto_senha_cifrada)
+
+    def servidor_arquivos(self, senha=None):
+        """Conexão (ainda não aberta) com o servidor de arquivos configurado."""
+        from contratos.services.servidor_arquivos import ServidorArquivos
+        return ServidorArquivos(
+            self.backup_remoto_caminho, self.backup_remoto_dominio, self.backup_remoto_usuario,
+            self.obter_senha_remota() if senha is None else senha,
+        )
+
+    @staticmethod
+    def separar_emails(texto):
+        """Divide uma lista de e-mails separada por vírgula, ponto e vírgula ou quebra de linha."""
+        partes = re.split(r'[,;\s]+', texto or '')
+        vistos = []
+        for p in partes:
+            p = p.strip().lower()
+            if p and p not in vistos:
+                vistos.append(p)
+        return vistos
+
+    @property
+    def destinatarios_backup(self):
+        return self.separar_emails(self.backup_emails_destinatarios)
 
     class Meta:
         verbose_name = "Configuração do Sistema"
@@ -802,6 +889,49 @@ class ConfiguracaoApresentacao(models.Model):
     def __str__(self):
         modo = "Livre" if self.modo_livre else "Antiguidade"
         return f"Config {self.get_tipo_apresentacao_display()} - {self.mes_referencia:02d}/{self.ano_referencia} ({modo})"
+
+
+class EmailPendente(models.Model):
+    """
+    Fila de e-mails do SISCONT. Cada mensagem é gravada aqui e enviada pelo comando
+    `processar_fila_email` (cron a cada 2 minutos), com novas tentativas em caso de falha.
+    O registro também serve de histórico do que foi enviado (apagado após 90 dias).
+    """
+    STATUS_PENDENTE = 'PENDENTE'
+    STATUS_ENVIADO = 'ENVIADO'
+    STATUS_FALHOU = 'FALHOU'
+    STATUS_CHOICES = [
+        (STATUS_PENDENTE, 'Pendente'),
+        (STATUS_ENVIADO, 'Enviado'),
+        (STATUS_FALHOU, 'Falhou'),
+    ]
+
+    categoria = models.CharField("Categoria", max_length=40, default='GERAL', db_index=True)
+    destinatarios = models.TextField("Destinatários", help_text="Separados por vírgula.")
+    assunto = models.CharField("Assunto", max_length=255)
+    corpo_texto = models.TextField("Corpo (texto)")
+    corpo_html = models.TextField("Corpo (HTML)", blank=True, default='')
+
+    status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES,
+                              default=STATUS_PENDENTE, db_index=True)
+    tentativas = models.PositiveSmallIntegerField("Tentativas", default=0)
+    proxima_tentativa = models.DateTimeField("Próxima Tentativa", default=timezone.now, db_index=True)
+    ultimo_erro = models.TextField("Último Erro", blank=True, default='')
+
+    criado_em = models.DateTimeField("Criado em", auto_now_add=True)
+    enviado_em = models.DateTimeField("Enviado em", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "E-mail da Fila"
+        verbose_name_plural = "Fila de E-mails"
+        ordering = ['-criado_em']
+
+    @property
+    def lista_destinatarios(self):
+        return ConfiguracaoSistema.separar_emails(self.destinatarios)
+
+    def __str__(self):
+        return f"[{self.get_status_display()}] {self.assunto}"
 
 
 class NotificacaoACI(models.Model):

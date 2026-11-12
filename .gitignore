@@ -23,6 +23,7 @@ staticfiles/
 
 .env
 .env.prod
+.env.dev
 credentials.json
 token.json
 secrets/
