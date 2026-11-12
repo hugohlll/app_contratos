@@ -32,7 +32,12 @@
     <tr>
       <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">Arquivos (mídia)</td>
       <td style="padding:6px 10px;border-bottom:1px solid #dde3ea;font-weight:bold;color:{% if r.midia.ok and not r.midia.aviso %}#1e7e34{% elif r.midia.ok %}#8a6d00{% else %}#b00020{% endif %}">{% if r.midia.ok and not r.midia.aviso %}OK{% elif r.midia.ok %}Atenção{% elif r.midia.erro %}Falhou{% else %}Não executado{% endif %}</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">{% if r.midia.ok %}{{ r.midia.arquivo }} ({{ midia_tamanho }}, {{ r.midia.quantidade }} arquivo(s)){% if r.midia.aviso %}<br>{{ r.midia.aviso }}{% endif %}{% else %}{{ r.midia.erro|default:"-" }}{% endif %}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">{% if r.midia.ok %}{% if r.midia.arquivo %}{{ r.midia.arquivo }} ({{ midia_tamanho }}, {{ r.midia.quantidade }} arquivo(s)){% else %}{{ r.midia.quantidade }} arquivo(s). {{ r.midia.info }}{% endif %}{% if r.midia.aviso %}<br>{{ r.midia.aviso }}{% endif %}{% else %}{{ r.midia.erro|default:"-" }}{% endif %}</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">Servidor de arquivos</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea;font-weight:bold;color:{% if not r.remoto.ativo %}#555{% elif r.remoto.ok %}#1e7e34{% else %}#b00020{% endif %}">{% if not r.remoto.ativo %}Desativado{% elif r.remoto.ok %}OK{% else %}Falhou{% endif %}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #dde3ea">{% if not r.remoto.ativo %}A cópia fica só no servidor do SISCONT (configure em Configurações).{% elif r.remoto.ok %}{{ r.remoto.destino }}<br>Dump: {{ r.remoto.banco_enviado|default:"-" }}<br>Réplica dos anexos: {{ r.remoto.midia_enviados }} enviado(s) de {{ r.remoto.midia_total }} ({{ remoto_bytes }})<br>Zip mensal: {{ r.remoto.zip_mensal_enviado|default:"já existente ou não gerado nesta execução" }}<br>Antigos apagados: {{ r.remoto.removidos }}{% else %}{{ r.remoto.erro|default:r.remoto.aviso }}<br>Destino: {{ r.remoto.destino }}<br>O backup local foi mantido.{% endif %}</td>
     </tr>
   </tbody>
 </table>
@@ -42,7 +47,7 @@
 <p style="margin:0">Não foi possível ler: {{ disco.erro }}</p>
 {% else %}
 <p style="margin:0">Espaço livre: <b>{{ disco_livre }}</b> de {{ disco_total }}<br>
-Backups guardados: {{ disco.quantidade }} arquivo(s), {{ disco_backups }}</p>
+Backups guardados: {{ disco.quantidade }} arquivo(s), {{ disco_backups }}{% if r.removidos_locais %}<br>Antigos apagados: {{ r.removidos_locais }}{% endif %}</p>
 {% endif %}
 
 <h3 style="margin:20px 0 6px;font-size:15px;color:#0b5394">Log da execução</h3>

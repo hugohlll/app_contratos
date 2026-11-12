@@ -25,6 +25,12 @@ from contratos.services import relatorio_backup
 
 LOCMEM = 'django.core.mail.backends.locmem.EmailBackend'
 REMETENTE = 'SCIPG - GAP-BR <scipg.gapbr@fab.mil.br>'
+# Campos de retenção obrigatórios no formulário de Configurações (valores padrão)
+RETENCAO = {
+    'backup_local_retencao_banco': 7, 'backup_local_retencao_midia': 1,
+    'backup_remoto_retencao_diaria': 30, 'backup_remoto_retencao_mensal': 12,
+    'backup_remoto_retencao_midia': 3,
+}
 
 
 @override_settings(EMAIL_BACKEND=LOCMEM, DEFAULT_FROM_EMAIL=REMETENTE)
@@ -162,7 +168,7 @@ class FormDestinatariosBackupTests(TestCase):
     def test_normaliza_lista(self):
         form = ConfiguracaoSistemaForm(data={
             'backup_periodicidade': 'diario',
-            'backup_emails_destinatarios': 'A@fab.mil.br; b@fab.mil.br',
+            'backup_emails_destinatarios': 'A@fab.mil.br; b@fab.mil.br', **RETENCAO,
         }, instance=ConfiguracaoSistema.get_config())
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data['backup_emails_destinatarios'], 'a@fab.mil.br, b@fab.mil.br')
@@ -170,14 +176,14 @@ class FormDestinatariosBackupTests(TestCase):
     def test_rejeita_email_invalido(self):
         form = ConfiguracaoSistemaForm(data={
             'backup_periodicidade': 'diario',
-            'backup_emails_destinatarios': 'ok@fab.mil.br, invalido',
+            'backup_emails_destinatarios': 'ok@fab.mil.br, invalido', **RETENCAO,
         }, instance=ConfiguracaoSistema.get_config())
         self.assertFalse(form.is_valid())
         self.assertIn('invalido', str(form.errors))
 
     def test_vazio_e_permitido(self):
         form = ConfiguracaoSistemaForm(data={'backup_periodicidade': 'diario',
-                                             'backup_emails_destinatarios': ''},
+                                             'backup_emails_destinatarios': '', **RETENCAO},
                                        instance=ConfiguracaoSistema.get_config())
         self.assertTrue(form.is_valid())
 
@@ -267,11 +273,16 @@ class RelatorioBackupTests(TestCase):
             self._rodar()
         self.assertFalse(EmailPendente.objects.exists())
 
-    @patch('contratos.management.commands.executar_backup.subprocess.run', side_effect=_dump_ok)
-    def test_manual_pelo_portal_identifica_usuario(self, _):
+    @patch('contratos.services.execucao_backup.disparar_em_segundo_plano')
+    def test_manual_pelo_portal_dispara_com_usuario(self, disparar):
         User.objects.create_superuser(username='hugo', password='pw')
         self.client.login(username='hugo', password='pw')
         self.client.post(reverse('configuracoes_sistema'), {'force_backup': 'true'})
+        disparar.assert_called_once_with('hugo')
+
+    @patch('contratos.management.commands.executar_backup.subprocess.run', side_effect=_dump_ok)
+    def test_manual_identifica_usuario_no_relatorio(self, _):
+        self._rodar(force=True, usuario='hugo')
         self.assertIn('manual (por hugo)', EmailPendente.objects.get().corpo_texto)
 
     @patch('contratos.management.commands.executar_backup.subprocess.run', side_effect=_dump_ok)
