@@ -29,6 +29,14 @@ class OcorrenciasService:
 
         return [(mes_x, ano_x), (mes_x1, ano_x1)]
 
+    # Status em que a ACI pode homologar ou devolver o Livro: atestado pelo fiscal ('entregue')
+    # ou já em conformidade ('ok'), o que permite revisar uma conformidade automática.
+    STATUS_ANALISE_ACI = ('entregue', 'ok')
+
+    @classmethod
+    def livro_analisavel_pela_aci(cls, controle):
+        return controle.status in cls.STATUS_ANALISE_ACI
+
     @staticmethod
     def livro_editavel(controle):
         """

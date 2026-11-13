@@ -88,6 +88,15 @@
                 </a>
             </li>
 
+            {% if ALERTAS_ACI %}
+            <li>
+                <a href="{% url 'notificacoes_lista' %}" class="d-flex align-items-center {% if 'notificacoes' in request.path %}active{% endif %}">
+                    🔔 Notificações
+                    <span class="badge rounded-pill bg-danger ms-auto js-alertas-contador {% if not ALERTAS_ACI_NAO_LIDAS %}d-none{% endif %}">{{ ALERTAS_ACI_NAO_LIDAS|default:0 }}</span>
+                </a>
+            </li>
+            {% endif %}
+
             {% if request.user.is_superuser %}
             <li>
                 <a href="{% url 'configuracoes_sistema' %}" class="{% if 'configuracoes' in request.path %}active{% endif %}">
@@ -131,7 +140,25 @@
     <!-- Main Content -->
     <div class="flex-grow-1 main-content position-relative">
         <!-- Header Rápido (Top Right) -->
-        <div class="d-flex justify-content-end mb-3">
+        <div class="d-flex justify-content-end align-items-center gap-2 mb-3">
+            {% if ALERTAS_ACI %}
+            <div class="dropdown" id="alertas-aci">
+                <button type="button" class="btn btn-outline-secondary rounded-pill position-relative" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notificações da ACI" title="Notificações">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger js-alertas-contador {% if not ALERTAS_ACI_NAO_LIDAS %}d-none{% endif %}">{{ ALERTAS_ACI_NAO_LIDAS|default:0 }}</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end shadow p-0" style="width: min(420px, 92vw);">
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                        <strong>Notificações</strong>
+                        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" id="alertas-marcar-todas">Marcar todas como lidas</button>
+                    </div>
+                    <div id="alertas-lista" style="max-height: 420px; overflow-y: auto;">
+                        <div class="text-muted small text-center py-4">Carregando…</div>
+                    </div>
+                    <a href="{% url 'notificacoes_lista' %}" class="d-block text-center small py-2 border-top text-decoration-none">Ver todas as notificações</a>
+                </div>
+            </div>
+            {% endif %}
             <a href="{% url 'manual_usuario' %}" class="btn btn-outline-info rounded-pill d-flex align-items-center">
                 <i class="bi bi-question-circle-fill me-2"></i> Manual de Ajuda
             </a>
@@ -153,6 +180,71 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    {% if ALERTAS_ACI %}
+    <script>
+        (function () {
+            const URL_RESUMO = "{% url 'notificacoes_resumo' %}";
+            const URL_MARCAR = "{% url 'notificacoes_marcar_todas' %}";
+            const CSRF = "{{ csrf_token }}";
+            const INTERVALO_MS = 60000;
+
+            function esc(t) {
+                const d = document.createElement('div');
+                d.textContent = t == null ? '' : String(t);
+                return d.innerHTML;
+            }
+            function quando(iso) {
+                const d = new Date(iso);
+                return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+            }
+            function icone(evento) {
+                if (evento === 'OCORRENCIA_CRIADA') return '<i class="bi bi-plus-circle-fill text-primary"></i>';
+                if (evento === 'OCORRENCIA_EXCLUIDA') return '<i class="bi bi-trash-fill text-danger"></i>';
+                return '<i class="bi bi-arrow-repeat text-warning"></i>';
+            }
+            function render(data) {
+                document.querySelectorAll('.js-alertas-contador').forEach(function (el) {
+                    el.textContent = data.nao_lidas > 99 ? '99+' : data.nao_lidas;
+                    el.classList.toggle('d-none', !data.nao_lidas);
+                });
+                const lista = document.getElementById('alertas-lista');
+                if (!lista) return;
+                if (!data.itens.length) {
+                    lista.innerHTML = '<div class="text-muted small text-center py-4">Nenhuma notificação.</div>';
+                    return;
+                }
+                lista.innerHTML = data.itens.map(function (n) {
+                    return '<a href="' + esc(n.url) + '" class="d-flex gap-2 px-3 py-2 border-bottom text-decoration-none text-body' + (n.lida ? '' : ' bg-primary-subtle') + '">' +
+                        '<div class="pt-1">' + icone(n.evento) + '</div>' +
+                        '<div class="flex-grow-1 small">' +
+                            '<div class="' + (n.lida ? '' : 'fw-semibold') + '">' + esc(n.titulo) + '</div>' +
+                            '<div class="text-muted">Contrato ' + esc(n.contrato) + (n.empresa ? ' — ' + esc(n.empresa) : '') + ' · Livro ' + esc(n.livro_mes) + '</div>' +
+                            (n.resumo ? '<div class="text-muted fst-italic text-truncate" style="max-width: 330px;">' + esc(n.resumo) + '</div>' : '') +
+                            '<div class="text-muted" style="font-size: .75rem;">' + quando(n.quando) + '</div>' +
+                        '</div></a>';
+                }).join('');
+            }
+            function atualizar() {
+                fetch(URL_RESUMO, {headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'})
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (data) { if (data) render(data); })
+                    .catch(function () {});
+            }
+            document.addEventListener('DOMContentLoaded', function () {
+                atualizar();
+                setInterval(function () { if (!document.hidden) atualizar(); }, INTERVALO_MS);
+                document.addEventListener('visibilitychange', function () { if (!document.hidden) atualizar(); });
+                const btn = document.getElementById('alertas-marcar-todas');
+                if (btn) btn.addEventListener('click', function () {
+                    fetch(URL_MARCAR, {
+                        method: 'POST', credentials: 'same-origin',
+                        headers: {'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest'}
+                    }).then(atualizar);
+                });
+            });
+        })();
+    </script>
+    {% endif %}
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll('select:not(.no-tomselect)').forEach((el) => {

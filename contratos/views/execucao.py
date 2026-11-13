@@ -671,6 +671,15 @@ def alterar_status_execucao(request, pk, novo_status):
     else:
         justificativa = request.POST.get('justificativa', '').strip()
 
+    if novo_status in ('ok', 'correcao') and not OcorrenciasService.livro_analisavel_pela_aci(controle):
+        if controle.status == 'correcao':
+            motivo = "o Livro já foi devolvido e aguarda a correção e o novo ateste do fiscal"
+        else:
+            motivo = "o Livro ainda não foi atestado pelo fiscal"
+        acao = "homologar" if novo_status == 'ok' else "solicitar correção"
+        messages.error(request, f"Não é possível {acao}: {motivo}.")
+        return redirect(reverse('visualizar_controle_execucao', args=[pk]))
+
     if novo_status == 'correcao' and not justificativa:
         messages.error(request, "A justificativa é obrigatória para solicitar correção.")
         return redirect(reverse('visualizar_controle_execucao', args=[pk]))

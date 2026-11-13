@@ -239,3 +239,58 @@ class LivroFiscalIntegridadeTests(TestCase):
         res = self.client.get(url)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res['Content-Type'], 'application/pdf')
+
+    # --- Homologação e correção da ACI só após o ateste do fiscal ---
+
+    def _post_status(self, livro, novo_status, **data):
+        self.client.force_login(self.user_auditor)
+        url = reverse('alterar_status_execucao', kwargs={'pk': livro.pk, 'novo_status': novo_status})
+        res = self.client.post(url, data)
+        livro.refresh_from_db()
+        return res
+
+    def test_homologacao_bloqueada_antes_do_ateste(self):
+        for i, status in enumerate(('rascunho', 'pendente', 'correcao')):
+            livro = self._criar_livro(status, mes=1 + i)
+            res = self._post_status(livro, 'ok')
+            self.assertRedirects(
+                res, reverse('visualizar_controle_execucao', kwargs={'pk': livro.pk}), fetch_redirect_response=False
+            )
+            self.assertEqual(livro.status, status)
+
+    def test_correcao_bloqueada_antes_do_ateste(self):
+        for i, status in enumerate(('rascunho', 'pendente', 'correcao')):
+            livro = self._criar_livro(status, mes=1 + i)
+            self._post_status(livro, 'correcao', justificativa='Ajustar.')
+            self.assertEqual(livro.status, status)
+            self.assertFalse(livro.apontamentos.exists())
+
+    def test_acoes_permitidas_apos_ateste(self):
+        livro = self._criar_livro('entregue')
+        self._post_status(livro, 'correcao', justificativa='Complementar evidências.')
+        self.assertEqual(livro.status, 'correcao')
+
+        livro = self._criar_livro('ok', mes=1, conformidade_automatica=True)
+        self._post_status(livro, 'correcao', justificativa='Revisar conformidade automática.')
+        self.assertEqual(livro.status, 'correcao')
+
+    def test_painel_da_aci_sem_botoes_antes_do_ateste(self):
+        self.client.force_login(self.user_auditor)
+        for i, status in enumerate(('rascunho', 'pendente', 'correcao')):
+            livro = self._criar_livro(status, mes=1 + i)
+            res = self.client.get(reverse('visualizar_controle_execucao', kwargs={'pk': livro.pk}))
+            self.assertContains(res, 'id="painel-aci-aguardando"')
+            self.assertNotContains(res, 'Homologar em Conformidade')
+            self.assertNotContains(res, 'data-bs-target="#modalCorrecao"')
+
+    def test_painel_da_aci_com_botoes_apos_ateste(self):
+        self.client.force_login(self.user_auditor)
+        livro = self._criar_livro('entregue')
+        res = self.client.get(reverse('visualizar_controle_execucao', kwargs={'pk': livro.pk}))
+        self.assertContains(res, 'Homologar em Conformidade')
+        self.assertContains(res, 'data-bs-target="#modalCorrecao"')
+
+        livro = self._criar_livro('ok', mes=1)
+        res = self.client.get(reverse('visualizar_controle_execucao', kwargs={'pk': livro.pk}))
+        self.assertNotContains(res, 'Homologar em Conformidade')
+        self.assertContains(res, 'data-bs-target="#modalCorrecao"')

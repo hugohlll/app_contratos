@@ -67,6 +67,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'contratos.context_processors.app_version',
+                'contratos.context_processors.alertas_aci',
             ],
         },
     },
