@@ -1,14 +1,29 @@
 import datetime
+import shutil
+import tempfile
 from unittest.mock import patch, MagicMock
 from io import StringIO
-from django.test import TestCase
+from django.test import TestCase as _TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from contratos.models import ConfiguracaoSistema
 
+
+class TestCase(_TestCase):
+    """Isola a pasta de backup e a mídia em diretórios temporários (a retenção apaga arquivos)."""
+
+    def setUp(self):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        override = override_settings(BACKUP_DIR=f"{tmp}/backups", MEDIA_ROOT=f"{tmp}/media")
+        override.enable()
+        self.addCleanup(override.disable)
+        super().setUp()
+
 class ConfiguracaoSistemaTests(TestCase):
     def setUp(self):
+        super().setUp()
         # Usuário normal
         self.user = User.objects.create_user(username='normal', password='pw')
         # Superusuário
@@ -62,7 +77,10 @@ class ConfiguracaoSistemaTests(TestCase):
         """Testa o envio do formulário de configuração"""
         self.client.login(username='super', password='pw')
         data = {
-            'backup_periodicidade': 'mensal'
+            'backup_periodicidade': 'mensal',
+            'backup_local_retencao_banco': 7, 'backup_local_retencao_midia': 1,
+            'backup_remoto_retencao_diaria': 30, 'backup_remoto_retencao_mensal': 12,
+            'backup_remoto_retencao_midia': 3,
         }
         response = self.client.post(self.url, data)
         
@@ -73,8 +91,8 @@ class ConfiguracaoSistemaTests(TestCase):
         config = ConfiguracaoSistema.get_config()
         self.assertEqual(config.backup_periodicidade, 'mensal')
 
-    @patch('django.core.management.call_command')
-    def test_superusuario_pode_forcar_backup(self, mock_call_command):
+    @patch('contratos.services.execucao_backup.disparar_em_segundo_plano')
+    def test_superusuario_pode_forcar_backup(self, mock_disparar):
         """Testa a execução forçada do backup via botão"""
         self.client.login(username='super', password='pw')
         data = {
@@ -83,13 +101,14 @@ class ConfiguracaoSistemaTests(TestCase):
         response = self.client.post(self.url, data)
         
         self.assertRedirects(response, self.url)
-        mock_call_command.assert_called_once_with('executar_backup', force=True)
+        mock_disparar.assert_called_once_with('super')
 
 
 class SidebarConfiguracaoTests(TestCase):
     """Testa a visibilidade do link 'Configurações' na sidebar"""
 
     def setUp(self):
+        super().setUp()
         self.user = User.objects.create_user(username='normal', password='pw')
         self.superuser = User.objects.create_superuser(username='super', password='pw')
         # Usamos portal_home pois renderiza o base_portal.html com a sidebar
@@ -113,6 +132,7 @@ class ExecutarBackupPeriodicidadeTests(TestCase):
     """Testa a lógica de periodicidade do comando executar_backup"""
 
     def setUp(self):
+        super().setUp()
         self.config = ConfiguracaoSistema.get_config()
 
     @patch('contratos.management.commands.executar_backup.subprocess.run')

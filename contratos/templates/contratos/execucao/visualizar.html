@@ -1,6 +1,7 @@
 {% extends 'contratos/portal/base_portal.html' %}
 {% block title %}Livro do Fiscal — {{ controle.contrato.numero }} — SISCONT{% endblock %}
 {% block content %}
+<style>tr:target > td { background-color: #fff3cd !important; transition: background-color .6s; }</style>
 <div class="container-fluid py-4">
     <!-- Cabeçalho Principal -->
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
@@ -26,7 +27,7 @@
             </a>
             {% endif %}
             <span class="badge fs-6 {% if controle.status == 'ok' %}bg-success{% elif controle.status == 'correcao' %}bg-warning text-dark{% elif controle.status == 'rascunho' %}bg-secondary{% else %}bg-primary{% endif %}">
-                {{ controle.get_status_display }}
+                {{ controle.get_status_display }}{% if controle.conformidade_automatica %} — Automática{% endif %}
             </span>
         </div>
     </div>
@@ -79,7 +80,7 @@
                         </thead>
                         <tbody>
                             {% for oc in ocorrencias_estruturadas %}
-                            <tr>
+                            <tr id="oc-{{ oc.pk }}" style="scroll-margin-top: 1rem;">
                                 <td class="fw-semibold">
                                     {{ oc.data_hora|date:"d/m/Y H:i"|default:"S/D" }}
                                     <div class="mt-1">
@@ -157,7 +158,12 @@
     <div class="card shadow-sm border-0 rounded-3 mb-4">
         <div class="card-body d-flex gap-2 justify-content-end flex-wrap align-items-center">
             <span class="me-auto text-muted small"><i class="bi bi-shield-lock me-1"></i>Painel de Análise e Homologação da ACI</span>
-            {% if controle.status != 'ok' %}
+            {% if controle.status == 'correcao' %}
+            <span class="text-muted small" id="painel-aci-aguardando"><i class="bi bi-hourglass-split me-1"></i>Devolvido para correção — aguardando novo ateste do fiscal.</span>
+            {% elif controle.status != 'entregue' and controle.status != 'ok' %}
+            <span class="text-muted small" id="painel-aci-aguardando"><i class="bi bi-hourglass-split me-1"></i>Aguardando o ateste do fiscal para análise.</span>
+            {% else %}
+            {% if controle.status == 'entregue' %}
             <form method="post" action="{% url 'alterar_status_execucao' controle.id 'ok' %}" class="d-inline">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-success fw-bold shadow-sm">
@@ -168,6 +174,7 @@
             <button type="button" class="btn btn-warning fw-bold shadow-sm text-dark" data-bs-toggle="modal" data-bs-target="#modalCorrecao">
                 <i class="bi bi-exclamation-triangle me-1"></i> Solicitar Correção
             </button>
+            {% endif %}
         </div>
     </div>
 

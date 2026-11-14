@@ -1,0 +1,36 @@
+{% autoescape off %}RELATÓRIO DE BACKUP – SISCONT
+Status: {{ status }}{% if status == 'OK' %} (banco e mídia copiados){% elif status == 'PARCIAL' %} (banco copiado; {% if r.remoto.ativo and not r.remoto.ok and r.midia.ok and not r.midia.aviso %}cópia no servidor de arquivos falhou{% else %}mídia com problema{% endif %}){% else %} (o backup do banco NÃO foi feito){% endif %}
+
+EXECUÇÃO
+  Origem ......: {{ origem }}
+  Início ......: {{ inicio|date:"d/m/Y H:i:s" }}
+  Fim .........: {% if fim %}{{ fim|date:"d/m/Y H:i:s" }}{% else %}-{% endif %}
+  Duração .....: {{ duracao }}
+{% if r.erro_geral %}
+ERRO GERAL
+  {{ r.erro_geral }}
+{% endif %}
+BANCO DE DADOS
+{% if r.banco.ok %}  OK – {{ r.banco.arquivo }} ({{ banco_tamanho }}){% elif r.banco.erro %}  FALHOU – {{ r.banco.erro }}{% else %}  Não executado.{% endif %}
+
+ARQUIVOS (MÍDIA)
+{% if r.midia.ok and r.midia.arquivo %}  OK – {{ r.midia.arquivo }} ({{ midia_tamanho }}, {{ r.midia.quantidade }} arquivo(s)){% elif r.midia.ok %}  OK – {{ r.midia.quantidade }} arquivo(s). {{ r.midia.info }}{% endif %}{% if r.midia.ok and r.midia.aviso %}
+  ATENÇÃO – {{ r.midia.aviso }}{% endif %}{% if not r.midia.ok %}{% if r.midia.erro %}  FALHOU – {{ r.midia.erro }}{% else %}  Não executado.{% endif %}{% endif %}
+
+SERVIDOR DE ARQUIVOS
+{% if not r.remoto.ativo %}  Desativado – a cópia fica só no servidor do SISCONT (configure em Configurações).{% elif r.remoto.ok %}  OK – {{ r.remoto.destino }}
+  Dump do banco .....: {{ r.remoto.banco_enviado|default:"-" }}
+  Réplica dos anexos : {{ r.remoto.midia_enviados }} enviado(s) de {{ r.remoto.midia_total }} ({{ remoto_bytes }})
+  Zip mensal ........: {{ r.remoto.zip_mensal_enviado|default:"já existente ou não gerado nesta execução" }}
+  Antigos apagados ..: {{ r.remoto.removidos }}{% else %}  FALHOU – {{ r.remoto.erro|default:r.remoto.aviso }}
+  Destino: {{ r.remoto.destino }}
+  O backup local foi mantido.{% endif %}
+
+DISCO ({{ r.diretorio }})
+{% if disco.erro %}  Não foi possível ler: {{ disco.erro }}{% else %}  Espaço livre ......: {{ disco_livre }} de {{ disco_total }}
+  Backups guardados .: {{ disco.quantidade }} arquivo(s), {{ disco_backups }}{% if r.removidos_locais %}
+  Antigos apagados ..: {{ r.removidos_locais }}{% endif %}{% endif %}
+
+LOG DA EXECUÇÃO
+{{ log }}
+{% endautoescape %}

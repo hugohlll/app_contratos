@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from contratos.views import public, militar, auditoria, auth, portal, users, prestacao, cargos, execucao
+from contratos.views import public, militar, auditoria, auth, portal, users, prestacao, cargos, execucao, notificacoes
 
 urlpatterns = [
     # --- ÁREA PÚBLICA (Módulo public.py) ---
@@ -77,6 +77,12 @@ urlpatterns = [
     path('portal/usuarios/editar/<int:pk>/', users.editar_usuario, name='editar_usuario'),
     path('portal/usuarios/excluir/<int:pk>/', users.excluir_usuario, name='excluir_usuario'),
     path('portal/alterar-senha/', users.alterar_senha, name='alterar_senha'),
+
+    # Alertas da ACI (ocorrências do Livro do Fiscal)
+    path('portal/notificacoes/', notificacoes.notificacoes_lista, name='notificacoes_lista'),
+    path('portal/notificacoes/resumo/', notificacoes.notificacoes_resumo, name='notificacoes_resumo'),
+    path('portal/notificacoes/<int:pk>/abrir/', notificacoes.notificacao_abrir, name='notificacao_abrir'),
+    path('portal/notificacoes/marcar-todas/', notificacoes.notificacoes_marcar_todas, name='notificacoes_marcar_todas'),
 
     # --- PORTAL PÚBLICO DE PRESTAÇÃO DE CONTAS ---
     path('prestacoes/', prestacao.portal_prestacao_index, name='portal_prestacao_index'),

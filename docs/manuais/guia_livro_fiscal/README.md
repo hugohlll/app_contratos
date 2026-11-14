@@ -17,6 +17,8 @@ Este diretório contém o **Guia Ilustrado do Livro do Fiscal Digital — Versã
 
 | Arquivo / Diretório | Descrição |
 | :--- | :--- |
+| **`Guia_Rapido_Livro_do_Fiscal.pdf`** | **Guia introdutório bem simplificado em PDF (9 slides Widescreen 16:9)**. Primeiro contato do fiscal com o Livro: ciclo do mês, registro de ocorrências, ateste e acompanhamento da ACI. |
+| **`guia_rapido_livro_fiscal.html`** | Código-fonte em HTML5/CSS3 do guia introdutório, com notas do apresentador em `<aside>`. |
 | **`Apresentacao_Pratica_Fiscal_v2.0.pdf`** | **Apresentação Didática de Capacitação Rápida para Fiscais em PDF (14 slides Widescreen 16:9)**. Foco na utilização prática: como lançar ocorrências contínuas (técnicas e administrativas), fechamento e ateste mensal com o campo de trâmites da ACI e acompanhamento de auditoria/saneamento de apontamentos. |
 | **`apresentacao_pratica_fiscal.html`** | Código-fonte em HTML5/CSS3 da apresentação didática widescreen 16:9 para treinamento e capacitação rápida de fiscais de contrato. |
 | **`Apresentacao_Livro_do_Fiscal_v2.0.pdf`** | **Apresentação Executiva Institucional em PDF (15 slides Widescreen 16:9)** voltada para divulgação e incentivo à adesão. Foco estratégico nos benefícios do sistema vs. riscos do método manual "por conta própria". |

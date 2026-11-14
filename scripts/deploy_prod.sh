@@ -146,14 +146,6 @@ for file in "${REQUIRED_FILES[@]}"; do
     fi
 done
 
-SECRETS_FILES=("secrets/credentials.json" "secrets/token.json")
-for file in "${SECRETS_FILES[@]}"; do
-    if [ ! -e "$file" ]; then
-        error "Arquivo/caminho de credenciais não encontrado: $file"
-        exit 1
-    fi
-done
-
 # Verifica se há interpolação acidental de variáveis ($) no .env.prod
 COMPOSE_CHECK=$(docker compose -f "$COMPOSE_FILE" config 2>&1 >/dev/null || true)
 if echo "$COMPOSE_CHECK" | grep -qi "variable is not set"; then

@@ -218,38 +218,6 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(form.initial.get('preposto_telefone'), '(61) 91111-2222')
         self.assertEqual(form.initial.get('preposto_email'), 'ana@empresa.com')
 
-    def test_salvar_ocorrencia_tempestiva_ajax(self):
-        """Testa o endpoint AJAX para gravar ocorrência tempestiva no dia a dia."""
-        url = reverse('salvar_ocorrencia_tempestiva')
-        payload = {
-            'contrato_id': self.contrato.id,
-            'mes_referencia': 6,
-            'ano_referencia': 2026,
-            'data_hora': '2026-06-15T10:00',
-            'local': 'Setor Administrativo',
-            'tipo': 'ADMINISTRATIVA',
-            'descricao': 'Falta de entrega de certidão de regularidade fiscal.',
-            'dispositivo_violado': 'Cláusula 12.1',
-            'notificacao_emitida': True,
-            'notificacao_numero': '010/GAP-BR/2026',
-            'prazo_dias_uteis': 5,
-            'status_ocorrencia': 'aberto'
-        }
-
-        response = self.client.post(
-            url, data=json.dumps(payload), content_type='application/json'
-        )
-        self.assertEqual(response.status_code, 200)
-        resp_json = response.json()
-        self.assertTrue(resp_json['success'])
-        self.assertIn('notificacao_pdf_url', resp_json['ocorrencia'])
-
-        ctrl = ControleExecucao.objects.filter(contrato=self.contrato, mes_referencia=6, ano_referencia=2026).first()
-        self.assertIsNotNone(ctrl)
-        self.assertEqual(ctrl.status, 'rascunho')
-        self.assertEqual(ctrl.ocorrencias.count(), 1)
-        self.assertEqual(ctrl.ocorrencias.first().notificacao_numero, '010/GAP-BR/2026')
-
     def test_workflow_auditoria_aci_status(self):
         """Testa homologação (ok) e pedido de correção da ACI no Livro do Fiscal."""
         ctrl = ControleExecucao.objects.create(
@@ -402,7 +370,7 @@ class ControleExecucaoTests(TestCase):
         self.assertEqual(ctrl.status, 'rascunho')
 
     def test_finalizar_mes_anterior_permitido(self):
-        """Testa que finalizar livro de mês anterior encerra e atesta com status entregue."""
+        """Testa que finalizar livro de mês anterior sem ocorrências, sem calendário, atinge a conformidade automática."""
         hoje = timezone.localtime(timezone.now()).date()
         primeiro_dia_mes_atual = hoje.replace(day=1)
         ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
@@ -429,7 +397,8 @@ class ControleExecucaoTests(TestCase):
             mes_referencia=mes_ant,
             ano_referencia=ano_ant
         )
-        self.assertEqual(ctrl.status, 'entregue')
+        self.assertEqual(ctrl.status, 'ok')
+        self.assertTrue(ctrl.conformidade_automatica)
 
     def test_classificacao_tempestividade_ocorrencia(self):
         """Testa auto-diferenciação de tempestividade pelo timestamp de inserção."""
@@ -464,13 +433,15 @@ class ControleExecucaoTests(TestCase):
 
     def test_salvar_ocorrencia_tempestiva_ajax(self):
         """Testa o endpoint AJAX para salvar ocorrência em tempo real."""
-        hoje = timezone.localtime(timezone.now()).date()
+        # Usa a hora atual: um horário fixo cairia no futuro em parte do dia e seria recusado.
+        agora = timezone.localtime(timezone.now())
+        hoje = agora.date()
         url = reverse('salvar_ocorrencia_tempestiva')
         payload = {
             'contrato_id': self.contrato.id,
             'mes_referencia': hoje.month,
             'ano_referencia': hoje.year,
-            'data_hora': f'{hoje.isoformat()}T10:00',
+            'data_hora': agora.strftime('%Y-%m-%dT%H:%M'),
             'local': 'Hangar 01',
             'tipo': 'TECNICA',
             'descricao': 'Vistoria técnica tempestiva realizada.',

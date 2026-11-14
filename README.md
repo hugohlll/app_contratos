@@ -41,7 +41,7 @@ Garantir **transparência**, **controle** e **conformidade** no gerenciamento de
 ✅ **Controle Interno**: Painel de auditoria com monitoramento de riscos e conformidade  
 ✅ **Gestão Eficiente**: Rastreamento completo de designações, qualificações e histórico  
 ✅ **Conformidade Regulatória**: Alertas automáticos para vencimentos, qualificações e rodízios
-✅ **Notificações**: Envio automatizado de e-mails via Gmail API para comissões e contratos próximos do vencimento
+✅ **Notificações**: Envio automático de e-mails pelo SMTP do Intraer (relatório de cada backup), com fila e novas tentativas
 
 ---
 
@@ -177,13 +177,16 @@ Dashboard interativo com gráficos e indicadores:
 
 #### 5. **Configurações do Sistema** (Superusuário)
 - Painel exclusivo para superusuários com parâmetros de infraestrutura
-- Configuração da periodicidade do backup automático (Diário, Semanal, Mensal)
+- Configuração da periodicidade do backup automático (Diário, Semanal, Mensal), dos destinatários do relatório e da retenção
+- Cópia do backup em servidor de arquivos da rede (SMB): caminho, domínio, usuário e senha (cifrada), com teste de conexão
 
 #### 6. **Backup Automático**
-- Rotina interna Docker que executa diariamente às 02h00
+- Rotina interna Docker que executa diariamente às 02h00 UTC
 - Gera dump do banco PostgreSQL e ZIP da pasta de mídia
 - Periodicidade configurável via interface web (Diário/Semanal/Mensal)
-- Arquivos salvos na pasta `./backups` do servidor (mapeada via volume Docker)
+- Arquivos salvos na pasta `./backups` do servidor (mapeada via volume Docker), com retenção automática
+- Cópia opcional em servidor de arquivos da rede: dumps com histórico diário e mensal, réplica incremental dos anexos (nunca apaga) e zip mensal completo; falha no envio gera relatório **PARCIAL**
+- Configuração e restauração descritas no [Manual de TI](docs/manuais/MANUAL_INSTALACAO_TI.md#4-backup-e-restauração)
 
 #### 3. **Relatórios e Exportações**
 
@@ -566,7 +569,6 @@ app_contratos/
 ├── data/                  # 📊 Arquivos de dados (CSVs e dumps SQL)
 ├── docs/                  # 📚 Documentação (Manuais e roteiros)
 ├── logs/                  # 📝 Logs do sistema e de testes
-├── secrets/               # 🔐 Repositório seguro de credenciais e tokens (Gmail API)
 ├── nginx/                 # Configuração do Nginx
 ├── scripts/               # 🛠️ Scripts utilitários e testes avulsos
 ├── .env.prod.example      # Modelo de variáveis de ambiente
@@ -580,7 +582,7 @@ app_contratos/
 └── README.md              # Este arquivo
 ```
 
-Dentro de `contratos/`: `views/` (public, militar, auditoria, portal, prestacao, execucao, cargos, users, auth), `services/` (`ocorrencias.py`, `notificacao.py`, `execucao_modulos.py`), `management/commands/` (`populate_db`, `executar_backup`, `ativar_comissoes_iniciadas`, `desativar_comissoes_expiradas`, `testar_email`), `templates/`, `templatetags/` e `tests/`.
+Dentro de `contratos/`: `views/` (public, militar, auditoria, portal, prestacao, execucao, cargos, users, auth), `services/` (`ocorrencias.py`, `notificacao.py`, `execucao_modulos.py`), `management/commands/` (`populate_db`, `executar_backup`, `ativar_comissoes_iniciadas`, `desativar_comissoes_expiradas`, `testar_email`, `processar_fila_email`), `templates/`, `templatetags/` e `tests/`.
 
 ---
 
@@ -841,7 +843,7 @@ Contribuições são bem-vindas! Para contribuir:
 - ✅ **Atualização de Guias**: Manual do TI, Guia de Isolamento Docker e Manual de Teste Local reestruturados com base na infraestrutura real.
 
 ### **Versão 1.4.0**
-- ✅ **Notificações Automáticas**: Integração com a Gmail API para envio de e-mails em processos importantes (como alertas de vencimento).
+- ✅ **Notificações Automáticas**: Envio de e-mails pelo SMTP do Intraer (`mail.intraer:587`), com fila no banco e novas tentativas automáticas.
 - ✅ **Rotinas Automatizadas**: Serviço de cron implementado no Docker para ativar e desativar comissões diariamente sob demanda temporal.
 - ✅ **Reorganização de Estrutura**: Repositório otimizado com novas pastas para dados (`data/`), scripts isolados (`scripts/`), documentação centralizada (`docs/`) e logs locais (`logs/`).
 - ✅ **Ordenação Padrão**: Comissões automaticamente ordenadas para apresentar Fiscalização antes de Recebimento (`F > R`).

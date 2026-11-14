@@ -21,6 +21,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Confere a sintaxe e a estrutura do compose de produção (não sobe nada).
+      # O .env.prod real não fica no repositório; um vazio basta para a validação.
+      - name: Validate Production Compose
+        run: |
+          touch .env.prod
+          docker compose -f docker-compose.prod.yml config --quiet
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -53,6 +60,10 @@ jobs:
 
       - name: Run Migrations (Prepare DB)
         run: docker compose exec -T web python manage.py migrate
+
+      # Mesma salvaguarda de scripts/deploy_prod.sh, antecipada para antes do merge
+      - name: Check Missing Migrations
+        run: docker compose exec -T web python manage.py makemigrations --check --dry-run
 
       - name: Run Tests
         run: docker compose exec -T web python manage.py test contratos
