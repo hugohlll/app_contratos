@@ -16,6 +16,7 @@ urlpatterns = [
 
     # --- ÁREA RESTRITA / AUDITORIA (Módulo auditoria.py) ---
     path('auditoria/', auditoria.painel_controle, name='painel_controle'),
+    path('auditoria/detalhe/<slug:indicador>/', auditoria.detalhe_indicador, name='detalhe_indicador'),
 
     # Exportações do Painel
     path('auditoria/exportar.csv', auditoria.exportar_csv, name='exportar_csv'),

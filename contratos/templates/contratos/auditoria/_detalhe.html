@@ -1,0 +1,45 @@
+<div class="detalhe-indicador" data-titulo="{{ indicador.titulo }}" data-rotulo="{{ rotulo }}">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <span class="badge bg-secondary-subtle text-secondary-emphasis border">{{ rotulo }}</span>
+            <span class="ms-2 text-muted small"><strong class="detalhe-contagem">{{ linhas|length }}</strong> registro{{ linhas|length|pluralize }}</span>
+        </div>
+        {% if linhas %}
+        <div class="btn-group btn-group-sm" role="group" aria-label="Exportar recorte">
+            <a class="btn btn-outline-secondary" href="{% url 'detalhe_indicador' indicador.chave %}?segmento={{ segmento|urlencode }}&formato=xlsx">
+                <i class="bi bi-download me-1"></i>XLS
+            </a>
+            <a class="btn btn-outline-secondary" href="{% url 'detalhe_indicador' indicador.chave %}?segmento={{ segmento|urlencode }}&formato=csv">CSV</a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if linhas %}
+    <input type="search" class="form-control form-control-sm mb-3 detalhe-busca" placeholder="Buscar nesta lista..." aria-label="Buscar nesta lista">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle small mb-0">
+            <thead class="table-light">
+                <tr>
+                    {% for coluna in indicador.colunas %}<th scope="col">{{ coluna }}</th>{% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for linha in linhas %}
+                <tr>
+                    {% for celula in linha.celulas %}
+                    <td>
+                        {% if forloop.counter0 == indicador.coluna_contrato and linha.contrato_id and pode_abrir_contrato %}
+                        <a href="{% url 'detalhe_contrato_portal' linha.contrato_id %}">{{ celula }}</a>
+                        {% else %}{{ celula }}{% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted small mt-3 mb-0 d-none detalhe-sem-resultado">Nenhum registro corresponde à busca.</p>
+    {% else %}
+    <div class="text-center text-muted py-5">Nenhum registro neste segmento.</div>
+    {% endif %}
+</div>
