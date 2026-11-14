@@ -1,11 +1,10 @@
 {% extends 'contratos/portal/base_portal.html' %}
 {% load static %}
-
-</script>
 {% block title %}Painel de Auditoria{% endblock %}
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'contratos/js/dashboard-drill.js' %}"></script>
 
 <style>
     /* Dashboard specific styles */
@@ -128,6 +127,50 @@
         background-color: #0dcaf0;
     }
 
+    .metric-card[data-drill-indicador] {
+        cursor: pointer;
+    }
+
+    .metric-card[data-drill-indicador]:focus-visible,
+    .legenda-drill:focus-visible {
+        outline: 3px solid #0d6efd;
+        outline-offset: 2px;
+    }
+
+    .legenda-drill {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        border: 1px solid #dee2e6;
+        background: #fff;
+        border-radius: 50rem;
+        padding: .25rem .75rem;
+        font-size: .85rem;
+        color: #495057;
+        transition: background-color .15s, border-color .15s;
+    }
+
+    .legenda-drill:hover {
+        background: #f1f3f5;
+        border-color: #adb5bd;
+    }
+
+    .legenda-drill .ponto {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .legenda-drill .qtd {
+        font-weight: 700;
+    }
+
+    .dica-drill {
+        font-size: .85rem;
+        color: #6c757d;
+    }
+
     .info-icon svg {
         width: 12px;
         height: 12px;
@@ -136,17 +179,18 @@
 </style>
 
 <div class="dashboard-container">
-    <div class="d-flex justify-content-between align-items-center mb-5">
-        <h2 class="fw-bold" style="color: #2c3e50;">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-5">
+        <h2 class="fw-bold mb-0" style="color: #2c3e50;">
             📊 Dashboard de Auditoria
         </h2>
+        <span class="dica-drill"><i class="bi bi-hand-index me-1"></i>Clique nos cartões, gráficos ou legendas para ver os registros</span>
 
     </div>
 
     <!-- Cards de Métricas Principais -->
     <div class="row mb-4">
         <div class="col-md-3 mb-3">
-            <div class="metric-card primary">
+            <div class="metric-card primary" role="button" tabindex="0" data-drill-indicador="contratos-vigentes" data-drill-segmento="todos" aria-label="Ver registros">
                 <div class="metric-label">
                     <span>Contratos Vigentes</span>
                     <span class="info-icon" data-bs-toggle="tooltip" title="Contratos com vigência ativa.">
@@ -160,7 +204,7 @@
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="metric-card success">
+            <div class="metric-card success" role="button" tabindex="0" data-drill-indicador="militares-designados" data-drill-segmento="todos" aria-label="Ver registros">
                 <div class="metric-label">
                     <span>Militares Designados</span>
                     <span class="info-icon" data-bs-toggle="tooltip" title="Militares únicos com designação ativa.">
@@ -174,7 +218,7 @@
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="metric-card warning position-relative">
+            <div class="metric-card warning position-relative" role="button" tabindex="0" data-drill-indicador="vencimento-comissoes" data-drill-segmento="todos" aria-label="Ver registros">
                 <div class="metric-label">
                     <span>Comissões com Prazo</span>
                     <span class="info-icon" data-bs-toggle="tooltip"
@@ -192,7 +236,7 @@
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="metric-card danger position-relative">
+            <div class="metric-card danger position-relative" role="button" tabindex="0" data-drill-indicador="contratos-risco" data-drill-segmento="todos" aria-label="Ver registros">
                 <div class="metric-label">
                     <span>Contratos em Risco</span>
                     <span class="info-icon" data-bs-toggle="tooltip" title="Contratos sem equipe de fiscalização.">
@@ -231,6 +275,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3" aria-label="Segmentos do gráfico">
+                    <button type="button" class="legenda-drill" data-drill-indicador="qualificacao" data-drill-segmento="em_dia"><span class="ponto" style="background:#198754"></span>Em Dia <span class="qtd" data-qtd="qualificacao:em_dia"></span></button>
+                    <button type="button" class="legenda-drill" data-drill-indicador="qualificacao" data-drill-segmento="vencidos"><span class="ponto" style="background:#dc3545"></span>Vencido <span class="qtd" data-qtd="qualificacao:vencidos"></span></button>
+                    <button type="button" class="legenda-drill" data-drill-indicador="qualificacao" data-drill-segmento="sem_curso"><span class="ponto" style="background:#6c757d"></span>Sem Curso <span class="qtd" data-qtd="qualificacao:sem_curso"></span></button>
+                </div>
             </div>
         </div>
 
@@ -256,6 +305,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3" aria-label="Segmentos do gráfico">
+                    <button type="button" class="legenda-drill" data-drill-indicador="vencimento-comissoes" data-drill-segmento="critico"><span class="ponto" style="background:#dc3545"></span>Crítico (≤7 dias) <span class="qtd" data-qtd="vencimento-comissoes:critico"></span></button>
+                    <button type="button" class="legenda-drill" data-drill-indicador="vencimento-comissoes" data-drill-segmento="alerta"><span class="ponto" style="background:#ffc107"></span>Alerta (8-15 dias) <span class="qtd" data-qtd="vencimento-comissoes:alerta"></span></button>
+                    <button type="button" class="legenda-drill" data-drill-indicador="vencimento-comissoes" data-drill-segmento="normal"><span class="ponto" style="background:#198754"></span>Normal (>15 dias) <span class="qtd" data-qtd="vencimento-comissoes:normal"></span></button>
+                </div>
             </div>
         </div>
     </div>
@@ -264,7 +318,9 @@
         <div class="col-12">
             <div class="chart-container">
                 <div class="chart-title">
-                    <span>⏱️ Radar de Permanência (Top 10)</span>
+                    <span>⏱️ Radar de Permanência (Top 10)
+                        <button type="button" class="btn btn-link btn-sm p-0 ms-2 align-baseline" data-drill-indicador="permanencia" data-drill-segmento="todos">ver todos</button>
+                    </span>
                     <form action="{% url 'exportar_radar_permanencia_csv' %}" method="get" class="d-inline-flex m-0">
                         <select name="formato" class="form-select form-select-sm border-secondary text-secondary me-1" style="width: auto; height: 31px; border-radius: 50rem;">
                             <option value="csv">CSV</option>
@@ -306,6 +362,11 @@
                 <div class="chart-wrapper" style="height: 250px;">
                     <canvas id="chartVelocimetro"></canvas>
                 </div>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3" aria-label="Segmentos do gráfico">
+                    <button type="button" class="legenda-drill" data-drill-indicador="vencimento-contratos" data-drill-segmento="ate_90"><span class="ponto" style="background:#dc3545"></span>≤ 90 dias <span class="qtd" data-qtd="vencimento-contratos:ate_90"></span></button>
+                    <button type="button" class="legenda-drill" data-drill-indicador="vencimento-contratos" data-drill-segmento="entre_90_120"><span class="ponto" style="background:#ffc107"></span>90-120 dias <span class="qtd" data-qtd="vencimento-contratos:entre_90_120"></span></button>
+                    <button type="button" class="legenda-drill" data-drill-indicador="vencimento-contratos" data-drill-segmento="apos_120"><span class="ponto" style="background:#198754"></span>> 120 dias <span class="qtd" data-qtd="vencimento-contratos:apos_120"></span></button>
+                </div>
             </div>
         </div>
 
@@ -313,7 +374,9 @@
         <div class="col-md-8">
             <div class="chart-container h-100">
                 <div class="chart-title">
-                    <span>⚖️ Sobrecarga de Fiscais</span>
+                    <span>⚖️ Sobrecarga de Fiscais
+                        <button type="button" class="btn btn-link btn-sm p-0 ms-2 align-baseline" data-drill-indicador="sobrecarga" data-drill-segmento="todos">ver todos</button>
+                    </span>
                     <form action="{% url 'exportar_sobrecarga_fiscais_csv' %}" method="get" class="d-inline-flex m-0">
                         <select name="formato" class="form-select form-select-sm border-secondary text-secondary me-1" style="width: auto; height: 31px; border-radius: 50rem;">
                             <option value="csv">CSV</option>
@@ -378,6 +441,17 @@
 
 </div>
 
+<!-- PAINEL LATERAL DE DETALHE (drill-down) -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasDetalhe" aria-labelledby="offcanvasDetalheTitulo"
+     style="width: min(760px, 100vw);"
+     data-url-modelo="{% url 'detalhe_indicador' 'indicador-modelo' %}">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold" id="offcanvasDetalheTitulo">Detalhe</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body"></div>
+</div>
+
 <!-- TRANSFERÊNCIA SEGURA DE DADOS DJANGO PARA JAVASCRIPT -->
 <script id="data-sob-labels" type="application/json">
     {{ sobrecarga_labels|safe|default:"[]" }}
@@ -385,12 +459,18 @@
 <script id="data-sob-valores" type="application/json">
     {{ sobrecarga_valores|safe|default:"[]" }}
 </script>
+<script id="data-sob-ids" type="application/json">
+    {{ sobrecarga_ids|safe|default:"[]" }}
+</script>
 <script id="data-sob-avg" type="application/json">
     {{ media_limite_fiscais|default:"0" }}
 </script>
 
 <script id="data-perm-labels" type="application/json">
     {{ permanencia_labels|safe|default:"[]" }}
+</script>
+<script id="data-perm-ids" type="application/json">
+    {{ permanencia_ids|safe|default:"[]" }}
 </script>
 <script id="data-perm-dias" type="application/json">
     {{ permanencia_dias|safe|default:"[]" }}
@@ -426,6 +506,15 @@
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
 
+        // Preenche as contagens das legendas clicáveis
+        function preencherLegenda(indicador, dados) {
+            document.querySelectorAll('[data-qtd^="' + indicador + ':"]').forEach(function (el) {
+                const seg = el.dataset.qtd.split(':')[1];
+                el.textContent = dados[seg] !== undefined ? dados[seg] : 0;
+            });
+        }
+        const drill = window.DashboardDrill;
+
         // Configuração Comum
         Chart.defaults.font.family = "'Segoe UI', 'Helvetica', 'Arial', sans-serif";
         Chart.defaults.color = '#6c757d';
@@ -434,25 +523,26 @@
         const ctxVenc = document.getElementById('chartVencimentos');
         if (ctxVenc) {
             const dataVenc = getSafeData('data-vencimentos', { critico: 0, alerta: 0, normal: 0 });
-            console.log('Vencimentos Data:', dataVenc);
             try {
+                preencherLegenda('vencimento-comissoes', dataVenc);
                 new Chart(ctxVenc, {
-                    type: 'pie',
+                    type: 'doughnut',
                     data: {
                         labels: ['Crítico (≤7 dias)', 'Alerta (8-15 dias)', 'Normal (>15 dias)'],
                         datasets: [{
                             data: [dataVenc.critico, dataVenc.alerta, dataVenc.normal],
                             backgroundColor: ['#dc3545', '#ffc107', '#198754'],
-                            borderWidth: 0
+                            borderWidth: 2,
+                            borderColor: '#fff'
                         }]
                     },
-                    options: {
+                    options: Object.assign({
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'right' } }
-                    }
+                        cutout: '55%',
+                        plugins: { legend: { display: false } }
+                    }, drill.opcoesGrafico('vencimento-comissoes', i => ['critico', 'alerta', 'normal'][i]))
                 });
-                console.log('Vencimentos Chart Created');
             } catch (e) {
                 console.error('Error creating Vencimentos Chart:', e);
             }
@@ -462,25 +552,26 @@
         const ctxQual = document.getElementById('chartQualificacao');
         if (ctxQual) {
             const dataQual = getSafeData('data-qualificacao', { em_dia: 0, vencidos: 0, sem_curso: 0 });
-            console.log('Qualificacao Data:', dataQual);
             try {
+                preencherLegenda('qualificacao', dataQual);
                 new Chart(ctxQual, {
-                    type: 'pie',
+                    type: 'doughnut',
                     data: {
                         labels: ['Em Dia', 'Vencido', 'Sem Curso'],
                         datasets: [{
                             data: [dataQual.em_dia, dataQual.vencidos, dataQual.sem_curso],
                             backgroundColor: ['#198754', '#dc3545', '#6c757d'],
-                            borderWidth: 0
+                            borderWidth: 2,
+                            borderColor: '#fff'
                         }]
                     },
-                    options: {
+                    options: Object.assign({
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'right' } }
-                    }
+                        cutout: '55%',
+                        plugins: { legend: { display: false } }
+                    }, drill.opcoesGrafico('qualificacao', i => ['em_dia', 'vencidos', 'sem_curso'][i]))
                 });
-                console.log('Qualificacao Chart Created');
             } catch (e) {
                 console.error('Error creating Qualificacao Chart:', e);
             }
@@ -530,6 +621,7 @@
                 }
             };
 
+            preencherLegenda('vencimento-contratos', vData);
             new Chart(ctxVelocimetro, {
                 type: 'doughnut',
                 data: {
@@ -542,15 +634,15 @@
                         rotation: 270       // Roda para começar na base esquerda
                     }]
                 },
-                options: {
+                options: Object.assign({
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '75%', // Grossura do anel
                     plugins: {
-                        legend: { position: 'bottom' },
+                        legend: { display: false },
                         tooltip: { enabled: true }
                     }
-                },
+                }, drill.opcoesGrafico('vencimento-contratos', i => ['ate_90', 'entre_90_120', 'apos_120'][i])),
                 plugins: [gaugeTextPlugin]
             });
         }
@@ -560,6 +652,7 @@
         if (ctxPerm) {
             const labelsPerm = getSafeData('data-perm-labels', []);
             const diasTotais = getSafeData('data-perm-dias', []);
+            const idsPerm = getSafeData('data-perm-ids', []);
 
             if (labelsPerm.length > 0) {
                 const baseData = diasTotais.map(d => Math.min(d, 365));
@@ -613,7 +706,7 @@
                             }
                         ]
                     },
-                    options: {
+                    options: Object.assign({
                         indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
@@ -624,7 +717,7 @@
                                 callbacks: {
                                     label: function (context) {
                                         const idx = context.dataIndex;
-                                        return `Total: ${diasTotais[idx]} dias`;
+                                        return `Total: ${diasTotais[idx]} dias (clique para detalhar)`;
                                     }
                                 }
                             }
@@ -640,7 +733,7 @@
                                 title: { display: true, text: 'Militares' }
                             }
                         }
-                    },
+                    }, drill.opcoesGrafico('permanencia', i => idsPerm[i])),
                     plugins: [limitLinePlugin]
                 });
             }
@@ -652,6 +745,7 @@
             const labelsSob = getSafeData('data-sob-labels', []);
             const valuesSob = getSafeData('data-sob-valores', []);
             const avgSob = getSafeData('data-sob-avg', 0);
+            const idsSob = getSafeData('data-sob-ids', []);
 
             if (labelsSob.length > 0) {
                 const baseDataSob = valuesSob.map(v => Math.min(v, avgSob));
@@ -705,7 +799,7 @@
                             }
                         ]
                     },
-                    options: {
+                    options: Object.assign({
                         responsive: true,
                         maintainAspectRatio: false,
                         layout: { padding: { top: 20 } },
@@ -715,7 +809,7 @@
                                 callbacks: {
                                     label: function (context) {
                                         const idx = context.dataIndex;
-                                        return `Contratos Fiscalizados: ${valuesSob[idx]}`;
+                                        return `Contratos Fiscalizados: ${valuesSob[idx]} (clique para detalhar)`;
                                     }
                                 }
                             }
@@ -733,7 +827,7 @@
                                 title: { display: true, text: 'Contratos Fiscalizados' }
                             }
                         }
-                    },
+                    }, drill.opcoesGrafico('sobrecarga', i => idsSob[i])),
                     plugins: [averageLinePlugin]
                 });
             }
