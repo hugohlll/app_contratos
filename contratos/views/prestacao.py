@@ -17,6 +17,22 @@ from contratos.models import Contrato, PrestacaoContas, Comissao, Integrante, Ag
 from contratos.forms import PrestacaoContasUploadForm, PrestacaoContasSetorUploadForm
 from contratos.utils import admin_required, auditor_required, export_csv_or_xlsx, get_filtro_ativos, is_admin, is_auditor
 
+STATUS_GRAFICO = ('ok', 'entregue', 'correcao')
+
+# Contagens usadas pela rosca "Situação do mês" (todos, prioritários e Livro do Fiscal)
+CHAVES_ROSCA = (
+    'total_contratos',
+    'ok_no_mes', 'entregues_no_mes', 'correcao_no_mes', 'pendentes_no_mes',
+    'prio_ok', 'prio_entregues', 'prio_correcao', 'prio_pendentes',
+    'livro_ok', 'livro_entregues', 'livro_correcao', 'livro_pendentes',
+)
+
+
+def status_grafico(status):
+    """Agrupa o status no segmento do gráfico: qualquer status fora de ok/entregue/correção conta como pendente."""
+    return status if status in STATUS_GRAFICO else 'pendente'
+
+
 def portal_prestacao_index(request):
     """Landing page do Portal Público de Prestações."""
     hoje = date.today()
@@ -335,6 +351,18 @@ def _get_dashboard_stats(ano, mes):
     correcao = prestacoes_filtradas.filter(status='correcao').count()
     # Pendentes são os contratos sem nenhuma entrega OU com entrega em status pendente
     pendentes = total_contratos - (ok + entregues + correcao)
+
+    # Livro do Fiscal: último registro de cada contrato vigente no mês (mesma regra da tabela do painel)
+    latest_livro_ids = ControleExecucao.objects.filter(
+        mes_referencia=mes,
+        ano_referencia=ano,
+        contrato__in=contratos_vigentes
+    ).values('contrato_id').annotate(max_id=Max('id')).values_list('max_id', flat=True)
+    livros = ControleExecucao.objects.filter(id__in=latest_livro_ids)
+    livro_ok = livros.filter(status='ok').count()
+    livro_entregues = livros.filter(status='entregue').count()
+    livro_correcao = livros.filter(status='correcao').count()
+    livro_pendentes = total_contratos - (livro_ok + livro_entregues + livro_correcao)
     
     prio_ok = prestacoes_filtradas.filter(status='ok', compor_apresentacao=True).count()
     prio_entregues = prestacoes_filtradas.filter(status='entregue', compor_apresentacao=True).count()
@@ -553,6 +581,10 @@ def _get_dashboard_stats(ano, mes):
         'prio_pendentes': prio_pendentes,
         'gestores_prio': gestores_prio,
         'modo_livre_fiscais': modo_livre_fiscais,
+        'livro_ok': livro_ok,
+        'livro_entregues': livro_entregues,
+        'livro_correcao': livro_correcao,
+        'livro_pendentes': livro_pendentes,
         
         # Setores
         'total_setores': total_setores,
@@ -764,6 +796,9 @@ def dashboard_prestacao(request):
             'controle': controle,
             'status_prestacao': prestacao.status if prestacao else 'pendente',
             'status_controle': controle.status if controle else 'pendente',
+            'segmento_slides': status_grafico(prestacao.status if prestacao else None),
+            'segmento_livro': status_grafico(controle.status if controle else None),
+            'prioritario': bool(prestacao and prestacao.compor_apresentacao),
             'msg_slides': msg_slides,
             'msg_controle': msg_controle,
         })
@@ -817,7 +852,8 @@ def dashboard_prestacao(request):
     context['calendario_anual'] = calendario_anual
     
     context.update(stats)
-    
+    context['rosca_stats'] = {chave: stats[chave] for chave in CHAVES_ROSCA}
+
     return render(request, 'contratos/dashboard_prestacao.html', context)
 
 
