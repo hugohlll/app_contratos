@@ -27,6 +27,13 @@ CHAVES_ROSCA = (
     'livro_ok', 'livro_entregues', 'livro_correcao', 'livro_pendentes',
 )
 
+# Contagens usadas pela rosca da aba Setores (todos e prioritários)
+CHAVES_ROSCA_SETORES = (
+    'total_setores',
+    'ok_setores_no_mes', 'entregues_setores_no_mes', 'correcao_setores_no_mes', 'pendentes_setores_no_mes',
+    'prio_ok_setores', 'prio_entregues_setores', 'prio_correcao_setores', 'prio_pendentes_setores',
+)
+
 
 def status_grafico(status):
     """Agrupa o status no segmento do gráfico: qualquer status fora de ok/entregue/correção conta como pendente."""
@@ -812,6 +819,8 @@ def dashboard_prestacao(request):
             'setor': s,
             'prestacao': prestacao,
             'status': prestacao.status if prestacao else 'pendente',
+            'segmento_slides': status_grafico(prestacao.status if prestacao else None),
+            'prioritario': bool(prestacao and prestacao.compor_apresentacao),
             'msg_setor': msg_setor,
         })
 
@@ -853,6 +862,7 @@ def dashboard_prestacao(request):
     
     context.update(stats)
     context['rosca_stats'] = {chave: stats[chave] for chave in CHAVES_ROSCA}
+    context['rosca_setores_stats'] = {chave: stats[chave] for chave in CHAVES_ROSCA_SETORES}
 
     return render(request, 'contratos/dashboard_prestacao.html', context)
 

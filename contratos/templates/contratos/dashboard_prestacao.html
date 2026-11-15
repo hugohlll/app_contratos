@@ -717,24 +717,37 @@
             
             <!-- GRÁFICOS SETORES (Mês Filtrado) -->
             <div class="row mb-4 align-items-stretch">
-                <!-- Gráfico de Slides de Apresentação (Setores) -->
-                <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <!-- Rosca alternável (Setores): todos e prioritários no mesmo quadro -->
+                <div class="col-lg-5 col-md-12 mb-3 mb-lg-0">
+                    <div class="card shadow-sm h-100" id="cardRoscaSetores">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
                             <h6 class="m-0 fw-bold text-secondary">
-                                <i class="bi bi-pie-chart-fill me-2" style="color: #d97706;"></i>Slides da Apresentação (Setores)
+                                <i class="bi bi-pie-chart-fill me-2" style="color: #d97706;"></i>Situação do Mês (Setores)
                             </h6>
-                        </div>
-                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                            <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
-                                <canvas id="prioritariosSetoresBarChart"></canvas>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Escolher a visão do gráfico de setores">
+                                <button type="button" class="btn btn-outline-secondary active" data-rosca-visao="todos" aria-pressed="true">Todos</button>
+                                <button type="button" class="btn btn-outline-secondary" data-rosca-visao="prioritarios" aria-pressed="false">Prioritários</button>
                             </div>
                         </div>
+                        <div class="card-body d-flex flex-column">
+                            <div class="position-relative mx-auto w-100" style="height: 220px; max-width: 260px;">
+                                <canvas id="roscaSetores" role="img" aria-label="Situação das entregas dos setores no mês"></canvas>
+                                <div class="rosca-centro" aria-hidden="true">
+                                    <span class="fs-3 fw-bold text-dark lh-1" id="roscaSetoresTotal"></span>
+                                    <span class="small text-muted" id="roscaSetoresSufixo"></span>
+                                </div>
+                            </div>
+                            <div class="legenda-rosca mt-3" id="roscaSetoresLegenda"></div>
+                            <p class="text-muted text-center mt-2 mb-0" style="font-size: 0.75rem;">
+                                <i class="bi bi-hand-index me-1"></i>Clique numa fatia ou na legenda para filtrar a tabela abaixo
+                            </p>
+                        </div>
                     </div>
+                    {{ rosca_setores_stats|json_script:"roscaSetoresDados" }}
                 </div>
 
                 <!-- Lista de Apresentação dos Gestores Setores -->
-                <div class="col-lg-6 col-md-12">
+                <div class="col-lg-7 col-md-12">
                     <div class="card shadow-sm h-100">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
                             <div class="d-flex align-items-center gap-2">
@@ -827,11 +840,19 @@
             </div>
 
             <!-- TABELA DO MÊS SELECIONADO SETORES -->
-            <div class="card shadow-sm border-0 mb-4">
+            <div class="card shadow-sm border-0 mb-4" id="cardTabelaMesSetores" style="scroll-margin-top: 80px;">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
                     <h6 class="m-0 fw-bold text-dark">
                         <i class="bi bi-list-check me-2 text-primary"></i>Entregas dos Setores - Mês {{ filtro_mes|stringformat:"02d" }}/{{ filtro_ano|stringformat:"d" }}
                     </h6>
+                    <div class="d-flex align-items-center gap-2 flex-wrap me-auto ms-2">
+                        <span id="filtroGraficoSetoresAtivo" class="badge rounded-pill text-bg-light border d-none align-items-center gap-1 py-2 px-3 fw-normal">
+                            <i class="bi bi-funnel-fill text-primary"></i>
+                            <span id="filtroGraficoSetoresRotulo"></span>
+                            <button type="button" class="btn-close ms-1" style="font-size: 0.55rem;" id="filtroGraficoSetoresLimpar" aria-label="Remover o filtro do gráfico de setores"></button>
+                        </span>
+                        <span class="small text-muted" id="contagemTabelaMesSetores" aria-live="polite"></span>
+                    </div>
                     <div class="input-group input-group-sm" style="width: 250px;">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
                         <input type="text" id="filtroTabelaMesSetores" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar setor ou sigla...">
@@ -849,7 +870,7 @@
                             </thead>
                             <tbody>
                                 {% for item in entregas_setor_mes_selecionado %}
-                                <tr class="linha-tabela-mes-setores">
+                                <tr class="linha-tabela-mes-setores" data-segmento-slides="{{ item.segmento_slides }}" data-prioritario="{{ item.prioritario|yesno:'1,0' }}">
                                     <td>
                                         <div class="fw-bold text-primary">{{ item.setor.sigla }}</div>
                                         <div class="small text-muted text-truncate" style="max-width: 280px;" title="{{ item.setor.nome }}">{{ item.setor.nome }}</div>
@@ -1199,54 +1220,6 @@
 </style>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Gráfico de Slides de Apresentação de Setores
-        var ctxSetores = document.getElementById('prioritariosSetoresBarChart');
-        if (ctxSetores) {
-            window.mySetoresBarChart = new Chart(ctxSetores.getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Conformidade (OK!)', 'Aguardando análise', 'Ajustes Necessários', 'Pendente'],
-                    datasets: [{
-                        data: [{{ prio_ok_setores }}, {{ prio_entregues_setores }}, {{ prio_correcao_setores }}, {{ prio_pendentes_setores }}],
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#9ca3af'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            align: 'center',
-                            labels: {
-                                font: {
-                                    size: 13
-                                },
-                                padding: 15
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    var label = context.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    var value = context.raw || 0;
-                                    var datasetData = context.chart.data.datasets[0].data;
-                                    var total = datasetData.reduce((a, b) => a + b, 0);
-                                    var percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                    label += value + ' (' + percentage + '%)';
-                                    return label;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
         // Ativa a aba Setores ou Execução se estiver na URL
         const urlParams = new URLSearchParams(window.location.search);
         const tabParam = urlParams.get('tab');
@@ -1388,19 +1361,33 @@
         if (inputFiltroTabelaMesFiscais) inputFiltroTabelaMesFiscais.addEventListener('input', aplicarFiltroTabelaMesFiscais);
         if (selectFiltroTabelaMesFiscaisStatus) selectFiltroTabelaMesFiscaisStatus.addEventListener('change', aplicarFiltroTabelaMesFiscais);
 
-        // Filtro Tabela Mês Selecionado (Setores)
+        // Filtro Tabela Mês Selecionado (Setores): busca + recorte da rosca
         const inputFiltroTabelaMesSetores = document.getElementById('filtroTabelaMesSetores');
-        if (inputFiltroTabelaMesSetores) {
-            inputFiltroTabelaMesSetores.addEventListener('input', function() {
-                const termo = this.value.toLowerCase().trim();
-                const linhas = document.querySelectorAll('#setores-mes-subpane .table-responsive tbody tr.linha-tabela-mes-setores');
-                
-                linhas.forEach(linha => {
-                    const textoLinha = linha.cells[0].textContent.toLowerCase();
-                    linha.style.display = (!termo || textoLinha.includes(termo)) ? '' : 'none';
-                });
+
+        function aplicarFiltroTabelaMesSetores() {
+            const termo = (inputFiltroTabelaMesSetores ? inputFiltroTabelaMesSetores.value : '').toLowerCase().trim();
+            const linhas = document.querySelectorAll('#setores-mes-subpane .table-responsive tbody tr.linha-tabela-mes-setores');
+            let visiveis = 0;
+
+            linhas.forEach(linha => {
+                const matchesTexto = !termo || linha.cells[0].textContent.toLowerCase().includes(termo);
+                const matchesGrafico = !window.RoscaSetores || window.RoscaSetores.linhaPassa(linha);
+                const mostra = matchesTexto && matchesGrafico;
+                linha.style.display = mostra ? '' : 'none';
+                if (mostra) visiveis++;
             });
+
+            const contagem = document.getElementById('contagemTabelaMesSetores');
+            if (contagem) {
+                contagem.textContent = visiveis === linhas.length
+                    ? linhas.length + ' setor' + (linhas.length === 1 ? '' : 'es')
+                    : 'Mostrando ' + visiveis + ' de ' + linhas.length;
+            }
         }
+        window.aplicarFiltroTabelaMesSetores = aplicarFiltroTabelaMesSetores;
+        aplicarFiltroTabelaMesSetores();
+
+        if (inputFiltroTabelaMesSetores) inputFiltroTabelaMesSetores.addEventListener('input', aplicarFiltroTabelaMesSetores);
 
         function atualizarTabelaPrioritarios(gestores) {
             const tbody = document.getElementById('tabelaGestoresPrioritarios');
@@ -1940,17 +1927,12 @@
                         cb.checked = isChecked;
                     });
 
-                    if (window.mySetoresBarChart && data.stats) {
-                        window.mySetoresBarChart.data.datasets[0].data = [
-                            data.stats.prio_ok_setores,
-                            data.stats.prio_entregues_setores,
-                            data.stats.prio_correcao_setores,
-                            data.stats.prio_pendentes_setores
-                        ];
-                        window.mySetoresBarChart.update();
-                        if (data.stats.gestores_setores) {
-                            atualizarTabelaGestoresSetores(data.stats.gestores_setores);
-                        }
+                    if (window.RoscaSetores) {
+                        window.RoscaSetores.marcarLinha(checkbox.closest('tr.linha-tabela-mes-setores'), null, isChecked);
+                        if (data.stats) window.RoscaSetores.atualizar(data.stats);
+                    }
+                    if (data.stats && data.stats.gestores_setores) {
+                        atualizarTabelaGestoresSetores(data.stats.gestores_setores);
                     }
                 }
                 checkbox.disabled = false;
@@ -2380,6 +2362,12 @@
         if (fiscaisTab) {
             fiscaisTab.addEventListener('shown.bs.tab', function() {
                 if (window.RoscaPrestacao) window.RoscaPrestacao.redimensionar();
+            });
+        }
+        const setoresTab = document.getElementById('setores-tab');
+        if (setoresTab) {
+            setoresTab.addEventListener('shown.bs.tab', function() {
+                if (window.RoscaSetores) window.RoscaSetores.redimensionar();
             });
         }
     });
