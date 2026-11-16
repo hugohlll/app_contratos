@@ -1,6 +1,6 @@
 {% extends "contratos/portal/base_portal.html" %}
 {% block global_messages %}{% endblock %}
-{% load humanize %}
+{% load humanize static %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -107,38 +107,36 @@
             
             <!-- GRÁFICOS (Mês Filtrado) -->
             <div class="row mb-4 align-items-stretch">
-                <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <div class="col-lg-5 col-md-12 mb-3 mb-lg-0">
+                    <div class="card shadow-sm h-100" id="cardRoscaPrestacao">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
                             <h6 class="m-0 fw-bold text-secondary">
-                                <i class="bi bi-pie-chart-fill me-2 text-info"></i>Situação das Entregas
+                                <i class="bi bi-pie-chart-fill me-2 text-info"></i>Situação do Mês
                             </h6>
-                            <span class="badge bg-primary rounded-pill px-3 py-2">Total: {{ total_contratos }} Contrato{{ total_contratos|pluralize }}</span>
-                        </div>
-                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                            <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
-                                <canvas id="prestacoesPieChart"></canvas>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Escolher a visão do gráfico">
+                                <button type="button" class="btn btn-outline-secondary active" data-rosca-visao="todos" aria-pressed="true">Todos</button>
+                                <button type="button" class="btn btn-outline-secondary" data-rosca-visao="prioritarios" aria-pressed="false">Prioritários</button>
+                                <button type="button" class="btn btn-outline-secondary" data-rosca-visao="livro" aria-pressed="false">Livro do Fiscal</button>
                             </div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                            <h6 class="m-0 fw-bold text-secondary">
-                                <i class="bi bi-pie-chart-fill me-2" style="color: #d97706;"></i>Slides da Apresentação
-                            </h6>
-                        </div>
-                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                            <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
-                                <canvas id="prioritariosBarChart"></canvas>
+                        <div class="card-body d-flex flex-column">
+                            <div class="position-relative mx-auto w-100" style="height: 220px; max-width: 260px;">
+                                <canvas id="roscaPrestacao" role="img" aria-label="Situação das entregas do mês"></canvas>
+                                <div class="rosca-centro" aria-hidden="true">
+                                    <span class="fs-3 fw-bold text-dark lh-1" id="roscaTotal"></span>
+                                    <span class="small text-muted" id="roscaSufixo"></span>
+                                </div>
                             </div>
+                            <div class="legenda-rosca mt-3" id="roscaLegenda"></div>
+                            <p class="text-muted text-center mt-2 mb-0" style="font-size: 0.75rem;">
+                                <i class="bi bi-hand-index me-1"></i>Clique numa fatia ou na legenda para filtrar a tabela abaixo
+                            </p>
                         </div>
                     </div>
+                    {{ rosca_stats|json_script:"roscaStatsDados" }}
                 </div>
 
-                <div class="col-lg-4 col-md-12">
+                <div class="col-lg-7 col-md-12">
                     <div class="card shadow-sm h-100">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
                             <div class="d-flex align-items-center gap-2">
@@ -231,11 +229,19 @@
             </div>
 
             <!-- TABELA DO MÊS SELECIONADO (UNIFICADA) -->
-            <div class="card shadow-sm border-0 mb-4">
+            <div class="card shadow-sm border-0 mb-4" id="cardTabelaMesFiscais" style="scroll-margin-top: 80px;">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
                     <h6 class="m-0 fw-bold text-dark">
                         <i class="bi bi-list-check me-2 text-primary"></i>Acompanhamento Detalhado - Mês {{ filtro_mes|stringformat:"02d" }}/{{ filtro_ano|stringformat:"d" }}
                     </h6>
+                    <div class="d-flex align-items-center gap-2 flex-wrap me-auto ms-2">
+                        <span id="filtroGraficoAtivo" class="badge rounded-pill text-bg-light border d-none align-items-center gap-1 py-2 px-3 fw-normal">
+                            <i class="bi bi-funnel-fill text-primary"></i>
+                            <span id="filtroGraficoRotulo"></span>
+                            <button type="button" class="btn-close ms-1" style="font-size: 0.55rem;" id="filtroGraficoLimpar" aria-label="Remover o filtro do gráfico"></button>
+                        </span>
+                        <span class="small text-muted" id="contagemTabelaMesFiscais" aria-live="polite"></span>
+                    </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <div class="input-group input-group-sm" style="width: 230px;">
                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
@@ -262,7 +268,7 @@
                             </thead>
                             <tbody>
                                 {% for item in entregas_mes_selecionado %}
-                                <tr class="linha-tabela-mes-fiscais" data-statuses="{{ item.status_prestacao }} {{ item.status_controle }}">
+                                <tr class="linha-tabela-mes-fiscais" data-statuses="{{ item.status_prestacao }} {{ item.status_controle }}" data-segmento-slides="{{ item.segmento_slides }}" data-segmento-livro="{{ item.segmento_livro }}" data-prioritario="{{ item.prioritario|yesno:'1,0' }}">
                                     <td class="align-top">
                                         <div class="fw-bold text-primary">{{ item.contrato.numero }}</div>
                                         {% if item.contrato.empresa %}
@@ -393,10 +399,15 @@
                                                         </div>
                                                         <span style="font-size: 0.75rem;">Corrigir</span>
                                                     </a>
-                                                {% else %}
+                                                {% elif item.controle.status == 'entregue' %}
                                                     <a href="{% url 'visualizar_controle_execucao' item.controle.id %}" class="text-primary text-decoration-none fw-bold p-1" title="Visualizar Livro">
                                                         <i class="bi bi-journal-arrow-up fs-5 mb-1 d-block"></i>
                                                         <span style="font-size: 0.75rem;">Entregue</span>
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'visualizar_controle_execucao' item.controle.id %}" class="text-secondary text-decoration-none fw-bold p-1" title="Visualizar Livro (ainda não entregue)">
+                                                        <i class="bi bi-journal-text fs-5 mb-1 d-block"></i>
+                                                        <span style="font-size: 0.75rem;">{% if item.controle.status == 'rascunho' %}Em andamento{% else %}Pendente{% endif %}</span>
                                                     </a>
                                                 {% endif %}
                                             </div>
@@ -643,10 +654,15 @@
                                                         </div>
                                                         <span style="font-size: 0.75rem;">Corrigir</span>
                                                     </a>
-                                                {% else %}
+                                                {% elif entrega.controle.status == 'entregue' %}
                                                     <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="text-primary text-decoration-none fw-bold p-1" title="Visualizar Livro">
                                                         <i class="bi bi-journal-arrow-up fs-5 mb-1 d-block"></i>
                                                         <span style="font-size: 0.75rem;">Entregue</span>
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'visualizar_controle_execucao' entrega.controle.id %}" class="text-secondary text-decoration-none fw-bold p-1" title="Visualizar Livro (ainda não entregue)">
+                                                        <i class="bi bi-journal-text fs-5 mb-1 d-block"></i>
+                                                        <span style="font-size: 0.75rem;">{% if entrega.controle.status == 'rascunho' %}Em andamento{% else %}Pendente{% endif %}</span>
                                                     </a>
                                                 {% endif %}
                                             </div>
@@ -701,24 +717,37 @@
             
             <!-- GRÁFICOS SETORES (Mês Filtrado) -->
             <div class="row mb-4 align-items-stretch">
-                <!-- Gráfico de Slides de Apresentação (Setores) -->
-                <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <!-- Rosca alternável (Setores): todos e prioritários no mesmo quadro -->
+                <div class="col-lg-5 col-md-12 mb-3 mb-lg-0">
+                    <div class="card shadow-sm h-100" id="cardRoscaSetores">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
                             <h6 class="m-0 fw-bold text-secondary">
-                                <i class="bi bi-pie-chart-fill me-2" style="color: #d97706;"></i>Slides da Apresentação (Setores)
+                                <i class="bi bi-pie-chart-fill me-2" style="color: #d97706;"></i>Situação do Mês (Setores)
                             </h6>
-                        </div>
-                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                            <div class="chart-wrapper w-100" style="position: relative; height: 280px;">
-                                <canvas id="prioritariosSetoresBarChart"></canvas>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Escolher a visão do gráfico de setores">
+                                <button type="button" class="btn btn-outline-secondary active" data-rosca-visao="todos" aria-pressed="true">Todos</button>
+                                <button type="button" class="btn btn-outline-secondary" data-rosca-visao="prioritarios" aria-pressed="false">Prioritários</button>
                             </div>
                         </div>
+                        <div class="card-body d-flex flex-column">
+                            <div class="position-relative mx-auto w-100" style="height: 220px; max-width: 260px;">
+                                <canvas id="roscaSetores" role="img" aria-label="Situação das entregas dos setores no mês"></canvas>
+                                <div class="rosca-centro" aria-hidden="true">
+                                    <span class="fs-3 fw-bold text-dark lh-1" id="roscaSetoresTotal"></span>
+                                    <span class="small text-muted" id="roscaSetoresSufixo"></span>
+                                </div>
+                            </div>
+                            <div class="legenda-rosca mt-3" id="roscaSetoresLegenda"></div>
+                            <p class="text-muted text-center mt-2 mb-0" style="font-size: 0.75rem;">
+                                <i class="bi bi-hand-index me-1"></i>Clique numa fatia ou na legenda para filtrar a tabela abaixo
+                            </p>
+                        </div>
                     </div>
+                    {{ rosca_setores_stats|json_script:"roscaSetoresDados" }}
                 </div>
 
                 <!-- Lista de Apresentação dos Gestores Setores -->
-                <div class="col-lg-6 col-md-12">
+                <div class="col-lg-7 col-md-12">
                     <div class="card shadow-sm h-100">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
                             <div class="d-flex align-items-center gap-2">
@@ -811,11 +840,19 @@
             </div>
 
             <!-- TABELA DO MÊS SELECIONADO SETORES -->
-            <div class="card shadow-sm border-0 mb-4">
+            <div class="card shadow-sm border-0 mb-4" id="cardTabelaMesSetores" style="scroll-margin-top: 80px;">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
                     <h6 class="m-0 fw-bold text-dark">
                         <i class="bi bi-list-check me-2 text-primary"></i>Entregas dos Setores - Mês {{ filtro_mes|stringformat:"02d" }}/{{ filtro_ano|stringformat:"d" }}
                     </h6>
+                    <div class="d-flex align-items-center gap-2 flex-wrap me-auto ms-2">
+                        <span id="filtroGraficoSetoresAtivo" class="badge rounded-pill text-bg-light border d-none align-items-center gap-1 py-2 px-3 fw-normal">
+                            <i class="bi bi-funnel-fill text-primary"></i>
+                            <span id="filtroGraficoSetoresRotulo"></span>
+                            <button type="button" class="btn-close ms-1" style="font-size: 0.55rem;" id="filtroGraficoSetoresLimpar" aria-label="Remover o filtro do gráfico de setores"></button>
+                        </span>
+                        <span class="small text-muted" id="contagemTabelaMesSetores" aria-live="polite"></span>
+                    </div>
                     <div class="input-group input-group-sm" style="width: 250px;">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
                         <input type="text" id="filtroTabelaMesSetores" class="form-control border-start-0 ps-0 bg-white" placeholder="Buscar setor ou sigla...">
@@ -833,7 +870,7 @@
                             </thead>
                             <tbody>
                                 {% for item in entregas_setor_mes_selecionado %}
-                                <tr class="linha-tabela-mes-setores">
+                                <tr class="linha-tabela-mes-setores" data-segmento-slides="{{ item.segmento_slides }}" data-prioritario="{{ item.prioritario|yesno:'1,0' }}">
                                     <td>
                                         <div class="fw-bold text-primary">{{ item.setor.sigla }}</div>
                                         <div class="small text-muted text-truncate" style="max-width: 280px;" title="{{ item.setor.nome }}">{{ item.setor.nome }}</div>
@@ -1168,101 +1205,21 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'contratos/js/prestacao-rosca.js' %}"></script>
+<style>
+    .rosca-centro { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+    .legenda-rosca { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; max-width: 320px; width: 100%; margin-left: auto; margin-right: auto; }
+    .legenda-rosca-item { display: flex; align-items: center; gap: 6px; width: 100%; border: 1px solid transparent; background: none; border-radius: 6px; padding: 3px 6px; font-size: 0.8rem; color: #4b5563; text-align: left; cursor: pointer; }
+    .legenda-rosca-item:hover { background: #f3f4f6; }
+    .legenda-rosca-item:focus-visible { outline: 2px solid #0d6efd; outline-offset: 1px; }
+    .legenda-rosca-item.ativo { border-color: #9ca3af; background: #f3f4f6; }
+    .legenda-rosca-cor { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .legenda-rosca-nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .legenda-rosca-item strong { margin-left: auto; color: #111827; font-weight: 600; white-space: nowrap; }
+</style>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var ctx = document.getElementById('prestacoesPieChart').getContext('2d');
-        window.myChart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['Conformidade (OK!)', 'Aguardando análise', 'Ajustes Necessários', 'Pendente'],
-                datasets: [{
-                    data: [{{ ok_no_mes }}, {{ entregues_no_mes }}, {{ correcao_no_mes }}, {{ pendentes_no_mes }}],
-                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#9ca3af'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        align: 'center',
-                        labels: {
-                            font: {
-                                size: 13
-                            },
-                            padding: 15
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                var label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                var value = context.raw || 0;
-                                var total = {{ total_contratos }};
-                                var percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                label += value + ' (' + percentage + '%)';
-                                return label;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Gráfico de Slides de Apresentação de Setores
-        var ctxSetores = document.getElementById('prioritariosSetoresBarChart');
-        if (ctxSetores) {
-            window.mySetoresBarChart = new Chart(ctxSetores.getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Conformidade (OK!)', 'Aguardando análise', 'Ajustes Necessários', 'Pendente'],
-                    datasets: [{
-                        data: [{{ prio_ok_setores }}, {{ prio_entregues_setores }}, {{ prio_correcao_setores }}, {{ prio_pendentes_setores }}],
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#9ca3af'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            align: 'center',
-                            labels: {
-                                font: {
-                                    size: 13
-                                },
-                                padding: 15
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    var label = context.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    var value = context.raw || 0;
-                                    var datasetData = context.chart.data.datasets[0].data;
-                                    var total = datasetData.reduce((a, b) => a + b, 0);
-                                    var percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                    label += value + ' (' + percentage + '%)';
-                                    return label;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
         // Ativa a aba Setores ou Execução se estiver na URL
         const urlParams = new URLSearchParams(window.location.search);
         const tabParam = urlParams.get('tab');
@@ -1377,80 +1334,61 @@
             const termo = (inputFiltroTabelaMesFiscais ? inputFiltroTabelaMesFiscais.value : '').toLowerCase().trim();
             const statusFiltro = (selectFiltroTabelaMesFiscaisStatus ? selectFiltroTabelaMesFiscaisStatus.value : '').toLowerCase().trim();
             const linhas = document.querySelectorAll('#fiscais-mes-subpane .table-responsive tbody tr.linha-tabela-mes-fiscais');
+            let visiveis = 0;
 
             linhas.forEach(linha => {
                 const textoLinha = linha.cells[0].textContent.toLowerCase();
                 const matchesTexto = !termo || textoLinha.includes(termo);
                 const statuses = (linha.dataset.statuses || '').toLowerCase();
                 const matchesStatus = !statusFiltro || statuses.includes(statusFiltro);
+                const matchesGrafico = !window.RoscaPrestacao || window.RoscaPrestacao.linhaPassa(linha);
 
-                linha.style.display = (matchesTexto && matchesStatus) ? '' : 'none';
+                const mostra = matchesTexto && matchesStatus && matchesGrafico;
+                linha.style.display = mostra ? '' : 'none';
+                if (mostra) visiveis++;
             });
+
+            const contagem = document.getElementById('contagemTabelaMesFiscais');
+            if (contagem) {
+                contagem.textContent = visiveis === linhas.length
+                    ? linhas.length + ' contrato' + (linhas.length === 1 ? '' : 's')
+                    : 'Mostrando ' + visiveis + ' de ' + linhas.length;
+            }
         }
+        window.aplicarFiltroTabelaMesFiscais = aplicarFiltroTabelaMesFiscais;
+        aplicarFiltroTabelaMesFiscais();
 
         if (inputFiltroTabelaMesFiscais) inputFiltroTabelaMesFiscais.addEventListener('input', aplicarFiltroTabelaMesFiscais);
         if (selectFiltroTabelaMesFiscaisStatus) selectFiltroTabelaMesFiscaisStatus.addEventListener('change', aplicarFiltroTabelaMesFiscais);
 
-        // Filtro Tabela Mês Selecionado (Setores)
+        // Filtro Tabela Mês Selecionado (Setores): busca + recorte da rosca
         const inputFiltroTabelaMesSetores = document.getElementById('filtroTabelaMesSetores');
-        if (inputFiltroTabelaMesSetores) {
-            inputFiltroTabelaMesSetores.addEventListener('input', function() {
-                const termo = this.value.toLowerCase().trim();
-                const linhas = document.querySelectorAll('#setores-mes-subpane .table-responsive tbody tr.linha-tabela-mes-setores');
-                
-                linhas.forEach(linha => {
-                    const textoLinha = linha.cells[0].textContent.toLowerCase();
-                    linha.style.display = (!termo || textoLinha.includes(termo)) ? '' : 'none';
-                });
-            });
-        }
 
-        var ctxBar = document.getElementById('prioritariosBarChart').getContext('2d');
-        window.myBarChart = new Chart(ctxBar, {
-            type: 'doughnut',
-            data: {
-                labels: ['Conformidade (OK!)', 'Aguardando análise', 'Ajustes Necessários', 'Pendente'],
-                datasets: [{
-                    data: [{{ prio_ok }}, {{ prio_entregues }}, {{ prio_correcao }}, {{ prio_pendentes }}],
-                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#9ca3af'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        align: 'center',
-                        labels: {
-                            font: {
-                                size: 13
-                            },
-                            padding: 15
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                var label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                var value = context.raw || 0;
-                                // Para rosca, o total é a soma dos prioritários
-                                var datasetData = context.chart.data.datasets[0].data;
-                                var total = datasetData.reduce((a, b) => a + b, 0);
-                                var percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                label += value + ' (' + percentage + '%)';
-                                return label;
-                            }
-                        }
-                    }
-                }
+        function aplicarFiltroTabelaMesSetores() {
+            const termo = (inputFiltroTabelaMesSetores ? inputFiltroTabelaMesSetores.value : '').toLowerCase().trim();
+            const linhas = document.querySelectorAll('#setores-mes-subpane .table-responsive tbody tr.linha-tabela-mes-setores');
+            let visiveis = 0;
+
+            linhas.forEach(linha => {
+                const matchesTexto = !termo || linha.cells[0].textContent.toLowerCase().includes(termo);
+                const matchesGrafico = !window.RoscaSetores || window.RoscaSetores.linhaPassa(linha);
+                const mostra = matchesTexto && matchesGrafico;
+                linha.style.display = mostra ? '' : 'none';
+                if (mostra) visiveis++;
+            });
+
+            const contagem = document.getElementById('contagemTabelaMesSetores');
+            if (contagem) {
+                contagem.textContent = visiveis === linhas.length
+                    ? linhas.length + ' setor' + (linhas.length === 1 ? '' : 'es')
+                    : 'Mostrando ' + visiveis + ' de ' + linhas.length;
             }
-        });
-        
+        }
+        window.aplicarFiltroTabelaMesSetores = aplicarFiltroTabelaMesSetores;
+        aplicarFiltroTabelaMesSetores();
+
+        if (inputFiltroTabelaMesSetores) inputFiltroTabelaMesSetores.addEventListener('input', aplicarFiltroTabelaMesSetores);
+
         function atualizarTabelaPrioritarios(gestores) {
             const tbody = document.getElementById('tabelaGestoresPrioritarios');
             if (!tbody) return;
@@ -1781,26 +1719,12 @@
                                 
                                 td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao, data.apontamentos_slides);
                                 
-                                if (window.myChart && data.stats) {
-                                    window.myChart.data.datasets[0].data = [
-                                        data.stats.ok_no_mes,
-                                        data.stats.entregues_no_mes,
-                                        data.stats.correcao_no_mes,
-                                        data.stats.pendentes_no_mes
-                                    ];
-                                    window.myChart.update();
+                                if (window.RoscaPrestacao) {
+                                    window.RoscaPrestacao.marcarLinha(td.closest('tr.linha-tabela-mes-fiscais'), data.status, data.compor_apresentacao);
+                                    if (data.stats) window.RoscaPrestacao.atualizar(data.stats);
                                 }
-                                if (window.myBarChart && data.stats) {
-                                    window.myBarChart.data.datasets[0].data = [
-                                        data.stats.prio_ok,
-                                        data.stats.prio_entregues,
-                                        data.stats.prio_correcao,
-                                        data.stats.prio_pendentes
-                                    ];
-                                    window.myBarChart.update();
-                                    if (data.stats.gestores_prio) {
-                                        atualizarTabelaPrioritarios(data.stats.gestores_prio);
-                                    }
+                                if (data.stats && data.stats.gestores_prio) {
+                                    atualizarTabelaPrioritarios(data.stats.gestores_prio);
                                 }
                             } else {
                                 alert('Erro ao solicitar correção: ' + (data.error || 'Erro desconhecido'));
@@ -1881,26 +1805,12 @@
                         td.innerHTML = renderCellHtml(data.prestacao_id, data.status, data.is_admin, data.is_auditor, data.compor_apresentacao, cId, m, a, data.observacao, data.apontamentos_slides);
                         
                         // Atualiza os gráficos se os dados de estatística estiverem disponíveis
-                        if (window.myChart && data.stats) {
-                            window.myChart.data.datasets[0].data = [
-                                data.stats.ok_no_mes,
-                                data.stats.entregues_no_mes,
-                                data.stats.correcao_no_mes,
-                                data.stats.pendentes_no_mes
-                            ];
-                            window.myChart.update();
+                        if (window.RoscaPrestacao) {
+                            window.RoscaPrestacao.marcarLinha(td.closest('tr.linha-tabela-mes-fiscais'), data.status, data.compor_apresentacao);
+                            if (data.stats) window.RoscaPrestacao.atualizar(data.stats);
                         }
-                        if (window.myBarChart && data.stats) {
-                            window.myBarChart.data.datasets[0].data = [
-                                data.stats.prio_ok,
-                                data.stats.prio_entregues,
-                                data.stats.prio_correcao,
-                                data.stats.prio_pendentes
-                            ];
-                            window.myBarChart.update();
-                            if (data.stats.gestores_prio) {
-                                atualizarTabelaPrioritarios(data.stats.gestores_prio);
-                            }
+                        if (data.stats && data.stats.gestores_prio) {
+                            atualizarTabelaPrioritarios(data.stats.gestores_prio);
                         }
                     } else {
                         alert('Erro ao alterar status: ' + (data.error || 'Erro desconhecido'));
@@ -1956,18 +1866,13 @@
                     checkbox.checked = !isChecked;
                     alert('Erro: ' + (data.error || 'Não foi possível alterar a seleção do slide.'));
                 } else {
-                    // Atualiza o gráfico de prioritários
-                    if (window.myBarChart && data.stats) {
-                        window.myBarChart.data.datasets[0].data = [
-                            data.stats.prio_ok,
-                            data.stats.prio_entregues,
-                            data.stats.prio_correcao,
-                            data.stats.prio_pendentes
-                        ];
-                        window.myBarChart.update();
-                        if (data.stats.gestores_prio) {
-                            atualizarTabelaPrioritarios(data.stats.gestores_prio);
-                        }
+                    // Atualiza a rosca e a lista de prioritários
+                    if (window.RoscaPrestacao) {
+                        window.RoscaPrestacao.marcarLinha(checkbox.closest('tr.linha-tabela-mes-fiscais'), null, isChecked);
+                        if (data.stats) window.RoscaPrestacao.atualizar(data.stats);
+                    }
+                    if (data.stats && data.stats.gestores_prio) {
+                        atualizarTabelaPrioritarios(data.stats.gestores_prio);
                     }
                 }
                 checkbox.disabled = false;
@@ -2022,17 +1927,12 @@
                         cb.checked = isChecked;
                     });
 
-                    if (window.mySetoresBarChart && data.stats) {
-                        window.mySetoresBarChart.data.datasets[0].data = [
-                            data.stats.prio_ok_setores,
-                            data.stats.prio_entregues_setores,
-                            data.stats.prio_correcao_setores,
-                            data.stats.prio_pendentes_setores
-                        ];
-                        window.mySetoresBarChart.update();
-                        if (data.stats.gestores_setores) {
-                            atualizarTabelaGestoresSetores(data.stats.gestores_setores);
-                        }
+                    if (window.RoscaSetores) {
+                        window.RoscaSetores.marcarLinha(checkbox.closest('tr.linha-tabela-mes-setores'), null, isChecked);
+                        if (data.stats) window.RoscaSetores.atualizar(data.stats);
+                    }
+                    if (data.stats && data.stats.gestores_setores) {
+                        atualizarTabelaGestoresSetores(data.stats.gestores_setores);
                     }
                 }
                 checkbox.disabled = false;
@@ -2461,8 +2361,13 @@
         const fiscaisTab = document.getElementById('fiscais-tab');
         if (fiscaisTab) {
             fiscaisTab.addEventListener('shown.bs.tab', function() {
-                if (window.myChart) window.myChart.resize();
-                if (window.myBarChart) window.myBarChart.resize();
+                if (window.RoscaPrestacao) window.RoscaPrestacao.redimensionar();
+            });
+        }
+        const setoresTab = document.getElementById('setores-tab');
+        if (setoresTab) {
+            setoresTab.addEventListener('shown.bs.tab', function() {
+                if (window.RoscaSetores) window.RoscaSetores.redimensionar();
             });
         }
     });
