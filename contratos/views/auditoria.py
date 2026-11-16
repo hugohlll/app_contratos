@@ -2,16 +2,17 @@ import csv
 import json
 import urllib.parse
 import io
-import math
 from datetime import date, timedelta
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
-from django.db.models import Count, Q, Prefetch
+from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from django.utils.dateparse import parse_date
 from django.utils.safestring import mark_safe
+from django.utils.text import slugify
 from contratos.models import Contrato, Agente, Comissao, Integrante, DIAS_VALIDADE_QUALIFICACAO
-from contratos.utils import get_filtro_ativos, export_csv_or_xlsx
+from contratos.utils import get_filtro_ativos, export_csv_or_xlsx, is_auditor
+from contratos.services import indicadores
 
 
 def get_classificacao_vencimento(dias):
@@ -30,216 +31,89 @@ def get_classificacao_vencimento(dias):
 @login_required
 def painel_controle(request):
     hoje = date.today()
-    data_limite_curso = hoje - timedelta(days=DIAS_VALIDADE_QUALIFICACAO)
-    filtro_ativos = get_filtro_ativos()
 
-    # 1. MONITORAMENTO DE VENCIMENTOS (Lógica Refatorada)
-    comissoes_ativas = Comissao.objects.filter(
-        ativa=True
-    ).select_related('contrato')
+    # 1. MONITORAMENTO DE VENCIMENTOS DAS COMISSÕES
+    # Serializado como JSON para evitar que o locale pt-BR formate números no template.
+    venc = indicadores.contar('vencimento-comissoes', hoje)
+    total_vencimentos_count = sum(venc.values())
 
-    lista_completa = []
-    for comissao in comissoes_ativas:
-        # Usa data_fim da comissão ou, se não existir, vigencia_fim do contrato
-        data_fim_efetiva = comissao.data_fim or (comissao.contrato.vigencia_fim if comissao.contrato else None)
-        if not data_fim_efetiva:
-            continue
-            
-        if data_fim_efetiva < hoje:
-            continue
+    # 2. RADAR DE PERMANÊNCIA (top 10)
+    top_10_permanencia = indicadores.radar_permanencia(hoje)[:10]
+    permanencia_labels = [f"{i['agente'].posto.sigla} {i['agente'].nome_de_guerra}" for i in top_10_permanencia]
+    permanencia_dias = [i['dias_totais'] for i in top_10_permanencia]
+    permanencia_ids = [i['agente'].id for i in top_10_permanencia]
 
-        dias_restantes = (data_fim_efetiva - hoje).days
+    # 3. QUALIFICAÇÃO
+    dados_qualificacao = indicadores.contar('qualificacao', hoje)
+    dados_qualificacao['total'] = sum(dados_qualificacao.values())
 
-        # Aplicação dos critérios: <=7 Crítico | 8-15 Alerta | >15 Normal
-        classe_cor, status_texto = get_classificacao_vencimento(dias_restantes)
+    # 4. VENCIMENTO DOS CONTRATOS (velocímetro 90/120 dias)
+    venc_contratos = indicadores.contar('vencimento-contratos', hoje)
+    total_contratos_ativos = sum(venc_contratos.values())
+    venc_contratos['total'] = total_contratos_ativos
 
-        comissao.dias_restantes = dias_restantes
-        comissao.classe_cor = classe_cor
-        comissao.status_texto = status_texto
-        lista_completa.append(comissao)
-
-    # Ordena pelos mais próximos de vencer
-    lista_completa.sort(key=lambda x: x.dias_restantes)
-    top_5_vencimentos = lista_completa[:5]
-    total_vencimentos_count = len(lista_completa)
-    
-    # Dados agregados para gráfico de vencimentos (serializado como JSON para evitar
-    # que o locale pt-BR formate números com separador de milhar no template)
-    vencimentos_critico = sum(1 for i in lista_completa if i.dias_restantes <= 7)
-    vencimentos_alerta = sum(1 for i in lista_completa if 8 <= i.dias_restantes <= 15)
-    vencimentos_normal = sum(1 for i in lista_completa if i.dias_restantes > 15)
-    vencimentos_json = mark_safe(json.dumps({
-        'critico': vencimentos_critico,
-        'alerta': vencimentos_alerta,
-        'normal': vencimentos_normal,
-    }))
-
-    # 2. RADAR DE PERMANÊNCIA (Cálculo de tempo de designação contínua)
-    integrantes_ativos = Integrante.objects.filter(filtro_ativos).select_related(
-        'agente', 'funcao', 'comissao__contrato'
-    )
-    radar_permanencia = []
-
-    for atual in integrantes_ativos:
-        data_inicio_real = atual.data_inicio
-        # Busca recursiva simples para encontrar a data de início real da sequência de designações no mesmo contrato e tipo de comissão
-        if atual.comissao.contrato:
-            while True:
-                dia_anterior = data_inicio_real - timedelta(days=1)
-                designacao_anterior = Integrante.objects.filter(
-                    comissao__contrato=atual.comissao.contrato,
-                    comissao__tipo=atual.comissao.tipo,
-                    agente=atual.agente,
-                    funcao=atual.funcao
-                ).filter(Q(data_fim=dia_anterior) | Q(data_desligamento=dia_anterior)).first()
-
-                if designacao_anterior:
-                    data_inicio_real = designacao_anterior.data_inicio
-                else:
-                    break
-
-        dias_totais = (hoje - data_inicio_real).days
-        anos, meses = dias_totais // 365, (dias_totais % 365) // 30
-
-        # Classificação de tempo para rodízio
-        classe_tempo = 'bg-success'
-        if dias_totais > 730:  # 2 anos
-            classe_tempo = 'bg-danger'
-        elif dias_totais > 365:  # 1 ano
-            classe_tempo = 'bg-warning text-dark'
-
-        contrato_ref = atual.comissao.contrato
-        radar_permanencia.append({
-            'agente': atual.agente,
-            'funcao': atual.funcao,
-            'contrato': contrato_ref,
-            'dias_totais': dias_totais,
-            'tempo_formatado': f"{anos}a {meses}m ({dias_totais} dias)",
-            'inicio_real': data_inicio_real,
-            'classe_tempo': classe_tempo,
-            'inicio_original': atual.data_inicio
-        })
-
-    radar_permanencia.sort(key=lambda x: (-x['dias_totais'], x['agente'].posto.senioridade, x['agente'].nome_de_guerra))
-    top_10_permanencia = radar_permanencia[:10]
-    
-    # Dados para gráfico de permanência (top 10) - serializado como JSON
-    permanencia_labels = [f"{item['agente'].posto.sigla} {item['agente'].nome_de_guerra}" for item in top_10_permanencia]
-    permanencia_dias = [item['dias_totais'] for item in top_10_permanencia]
-    permanencia_labels_json = mark_safe(json.dumps(permanencia_labels, ensure_ascii=False))
-    permanencia_dias_json = mark_safe(json.dumps(permanencia_dias))
-    tem_permanencia = len(top_10_permanencia) > 0
-
-    # 3. ESTATÍSTICAS DE QUALIFICAÇÃO
-    agentes_ativos_ids = Integrante.objects.filter(filtro_ativos).values_list('agente', flat=True).distinct()
-    agentes_ativos_qs = Agente.objects.filter(id__in=agentes_ativos_ids)
-    
-    total_ativos = agentes_ativos_qs.count()
-    qtd_sem_curso = agentes_ativos_qs.filter(data_ultimo_curso__isnull=True).count()
-    qtd_vencidos = agentes_ativos_qs.filter(data_ultimo_curso__lt=data_limite_curso).count()
-    qtd_em_dia = total_ativos - qtd_sem_curso - qtd_vencidos
-
-    dados_qualificacao = {
-        'sem_curso': qtd_sem_curso,
-        'vencidos': qtd_vencidos,
-        'em_dia': qtd_em_dia,
-        'total': total_ativos
-    }
-
-    # CÁLCULO PARA O VELOCÍMETRO (Segmentado: 90 e 120 dias)
-    limite_90 = hoje + timedelta(days=90)
-    limite_120 = hoje + timedelta(days=120)
-
-    count_venc_90 = Contrato.objects.filter(vigencia_fim__gte=hoje, vigencia_fim__lte=limite_90).count()
-    count_venc_120 = Contrato.objects.filter(vigencia_fim__gt=limite_90, vigencia_fim__lte=limite_120).count()
-    count_venc_maior_120 = Contrato.objects.filter(vigencia_fim__gt=limite_120).count()
-
-    # Listagem completa de contratos ativos com cálculo de dias restantes
-    # (Usada para a nova tabela de monitoramento de prazos)
-    contratos_ativos_lista = Contrato.objects.filter(vigencia_fim__gte=hoje).select_related('empresa').order_by('vigencia_fim')
-    for c in contratos_ativos_lista:
-        c.dias_restantes = (c.vigencia_fim - hoje).days
-        if c.dias_restantes <= 90:
-            c.classe_vencimento = 'text-danger fw-bold'
-        elif c.dias_restantes <= 120:
-            c.classe_vencimento = 'text-warning fw-bold'
-        else:
-            c.classe_vencimento = 'text-success'
-
-    # 4. SOBRECARGA DE FISCAIS E RISCOS
-    # Filtra apenas as designações ativas onde o título da função é exatamente "Fiscal"
-    integrantes_fiscais = Integrante.objects.filter(filtro_ativos, funcao__titulo='Fiscal')
-    
-    # Agrupa os agentes e conta as suas atuações exclusivas como Fiscais
-    fiscais_sobrecarregados = Agente.objects.filter(
-        integrante__in=integrantes_fiscais
-    ).annotate(
-        total_atuacoes=Count('integrante', filter=Q(integrante__in=integrantes_fiscais))
-    ).filter(total_atuacoes__gt=0).order_by('-total_atuacoes', 'posto__senioridade', 'nome_de_guerra')[:10]
-    
-    total_contratos_ativos = Contrato.objects.filter(vigencia_fim__gte=hoje).count()
-    
-    # Conta a quantidade de Fiscais ÚNICOS (agentes distintos) atuando no momento
-    total_fiscais_unicos = integrantes_fiscais.values('agente').distinct().count()
-    
-    # NOVO CÁLCULO DO LIMITE: (Nº Total de Contratos) / (Total de Fiscais Únicos)
-    media_limite_fiscais = math.ceil(total_contratos_ativos / total_fiscais_unicos) if total_fiscais_unicos > 0 else 0
-    
-    # Dados para gráfico de sobrecarga - serializado como JSON
+    # 5. SOBRECARGA DE FISCAIS (top 10)
+    fiscais_sobrecarregados = list(indicadores.sobrecarga_fiscais(limite=10))
     sobrecarga_labels = [f"{ag.posto.sigla} {ag.nome_de_guerra}" for ag in fiscais_sobrecarregados]
     sobrecarga_valores = [ag.total_atuacoes for ag in fiscais_sobrecarregados]
-    sobrecarga_labels_json = mark_safe(json.dumps(sobrecarga_labels, ensure_ascii=False))
-    sobrecarga_valores_json = mark_safe(json.dumps(sobrecarga_valores))
-    tem_sobrecarga = len(sobrecarga_labels) > 0
+    sobrecarga_ids = [ag.id for ag in fiscais_sobrecarregados]
 
-    contratos_risco = Contrato.objects.filter(vigencia_fim__gte=hoje).annotate(
-        fiscais_ativos=Count('comissoes__integrantes', filter=Q(comissoes__tipo='FISCALIZACAO') & Q(comissoes__ativa=True) & Q(
-            comissoes__integrantes__in=Integrante.objects.filter(filtro_ativos)))
-    ).filter(fiscais_ativos=0)
+    contratos_risco = indicadores.contratos_risco_qs(hoje)
+    total_agentes_atuando = indicadores.agentes_ativos_qs().count()
 
-    total_contratos_ativos = Contrato.objects.filter(vigencia_fim__gte=hoje).count()
-    total_agentes_atuando = Agente.objects.filter(
-        integrante__in=Integrante.objects.filter(filtro_ativos)).distinct().count()
-
-    tabela_contratos = Contrato.objects.filter(vigencia_fim__gte=hoje).prefetch_related(
-        Prefetch('comissoes', queryset=Comissao.objects.filter(ativa=True).prefetch_related(
-            Prefetch('integrantes',
-                     queryset=Integrante.objects.filter(filtro_ativos).select_related('agente', 'funcao'),
-                     to_attr='equipe_vigente')
-        ), to_attr='comissoes_ativas')
-    ).order_by('vigencia_fim')
+    def _json(valor):
+        return mark_safe(json.dumps(valor, ensure_ascii=False))
 
     context = {
-        'lista_vencimentos': top_5_vencimentos,
         'total_vencimentos_count': total_vencimentos_count,
-        'vencimentos_critico': vencimentos_critico,
-        'vencimentos_alerta': vencimentos_alerta,
-        'vencimentos_normal': vencimentos_normal,
-        'vencimentos_json': vencimentos_json,
-        'top_permanencia': top_10_permanencia,
-        'permanencia_labels': permanencia_labels_json,
-        'permanencia_dias': permanencia_dias_json,
-        'tem_permanencia': tem_permanencia,
-        'agentes_sobrecarregados': fiscais_sobrecarregados,
-        'sobrecarga_labels': sobrecarga_labels_json,
-        'sobrecarga_valores': sobrecarga_valores_json,
-        'tem_sobrecarga': tem_sobrecarga,
-        'media_limite_fiscais': media_limite_fiscais,
-        'venc_data_json': mark_safe(json.dumps({
-            'ate_90': count_venc_90,
-            'entre_90_120': count_venc_120,
-            'apos_120': count_venc_maior_120,
-            'total': total_contratos_ativos
-        })),
-        'contratos_ativos_lista': contratos_ativos_lista,
+        'vencimentos_critico': venc['critico'],
+        'vencimentos_json': _json(venc),
+        'tem_permanencia': bool(top_10_permanencia),
+        'permanencia_labels': _json(permanencia_labels),
+        'permanencia_dias': _json(permanencia_dias),
+        'permanencia_ids': _json(permanencia_ids),
+        'tem_sobrecarga': bool(fiscais_sobrecarregados),
+        'sobrecarga_labels': _json(sobrecarga_labels),
+        'sobrecarga_valores': _json(sobrecarga_valores),
+        'sobrecarga_ids': _json(sobrecarga_ids),
+        'media_limite_fiscais': indicadores.media_limite_fiscais(hoje),
+        'venc_data_json': _json(venc_contratos),
         'contratos_risco': contratos_risco,
         'total_contratos_ativos': total_contratos_ativos,
         'total_agentes_atuando': total_agentes_atuando,
-        'tabela_contratos': tabela_contratos,
-        'dados_qualificacao_json': mark_safe(json.dumps(dados_qualificacao)),
+        'dados_qualificacao_json': _json(dados_qualificacao),
+        'detalhe_inicial': request.GET.get('detalhe', ''),
     }
 
     return render(request, 'contratos/painel_controle.html', context)
+
+
+@login_required
+def detalhe_indicador(request, indicador):
+    """
+    Lista os registros de um segmento de gráfico do painel.
+    Sem `formato`, devolve o fragmento HTML exibido no painel lateral;
+    com `formato=csv|xlsx`, exporta o mesmo recorte.
+    """
+    segmento = request.GET.get('segmento', indicadores.SEGMENTO_TODOS)
+    try:
+        ind, rotulo, linhas = indicadores.detalhar(indicador, segmento)
+    except KeyError:
+        return HttpResponseBadRequest('Indicador inválido.')
+    except ValueError:
+        return HttpResponseBadRequest('Segmento inválido.')
+
+    if request.GET.get('formato') in ('csv', 'xlsx'):
+        sufixo = '' if segmento == indicadores.SEGMENTO_TODOS else f"_{slugify(rotulo)}"
+        return export_csv_or_xlsx(request, f"{ind.nome_arquivo}{sufixo}", ind.colunas, [l.celulas for l in linhas])
+
+    return render(request, 'contratos/auditoria/_detalhe.html', {
+        'indicador': ind,
+        'segmento': segmento,
+        'rotulo': rotulo,
+        'linhas': linhas,
+        'pode_abrir_contrato': is_auditor(request.user),
+    })
 
 
 @login_required
@@ -425,45 +299,8 @@ def exportar_radar_permanencia_csv(request):
     headers = ['Militar', 'Função', 'Contrato', 'Dias Totais', 'Tempo Formatado', 'Início Real']
     data = []
     
-    hoje = date.today()
-    filtro_ativos = get_filtro_ativos()
-    
-    integrantes_ativos = Integrante.objects.filter(filtro_ativos).select_related(
-        'agente', 'funcao', 'comissao__contrato'
-    )
-    
-    radar_permanencia = []
-    
-    for atual in integrantes_ativos:
-        data_inicio_real = atual.data_inicio
-        while True:
-            dia_anterior = data_inicio_real - timedelta(days=1)
-            designacao_anterior = Integrante.objects.filter(
-                comissao__contrato=atual.comissao.contrato,
-                comissao__tipo=atual.comissao.tipo,
-                agente=atual.agente,
-                funcao=atual.funcao
-            ).filter(Q(data_fim=dia_anterior) | Q(data_desligamento=dia_anterior)).first()
+    radar_permanencia = indicadores.radar_permanencia(date.today())
 
-            if designacao_anterior:
-                data_inicio_real = designacao_anterior.data_inicio
-            else:
-                break
-
-        dias_totais = (hoje - data_inicio_real).days
-        anos, meses = dias_totais // 365, (dias_totais % 365) // 30
-        
-        radar_permanencia.append({
-            'agente': atual.agente,
-            'funcao': atual.funcao,
-            'contrato': atual.comissao.contrato,
-            'dias_totais': dias_totais,
-            'tempo_formatado': f"{anos}a {meses}m ({dias_totais} dias)",
-            'inicio_real': data_inicio_real,
-        })
-        
-    radar_permanencia.sort(key=lambda x: (-x['dias_totais'], x['agente'].posto.senioridade, x['agente'].nome_de_guerra))
-    
     for item in radar_permanencia:
         data.append([
             f"{item['agente'].posto.sigla} {item['agente'].nome_de_guerra}",
