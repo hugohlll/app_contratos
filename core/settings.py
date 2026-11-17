@@ -209,3 +209,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 # Limites de Upload (10 MB)
 FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
+
+# Integração com a API do Contratos.gov.br (contratos.comprasnet.gov.br)
+# O proxy vale SÓ para este cliente: não use HTTP_PROXY/HTTPS_PROXY globais, que desviariam
+# também o healthcheck em localhost e o cron. Usuário e senha ficam separados da URL do proxy,
+# então caracteres especiais na senha não precisam de codificação. Se a senha tiver $, # ou
+# aspas, prefira CONTRATOSGOV_PROXY_SENHA_ARQUIVO (um arquivo contendo só a senha).
+CONTRATOSGOV_API_URL = os.getenv('CONTRATOSGOV_API_URL', 'https://contratos.comprasnet.gov.br/api')
+CONTRATOSGOV_UG = os.getenv('CONTRATOSGOV_UG', '120006')
+CONTRATOSGOV_PROXY = os.getenv('CONTRATOSGOV_PROXY', '')  # ex.: http://proxy-brasilia.intraer:8080
+CONTRATOSGOV_PROXY_USUARIO = os.getenv('CONTRATOSGOV_PROXY_USUARIO', '')
+CONTRATOSGOV_PROXY_SENHA = os.getenv('CONTRATOSGOV_PROXY_SENHA', '')
+CONTRATOSGOV_PROXY_SENHA_ARQUIVO = os.getenv('CONTRATOSGOV_PROXY_SENHA_ARQUIVO', '')
+CONTRATOSGOV_TIMEOUT = int(os.getenv('CONTRATOSGOV_TIMEOUT', '30'))
