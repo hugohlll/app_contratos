@@ -7,3 +7,7 @@
 
 # Executa a rotina de backup às 02:00 da manhã
 0 2 * * * root /usr/local/bin/python /app/manage.py executar_backup >> /var/log/cron.log 2>&1
+
+# Atualiza o catálogo de contratos da UG no Contratos.gov.br e avisa os Administradores
+# quando houver contrato novo a classificar (#51). Precisa de CONTRATOSGOV_PROXY no .env.prod.
+30 6 * * * root /usr/local/bin/python /app/manage.py sincronizar_catalogo_contratosgov >> /var/log/cron.log 2>&1

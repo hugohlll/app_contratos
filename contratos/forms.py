@@ -623,3 +623,20 @@ class OcorrenciaContratualForm(EstiloFormMixin, forms.ModelForm):
         }
 
 
+
+
+class OrganizacaoMilitarForm(EstiloFormMixin, forms.ModelForm):
+    class Meta:
+        from .models import OrganizacaoMilitar
+        model = OrganizacaoMilitar
+        fields = ['sigla', 'nome', 'codigo_uasg', 'prefixos_pi', 'eh_gapbr', 'ativa']
+
+    def clean_sigla(self):
+        return self.cleaned_data['sigla'].strip().upper()
+
+    def clean_eh_gapbr(self):
+        from .models import OrganizacaoMilitar
+        valor = self.cleaned_data['eh_gapbr']
+        if valor and OrganizacaoMilitar.objects.filter(eh_gapbr=True).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('Só uma OM pode ser marcada como GAP-BR.')
+        return valor

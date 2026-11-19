@@ -68,6 +68,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'contratos.context_processors.app_version',
                 'contratos.context_processors.alertas_aci',
+                'contratos.context_processors.contratos_a_classificar',
             ],
         },
     },

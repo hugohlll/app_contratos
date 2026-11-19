@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from contratos.views import public, militar, auditoria, auth, portal, users, prestacao, cargos, execucao, notificacoes
+from contratos.views import public, militar, auditoria, auth, portal, users, prestacao, cargos, execucao, notificacoes, catalogo
 
 urlpatterns = [
     # --- ÁREA PÚBLICA (Módulo public.py) ---
@@ -147,6 +147,14 @@ urlpatterns = [
     path('portal/cargos/setores/novo/', cargos.novo_setor, name='novo_setor'),
     path('portal/cargos/setores/excluir/<int:pk>/', cargos.excluir_setor, name='excluir_setor'),
     path('portal/cargos/setores/reordenar/', cargos.reordenar_setores, name='reordenar_setores'),
+    # --- CONTRATOS.GOV.BR: CATÁLOGO E OM BENEFICIADA (#51) ---
+    path('portal/contratosgov/catalogo/', catalogo.catalogo_contratosgov, name='catalogo_contratosgov'),
+    path('portal/contratosgov/catalogo/<int:pk>/', catalogo.classificar_catalogo, name='classificar_catalogo'),
+    path('portal/contratosgov/catalogo/lote/', catalogo.classificar_catalogo_lote, name='classificar_catalogo_lote'),
+    path('portal/contratosgov/oms/', catalogo.listar_oms, name='listar_oms'),
+    path('portal/contratosgov/oms/nova/', catalogo.nova_om, name='nova_om'),
+    path('portal/contratosgov/oms/editar/<int:pk>/', catalogo.editar_om, name='editar_om'),
+
     # --- CONFIGURAÇÕES DO SISTEMA ---
     path('portal/configuracoes/', portal.configuracoes_sistema, name='configuracoes_sistema'),
 

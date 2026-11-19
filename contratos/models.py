@@ -977,3 +977,114 @@ class NotificacaoACI(models.Model):
     @property
     def lida(self):
         return self.lida_em is not None
+
+
+# ============================================================================
+# Integração Contratos.gov.br: OM beneficiada dos contratos da UG (#51)
+# ============================================================================
+
+class OrganizacaoMilitar(models.Model):
+    """OM que pode ser beneficiária de um contrato executado pela UG do GAP-BR."""
+    sigla = models.CharField("Sigla", max_length=20, unique=True)
+    nome = models.CharField("Nome", max_length=200, blank=True)
+    codigo_uasg = models.CharField("Código UASG", max_length=6, blank=True,
+                                   help_text="Opcional. Usado para reconhecer a unidade requisitante.")
+    prefixos_pi = models.CharField(
+        "Prefixos de plano interno", max_length=100, blank=True,
+        help_text="Opcional. Prefixos separados por vírgula (ex.: CG) que indicam esta OM no plano interno dos empenhos.")
+    eh_gapbr = models.BooleanField("É o GAP-BR", default=False,
+                                   help_text="Contratos desta OM viram contratos do SISCONT.")
+    ativa = models.BooleanField("Ativa", default=True)
+
+    class Meta:
+        verbose_name = "Organização Militar"
+        verbose_name_plural = "Organizações Militares"
+        ordering = ['-eh_gapbr', 'sigla']
+
+    def __str__(self):
+        return self.sigla
+
+    def lista_prefixos_pi(self):
+        return [p.strip().upper() for p in self.prefixos_pi.split(',') if p.strip()]
+
+
+class ContratoCatalogo(models.Model):
+    """Contrato da UG lido do Contratos.gov.br, com a classificação da OM beneficiada.
+
+    Só os classificados como GAP-BR viram ``Contrato``. Os de OM apoiada guardam apenas os
+    dados da lista diária.
+    """
+    PENDENTE = 'PENDENTE'
+    CLASSIFICADO = 'CLASSIFICADO'
+    DESCONSIDERADO = 'DESCONSIDERADO'
+    SITUACAO_CHOICES = [
+        (PENDENTE, 'A classificar'),
+        (CLASSIFICADO, 'Classificado'),
+        (DESCONSIDERADO, 'Desconsiderado'),
+    ]
+
+    id_contratosgov = models.PositiveIntegerField("ID no Contratos.gov.br", unique=True)
+    numero = models.CharField("Número", max_length=30)
+    tipo_instrumento = models.CharField("Tipo de instrumento", max_length=50, blank=True)
+    receita_despesa = models.CharField("Receita/Despesa", max_length=10, blank=True)
+    categoria_contratosgov = models.CharField("Categoria (Contratos.gov.br)", max_length=100, blank=True)
+    fornecedor_nome = models.CharField("Fornecedor", max_length=255, blank=True)
+    fornecedor_cnpj = models.CharField("CNPJ/CPF", max_length=30, blank=True)
+    objeto = models.TextField("Objeto", blank=True)
+    vigencia_inicio = models.DateField("Início da vigência", null=True, blank=True)
+    vigencia_fim = models.DateField("Fim da vigência", null=True, blank=True)
+    valor_global = models.DecimalField("Valor global", max_digits=16, decimal_places=2, null=True, blank=True)
+    situacao_contratosgov = models.CharField("Situação (Contratos.gov.br)", max_length=30, blank=True)
+    unidades_requisitantes = models.CharField("Unidade requisitante (API)", max_length=255, blank=True)
+    processo = models.CharField("Processo", max_length=50, blank=True)
+    na_lista_em = models.DateTimeField("Visto na lista em", null=True, blank=True)
+    criado_em = models.DateTimeField("Primeira leitura", auto_now_add=True)
+
+    situacao = models.CharField("Classificação", max_length=15, choices=SITUACAO_CHOICES,
+                                default=PENDENTE, db_index=True)
+    om_beneficiada = models.ForeignKey(OrganizacaoMilitar, on_delete=models.PROTECT, null=True, blank=True,
+                                       related_name='contratos_catalogo', verbose_name="OM beneficiada")
+    justificativa = models.TextField("Justificativa", blank=True)
+    classificado_por = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True,
+                                         related_name='+', verbose_name="Classificado por")
+    classificado_em = models.DateTimeField("Classificado em", null=True, blank=True)
+    vinculo_automatico = models.BooleanField(
+        "Vínculo automático", default=False,
+        help_text="Classificado como GAP-BR por já existir no SISCONT (número e CNPJ).")
+    contrato = models.OneToOneField('Contrato', on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='catalogo_contratosgov', verbose_name="Contrato no SISCONT")
+
+    sugestao_om = models.ForeignKey(OrganizacaoMilitar, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='+', verbose_name="OM sugerida")
+    sugestao_indicios = models.JSONField("Indícios da sugestão", default=list, blank=True)
+    sugestao_em = models.DateTimeField("Sugestão calculada em", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Contrato do Contratos.gov.br"
+        verbose_name_plural = "Catálogo do Contratos.gov.br"
+        ordering = ['situacao', '-vigencia_inicio']
+
+    def __str__(self):
+        return f"{self.numero} - {self.fornecedor_nome}"
+
+    @property
+    def eh_gapbr(self):
+        return self.situacao == self.CLASSIFICADO and self.om_beneficiada_id and self.om_beneficiada.eh_gapbr
+
+
+class RegistroClassificacao(models.Model):
+    """Histórico de cada classificação ou correção de um contrato do catálogo."""
+    catalogo = models.ForeignKey(ContratoCatalogo, on_delete=models.CASCADE, related_name='registros')
+    usuario = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    data = models.DateTimeField("Data", auto_now_add=True)
+    situacao_anterior = models.CharField(max_length=15, blank=True)
+    om_anterior = models.CharField(max_length=20, blank=True)
+    situacao_nova = models.CharField(max_length=15)
+    om_nova = models.CharField(max_length=20, blank=True)
+    justificativa = models.TextField(blank=True)
+    automatico = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Registro de classificação"
+        verbose_name_plural = "Registros de classificação"
+        ordering = ['-data']
