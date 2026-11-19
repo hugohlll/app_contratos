@@ -1,0 +1,104 @@
+{% extends 'contratos/portal/base_portal.html' %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+    <a href="{% url 'catalogo_contratosgov' %}" class="btn btn-outline-secondary me-3">← Voltar</a>
+    <h2 class="fw-bold mb-0">Contrato {{ c.numero }}</h2>
+    <span class="badge ms-3 {% if c.situacao == 'PENDENTE' %}bg-warning text-dark{% elif c.situacao == 'CLASSIFICADO' %}bg-success{% else %}bg-secondary{% endif %}">{{ c.get_situacao_display }}{% if c.om_beneficiada %}: {{ c.om_beneficiada }}{% endif %}</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card card-custom mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Dados no Contratos.gov.br</h5>
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-4">Empresa</dt><dd class="col-sm-8">{{ c.fornecedor_nome }} ({{ c.fornecedor_cnpj }})</dd>
+                    <dt class="col-sm-4">Objeto</dt><dd class="col-sm-8">{{ c.objeto }}</dd>
+                    <dt class="col-sm-4">Vigência</dt><dd class="col-sm-8">{{ c.vigencia_inicio|date:"d/m/Y" }} a {{ c.vigencia_fim|date:"d/m/Y" }}</dd>
+                    <dt class="col-sm-4">Valor global</dt><dd class="col-sm-8">R$ {{ c.valor_global|floatformat:"2g" }}</dd>
+                    <dt class="col-sm-4">Receita/Despesa</dt><dd class="col-sm-8">{{ c.receita_despesa }}</dd>
+                    <dt class="col-sm-4">Categoria</dt><dd class="col-sm-8">{{ c.categoria_contratosgov|default:"—" }}</dd>
+                    <dt class="col-sm-4">Processo</dt><dd class="col-sm-8">{{ c.processo|default:"—" }}</dd>
+                    <dt class="col-sm-4">ID Contratos.gov.br</dt><dd class="col-sm-8">{{ c.id_contratosgov }}</dd>
+                    {% if c.contrato %}<dt class="col-sm-4">No SISCONT</dt><dd class="col-sm-8"><a href="{% url 'editar_contrato' c.contrato.pk %}">{{ c.contrato }}</a></dd>{% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <div class="card card-custom">
+            <div class="card-body">
+                <h5 class="card-title">Indícios da OM beneficiada</h5>
+                {% if c.sugestao_indicios %}
+                <table class="table table-sm mb-2">
+                    <thead><tr><th>Fonte</th><th>Valor</th><th>OM</th></tr></thead>
+                    <tbody>
+                        {% for i in c.sugestao_indicios %}
+                        <tr>
+                            <td>{{ i.fonte }}</td>
+                            <td class="small">{{ i.valor }}</td>
+                            <td>{% if i.om %}<span class="badge bg-info text-dark">{{ i.om }}</span>{% else %}<span class="small text-muted">{{ i.observacao }}</span>{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p class="small mb-0">
+                    {% if c.sugestao_om %}Sugestão: <strong>{{ c.sugestao_om }}</strong>{% else %}Sem sugestão: os indícios não apontam para uma única OM.{% endif %}
+                    {% if c.sugestao_em %}<span class="text-muted">(calculada em {{ c.sugestao_em|date:"d/m/Y H:i" }})</span>{% endif %}
+                </p>
+                {% else %}
+                <p class="text-muted small mb-0">Nenhum indício público encontrado{% if c.sugestao_em %} até {{ c.sugestao_em|date:"d/m/Y H:i" }}{% endif %}.
+                    {% if c.situacao == 'PENDENTE' %}A sugestão é refeita a cada sincronização.{% endif %}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card card-custom mb-4">
+            <div class="card-body">
+                <h5 class="card-title">{% if correcao %}Corrigir classificação{% else %}Classificar{% endif %}</h5>
+                {% if correcao %}<p class="small text-muted">A OM beneficiada não muda durante o contrato. Use a correção só para erro de classificação.</p>{% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="om" class="form-label fw-semibold">OM beneficiada</label>
+                        <select id="om" name="om" class="form-select" required>
+                            <option value="">Escolha…</option>
+                            {% for om in oms %}
+                            <option value="{{ om.pk }}" {% if om.pk == selecionada %}selected{% endif %}>{{ om.sigla }}{% if om.nome %} - {{ om.nome }}{% endif %}{% if om.pk == c.sugestao_om_id %} (sugerida){% endif %}</option>
+                            {% endfor %}
+                            <option value="DESCONSIDERAR" {% if c.situacao == 'DESCONSIDERADO' %}selected{% endif %}>Desconsiderar (duplicado ou erro de cadastro)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="justificativa" class="form-label fw-semibold">Justificativa</label>
+                        <textarea id="justificativa" name="justificativa" rows="3" class="form-control">{% if correcao %}{% else %}{{ c.justificativa }}{% endif %}</textarea>
+                        <div class="form-text">Obrigatória para desconsiderar e para corrigir uma classificação.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">{% if correcao %}Salvar correção{% else %}Classificar{% endif %}</button>
+                </form>
+            </div>
+        </div>
+
+        {% if registros %}
+        <div class="card card-custom">
+            <div class="card-body">
+                <h5 class="card-title">Histórico</h5>
+                <ul class="list-unstyled small mb-0">
+                    {% for r in registros %}
+                    <li class="mb-2">
+                        <strong>{{ r.data|date:"d/m/Y H:i" }}</strong> —
+                        {% if r.automatico %}automático{% else %}{{ r.usuario.get_full_name|default:r.usuario.username|default:"—" }}{% endif %}:
+                        {{ r.situacao_anterior|default:"—" }}{% if r.om_anterior %} ({{ r.om_anterior }}){% endif %} →
+                        {{ r.situacao_nova }}{% if r.om_nova %} ({{ r.om_nova }}){% endif %}
+                        {% if r.justificativa %}<div class="text-muted">{{ r.justificativa }}</div>{% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

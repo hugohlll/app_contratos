@@ -92,6 +92,20 @@
             </div>
         </div>
     </div>
+    {% if request.user|is_admin %}
+    <div class="col-md-4 mb-4">
+        <div class="card card-custom h-100">
+            <div class="card-body text-center p-4">
+                <h5 class="card-title">Contratos.gov.br</h5>
+                <p class="card-text text-muted">{{ CONTRATOS_A_CLASSIFICAR|default:0 }} contrato(s) a classificar</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'catalogo_contratosgov' %}" class="btn btn-outline-primary">Catálogo da UG</a>
+                    <a href="{% url 'listar_oms' %}" class="btn btn-outline-secondary">Organizações Militares</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <div class="row mt-4">

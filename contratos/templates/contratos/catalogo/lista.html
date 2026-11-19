@@ -1,0 +1,97 @@
+{% extends 'contratos/portal/base_portal.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold mb-0">Catálogo do Contratos.gov.br</h2>
+        <p class="text-muted mb-0">Contratos da UG 120006. Só os classificados como GAP-BR entram no SISCONT.</p>
+    </div>
+    <a href="{% url 'listar_oms' %}" class="btn btn-outline-secondary">Organizações Militares</a>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    {% for chave, nome, n in abas %}
+    <li class="nav-item">
+        <a class="nav-link {% if chave == aba %}active{% endif %}" href="?aba={{ chave }}">
+            {{ nome }} <span class="badge {% if chave == 'PENDENTE' and n %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ n }}</span>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+
+{% if aba == 'CLASSIFICADO' %}
+<form method="get" class="d-flex gap-2 align-items-center mb-3">
+    <input type="hidden" name="aba" value="CLASSIFICADO">
+    <label class="small fw-bold text-muted mb-0" for="filtroOm">OM:</label>
+    <select id="filtroOm" name="om" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
+        <option value="">Todas</option>
+        {% for om in oms %}<option value="{{ om.sigla }}" {% if om.sigla == om_filtro %}selected{% endif %}>{{ om.sigla }}</option>{% endfor %}
+    </select>
+</form>
+{% endif %}
+
+<form method="post" action="{% url 'classificar_catalogo_lote' %}">
+    {% csrf_token %}
+    <div class="card card-custom">
+        <div class="card-body">
+            {% if aba == 'PENDENTE' and itens %}
+            <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                <span class="small fw-bold text-muted">Classificar os selecionados como:</span>
+                <select name="om" class="form-select form-select-sm" style="width:auto" required>
+                    <option value="">Escolha a OM…</option>
+                    {% for om in oms %}<option value="{{ om.pk }}">{{ om.sigla }}</option>{% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Classificar em lote</button>
+            </div>
+            {% endif %}
+
+            <div class="table-responsive border rounded">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="custom-table-header">
+                        <tr>
+                            {% if aba == 'PENDENTE' %}<th class="px-3"><input type="checkbox" class="form-check-input" aria-label="Selecionar todos" onclick="document.querySelectorAll('.js-sel').forEach(c => c.checked = this.checked)"></th>{% endif %}
+                            <th>Número</th>
+                            <th>Empresa</th>
+                            <th>Objeto</th>
+                            <th>Vigência</th>
+                            <th>{% if aba == 'PENDENTE' %}Sugestão{% elif aba == 'CLASSIFICADO' %}OM beneficiada{% else %}Justificativa{% endif %}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in itens %}
+                        <tr>
+                            {% if aba == 'PENDENTE' %}<td class="px-3"><input type="checkbox" class="form-check-input js-sel" name="selecionados" value="{{ c.pk }}" aria-label="Selecionar {{ c.numero }}"></td>{% endif %}
+                            <td class="text-nowrap fw-semibold">{{ c.numero }}</td>
+                            <td><div>{{ c.fornecedor_nome }}</div><div class="small text-muted">{{ c.fornecedor_cnpj }}</div></td>
+                            <td class="small" style="max-width:340px">{{ c.objeto|truncatechars:140 }}</td>
+                            <td class="small text-nowrap">{{ c.vigencia_inicio|date:"d/m/Y" }} a {{ c.vigencia_fim|date:"d/m/Y" }}</td>
+                            <td class="small">
+                                {% if aba == 'PENDENTE' %}
+                                    {% if c.sugestao_om %}<span class="badge bg-info text-dark">{{ c.sugestao_om }}</span>
+                                    {% elif c.sugestao_indicios %}<span class="text-muted">Indícios divergentes</span>
+                                    {% else %}<span class="text-muted">Sem indícios</span>{% endif %}
+                                {% elif aba == 'CLASSIFICADO' %}
+                                    <span class="badge {% if c.om_beneficiada.eh_gapbr %}bg-success{% else %}bg-secondary{% endif %}">{{ c.om_beneficiada }}</span>
+                                    {% if c.vinculo_automatico %}<div class="text-muted">vínculo automático</div>{% endif %}
+                                    {% if c.contrato %}<div><a href="{% url 'editar_contrato' c.contrato.pk %}">no SISCONT</a></div>{% endif %}
+                                {% else %}
+                                    {{ c.justificativa|truncatechars:80 }}
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'classificar_catalogo' c.pk %}" class="btn btn-sm {% if aba == 'PENDENTE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                                    {% if aba == 'PENDENTE' %}Classificar{% else %}Detalhes{% endif %}
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="text-center text-muted py-4">Nenhum contrato nesta situação.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
