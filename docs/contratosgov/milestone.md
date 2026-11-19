@@ -1,6 +1,6 @@
 # Milestone: Integração com o Contratos.gov.br
 
-> Criado no GitHub em 13/11/2026: milestone 2, issues #21 a #29.
+> Criado no GitHub em 13/11/2026: milestone 2, issues #21 a #29. Issue #51 acrescentada em 19/11/2026.
 > Detalhes de campos em [mapeamento-campos.md](mapeamento-campos.md).
 
 ## Descrição do milestone
@@ -11,7 +11,7 @@
 
 **Escopo:**
 - Nenhum campo é absorvido só por ter o mesmo nome nas duas aplicações. Cada campo tem o significado e a funcionalidade real validados antes de ser sincronizado, com a decisão registrada no mapeamento.
-- Contratos ativos e inativos da UG do GAP-BR sincronizados diariamente, mais atualização sob demanda de um contrato.
+- Só os contratos cuja OM beneficiada é o GAP-BR, classificados uma vez por um Administrador (#51). Contratos ativos e inativos desse conjunto sincronizados diariamente, mais atualização sob demanda de um contrato.
 - Integração só de leitura, apenas com os endpoints públicos (sem token): o SISCONT nunca escreve no Contratos.gov.br.
 - Campos vindos do Contratos.gov.br ficam somente leitura no SISCONT. Os demais dados (PAG, comissões, Livro do Fiscal) continuam locais.
 - Empresas criadas e atualizadas pelo CNPJ.
@@ -69,7 +69,7 @@ Depende de #21
 
 ### #24 Histórico de termos do contrato `enhancement`
 
-- [ ] Novo modelo `TermoContrato` (seção 5 do mapeamento)
+- [ ] Novo modelo `HistoricoContrato` (seção 5 do mapeamento): só o registro dos termos que já existem no Contratos.gov.br; o SISCONT não gera documento
 - [ ] Linha do tempo de aditivos, apostilamentos e rescisões na tela do contrato
 - [ ] Vigência e valor do contrato atualizados quando houver novo termo
 
@@ -112,6 +112,21 @@ Depende de #26
 
 Depende de #22 e #23
 
+### #51 Classificação da OM beneficiada dos contratos da UG `enhancement`
+
+A UG 120006 executa os próprios contratos e os das OMs apoiadas, e a API pública não informa a UASG beneficiada.
+Cada contrato novo é classificado uma vez por um Administrador, com sugestão automática. Detalhes na seção 9 do mapeamento.
+
+- [ ] Catálogo dos contratos da UG (só tipo Contrato, vigentes ou futuros), separado de `Contrato`
+- [ ] Classificação: OM beneficiada ou Desconsiderar; só GAP-BR vira `Contrato`
+- [ ] Cadastro de OMs com carga inicial
+- [ ] Sugestão automática com a origem de cada indício, refeita diariamente até a classificação
+- [ ] Vínculo automático dos contratos já existentes no SISCONT
+- [ ] Classificação individual e em lote, só por Administradores
+- [ ] Contador de pendências e e-mail de contrato novo a classificar
+
+Depende de #22 e #23
+
 ### #29 Implantar a integração com o Contratos.gov.br em produção `enhancement`
 
 - [ ] Variável do proxy em `.env.prod`
@@ -125,8 +140,7 @@ Depende de #26, #27 e #28
 
 Itens da seção 7 do mapeamento, a avaliar depois que a sincronização estiver estável. Cada um passa pela mesma análise de funcionalidade real (seção 0), em especial ocorrências, faturas, prepostos e responsáveis, cujos conceitos diferem entre as duas aplicações:
 
-- Pré-preencher preposto (nome, e-mail, telefone) e notas fiscais do mês no Livro do Fiscal
-- Mostrar ao fiscal as ocorrências registradas no Contratos.gov.br no período
+- Pré-preencher preposto (nome, e-mail, telefone) no Livro do Fiscal, editável. Faturas e ocorrências não são absorvidas (decisão de 19/11/2026)
 - Relatório de divergências entre integrantes das comissões e responsáveis no Contratos.gov.br
 - Alerta de vencimento de garantia contratual
 - Saldo de empenho, itens, cronograma e links para documentos e publicações na tela do contrato

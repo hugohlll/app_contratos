@@ -49,7 +49,13 @@ A validação é feita com o usuário responsável pela gestão de contratos, n�
 
 | Campo | Decisão | Regra / observação | Validado com | Data |
 |---|---|---|---|---|
-| (preencher durante a #21) | | | | |
+| Instrumentos acompanhados | **Só o tipo Contrato** | Registros dos tipos Empenho e Outros da API não entram no SISCONT | Responsável pelo SISCONT | 19/11/2026 |
+| OM beneficiada | **Campo próprio**, classificado no SISCONT | A API pública não informa a UASG beneficiada; classificação manual com sugestão automática (seção 9, #51) | Responsável pelo SISCONT | 19/11/2026 |
+| `categoria` | **Campo próprio** `categoria_contratosgov`, só leitura | Não se confunde com a categoria de objeto da escala (#35), que o Administrador decide; serve só de sugestão | Responsável pelo SISCONT | 19/11/2026 |
+| `faturas` → `RegistroFatura` | **Não absorver** | As faturas do Contratos.gov.br não entram no Livro do Fiscal | Responsável pelo SISCONT | 19/11/2026 |
+| `ocorrencias` → Livro do Fiscal / `OcorrenciaContratual` | **Não absorver** | Nem cópia nem exibição: o registro de ocorrências continua só no SISCONT | Responsável pelo SISCONT | 19/11/2026 |
+| `prepostos` → `ControleExecucao.preposto_*` | **Pré-preenchimento** editável | Nome, e-mail e telefone do preposto ativo; o fiscal pode alterar | Responsável pelo SISCONT | 19/11/2026 |
+| (demais campos: preencher durante a #21) | | | | |
 
 ## 1. Endpoints a usar
 
@@ -90,11 +96,12 @@ A validação é feita com o usuário responsável pela gestão de contratos, n�
 | `data_assinatura` | `data_assinatura` | Exibição |
 | `valor_inicial` | `valor_inicial` | Comparar com o valor global (acréscimos) |
 | `prorrogavel` | `prorrogavel` | Mostrar nos alertas de aditivo se o contrato admite prorrogação |
+| `categoria_contratosgov` | `categoria` | Só leitura (Serviços, Compras, Informática (TIC), Cessão, Obras…); sugestão para a categoria de objeto da escala (#35) |
 | `origem` | — | `CONTRATOSGOV` ou `MANUAL` (cadastrados antes da carga e não encontrados) |
 | `sincronizado_em` | — | Data/hora da última sincronização bem-sucedida |
 
 Candidatos descartados por enquanto: `contratante` (sempre a própria UG), `codigo_tipo`, `subtipo`,
-`categoria`, `subcategoria`, `unidades_requisitantes`, `informacao_complementar`, `codigo_modalidade`,
+`subcategoria`, `unidades_requisitantes`, `informacao_complementar`, `codigo_modalidade`,
 `unidade_compra`, `sistema_origem_licitacao`, `data_publicacao`, `num_parcelas`, `valor_parcela`, `valor_acumulado`.
 
 ## 4. Modelo `Empresa`
@@ -105,9 +112,10 @@ Candidatos descartados por enquanto: `contratante` (sempre a própria UG), `codi
 | `razao_social` | `fornecedor.nome` | Sincronizado |
 | `nome_fantasia` | (não há) | **Local** |
 
-## 5. Novo modelo `TermoContrato` (histórico)
+## 5. Novo modelo `HistoricoContrato`
 
-Origem: E4. Um registro por termo do contrato, só leitura.
+Origem: E4. Um registro por termo do contrato, só leitura, apenas para contratos classificados como GAP-BR.
+É só o registro dos termos que já existem no Contratos.gov.br: o SISCONT **não gera** termo de contrato nem aditivo.
 
 | Campo | Origem | Observação |
 |---|---|---|
@@ -146,14 +154,14 @@ Cruzamento de todos os campos digitados hoje no SISCONT com os endpoints públic
 | `preposto_cpf` | `/prepostos` → `usuario` | Nenhum | O CPF vem mascarado (`***.111.111-**`) |
 | `preposto_cargo` | (não há) | Nenhum | |
 | Campos de obra (ART, CNO, clima, efetivo…) | (não há) | Nenhum | |
-| `relatorio_ocorrencias`, `sem_ocorrencias_periodo` | `/ocorrencias` | Só referência | Mostrar ao fiscal as ocorrências lançadas no Contratos.gov.br no mês, sem substituir o relatório |
+| `relatorio_ocorrencias`, `sem_ocorrencias_periodo` | `/ocorrencias` | **Não absorver** (decisão de 19/11/2026) | Continua só no SISCONT |
 
 ### 7.2 Faturas do Livro do Fiscal (`RegistroFatura`)
 
 | Campo SISCONT | Origem | Aproveitamento | Observações |
 |---|---|---|---|
-| `numero_nf` | `/faturas` → `numero` (+ `numero_serie`) | **Pré-preenchimento** | Filtrar por `mesref`/`anoref` = mês do livro e `nota_cancelada` = Não |
-| `valor` | `/faturas` → `valor` (ou `valorliquido`) | **Pré-preenchimento** | ⚠️ Definir se o livro registra o valor bruto ou o líquido |
+| `numero_nf` | `/faturas` → `numero` (+ `numero_serie`) | **Não absorver** (decisão de 19/11/2026) | Continua manual |
+| `valor` | `/faturas` → `valor` (ou `valorliquido`) | **Não absorver** (decisão de 19/11/2026) | Continua manual |
 | `numero_ob` | (só em `/api/v1/ordembancaria/...`, com token) | Nenhum | Continua manual |
 
 Depende de a UG lançar os instrumentos de cobrança no Contratos.gov.br. ⚠️ Verificar se o GAP faz isso para todos os contratos.
@@ -167,7 +175,7 @@ Depende de a UG lançar os instrumentos de cobrança no Contratos.gov.br. ⚠️
 | `notificacao_emitida` | `notificapreposto` | Só referência |
 | `status_ocorrencia` | `situacao` / `novasituacao` | Só referência |
 
-O SISCONT é o registro formal do fiscal (NPA 009). Importar ocorrências criaria duplicidade. A proposta é exibi-las, não copiá-las.
+O SISCONT é o registro formal do fiscal (NPA 009). **Decisão de 19/11/2026: não absorver** as ocorrências do Contratos.gov.br, nem para exibição.
 
 ### 7.4 Comissões e integrantes (`Comissao`, `Integrante`)
 
@@ -213,3 +221,58 @@ local, que é a fonte das portarias e boletins.
 - [ ] Quantos contratos locais não têm correspondente (cadastrados só no SISCONT)
 - [ ] Acesso a partir do container de produção pelo proxy (o host já passa)
 - [ ] Estabilidade da API: em 13/11/2026 o site alternou entre 200, 403 e 404 em poucos minutos; a sincronização precisa tolerar falhas sem apagar nada
+
+## 9. OM beneficiada: classificação dos contratos da UG
+
+Decisões de 19/11/2026, implementadas na #51.
+
+### 9.1 Problema
+
+A UG 120006 executa no Contratos.gov.br os próprios contratos e os das OMs apoiadas, e o SISCONT acompanha **só os
+contratos em que o GAP-BR é o beneficiado**. A API pública não informa a UASG beneficiada: `unidade_origem` e
+`unidade_compra` são sempre 120006, `unidades_requisitantes` é texto livre e quase sempre nulo, e os empenhos vinculados
+trazem só "UASG MINUTA: 120006". O campo `uasg_beneficiaria` existe apenas em
+`GET /api/v1/contrato/empenho/consultar/{empenho_id}`, que exige login no Contratos.gov.br (sem acesso hoje).
+O PNCP (`/api/consulta/v1/contratos`) recebe os dados do próprio Contratos.gov.br e tem `unidadeSubRogada` vazio.
+
+Como a OM beneficiada não muda do início ao término do contrato, ela é definida **uma vez**, quando o contrato aparece.
+
+### 9.2 Fluxo
+
+1. A sincronização diária lê a lista da UG (E1, uma chamada) e grava no **catálogo** os registros do tipo Contrato,
+   vigentes ou futuros, mais os que já existem no SISCONT.
+2. Contrato já existente no SISCONT (mesmo número normalizado e mesmo CNPJ) é vinculado e classificado como GAP-BR
+   automaticamente, na carga inicial e depois dela.
+3. Os demais ficam "a classificar", com uma sugestão automática (9.3), refeita a cada execução até a classificação.
+4. Um **Administrador** classifica, individualmente ou em lote: OM beneficiada (GAP-BR ou outra OM do cadastro) ou
+   **Desconsiderar** (duplicado ou erro de cadastro), com justificativa obrigatória.
+5. Só o classificado como GAP-BR vira `Contrato` e passa a receber os detalhes (histórico etc.). Os de OM apoiada
+   guardam apenas os dados da lista diária.
+6. Erro de classificação é corrigido só por Administrador, com registro de quem e quando. Contrato que deixa de ser
+   GAP-BR é inativado, nunca excluído.
+
+Acesso só para Administradores (grupo `Administradores` ou superusuário). Contador "Contratos a classificar (N)" no
+menu, oculto quando N = 0, e e-mail pela `EmailPendente` quando surgir contrato novo.
+
+### 9.3 Fontes da sugestão automática
+
+| Fonte | Endpoint | Exemplo | Observação |
+|---|---|---|---|
+| Unidade requisitante | E1 `unidades_requisitantes` | `120112` → OABR | Texto livre; código UASG, sigla ou NUP |
+| Sigla no número formal | `/arquivos` (`descricao`), `/historico` (`observacao`) | `013/GAP-BR-COMGEP/2024` → COMGEP | Em 12 dos 82 vigentes de 17/11/2026; "GAP-BR" sozinho é ambíguo |
+| Prefixo do plano interno | `/empenhos` (`planointerno`) | `CG…` → COMGEP, `GB…` → GABAER, `SF…` → SEFA | Indica quem paga, não necessariamente quem pediu |
+| Sigla no objeto | E1 `objeto` | "…INSTALAÇÕES DO COMGEP…" | |
+
+A tela mostra a OM sugerida e a origem de cada indício. Quando as fontes discordam, não há sugestão.
+Fora desta versão: leitura da cláusula de dotação orçamentária nos PDFs (ex.: "Gestão/Unidade: 120131" no contrato
+303557), que exige baixar e extrair texto, e OCR em documentos escaneados.
+
+### 9.4 Cadastro de OMs
+
+Sigla, nome e código UASG (opcional), ampliável pelo Administrador. Carga inicial: GAP-BR (120006), OABR (120112),
+COMGEP (120131), CCA-BR, EMAER, GABAER, CIAER, SEFA, DIREF, SECPROM e DECEA.
+
+### 9.5 Fora do escopo
+
+- O campo `ControleExecucao.omap` do Livro do Fiscal (oculto e fixo em GAP-BR) não muda.
+- Contratos de OMs apoiadas não usam o SISCONT (comissões, Livro do Fiscal).
